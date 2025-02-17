@@ -1,0 +1,215 @@
+import request from '@/utils/request'
+
+// 执法仪API
+export function getEquipmentLawcameraList(query) {
+  return request({
+    url: '/api/v1/equipment/lawcamera',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getEquipmentLawcamera(lawcameraId) {
+  return request({
+    url: '/api/v1/equipment/lawcamera/' + lawcameraId,
+    method: 'get'
+  })
+}
+
+export function addEquipmentLawcamera(data) {
+  return request({
+    url: '/api/v1/equipment/lawcamera',
+    method: 'post',
+    data: data
+  })
+}
+
+export function updateEquipmentLawcamera(data, id) {
+  return request({
+    url: '/api/v1/equipment/lawcamera/' + id,
+    method: 'put',
+    data: data
+  })
+}
+
+export function delEquipmentLawcamera(data) {
+  return request({
+    url: '/api/v1/equipment/lawcamera',
+    method: 'delete',
+    data: data
+  })
+}
+
+// 场地API
+export function listEquipmentTrial(query) {
+  return request({
+    url: '/api/v1/equipment/trial',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getEquipmentTrial(trialId) {
+  return request({
+    url: '/api/v1/equipment/trial/' + trialId,
+    method: 'get'
+  })
+}
+
+export function addEquipmentTrial(data) {
+  return request({
+    url: '/api/v1/equipment/trial',
+    method: 'post',
+    data: data
+  })
+}
+
+export function updateEquipmentTrial(data, trialId) {
+  return request({
+    url: '/api/v1/equipment/trial/' + trialId,
+    method: 'put',
+    data: data
+  })
+}
+
+export function delEquipmentTrial(trialId) {
+  return request({
+    url: '/api/v1/equipment/trial',
+    method: 'delete',
+    data: trialId
+  })
+}
+
+// 采集站API
+export function listEquipmentSite(query) {
+  return request({
+    url: '/api/v1/equipment/site',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getEquipmentSite(siteId) {
+  return request({
+    url: '/api/v1/equipment/site/' + siteId,
+    method: 'get'
+  })
+}
+
+export function addEquipmentSite(data) {
+  return request({
+    url: '/api/v1/equipment/site',
+    method: 'post',
+    data: data
+  })
+}
+
+export function updateEquipmentSite(data, siteId) {
+  return request({
+    url: '/api/v1/equipment/site/' + siteId,
+    method: 'put',
+    data: data
+  })
+}
+
+export function delEquipmentSite(siteId) {
+  return request({
+    url: '/api/v1/equipment/site',
+    method: 'delete',
+    data: siteId
+  })
+}
+
+export function getEquipmentSiteConfig(siteConfigId) {
+  return request({
+    url: '/api/v1/equipment/siteconfig/' + siteConfigId,
+    method: 'get'
+  })
+}
+
+// 品牌API
+export function listEquipmentBrand(query) {
+  return request({
+    url: '/api/v1/equipment/brand',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getEquipmentBrand(brandId) {
+  return request({
+    url: '/api/v1/equipment/brand/' + brandId,
+    method: 'get'
+  })
+}
+
+export function addEquipmentBrand(data) {
+  return request({
+    url: '/api/v1/equipment/brand',
+    method: 'post',
+    data: data
+  })
+}
+
+export function updateEquipmentBrand(data, brandId) {
+  return request({
+    url: '/api/v1/equipment/brand/' + brandId,
+    method: 'put',
+    data: data
+  })
+}
+
+export function delEquipmentBrand(brandId) {
+  return request({
+    url: '/api/v1/equipment/brand',
+    method: 'delete',
+    data: brandId
+  })
+}
+
+// 存储API
+export function listEquipmentStorage(query) {
+  return request({
+    url: '/api/v1/equipment/storage',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getEquipmentStorage(storageId) {
+  return request({
+    url: '/api/v1/equipment/storage/' + storageId,
+    method: 'get'
+  })
+}
+
+export function addEquipmentStorage(data) {
+  return request({
+    url: '/api/v1/equipment/storage',
+    method: 'post',
+    data: data
+  })
+}
+
+export function updateEquipmentStorage(data, storageId) {
+  return request({
+    url: '/api/v1/equipment/storage/' + storageId,
+    method: 'put',
+    data: data
+  })
+}
+
+export function delEquipmentStorage(storageId) {
+  return request({
+    url: '/api/v1/equipment/storage',
+    method: 'delete',
+    data: storageId
+  })
+}
+
+export function getEquipmentStorageConfig(storageConfigId) {
+  return request({
+    url: '/api/v1/equipment/storageconfig/' + storageConfigId,
+    method: 'get'
+  })
+}
