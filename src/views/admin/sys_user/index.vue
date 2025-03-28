@@ -134,7 +134,7 @@
               <el-table-column label="登录名" width="105" prop="userName" sortable="custom" :show-overflow-tooltip="true" />
               <el-table-column label="昵称" prop="nickName" :show-overflow-tooltip="true" />
               <el-table-column label="性别" prop="sexName" />
-              <el-table-column label="部门" prop="deptAllName" :show-overflow-tooltip="true" />
+              <el-table-column label="部门" prop="deptName" :show-overflow-tooltip="true" />
               <el-table-column label="角色" prop="roleName" :show-overflow-tooltip="true" />
               <el-table-column label="岗位" prop="postName" :show-overflow-tooltip="true" />
               <el-table-column label="手机号" prop="phone" width="108" />

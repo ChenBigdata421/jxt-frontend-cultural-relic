@@ -90,6 +90,13 @@ Object.keys(filters).forEach(key => {
   Vue.filter(key, filters[key])
 })
 
+// 设置 Vue 2 项目使用兼容的 DevTools 版本
+// if (process.env.NODE_ENV === 'development') {  
+//   const VueDevtools = require('@vue/devtools')  
+//   VueDevtools.default.connect()  
+// }  
+
+
 Vue.config.productionTip = false
 // 将路由配置注入到 Vue 实例中
 new Vue({

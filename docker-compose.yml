@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  jxt-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    privileged: true
+    restart: always
+    ports:
+      - 8080:80
+    volumes:  
+      # 将主机上的 default.conf 映射到容器内的 `/etc/nginx/conf.d/default.conf`  
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    command:  ["nginx", "-g", "daemon off;"]
+    
+    networks:
+      - security-management_jxt_web
+
+
+networks:
+  security-management_jxt_web:
+    external: true
+

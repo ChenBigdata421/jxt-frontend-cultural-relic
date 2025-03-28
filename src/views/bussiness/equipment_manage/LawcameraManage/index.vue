@@ -103,7 +103,7 @@
           <el-table-column prop="no" label="编号" width="80" />
           <el-table-column prop="name" label="名称" width="100" />
           <el-table-column prop="managerName" label="管理员" width="80" />
-          <el-table-column prop="managerDeptAllName" label="管理员部门" width="150" />
+          <el-table-column prop="managerDeptName" label="管理员部门" width="150" />
           <el-table-column prop="enableUse" label="是否可用" width="100">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
@@ -426,8 +426,8 @@ export default {
       this.form = {
         managerDeptId: undefined,
         managerId: undefined,
-        collectorDeptId: undefined,
-        collectorId: undefined,
+        requisitionorDeptId: undefined,
+        requisitionorId: undefined,
         name: undefined,
         no: undefined,
         enableUse: undefined,

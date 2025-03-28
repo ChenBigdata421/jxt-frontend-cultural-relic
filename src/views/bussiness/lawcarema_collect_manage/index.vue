@@ -63,7 +63,7 @@
           <el-table-column prop="no" label="编号" width="80" />
           <el-table-column prop="name" label="名称" width="100" />
           <el-table-column prop="managerName" label="管理员" width="80" />
-          <el-table-column prop="managerDeptAllName" label="管理员部门" width="150" />
+          <el-table-column prop="managerDeptName" label="管理员部门" width="150" />
           <el-table-column prop="useState" label="领用状态" width="80">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
@@ -75,8 +75,8 @@
               >{{ useStatusFormat(scope.row) }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="collectorName" label="领用者" width="80" />
-          <el-table-column prop="collectorDeptAllName" label="领用者部门" width="150" />
+          <el-table-column prop="requisitionorName" label="领用者" width="80" />
+          <el-table-column prop="requisitionorDeptName" label="领用者部门" width="150" />
           <el-table-column
             label="操作"
             align="left"
@@ -93,7 +93,7 @@
                 @click="handleCollect(scope.row)"
               >领用</el-button>
               <el-button
-                v-if="scope.row.useState !== 0 && userId === scope.row.collectorId"
+                v-if="scope.row.useState !== 0 && userId === scope.row.Id"
                 v-permisaction="['admin:sysRole:update']"
                 size="mini"
                 type="text"
@@ -131,10 +131,10 @@
             <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
             <el-table-column prop="no" label="执法仪编号" width="100" />
             <el-table-column prop="name" label="执法仪名称" width="100" />
-            <el-table-column prop="collectorName" label="领用人" width="100" />
-            <el-table-column prop="collectorDeptAllName" label="领用人部门" width="150" />
-            <el-table-column prop="collectStartTime" label="领用开始时间" width="100" />
-            <el-table-column prop="collectEndTime" label="领用结束时间" width="100" />
+            <el-table-column prop="requisitionorName" label="领用人" width="100" />
+            <el-table-column prop="requisitionorDeptName" label="领用人部门" width="150" />
+            <el-table-column prop="requisitionorStartTime" label="领用开始时间" width="100" />
+            <el-table-column prop="requisitionorEndTime" label="领用结束时间" width="100" />
           </el-table>
         </el-dialog>
         <!--显示详情-->
