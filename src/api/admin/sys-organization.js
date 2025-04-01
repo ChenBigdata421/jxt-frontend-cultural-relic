@@ -2,58 +2,58 @@ import request from '@/utils/request'
 
 export function getOrgList(query) {
   return request({
-    url: '/api/v1/dept',
+    url: '/api/v1/org',
     method: 'get',
     params: query
   })
 }
 
 // 查询部门详细
-export function getDept(deptId) {
+export function getOrg(orgId) {
   return request({
-    url: '/api/v1/dept/' + deptId,
+    url: '/api/v1/org/' + orgId,
     method: 'get'
   })
 }
 
 // 查询部门下拉树结构
-export function treeselect() {
+export function orgTreeselect() {
   return request({
-    url: '/api/v1/deptTree',
+    url: '/api/v1/org/orgTreeSelect',
     method: 'get'
   })
 }
 
 // 根据角色ID查询部门树结构
-export function roleDeptTreeselect(roleId) {
+export function orgRoleTreeselect(roleId) {
   return request({
-    url: '/api/v1/roleDeptTreeselect/' + roleId,
+    url: '/api/v1/orgRoleTreeselect/' + roleId,
     method: 'get'
   })
 }
 
 // 新增部门
-export function addDept(data) {
+export function addOrg(data) {
   return request({
-    url: '/api/v1/dept',
+    url: '/api/v1/org',
     method: 'post',
     data: data
   })
 }
 
 // 修改部门
-export function updateDept(data, id) {
+export function updateOrg(data, id) {
   return request({
-    url: '/api/v1/dept/' + id,
+    url: '/api/v1/org/' + id,
     method: 'put',
     data: data
   })
 }
 
 // 删除部门
-export function delDept(data) {
+export function delOrg(data) {
   return request({
-    url: '/api/v1/dept',
+    url: '/api/v1/org',
     method: 'delete',
     data: data
   })

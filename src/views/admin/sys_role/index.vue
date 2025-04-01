@@ -218,8 +218,8 @@
             </el-form-item>
             <el-form-item v-show="form.dataScope == 2" label="数据权限">
               <el-tree
-                ref="dept"
-                :data="deptOptions"
+                ref="org"
+                :data="orgOptions"
                 show-checkbox
                 default-expand-all
                 node-key="id"
@@ -241,7 +241,7 @@
 <script>
 import { listRole, getRole, delRole, addRole, updateRole, dataScope, changeRoleStatus } from '@/api/admin/sys-role'
 import { menuTreeselect } from '@/api/admin/sys-menu'
-import { deptTreeselect } from '@/api/admin/sys-dept'
+import { orgTreeselect } from '@/api/admin/sys-organization'
 import { formatJson } from '@/utils'
 
 export default {
@@ -301,8 +301,8 @@ export default {
       // 菜单列表
       menuOptions: [],
       menuList: [],
-      // 部门列表
-      deptOptions: [],
+      // 单位列表
+      orgOptions: [],
       menuOptionsAlert: '加载中，请稍后',
       // 查询参数
       queryParams: {
@@ -337,7 +337,7 @@ export default {
   created() {
     this.getList()
     this.getMenuTreeselect()
-    this.getDeptTreeselect()
+    this.getOrgTreeselect()
     this.getDicts('sys_normal_disable').then(response => {
       this.statusOptions = response.data
     })
@@ -362,10 +362,10 @@ export default {
       })
     },
 
-    /** 查询部门树结构 （只包含菜单ID和标题）*/
-    getDeptTreeselect() {
-      deptTreeselect().then(response => {
-        this.deptOptions = response.data
+    /** 查询单位树结构 （只包含菜单ID和标题）*/
+    getOrgTreeselect() {
+      orgTreeselect().then(response => {
+        this.orgOptions = response.data
       })
     },
 
@@ -384,13 +384,13 @@ export default {
       return allCheckedKeys
     },
     
-    // 所有部门节点数据
-    getDeptAllCheckedKeys() {
-      // 目前被选中的部门节点
-      const checkedKeys = this.$refs.dept.getCheckedKeys()
-      console.log('目前被选中的部门节点', checkedKeys)
-      // 半选中的部门节点
-      // const halfCheckedKeys = this.$refs.dept.getCheckedKeys()
+    // 所有单位节点数据
+    getOrgAllCheckedKeys() {
+      // 目前被选中的单位节点
+      const checkedKeys = this.$refs.org.getCheckedKeys()
+      console.log('目前被选中的单位节点', checkedKeys)
+      // 半选中的单位节点
+      // const halfCheckedKeys = this.$refs.org.getCheckedKeys()
       // checkedKeys.unshift.apply(checkedKeys, halfCheckedKeys)
       return checkedKeys
     },
@@ -406,10 +406,10 @@ export default {
         })
       }
     },
-    /** 根据角色ID查询部门树结构 */
-    getRoleDeptTreeselect(checkedKeys) {
+    /** 根据角色ID查询单位树结构 */
+    getRoleOrgTreeselect(checkedKeys) {
       this.$nextTick(() => {
-        this.$refs.dept.setCheckedKeys(checkedKeys)
+        this.$refs.org.setCheckedKeys(checkedKeys)
       })
     },
     // 角色状态修改
@@ -451,7 +451,7 @@ export default {
         roleSort: 0,
         status: '2',
         menuIds: [],
-        deptIds: [],
+        orgIds: [],
         sysMenu: [],
         remark: undefined
       }
@@ -517,7 +517,7 @@ export default {
         this.form = response.data
         this.openDataScope = true
         this.title = '分配数据权限'
-        this.getRoleDeptTreeselect(response.data.deptIds)
+        this.getRoleOrgTreeselect(response.data.orgIds)
       })
     },
     /** 提交按钮 */
@@ -553,8 +553,8 @@ export default {
     /** 提交按钮（数据权限） */
     submitDataScope: function() {
       if (this.form.roleId !== undefined) {
-        this.form.deptIds = this.getDeptAllCheckedKeys()
-        console.log(this.getDeptAllCheckedKeys())
+        this.form.orgIds = this.getOrgAllCheckedKeys()
+        console.log(this.getOrgAllCheckedKeys())
         dataScope(this.form).then(response => {
           if (response.code === 200) {
             this.msgSuccess(response.msg)

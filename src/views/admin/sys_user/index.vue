@@ -7,8 +7,8 @@
           <el-col :span="4" :xs="24">
             <div class="head-container">
               <el-input
-                v-model="deptName"
-                placeholder="请输入部门名称"
+                v-model="orgName"
+                placeholder="请输入单位名称"
                 clearable
                 size="small"
                 prefix-icon="el-icon-search"
@@ -18,7 +18,7 @@
             <div class="head-container">
               <el-tree
                 ref="tree"
-                :data="deptOptions"
+                :data="orgOptions"
                 :props="defaultProps"
                 :expand-on-click-node="false"
                 :filter-node-method="filterNode"
@@ -134,7 +134,7 @@
               <el-table-column label="登录名" width="105" prop="userName" sortable="custom" :show-overflow-tooltip="true" />
               <el-table-column label="昵称" prop="nickName" :show-overflow-tooltip="true" />
               <el-table-column label="性别" prop="sexName" />
-              <el-table-column label="部门" prop="deptName" :show-overflow-tooltip="true" />
+              <el-table-column label="单位" prop="orgName" :show-overflow-tooltip="true" />
               <el-table-column label="角色" prop="roleName" :show-overflow-tooltip="true" />
               <el-table-column label="岗位" prop="postName" :show-overflow-tooltip="true" />
               <el-table-column label="手机号" prop="phone" width="108" />
@@ -213,11 +213,11 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="归属部门" prop="deptId">
+              <el-form-item label="归属单位" prop="orgId">
                 <treeselect
-                  v-model="form.deptId"
-                  :options="deptOptions"
-                  placeholder="请选择归属部门"
+                  v-model="form.orgId"
+                  :options="orgOptions"
+                  placeholder="请选择归属单位"
                 />
               </el-form-item>
             </el-col>
@@ -343,7 +343,7 @@ import { getToken } from '@/utils/auth'
 
 import { listPost } from '@/api/admin/sys-post'
 import { listRole } from '@/api/admin/sys-role'
-import { deptTreeselect } from '@/api/admin/sys-dept'
+import { orgTreeselect } from '@/api/admin/sys-organization'
 import { formatJson } from '@/utils'
 
 import Treeselect from '@riophae/vue-treeselect'
@@ -369,12 +369,12 @@ export default {
       userList: null,
       // 弹出层标题
       title: '',
-      // 部门树选项
-      deptOptions: undefined,
+      // 单位树选项
+      orgOptions: undefined,
       // 是否显示弹出层
       open: false,
-      // 部门名称
-      deptName: undefined,
+      // 单位名称
+      orgName: undefined,
       // 默认密码
       initPassword: undefined,
       // 日期范围
@@ -415,13 +415,13 @@ export default {
         userName: undefined,
         phone: undefined,
         status: undefined,
-        deptId: undefined
+        orgId: undefined
       },
       // 表单校验
       rules: {
         userName: [{ required: true, message: '用户名称不能为空', trigger: 'blur' }],
         nickName: [{ required: true, message: '用户昵称不能为空', trigger: 'blur' }],
-        deptId: [{ required: true, message: '归属部门不能为空', trigger: 'blur' }],
+        orgId: [{ required: true, message: '归属单位不能为空', trigger: 'blur' }],
         password: [{ required: true, message: '用户密码不能为空', trigger: 'blur' }],
         email: [
           { required: true, message: '邮箱地址不能为空', trigger: 'blur' },
@@ -435,8 +435,8 @@ export default {
     }
   },
   watch: {
-    // 根据名称筛选部门树，调用了filterNode，就无需调用this.$refs.tree.filter
-    deptName(val) {
+    // 根据名称筛选单位树，调用了filterNode，就无需调用this.$refs.tree.filter
+    orgName(val) {
       // this.$refs.tree.filter(val)
     }
   },
@@ -472,10 +472,10 @@ export default {
       }
       )
     },
-    /** 查询部门下拉树结构 */
+    /** 查询单位下拉树结构 */
     getTreeselect() {
-      deptTreeselect().then(response => {
-        this.deptOptions = response.data // 返回数组类型；[id:    label(部门名称):  children []]})，这里将返回所有部门
+      orgTreeselect().then(response => {
+        this.orgOptions = response.data // 返回数组类型；[id:    label(单位名称):  children []]})，这里将返回所有单位
       })
     },
     /* 筛选节点，el-tree 组件会在每次输入deptName更新时自动调用 filterNode 方法，并将当前的搜索词（value）和每个节点的数据（data）作为参数传递给该方法。
