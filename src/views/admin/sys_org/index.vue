@@ -6,17 +6,17 @@
           内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
           这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
         <el-form :inline="true">
-          <el-form-item label="部门名称">
+          <el-form-item label="组织名称">
             <el-input
               v-model="queryParams.orgName"
-              placeholder="请输入单位名称"
+              placeholder="请输入组织名称"
               clearable
               size="small"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
           <el-form-item label="状态">
-            <el-select v-model="queryParams.status" placeholder="部门状态" clearable size="small">
+            <el-select v-model="queryParams.status" placeholder="组织状态" clearable size="small">
               <el-option
                 v-for="dict in statusOptions"
                 :key="dict.value"
@@ -34,7 +34,7 @@
               @click="handleQuery"
             >搜索</el-button>
             <el-button
-              v-permisaction="['admin:sysDept:add']"
+              v-permisaction="['admin:sysOrg:add']"
               class="filter-item"
               type="primary"
               icon="el-icon-plus"
@@ -84,14 +84,14 @@
           <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['admin:sysDept:edit']"
+                v-permisaction="['admin:sysOrg:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
               >修改</el-button>
               <el-button
-                v-permisaction="['admin:sysDept:add']"
+                v-permisaction="['admin:sysOrg:add']"
                 size="mini"
                 type="text"
                 icon="el-icon-plus"
@@ -99,7 +99,7 @@
               >新增</el-button>
               <!--v-if="scope.row.p_id != 0",这个属性注释掉，因为p_id根本不存在-->
               <el-button
-                v-permisaction="['admin:sysDept:remove']"
+                v-permisaction="['admin:sysOrg:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
@@ -191,7 +191,7 @@ import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
 export default {
-  name: 'SysDeptManage',
+  name: 'SysOrgManage',
   components: { Treeselect },
   data() {
     return {
