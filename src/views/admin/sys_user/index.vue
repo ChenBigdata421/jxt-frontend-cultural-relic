@@ -132,7 +132,7 @@
               <el-table-column type="selection" width="45" align="center" />
               <el-table-column label="编号" width="75" prop="userId" sortable="custom" />
               <el-table-column label="登录名" width="105" prop="userName" sortable="custom" :show-overflow-tooltip="true" />
-              <el-table-column label="昵称" prop="nickName" :show-overflow-tooltip="true" />
+              <el-table-column label="警号" prop="policeNo" :show-overflow-tooltip="true" />
               <el-table-column label="性别" prop="sexName" />
               <el-table-column label="单位" prop="orgName" :show-overflow-tooltip="true" />
               <el-table-column label="角色" prop="roleName" :show-overflow-tooltip="true" />
@@ -208,8 +208,8 @@
         <el-form ref="form" :model="form" :rules="rules" label-width="80px">
           <el-row>
             <el-col :span="12">
-              <el-form-item label="用户昵称" prop="nickName">
-                <el-input v-model="form.nickName" placeholder="请输入用户昵称" />
+              <el-form-item label="警号" prop="policeNo">
+                <el-input v-model="form.policeNo" placeholder="请输入警号" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -420,7 +420,7 @@ export default {
       // 表单校验
       rules: {
         userName: [{ required: true, message: '用户名称不能为空', trigger: 'blur' }],
-        nickName: [{ required: true, message: '用户昵称不能为空', trigger: 'blur' }],
+        policeNo: [{ required: true, message: '警号不能为空', trigger: 'blur' }],
         orgId: [{ required: true, message: '归属单位不能为空', trigger: 'blur' }],
         password: [{ required: true, message: '用户密码不能为空', trigger: 'blur' }],
         email: [
@@ -544,7 +544,7 @@ export default {
         userId: undefined,
         deptId: undefined,
         userName: undefined,
-        nickName: undefined,
+        policeNo: undefined,
         password: undefined,
         phone: undefined,
         email: undefined,
@@ -685,8 +685,8 @@ export default {
       }).then(() => {
         this.downloadLoading = true
         import('@/vendor/Export2Excel').then(excel => {
-          const tHeader = ['用户编号', '登录名', '昵称', '性别', '部门', '角色', '岗位', '手机', '邮箱', '状态', '创建时间']
-          const filterVal = ['userId', 'userName', 'nickName', 'sexName', 'deptName', 'roleName', 'postName', 'phone', 'email', 'statusName', 'createdAt']
+          const tHeader = ['用户编号', '登录名', '警号', '性别', '部门', '角色', '岗位', '手机', '邮箱', '状态', '创建时间']
+          const filterVal = ['userId', 'userName', 'policeNo', 'sexName', 'deptName', 'roleName', 'postName', 'phone', 'email', 'statusName', 'createdAt']
           const list = this.userList
           const data = formatJson(filterVal, list)
           excel.export_json_to_excel({
