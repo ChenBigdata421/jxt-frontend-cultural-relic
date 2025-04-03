@@ -486,7 +486,7 @@ export default {
     },
     // 节点单击事件
     handleNodeClick(data) {
-      this.queryParams.deptId = '/' + data.id + '/'// 比如：/0/1/7/，/0/1/7/8，通过搜索/7/，就可以将该部门以及它的下级部门都搜索出来
+      this.queryParams.orgId = '/' + data.id + '/'// 比如：/0/1/7/，/0/1/7/8，通过搜索/7/，就可以将该部门以及它的下级部门都搜索出来
       this.getList()
     },
     /** 转换菜单数据结构 ，目前没有使用，暂时保留*/
