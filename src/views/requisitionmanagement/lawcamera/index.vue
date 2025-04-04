@@ -53,7 +53,7 @@
           这意味着每个表格数据对象都可能有一个 hasChildren 字段，如果为 true，则表示该行有子节点。-->
         <el-table
           v-loading="loading"
-          :data="lawcameraCollectList"
+          :data="lawcameraRequisitionList"
           row-key="id"
           default-expand-all
           border
@@ -63,7 +63,7 @@
           <el-table-column prop="no" label="编号" width="80" />
           <el-table-column prop="name" label="名称" width="100" />
           <el-table-column prop="managerName" label="管理员" width="80" />
-          <el-table-column prop="managerDeptName" label="管理员部门" width="150" />
+          <el-table-column prop="managerDeptFullName" label="管理员部门" width="150" />
           <el-table-column prop="useState" label="领用状态" width="80">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
@@ -75,8 +75,8 @@
               >{{ useStatusFormat(scope.row) }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="requisitionorName" label="领用者" width="80" />
-          <el-table-column prop="requisitionorDeptName" label="领用者部门" width="150" />
+          <el-table-column prop="requisitionerName" label="领用者" width="80" />
+          <el-table-column prop="requisitionerDeptFullName" label="领用者部门" width="150" />
           <el-table-column
             label="操作"
             align="left"
@@ -129,12 +129,12 @@
           >
             <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
             <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
-            <el-table-column prop="no" label="执法仪编号" width="100" />
-            <el-table-column prop="name" label="执法仪名称" width="100" />
-            <el-table-column prop="requisitionorName" label="领用人" width="100" />
-            <el-table-column prop="requisitionorDeptName" label="领用人部门" width="150" />
-            <el-table-column prop="requisitionorStartTime" label="领用开始时间" width="100" />
-            <el-table-column prop="requisitionorEndTime" label="领用结束时间" width="100" />
+            <el-table-column prop="lawcameraNo" label="执法仪编号" width="100" />
+            <el-table-column prop="lawcameraName" label="执法仪名称" width="100" />
+            <el-table-column prop="requisitionerName" label="领用人" width="100" />
+            <el-table-column prop="requisitionerDeptName" label="领用人部门" width="150" />
+            <el-table-column prop="requisitionStartTime" label="领用开始时间" width="100" />
+            <el-table-column prop="requisitionEndTime" label="领用结束时间" width="100" />
           </el-table>
         </el-dialog>
         <!--显示详情-->
@@ -154,8 +154,8 @@
 </template>
 
 <script>
-import { getLawcameraCollectList, getLawCameraLogList, lawcameraCollect, lawcameraReturn } from '@/api/admin/lawcamera_collect_manage_api'
-import { deptTreeselect } from '@/api/admin/sys-dept'
+import { getLawcameraRequisitionList, getLawCameraLogList, lawcameraCollect, lawcameraReturn } from '@/api/admin/lawcamera_requisition_manage_api'
+import { orgTreeSelect } from '@/api/admin/sys-org'
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 export default {
@@ -166,7 +166,7 @@ export default {
       // 遮罩层
       loading: true,
       // 执法仪数据
-      lawcameraCollectList: [],
+      lawcameraRequisitionList: [],
       // 领用记录数据
       collectLogList: [],
       // 部门树选项
@@ -241,7 +241,7 @@ export default {
   methods: {
     /** 查询部门下拉树结构 */
     getTreeselect() {
-      deptTreeselect().then(response => {
+      orgTreeSelect().then(response => {
         this.deptOptions = response.data // 返回数组类型；[id:    label(部门名称):  children []]})，这里将返回所有部门
       })
     },
@@ -249,9 +249,9 @@ export default {
     getList() {
       this.loading = true
       this.setTempQueryParams()
-      getLawcameraCollectList(this.tempQueryParams).then(response => {
+      getLawcameraRequisitionList(this.tempQueryParams).then(response => {
         // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根部门的信息（其中孩子又是一个数组，包含若干个对象，即若干个子部门）}]
-        this.lawcameraCollectList = response.data.list
+        this.lawcameraRequisitionList = response.data.list
         this.loading = false
       })
     },

@@ -6,44 +6,17 @@
           内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
           这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="存储编号" prop="No">
+          <el-form-item label="执法仪名称" prop="Name">
             <el-input
-              v-model="queryParams.No"
-              placeholder="请输入存储编号"
+              v-model="queryParams.name"
+              placeholder="请输入执法仪名称"
               clearable
               style="width: 170px;"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="存储名称" prop="Name">
-            <el-input
-              v-model="queryParams.Name"
-              placeholder="请输入存储名称"
-              clearable
-              style="width: 170px;"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="管理员" prop="AdminPoliceName">
-            <el-input
-              v-model="queryParams.AdminPoliceName"
-              placeholder="请输入管理员"
-              clearable
-              style="width: 170px;"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="归属单位" prop="OrgName">
-            <el-input
-              v-model="queryParams.OrgName"
-              placeholder="请输入归属单位"
-              clearable
-              style="width: 170px;"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="状态" prop="State">
-            <el-select v-model="queryParams.State" placeholder="状态" clearable style="width: 170px;">
+          <el-form-item label="状态">
+            <el-select v-model="queryParams.state" placeholder="执法仪状态" clearable style="width: 170px;">
               <el-option
                 v-for="dict in stateOptions"
                 :key="dict.value"
@@ -53,14 +26,15 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="品牌名称" prop="BrandName">
-            <el-input
-              v-model="queryParams.BrandName"
-              placeholder="请输入品牌名称"
-              clearable
-              style="width: 170px;"
-              @keyup.enter.native="handleQuery"
-            />
+          <el-form-item label="是否可用">
+            <el-select v-model="queryParams.enableUse" placeholder="是否可用" clearable style="width: 170px;">
+              <el-option
+                v-for="dict in enableUseOptions"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+              />
+            </el-select>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
@@ -84,7 +58,7 @@
               type="success"
               icon="el-icon-edit"
               size="mini"
-              :disabled="UpdateDisabled"
+              :disabled="single"
               @click="handleUpdate"
             >修改</el-button>
           </el-col>
@@ -94,7 +68,7 @@
               type="danger"
               icon="el-icon-delete"
               size="mini"
-              :disabled="DeleteDisabled"
+              :disabled="multiple"
               @click="handleDelete"
             >删除</el-button>
           </el-col>
@@ -118,7 +92,7 @@
           这意味着每个表格数据对象都可能有一个 hasChildren 字段，如果为 true，则表示该行有子节点。-->
         <el-table
           v-loading="loading"
-          :data="StorageList"
+          :data="lawCameraList"
           border
           @selection-change="handleSelectionChange"
           @sort-change="handleSortChang"
@@ -126,13 +100,22 @@
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column type="selection" width="55" align="center" />
-          <el-table-column prop="Name" label="名称" width="100" />
-          <el-table-column prop="No" label="编号" width="100" />
-          <el-table-column prop="BrandName" label="品牌名称" width="100" />
-          <el-table-column prop="Ip" label="Ip" width="100" />
-          <el-table-column prop="AdminPoliceName" label="管理员" width="100" />
-          <el-table-column prop="OrgName" label="归属单位" width="100" />
-          <el-table-column prop="State" label="状态" width="100">
+          <el-table-column prop="no" label="编号" width="80" />
+          <el-table-column prop="name" label="名称" width="100" />
+          <el-table-column prop="managerName" label="管理员" width="80" />
+          <el-table-column prop="managerDeptFullName" label="管理员部门" width="150" />
+          <el-table-column prop="enableUse" label="是否可用" width="100">
+            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
+            <template slot-scope="scope">
+              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
+                否则为 'success'（通常显示为绿色）。-->
+              <el-tag
+                :type="scope.row.enableUse === 1 ? 'success' : 'danger'"
+                disable-transitions
+              >{{ enableUseFormat(scope.row) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="state" label="状态" width="100">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
               <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
@@ -142,13 +125,17 @@
               >{{ stateFormat(scope.row) }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="System" label="操作系统" width="100" />
-          <el-table-column prop="Version" label="版本" width="60" />
+          <el-table-column prop="cpu" label="Cpu" width="100" />
+          <el-table-column prop="memory" label="内存(G)" width="100" />
+          <el-table-column prop="disk" label="存储(G)" width="100" />
+          <el-table-column prop="system" label="操作系统" width="100" />
+          <el-table-column prop="version" label="版本" width="100" />
+          <el-table-column prop="remark" label="备注" width="100" />
           <el-table-column
             label="操作"
             align="left"
             class-name="small-padding fixed-width"
-            width="180"
+            width="150"
           >
             <template slot-scope="scope">
               <el-button
@@ -186,97 +173,104 @@
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
-        <el-dialog :title="title" :visible.sync="open" width="700px" :close-on-click-modal="false">
+        <el-dialog :title="title" :visible.sync="open" width="600px" :close-on-click-modal="false">
           <el-form ref="form" :model="form" :rules="rules" label-width="80px">
             <el-row>
               <el-col :span="12">
-                <el-form-item label="名称" prop="Name" label-width="100px">
-                  <el-input v-model="form.Name" placeholder="请输入名称" />
+                <el-form-item label="归属部门" prop="managerDeptId">
+                  <treeselect
+                    v-model="form.managerDeptId"
+                    :options="deptOptions"
+                    placeholder="请选择归属部门"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="编号" prop="No" label-width="100px">
-                  <el-input v-model="form.No" placeholder="请输入编号" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <!-- prop="deptName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 deptName 规则进行校验。-->
-                <el-form-item label="品牌名称" prop="BrandName" label-width="100px">
-                  <el-input v-model="form.BrandName" placeholder="请输入品牌名称" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="IP" prop="Ip" label-width="100px">
-                  <el-input v-model="form.Ip" placeholder="请输入IP" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="地址" prop="Address" label-width="100px">
-                  <el-input v-model="form.Address" placeholder="请输入品牌地址" />
+                <el-form-item label="管理人员">
+                  <!--前缀为 $ 的方法和属性通常表示它们是 Vue 实例的内置属性或方法。这些方法和属性是 Vue 框架提供的，用户不需要自己定义或实现。-->
+                  <el-select v-model="form.managerId" placeholder="请选择" @change="$forceUpdate()">
+                    <el-option
+                      v-for="item in userOptions"
+                      :key="item.userId"
+                      :label="item.userName"
+                      :value="item.userId"
+                    />
+                  </el-select>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <!-- prop="deptName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 deptName 规则进行校验。-->
-                <el-form-item label="播放地址" prop="Http" label-width="100px">
-                  <el-input v-model="form.Http" placeholder="请输入播放地址" />
+                <el-form-item label="名称" prop="Name">
+                  <el-input v-model="form.name" placeholder="请输入名称" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <!-- prop="deptName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 deptName 规则进行校验。-->
-                <el-form-item label="管理员" prop="AdminPoliceName" label-width="100px">
-                  <el-input v-model="form.AdminPoliceName" placeholder="请输入管理员" />
+                <el-form-item label="编号" prop="No">
+                  <el-input v-model="form.no" placeholder="请输入编号" :disabled="title === '修改执法仪'" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="归属单位" prop="OrgName" label-width="100px">
-                  <el-input v-model="form.OrgName" placeholder="请输入归属单位" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="状态" label-width="100px">
+                <el-form-item label="是否可用">
                   <!--当用户选择一个单选按钮时，form.status 的值将被更新为该按钮的 label（或者更准确地说是 :label 绑定的值）。-->
-                  <el-radio-group v-model="form.State">
+                  <el-radio-group v-model="form.enableUse">
                     <el-radio
-                      v-for="dict in stateOptions"
-                      :key="dict.value"
-                      :label="dict.value"
+                      v-for="dict in enableUseOptions"
+                      :key="parseInt(dict.value)"
+                      :label="parseInt(dict.value)"
                     >{{ dict.label }}</el-radio>
                   </el-radio-group>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="在线总时长" label-width="100px">
-                  <el-input-number v-model="form.OnlineTimeTotal" placeholder="请输入在线总时长" />
+                <el-form-item label="状态">
+                  <!--当用户选择一个单选按钮时，form.status 的值将被更新为该按钮的 label（或者更准确地说是 :label 绑定的值）。-->
+                  <el-radio-group v-model="form.state">
+                    <el-radio
+                      v-for="dict in stateOptions"
+                      :key="parseInt(dict.value)"
+                      :label="parseInt(dict.value)"
+                    >{{ dict.label }}</el-radio>
+                  </el-radio-group>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="CPU" label-width="100px">
-                  <el-input v-model="form.Cpu" placeholder="请输入CPU" />
+                <el-form-item label="CPU">
+                  <el-input v-model="form.cpu" placeholder="请输入CPU" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="内存(G)" label-width="100px">
-                  <el-input-number v-model="form.Memory" placeholder="请输入内存大小" />
+                <el-form-item label="内存(G)">
+                  <el-input-number v-model="form.memory" placeholder="请输入内存大小" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="购置时间" label-width="100px">
-                  <el-input v-model="form.BuyTime" placeholder="请输入购置时间" />
+                <el-form-item label="存储(G)">
+                  <el-input-number v-model="form.disk" placeholder="请输入磁盘大小" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="操作系统" label-width="100px">
-                  <el-input v-model="form.System" placeholder="操作系统" maxlength="20" />
+                <el-form-item label="网卡">
+                  <el-input v-model="form.networkCard" placeholder="请输入网卡型号" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="版本" label-width="100px">
-                  <el-input v-model="form.Version" placeholder="版本" maxlength="20" />
+                <el-form-item label="USB数量">
+                  <el-input-number v-model="form.usbNum" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="备注" label-width="100px">
-                  <el-input v-model="form.Remark" />
+                <el-form-item label="操作系统">
+                  <el-input v-model="form.system" placeholder="操作系统" maxlength="20" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="版本">
+                  <el-input v-model="form.version" placeholder="版本" maxlength="20" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="备注">
+                  <el-input v-model="form.remark" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -290,115 +284,80 @@
 
         <!--显示详情-->
         <el-dialog :title="title" :visible.sync="ViewOpen" width="593px" :close-on-click-modal="false">
-          <el-tabs v-model="ActiveLab">
-            <el-tab-pane label="存储信息" name="first">
-              <el-table
-                v-loading="loading"
-                :data="AttributeValueList"
-                border
-              >
-                <el-table-column prop="AttributeName" label="属性" width="100" align="center" />
-                <el-table-column prop="Value" label="值" width="450" align="center" />
-              </el-table>
-            </el-tab-pane>
-            <el-tab-pane label="存储配置" name="second">
-              <el-table
-                v-loading="loading"
-                :data="AttributeValueConfigList"
-                border
-              >
-                <el-table-column prop="AttributeName" label="属性" width="200" align="center" />
-                <el-table-column prop="Value" label="值" width="350" align="center" />
-              </el-table>
-            </el-tab-pane>
-          </el-tabs>
+          <el-table
+            v-loading="loading"
+            :data="AttributeValueList"
+            border
+          >
+            <el-table-column prop="AttributeName" label="属性" width="100" align="center" />
+            <el-table-column prop="Value" label="值" width="450" align="center" />
+          </el-table>
         </el-dialog>
       </el-card>
     </template>
   </BasicLayout>
 </template>
-
 <script>
-import { listEquipmentStorage, delEquipmentStorage, getEquipmentStorage, getEquipmentStorageConfig, addEquipmentStorage, updateEquipmentStorage } from '@/api/admin/equipment_manage_api'
+import { getEquipmentLawcameraList, getEquipmentLawcamera, delEquipmentLawcamera, addEquipmentLawcamera, updateEquipmentLawcamera } from '@/api/admin/equipment_manage_api'
 import { formatJson } from '@/utils'
-
+import { orgTreeSelect } from '@/api/admin/sys-org'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import { listUser } from '@/api/admin/sys-user'
 export default {
   name: 'LawCarema',
-  components: {
-
-  },
+  components: { Treeselect },
   data() {
     return {
       // 遮罩层
       loading: true,
+      firstLoad: null,
       // 选中数组
-      StorageIds: [],
-      // 可否修改
-      UpdateDisabled: true,
-      // 可否删除
-      DeleteDisabled: true,
+      LawCameraIds: [],
+      // 非单个禁用
+      single: true,
+      // 非多个禁用
+      multiple: true,
       // 总条数
       total: 0,
       // 执法仪数据
-      StorageList: [],
+      lawCameraList: [],
       // 状态数据字典
       stateOptions: [],
+      // 是否可用数据字典
+      enableUseOptions: [],
       // 弹出层标题
       title: '',
       isEdit: false,
-      // 是否显示增加存储对话框
+      // 是否显示增加执法仪对话框
       open: false,
-      // 是否显示查看存储详情对话框
       ViewOpen: false,
-      ActiveLab: 'first',
-      SelectedRow: undefined,
+      // 部门树选项
+      deptOptions: undefined,
+      userOptions: undefined,
       // 查询参数
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
-        No: undefined,
-        Name: undefined,
-        AdminPoliceName: undefined,
-        OrgName: undefined,
-        State: undefined,
-        BrandName: undefined
+        Name: undefined
       },
       AttributeValueList: [],
-      AttributeValueConfigList: [],
+      ColumnNameConvert: new Map([
+        ['no', '编号'],
+        ['name', '名称'],
+        ['cpu', 'CPU'],
+        ['memory', '内存(G)'],
+        ['disk', '存储(G)'],
+        ['networkCard', '网卡'],
+        ['usbNum', 'USB数量'],
+        ['system', '操作系统'],
+        ['version', '版本'],
+        ['buyTime', '购买时间'],
+        ['remark', '备注']
+      ]),
       // 表单参数
       form: {
-        State: '1'
       },
-      ColumnNameConvert: new Map([
-        ['Id', '主键ID'],
-        ['No', '编号'],
-        ['Name', '名称'],
-        ['Ip', 'IP地址'],
-        ['Http', '播放地址'],
-        ['Address', '详细地址'],
-        ['AdminPoliceName', '管理员'],
-        ['Cpu', 'CPU'],
-        ['Memory', '内存'],
-        ['BuyTime', '购置时间'],
-        ['System', '操作系统'],
-        ['Version', '版本号'],
-        ['Remark', '备注'],
-        ['BrandName', '品牌名称'],
-        ['OnlineTimeTotal', '在线总时长'],
-        ['OrgName', '归属单位'],
-        ['State', '状态']
-      ]),
-      ColumnNameConfigConvert: new Map([
-        ['Id', '主键ID'],
-        ['StorageName', '存储服务器名称'],
-        ['FtpUsername', 'FTP用户名'],
-        ['FtpPassword', 'FTP密码'],
-        ['FtpPort', 'FTP端口'],
-        ['HeartBeatTimeSpace', '心跳包间隔时间'],
-        ['FileRootPath', '文件保存路径'],
-        ['UploadSpeed', '上传文件速率'],
-        ['ExpiryTime', '到期时间']
-      ]),
       // 表单校验,触发时机（trigger: 'blur'）：当输入框失去焦点（blur 事件）时触发验证。
       rules: {
         no: [
@@ -408,19 +367,35 @@ export default {
 
     }
   },
+  watch: {
+    'form.managerDeptId': function(newVal) {
+      // 当 form.managerDeptId 更新时，调用 getUser
+      if (newVal) {
+        if (this.firstLoad !== true) { // 首次打开对话框，不需要清空管理人员
+          this.form.managerId = null // 清空管理人员选择
+        }
+        this.firstLoad = false
+        this.getUser()
+      }
+    }
+  },
   created() {
     this.getList()
-    this.getDicts('site_status').then(response => {
+    this.getTreeselect()
+    this.getDicts('lawcamera_state').then(response => {
       this.stateOptions = response.data
+    })
+    this.getDicts('enableuse_state').then(response => {
+      this.enableUseOptions = response.data
     })
   },
   methods: {
-    /** 查询存储列表 */
+    /** 查询执法仪列表 */
     getList() {
       this.loading = true
-      listEquipmentStorage(this.queryParams).then(response => {
+      getEquipmentLawcameraList(this.queryParams).then(response => {
         // 注意：response.data是数组类型，数组的元素是对象
-        this.StorageList = response.data.list
+        this.lawCameraList = response.data.list
         this.total = response.data.count
         this.loading = false
       })
@@ -428,28 +403,44 @@ export default {
 
     // 字典状态字典翻译
     stateFormat(row) {
-      return this.selectDictLabel(this.stateOptions, parseInt(row.State))
+      return this.selectDictLabel(this.stateOptions, parseInt(row.state))
+    },
+    // 字典状态字典翻译
+    enableUseFormat(row) {
+      return this.selectDictLabel(this.enableUseOptions, parseInt(row.enableUse))
+    },
+    /** 查询部门下拉树结构 */
+    getTreeselect() {
+      orgTreeSelect().then(response => {
+        this.deptOptions = response.data // 返回数组类型；[id:    label(部门名称):  children []]})，这里将返回所有部门
+      })
+    },
+    getUser() {
+      listUser({ deptId: '/' + this.form.managerDeptId + '/' }).then(response => {
+        this.userOptions = response.data.list
+      })
     },
 
     // 表单重置
     reset() {
       this.form = {
-        No: undefined,
-        Name: undefined,
-        Ip: undefined,
-        Http: undefined,
-        Address: undefined,
-        AdminPoliceName: undefined,
-        Cpu: undefined,
-        Memory: undefined,
-        BuyTime: undefined,
-        System: undefined,
-        Version: undefined,
-        Remark: undefined,
-        BrandName: undefined,
-        OnlineTimeTotal: undefined,
-        OrgName: undefined,
-        State: '1'
+        managerDeptId: undefined,
+        managerId: undefined,
+        requisitionorDeptId: undefined,
+        requisitionorId: undefined,
+        name: undefined,
+        no: undefined,
+        enableUse: undefined,
+        state: undefined,
+        cpu: undefined,
+        memory: undefined,
+        disk: undefined,
+        networkCard: undefined,
+        usbNum: undefined,
+        system: undefined,
+        version: undefined,
+        buyTime: undefined,
+        remark: undefined
       }
       this.resetForm('form')
     },
@@ -469,15 +460,15 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.StorageIds = selection.map(item => item.Id)
-      this.UpdateDisabled = selection.length !== 1
-      this.DeleteDisabled = !selection.length
+      this.LawCameraIds = selection.map(item => item.id)
+      this.single = selection.length !== 1
+      this.multiple = !selection.length
     },
     /** 新增按钮操作*/
     handleAdd(row) {
       this.reset()
       this.open = true
-      this.title = '添加存储'
+      this.title = '添加执法仪'
       this.isEdit = false
     },
 
@@ -493,14 +484,15 @@ export default {
       }
       this.getList()
     },
-    /** 修改按钮操作 ,该函数可以优化，没有必要从服务端获取数据。查询到的所有记录都缓存在了前端*/
+
+    /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset()
-      const StorageId = row.Id || this.StorageIds
-      getEquipmentStorage(StorageId).then(response => {
+      this.firstLoad = true
+      const LawCameraId = row.id || this.LawCameraIds
+      getEquipmentLawcamera(LawCameraId).then(response => {
         this.form = response.data
-        this.form.State = String(this.form.State)
-        this.title = '修改存储'
+        this.title = '修改执法仪'
         this.isEdit = true
         this.open = true
       })
@@ -513,28 +505,21 @@ export default {
           AttributeName: this.ColumnNameConvert.get(key),
           Value: row[key]
         }
-        this.AttributeValueList.push(attributeValue)
-      })
-      this.AttributeValueConfigList = []
-      getEquipmentStorageConfig(row.Id).then(response => {
-        Object.keys(response.data).forEach(key => {
-          const attributeValue = {
-            AttributeName: this.ColumnNameConfigConvert.get(key),
-            Value: response.data[key]
-          }
-          this.AttributeValueConfigList.push(attributeValue)
-        })
+        if (attributeValue.AttributeName !== undefined) {
+          this.AttributeValueList.push(attributeValue)
+        }
       })
       this.ViewOpen = true
-      this.title = ''
+      this.title = '执法仪信息'
     },
     /** 提交按钮 */
     submitForm: function() {
       this.$refs['form'].validate(valid => {
         if (valid) {
-          this.form.State = parseInt(this.form.State)
-          if (this.form.Id !== undefined) {
-            updateEquipmentStorage(this.form, this.form.Id).then(response => {
+          this.form.state = parseInt(this.form.state)
+          this.form.enableUse = parseInt(this.form.enableUse)
+          if (this.form.id !== undefined) {
+            updateEquipmentLawcamera(this.form, this.form.id).then(response => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
                 this.open = false
@@ -544,7 +529,7 @@ export default {
               }
             })
           } else {
-            addEquipmentStorage(this.form).then(response => {
+            addEquipmentLawcamera(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
                 this.open = false
@@ -559,13 +544,13 @@ export default {
     },
 
     handleDelete(row) {
-      const StorageId = (row.Id && [row.Id]) || this.StorageIds
-      this.$confirm('是否确认删除存储编号为"' + StorageId + '"的数据项?', '警告', {
+      const LawCameraId = (row.id && [row.id]) || this.LawCameraIds
+      this.$confirm('是否确认删除执法仪编号为"' + LawCameraId + '"的数据项?', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(function() {
-        return delEquipmentStorage({ 'ids': StorageId })
+        return delEquipmentLawcamera({ 'ids': LawCameraId })
       }).then((response) => {
         this.getList()
         this.msgSuccess(response.msg)
@@ -574,21 +559,21 @@ export default {
 
     /** 导出按钮操作 */
     handleExport() {
-      this.$confirm('是否确认导出所有存储数据项?', '警告', {
+      this.$confirm('是否确认导出所有执法仪数据项?', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
         this.downloadLoading = true
         import('@/vendor/Export2Excel').then(excel => {
-          const tHeader = ['主键ID', '编号', '名称', 'IP地址', '播放地址', '详细地址', '管理员', 'CPU', '内存', '购置时间', '操作系统', '版本号', '备注', '品牌名称', '在线总时长', '归属单位', '状态']
-          const filterVal = ['Id', 'No', 'Name', 'Ip', 'Http', 'Address', 'AdminPoliceName', 'Cpu', 'Memory', 'BuyTime', 'System', 'Version', 'Remark', 'BrandName', 'OnlineTimeTotal', 'OrgName', 'State']
-          const list = this.StorageList
+          const tHeader = ['工程ID', '编号', '名称', 'CPU', '内存', '存储', '网卡', 'USB数量', '操作系统', '购置时间', '版本', '备注']
+          const filterVal = ['FactoryId', 'No', 'Name', 'Cpu', 'Memory', 'Disk', 'NetworkCard', 'UsbNum', 'System', 'BuyTime', 'Version', 'Remark']
+          const list = this.lawCameraList
           const data = formatJson(filterVal, list)
           excel.export_json_to_excel({
             header: tHeader,
             data,
-            filename: '存储列表',
+            filename: '执法仪列表',
             autoWidth: true, // Optional
             bookType: 'xlsx' // Optional
           })

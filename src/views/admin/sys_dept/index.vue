@@ -179,7 +179,7 @@
 </template>
 
 <script>
-import { getDeptList, getDept, delDept, addDept, updateDept } from '@/api/admin/sys-dept'
+import { getDeptList, getDept, delDept, addDept, updateDept } from '@/api/admin/sys-org'
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 

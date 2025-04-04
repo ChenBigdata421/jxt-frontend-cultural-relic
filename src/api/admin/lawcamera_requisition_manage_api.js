@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 // 查询可以领用的执法仪列表
-export function getLawcameraCollectList(query) {
+export function getLawcameraRequisitionList(query) {
   return request({
     url: '/api/v1/equipment/lawcamera/getRequisition',
     method: 'get',

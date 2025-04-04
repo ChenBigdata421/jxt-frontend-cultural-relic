@@ -272,7 +272,7 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="购置时间" label-width="100px">
-                  <el-input v-model="form.BuyTime" placeholder="请输入购置时间" />
+                  <el-date-picker v-model="form.BuyTime" type="datetime" placeholder="请输入购置时间" format="yyyy-MM-ddTHH:mm:ssZ" value-format="yyyy-MM-ddTHH:mm:ssZ"></el-date-picker>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
