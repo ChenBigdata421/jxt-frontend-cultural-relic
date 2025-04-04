@@ -93,7 +93,7 @@
                 @click="handleCollect(scope.row)"
               >领用</el-button>
               <el-button
-                v-if="scope.row.useState !== 0 && userId === scope.row.Id"
+                v-if="scope.row.useState !== 0 && userId === scope.row.requisitionerId"
                 v-permisaction="['admin:sysRole:update']"
                 size="mini"
                 type="text"
