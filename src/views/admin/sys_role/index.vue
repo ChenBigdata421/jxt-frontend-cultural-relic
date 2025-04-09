@@ -287,11 +287,11 @@ export default {
         },
         {
           value: '3',
-          label: '本部门数据权限'
+          label: '本组织数据权限'
         },
         {
           value: '4',
-          label: '本部门及以下数据权限'
+          label: '本组织及以下数据权限'
         },
         {
           value: '5',
@@ -383,7 +383,7 @@ export default {
       console.log('目前选中的全部菜单节点', allCheckedKeys)
       return allCheckedKeys
     },
-    
+
     // 所有单位节点数据
     getOrgAllCheckedKeys() {
       // 目前被选中的单位节点

@@ -52,6 +52,7 @@
           <el-form-item>
             <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
             <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+            <el-button v-permisaction="['admin:sysApi:create']" icon="el-icon-plus" size="mini" @click="handleAdd">新增</el-button>
           </el-form-item>
         </el-form>
 
@@ -85,6 +86,7 @@
             header-align="center"
             align="left"
             prop="path"
+            width="500px"
             sortable="custom"
             :show-overflow-tooltip="true"
           >
@@ -129,7 +131,7 @@
           <el-table-column
             label="操作"
             align="center"
-            width="80px"
+            width="150px"
             class-name="small-padding fixed-width"
           >
             <template slot-scope="scope">
@@ -140,6 +142,14 @@
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
               >修改
+              </el-button>
+              <el-button
+                v-permisaction="['admin:sysApi:remove']"
+                size="mini"
+                type="text"
+                icon="el-icon-edit"
+                @click="handleDelete(scope.row)"
+              >删除
               </el-button>
             </template>
           </el-table-column>

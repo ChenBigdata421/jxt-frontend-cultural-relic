@@ -8,7 +8,7 @@ export function getOrgList(query) {
   })
 }
 
-// 查询部门详细
+// 查询组织详细
 export function getOrg(orgId) {
   return request({
     url: '/api/v1/org/' + orgId,
@@ -16,7 +16,7 @@ export function getOrg(orgId) {
   })
 }
 
-// 查询部门下拉树结构
+// 查询组织下拉树结构
 export function orgTreeselect() {
   return request({
     url: '/api/v1/org/orgTreeSelect',
@@ -24,7 +24,7 @@ export function orgTreeselect() {
   })
 }
 
-// 根据角色ID查询部门树结构
+// 根据角色ID查询组织树结构
 export function orgRoleTreeselect(roleId) {
   return request({
     url: '/api/v1/orgRoleTreeselect/' + roleId,
@@ -32,7 +32,7 @@ export function orgRoleTreeselect(roleId) {
   })
 }
 
-// 新增部门
+// 新增组织
 export function addOrg(data) {
   return request({
     url: '/api/v1/org',
@@ -41,7 +41,7 @@ export function addOrg(data) {
   })
 }
 
-// 修改部门
+// 修改组织
 export function updateOrg(data, id) {
   return request({
     url: '/api/v1/org/' + id,
@@ -50,7 +50,7 @@ export function updateOrg(data, id) {
   })
 }
 
-// 删除部门
+// 删除组织
 export function delOrg(data) {
   return request({
     url: '/api/v1/org',

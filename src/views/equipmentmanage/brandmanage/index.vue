@@ -60,7 +60,7 @@
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:add']"
+              v-permisaction="['equipment:brand:create']"
               type="primary"
               icon="el-icon-plus"
               size="mini"
@@ -69,7 +69,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:update']"
+              v-permisaction="['equipment:brand:edit']"
               type="success"
               icon="el-icon-edit"
               size="mini"
@@ -79,7 +79,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:remove']"
+              v-permisaction="['equipment:brand:remove']"
               type="danger"
               icon="el-icon-delete"
               size="mini"
@@ -89,7 +89,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:export']"
+              v-permisaction="['equipment:brand:export']"
               type="warning"
               icon="el-icon-download"
               size="mini"
@@ -137,14 +137,14 @@
           >
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['admin:sysRole:update']"
+                v-permisaction="['equipment:brand:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
               >修改</el-button>
               <el-button
-                v-permisaction="['admin:sysRole:remove']"
+                v-permisaction="['equipment:brand:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
@@ -260,7 +260,6 @@ export default {
           this.loading = false
         }
       )
-      console.log(this.equipmentBrandList)
     },
     // 取消按钮
     cancel() {
@@ -315,7 +314,6 @@ export default {
       } else {
         this.queryParams[prop + 'Order'] = undefined
       }
-      console.log(this.queryParams)
       this.getList()
     },
     /** 修改按钮操作 */

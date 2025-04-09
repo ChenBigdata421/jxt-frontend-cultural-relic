@@ -5,23 +5,48 @@
         <!--inline 属性被绑定为 true，这意味着该 <el-form> 组件将以内联形式呈现。
           内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
           这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
-        <el-form :inline="true" :model="queryParams">
-          <el-form-item label="执法仪别名">
+        <el-form ref="queryForm" :model="queryParams" :inline="true">
+          <el-form-item label="执法仪编号" prop="No">
             <el-input
-              v-model="queryParams.name"
-              placeholder="请输入执法仪别名"
+              v-model="queryParams.no"
+              placeholder="请输入执法仪编号"
               clearable
               style="width: 170px;"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="归属部门">
+          <el-form-item label="执法仪名称" prop="Name">
+            <el-input
+              v-model="queryParams.name"
+              placeholder="请输入执法仪名称"
+              clearable
+              style="width: 170px;"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="管理组织" prop="managerOrgId">
             <treeselect
-              v-model="queryParams.managerDeptId"
-              :options="deptOptions"
-              placeholder="请选择归属部门"
+              v-model="queryParams.managerOrgId"
+              :options="orgOptions"
+              placeholder="请选择管理组织"
               style="width: 170px;"
             />
+          </el-form-item>
+          <el-form-item label="管理人员">
+            <el-select
+              v-model="queryParams.managerId"
+              placeholder="请选择管理人员"
+              style="width: 170px;"
+              clearable
+              @change="$forceUpdate()"
+            >
+              <el-option
+                v-for="item in userOptions"
+                :key="item.userId"
+                :label="item.userName"
+                :value="item.userId"
+              />
+            </el-select>
           </el-form-item>
           <el-form-item label="使用状态">
             <el-select v-model="queryParams.useState" placeholder="使用状态" clearable style="width: 170px;">
@@ -34,16 +59,11 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button
-              class="filter-item"
-              type="primary"
-              icon="el-icon-search"
-              size="mini"
-              @click="handleQuery"
-            >搜索</el-button>
+            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
           </el-form-item>
         </el-form>
-        <!--deptList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
+        <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
         <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 id
           作为每行数据的唯一键。这有助于 Vue 跟踪每行数据的变化，提高渲染性能。-->
         <!--tree-props 是一个对象，用于指定树形表格的数据结构。
@@ -62,8 +82,8 @@
           <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column prop="no" label="编号" width="80" />
           <el-table-column prop="name" label="名称" width="100" />
-          <el-table-column prop="managerName" label="管理员" width="80" />
-          <el-table-column prop="managerDeptFullName" label="管理员部门" width="150" />
+          <el-table-column prop="managerName" label="管理人员" width="80" />
+          <el-table-column prop="managerOrgFullName" label="管理组织" width="300" />
           <el-table-column prop="useState" label="领用状态" width="80">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
@@ -76,7 +96,7 @@
             </template>
           </el-table-column>
           <el-table-column prop="requisitionerName" label="领用者" width="80" />
-          <el-table-column prop="requisitionerDeptFullName" label="领用者部门" width="150" />
+          <el-table-column prop="requisitionerOrgFullName" label="领用者组织" width="300" />
           <el-table-column
             label="操作"
             align="left"
@@ -86,15 +106,15 @@
             <template slot-scope="scope">
               <el-button
                 v-if="scope.row.useState === 0"
-                v-permisaction="['admin:sysRole:update']"
+                v-permisaction="['lawcamera:requisition']"
                 size="mini"
                 type="text"
                 icon="el-icon-setting"
-                @click="handleCollect(scope.row)"
+                @click="handleRequisition(scope.row)"
               >领用</el-button>
               <el-button
                 v-if="scope.row.useState !== 0 && userId === scope.row.requisitionerId"
-                v-permisaction="['admin:sysRole:update']"
+                v-permisaction="['lawcamera:return']"
                 size="mini"
                 type="text"
                 icon="el-icon-setting"
@@ -102,27 +122,27 @@
                 @click="handleReturn(scope.row)"
               >退还</el-button>
               <el-button
-                v-permisaction="['admin:sysRole:update']"
+                v-permisaction="['lawcamera:info']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row)"
               >执法仪信息</el-button>
               <el-button
-                v-permisaction="['admin:sysRole:remove']"
+                v-permisaction="['lawcamera:requisitionrecord']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
-                @click="collectLog(scope.row.no)"
+                @click="requisitionLog(scope.row.no)"
               >领用记录</el-button>
             </template>
           </el-table-column>
         </el-table>
         <!--展示领用记录-->
-        <el-dialog :title="title" :visible.sync="collectLogOpen" width="1000px" :close-on-click-modal="false">
+        <el-dialog :title="title" :visible.sync="requisitionLogOpen" width="800px" :close-on-click-modal="false">
           <el-table
             v-loading="loading"
-            :data="collectLogList"
+            :data="requisitionLogList"
             row-key="id"
             default-expand-all
             border
@@ -132,7 +152,7 @@
             <el-table-column prop="lawcameraNo" label="执法仪编号" width="100" />
             <el-table-column prop="lawcameraName" label="执法仪名称" width="100" />
             <el-table-column prop="requisitionerName" label="领用人" width="100" />
-            <el-table-column prop="requisitionerDeptName" label="领用人部门" width="150" />
+            <el-table-column prop="requisitionerOrgName" label="领用人组织" width="250" />
             <el-table-column prop="requisitionStartTime" label="领用开始时间" width="100" />
             <el-table-column prop="requisitionEndTime" label="领用结束时间" width="100" />
           </el-table>
@@ -154,12 +174,13 @@
 </template>
 
 <script>
-import { getLawcameraRequisitionList, getLawCameraLogList, lawcameraCollect, lawcameraReturn } from '@/api/admin/lawcamera_requisition_manage_api'
+import { getLawcameraRequisitionList, getLawCameraLogList, lawcameraRequisition, lawcameraReturn } from '@/api/admin/lawcamera_requisition_manage_api'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import { listUser } from '@/api/admin/sys-user'
 export default {
-  name: 'LawCaremaCollect',
+  name: 'LawCaremaRequisition',
   components: { Treeselect },
   data() {
     return {
@@ -168,9 +189,10 @@ export default {
       // 执法仪数据
       lawcameraRequisitionList: [],
       // 领用记录数据
-      collectLogList: [],
-      // 部门树选项
-      deptOptions: undefined,
+      requisitionLogList: [],
+      // 组织树选项
+      orgOptions: undefined,
+      userOptions: undefined,
       // 弹出层标题
       title: '',
       isEdit: false,
@@ -178,7 +200,7 @@ export default {
       open: false,
       ViewOpen: false,
       // 是否显示领用记录对话框
-      collectLogOpen: false,
+      requisitionLogOpen: false,
       // 状态数据字典
       stateOptions: [],
       // 是否可用数据字典
@@ -186,12 +208,8 @@ export default {
       // 查询参数
       queryParams: {
         name: undefined,
-        managerDeptId: undefined,
-        useState: undefined
-      },
-      tempQueryParams: {
-        name: undefined,
-        managerDeptId: undefined,
+        managerOrgId: undefined,
+        managerId: undefined,
         useState: undefined
       },
       AttributeValueList: [],
@@ -224,8 +242,17 @@ export default {
     userId() {
       return this.$store.state.user.userid
     },
-    deptId() {
-      return this.$store.state.user.deptid
+    orgId() {
+      return this.$store.state.user.orgid
+    }
+  },
+  watch: {
+    'queryParams.managerOrgId': function(newVal) {
+      // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
+      if (newVal) {
+        this.queryParams.managerId = null // 清空管理人员选择
+        this.getQueryUser()
+      }
     }
   },
   created() {
@@ -239,31 +266,23 @@ export default {
     })
   },
   methods: {
-    /** 查询部门下拉树结构 */
+    /** 查询组织下拉树结构 */
     getTreeselect() {
       orgTreeSelect().then(response => {
-        this.deptOptions = response.data // 返回数组类型；[id:    label(部门名称):  children []]})，这里将返回所有部门
+        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
       })
     },
     /** 查询执法仪列表 */
     getList() {
       this.loading = true
-      this.setTempQueryParams()
-      getLawcameraRequisitionList(this.tempQueryParams).then(response => {
-        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根部门的信息（其中孩子又是一个数组，包含若干个对象，即若干个子部门）}]
+      getLawcameraRequisitionList(this.queryParams).then(response => {
+        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
         this.lawcameraRequisitionList = response.data.list
         this.loading = false
       })
     },
-    setTempQueryParams() { // 因为queryParams与treeselect绑定，为了不影响treeselect，所以引入一个临时变量tempQueryParams
-      this.tempQueryParams.name = this.queryParams.name
-      if (this.queryParams.managerDeptId !== undefined) {
-        this.tempQueryParams.managerDeptId = '/' + this.queryParams.managerDeptId + '/'
-      }
-      this.tempQueryParams.useState = this.queryParams.useState
-    },
-    handleCollect(row) {
-      lawcameraCollect({ id: row.id }).then(response => {
+    handleRequisition(row) {
+      lawcameraRequisition({ id: row.id }).then(response => {
         if (response.msg === '领用成功') {
           this.$confirm('领用成功！', '信息', {
             confirmButtonText: '确定',
@@ -271,6 +290,16 @@ export default {
           }).then(this.getList())
         }
       })
+    },
+    getQueryUser() {
+      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(response => {
+        this.userOptions = response.data.list
+      })
+    },
+    /** 重置按钮操作 */
+    resetQuery() {
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
     handleReturn(row) {
       lawcameraReturn({ id: row.id }).then(response => {
@@ -299,11 +328,11 @@ export default {
     },
 
     /** 查询领用记录 */
-    getCollectLog(no) {
+    getRequisitionLog(no) {
       this.loading = true
       getLawCameraLogList({ no: no }).then(response => {
-        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根部门的信息（其中孩子又是一个数组，包含若干个对象，即若干个子部门）}]
-        this.collectLogList = response.data.list
+        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
+        this.requisitionLogList = response.data.list
         this.loading = false
       })
     },
@@ -340,10 +369,10 @@ export default {
       this.getList()
     },
     /** 查看领用记录 */
-    collectLog(no) {
+    requisitionLog(no) {
       this.title = '领用记录'
-      this.collectLogOpen = true
-      this.getCollectLog(no)
+      this.requisitionLogOpen = true
+      this.getRequisitionLog(no)
     }
   }
 }

@@ -34,7 +34,7 @@
               @click="handleQuery"
             >搜索</el-button>
             <el-button
-              v-permisaction="['admin:sysDept:add']"
+              v-permisaction="['admin:sysOrg:add']"
               class="filter-item"
               type="primary"
               icon="el-icon-plus"
@@ -43,8 +43,8 @@
             >新增</el-button>
           </el-form-item>
         </el-form>
-        <!--deptList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
-        <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 deptId
+        <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
+        <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 orgId
           作为每行数据的唯一键。这有助于 Vue 跟踪每行数据的变化，提高渲染性能。-->
         <!--tree-props 是一个对象，用于指定树形表格的数据结构。
           children 字段指定了子节点的字段名，这里是 'children'。这意味着每个表格数据对象都可能有一个
@@ -82,14 +82,14 @@
           <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['admin:sysDept:edit']"
+                v-permisaction="['admin:sysOrg:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
               >修改</el-button>
               <el-button
-                v-permisaction="['admin:sysDept:add']"
+                v-permisaction="['admin:sysOrg:add']"
                 size="mini"
                 type="text"
                 icon="el-icon-plus"
@@ -97,7 +97,7 @@
               >新增</el-button>
               <!--v-if="scope.row.p_id != 0",这个属性注释掉，因为p_id根本不存在-->
               <el-button
-                v-permisaction="['admin:sysDept:remove']"
+                v-permisaction="['admin:sysOrg:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
@@ -107,7 +107,7 @@
           </el-table-column>
         </el-table>
 
-        <!-- 添加或修改部门对话框 -->
+        <!-- 添加或修改组织对话框 -->
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
@@ -127,7 +127,7 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <!-- prop="deptName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 deptName 规则进行校验。-->
+                <!-- prop="orgName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 orgName 规则进行校验。-->
                 <el-form-item label="组织名称" prop="orgName">
                   <el-input v-model="form.orgName" placeholder="请输入组织名称" />
                 </el-form-item>
@@ -153,7 +153,7 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="部门状态">
+                <el-form-item label="组织状态">
                   <!--当用户选择一个单选按钮时，form.status 的值将被更新为该按钮的 label（或者更准确地说是 :label 绑定的值）。-->
                   <el-radio-group v-model="form.status">
                     <el-radio
@@ -191,7 +191,7 @@ export default {
       loading: true,
       // 表格树数据
       orgList: [],
-      // 部门树选项
+      // 组织树选项
       orgOptions: [],
       // 弹出层标题
       title: '',
@@ -232,11 +232,11 @@ export default {
     })
   },
   methods: {
-    /** 查询部门列表 */
+    /** 查询组织列表 */
     getList() {
       this.loading = true
       getOrgList(this.queryParams).then(response => {
-        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根部门的信息（其中孩子又是一个数组，包含若干个对象，即若干个子部门）}]
+        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
         this.orgList = response.data
         this.loading = false
       })
@@ -247,34 +247,34 @@ export default {
     /* 虽然 normalizer 函数本身不包含递归逻辑，但如果它被用在一个自动处理树形数据的组件中，
     如 Treeselect，它会被组件自动多次调用，每次处理一个节点。这样的设计允许函数保持简单和专注于
     单个节点的处理，而复杂的遍历逻辑由组件内部管理。 */
-    /** 转换部门数据结构 */
+    /** 转换组织数据结构 */
     normalizer(node) {
       if (node.children && !node.children.length) {
         delete node.children
       }
       return {
-        id: node.deptId,
-        label: node.deptName,
+        id: node.orgId,
+        label: node.orgName,
         children: node.children
       }
     },
-    /** 查询部门下拉树结构 */
+    /** 查询组织下拉树结构 */
     getTreeselect() {
       getOrgList().then(response => {
         this.orgOptions = []
         /* isDisabled: true，这个属性通常用于控制节点的可交互性。设置为 true 表示这个节点在
-        用户界面上不能被选择或操作。 在这里，根节点不可被操作，也即整个部门树是不可被操作的.既然<treeselect>组件使用了disabled属性，这里就没有必要再做特殊处理了
+        用户界面上不能被选择或操作。 在这里，根节点不可被操作，也即整个组织树是不可被操作的.既然<treeselect>组件使用了disabled属性，这里就没有必要再做特殊处理了
         if (e === 'update') {
-          const dept = { deptId: 0, deptName: '主类目', children: [], isDisabled: true }
-          dept.children = response.data
-          this.deptOptions.push(dept)
+          const org = { orgId: 0, orgName: '主类目', children: [], isDisabled: true }
+          org.children = response.data
+          this.orgOptions.push(org)
         } else {
-          const dept = { deptId: 0, deptName: '主类目', children: [] }
-          dept.children = response.data
-          this.deptOptions.push(dept)
+          const org = { orgId: 0, orgName: '主类目', children: [] }
+          org.children = response.data
+          this.orgOptions.push(org)
         }*/
         const org = { id: 0, orgName: '主类目', children: [] }
-        dept.children = response.data
+        org.children = response.data
         this.orgOptions.push(org)
       })
     },
@@ -311,7 +311,7 @@ export default {
         this.form.id = row.id
       }
       this.open = true
-      this.title = '添加部门'
+      this.title = '添加组织'
       this.isEdit = false
     },
     /** 修改按钮操作 */
@@ -320,7 +320,7 @@ export default {
       this.getTreeselect()
 
       getOrg(row.id).then(response => {
-        this.form = response.data// 只返回一个部门的信息，则是一个对象类型，如果返回的是多个部门信息，则为数组类型
+        this.form = response.data// 只返回一个组织的信息，则是一个对象类型，如果返回的是多个组织信息，则为数组类型
         this.form.status = String(this.form.status)
         this.open = true
         this.title = '修改组织'
@@ -358,9 +358,9 @@ export default {
     },
     /** 删除按钮操作 */
     /* 这种写法在 JavaScript 中是一种常见的技巧，用于根据条件简洁地设置变量值。
-    如果 row.deptId 存在且其值为真值（truthy，即不是 null、undefined、0、NaN、"" 或 false），
-    则整个表达式的结果将是 [row.deptId]，这是一个只包含 row.deptId 的数组 ，Ids 将被赋值为该数组
-    如果 row.deptId 不存在或其为假值（falsy），则(row.deptId && [row.deptId]) 表达式的结果将是 false，
+    如果 row.orgId 存在且其值为真值（truthy，即不是 null、undefined、0、NaN、"" 或 false），
+    则整个表达式的结果将是 [row.orgId]，这是一个只包含 row.orgId 的数组 ，Ids 将被赋值为该数组
+    如果 row.orgId 不存在或其为假值（falsy），则(row.orgId && [row.orgId]) 表达式的结果将是 false，
     此时Ids 将被赋值为 this.ids*/
     handleDelete(row) {
       const Ids = (row.id && [row.id]) || this.ids

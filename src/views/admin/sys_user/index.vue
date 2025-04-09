@@ -3,7 +3,7 @@
     <template #wrapper>
       <el-card class="box-card">
         <el-row :gutter="20">
-          <!--部门数据-->
+          <!--组织数据-->
           <el-col :span="4" :xs="24">
             <div class="head-container">
               <el-input
@@ -351,7 +351,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
 export default {
   name: 'SysUserManage',
-  /*components: { Treeselect } 是 Vue 组件的一个部分，表示在当前组件中注册了一个名为 Treeselect 的子组件。这样做的目的是为了在模板中使用 Treeselect 组件。*/
+  /* components: { Treeselect } 是 Vue 组件的一个部分，表示在当前组件中注册了一个名为 Treeselect 的子组件。这样做的目的是为了在模板中使用 Treeselect 组件。*/
   components: { Treeselect },
   data() {
     return {
@@ -478,7 +478,7 @@ export default {
         this.orgOptions = response.data // 返回数组类型；[id:    label(单位名称):  children []]})，这里将返回所有单位
       })
     },
-    /* 筛选节点，el-tree 组件会在每次输入deptName更新时自动调用 filterNode 方法，并将当前的搜索词（value）和每个节点的数据（data）作为参数传递给该方法。
+    /* 筛选节点，el-tree 组件会在每次输入orgName更新时自动调用 filterNode 方法，并将当前的搜索词（value）和每个节点的数据（data）作为参数传递给该方法。
     filterNode 方法会检查节点的 label 是否包含搜索词，如果包含则返回 true 以显示该节点，否则返回 false 以隐藏该节点。*/
     filterNode(value, data) {
       if (!value) return true
@@ -486,7 +486,7 @@ export default {
     },
     // 节点单击事件
     handleNodeClick(data) {
-      this.queryParams.orgId = '/' + data.id + '/'// 比如：/0/1/7/，/0/1/7/8，通过搜索/7/，就可以将该部门以及它的下级部门都搜索出来
+      this.queryParams.orgId = '/' + data.id + '/'// 比如：/0/1/7/，/0/1/7/8，通过搜索/7/，就可以将该组织以及它的下级组织都搜索出来
       this.getList()
     },
     /** 转换菜单数据结构 ，目前没有使用，暂时保留*/
@@ -542,7 +542,7 @@ export default {
     reset() {
       this.form = {
         userId: undefined,
-        deptId: undefined,
+        orgId: undefined,
         userName: undefined,
         policeNo: undefined,
         password: undefined,
@@ -565,7 +565,7 @@ export default {
     resetQuery() {
       this.dateRange = []
       this.resetForm('queryForm')
-      this.queryParams.deptId = ''
+      this.queryParams.orgId = ''
       this.handleQuery()
     },
     // 多选框选中数据
@@ -685,8 +685,8 @@ export default {
       }).then(() => {
         this.downloadLoading = true
         import('@/vendor/Export2Excel').then(excel => {
-          const tHeader = ['用户编号', '登录名', '警号', '性别', '部门', '角色', '岗位', '手机', '邮箱', '状态', '创建时间']
-          const filterVal = ['userId', 'userName', 'policeNo', 'sexName', 'deptName', 'roleName', 'postName', 'phone', 'email', 'statusName', 'createdAt']
+          const tHeader = ['用户编号', '登录名', '警号', '性别', '组织', '角色', '岗位', '手机', '邮箱', '状态', '创建时间']
+          const filterVal = ['userId', 'userName', 'policeNo', 'sexName', 'orgName', 'roleName', 'postName', 'phone', 'email', 'statusName', 'createdAt']
           const list = this.userList
           const data = formatJson(filterVal, list)
           excel.export_json_to_excel({

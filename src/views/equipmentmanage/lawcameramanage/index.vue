@@ -6,7 +6,16 @@
           内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
           这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="执法仪名称" prop="Name">
+          <el-form-item label="执法仪编号" prop="no">
+            <el-input
+              v-model="queryParams.no"
+              placeholder="请输入执法仪编号"
+              clearable
+              style="width: 170px;"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="执法仪名称" prop="name">
             <el-input
               v-model="queryParams.name"
               placeholder="请输入执法仪名称"
@@ -15,8 +24,32 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="状态">
-            <el-select v-model="queryParams.state" placeholder="执法仪状态" clearable style="width: 170px;">
+          <el-form-item label="管理组织" prop="managerOrgId">
+            <treeselect
+              v-model="queryParams.managerOrgId"
+              :options="orgOptions"
+              placeholder="请选择管理组织"
+              style="width: 170px;"
+            />
+          </el-form-item>
+          <el-form-item label="管理人员">
+            <el-select
+              v-model="queryParams.managerId"
+              placeholder="请选择管理人员"
+              style="width: 170px;"
+              clearable
+              @change="$forceUpdate()"
+            >
+              <el-option
+                v-for="item in userOptions"
+                :key="item.userId"
+                :label="item.userName"
+                :value="item.userId"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="状态" prop="state">
+            <el-select v-model="queryParams.state" placeholder="状态" clearable style="width: 170px;">
               <el-option
                 v-for="dict in stateOptions"
                 :key="dict.value"
@@ -41,11 +74,10 @@
             <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
           </el-form-item>
         </el-form>
-
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:add']"
+              v-permisaction="['equipment:lawcamera:create']"
               type="primary"
               icon="el-icon-plus"
               size="mini"
@@ -54,7 +86,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:update']"
+              v-permisaction="['equipment:lawcamera:edit']"
               type="success"
               icon="el-icon-edit"
               size="mini"
@@ -64,7 +96,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:remove']"
+              v-permisaction="['equipment:lawcamera:remove']"
               type="danger"
               icon="el-icon-delete"
               size="mini"
@@ -74,7 +106,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:export']"
+              v-permisaction="['equipment:lawcamera:export']"
               type="warning"
               icon="el-icon-download"
               size="mini"
@@ -82,7 +114,7 @@
             >导出</el-button>
           </el-col>
         </el-row>
-        <!--deptList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
+        <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
         <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 id
           作为每行数据的唯一键。这有助于 Vue 跟踪每行数据的变化，提高渲染性能。-->
         <!--tree-props 是一个对象，用于指定树形表格的数据结构。
@@ -103,7 +135,7 @@
           <el-table-column prop="no" label="编号" width="80" />
           <el-table-column prop="name" label="名称" width="100" />
           <el-table-column prop="managerName" label="管理员" width="80" />
-          <el-table-column prop="managerDeptFullName" label="管理员部门" width="150" />
+          <el-table-column prop="managerOrgFullName" label="管理员所在组织" width="150" />
           <el-table-column prop="enableUse" label="是否可用" width="100">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
@@ -139,21 +171,21 @@
           >
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['admin:sysRole:update']"
+                v-permisaction="['equipment:lawcamera:browse']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row)"
               >浏览</el-button>
               <el-button
-                v-permisaction="['admin:sysRole:update']"
+                v-permisaction="['equipment:lawcamera:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
               >修改</el-button>
               <el-button
-                v-permisaction="['admin:sysRole:remove']"
+                v-permisaction="['equipment:lawcamera:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
@@ -175,19 +207,19 @@
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
         <el-dialog :title="title" :visible.sync="open" width="600px" :close-on-click-modal="false">
           <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-            <el-row>
+            <!-- 管理信息 -->
+            <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="归属部门" prop="managerDeptId">
+                <el-form-item label="管理组织" prop="managerOrgId">
                   <treeselect
-                    v-model="form.managerDeptId"
-                    :options="deptOptions"
-                    placeholder="请选择归属部门"
+                    v-model="form.managerOrgId"
+                    :options="orgOptions"
+                    placeholder="请选择管理组织"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="管理人员">
-                  <!--前缀为 $ 的方法和属性通常表示它们是 Vue 实例的内置属性或方法。这些方法和属性是 Vue 框架提供的，用户不需要自己定义或实现。-->
                   <el-select v-model="form.managerId" placeholder="请选择" @change="$forceUpdate()">
                     <el-option
                       v-for="item in userOptions"
@@ -198,8 +230,11 @@
                   </el-select>
                 </el-form-item>
               </el-col>
+            </el-row>
+
+            <!-- 基础信息 -->
+            <el-row :gutter="20">
               <el-col :span="12">
-                <!-- prop="deptName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 deptName 规则进行校验。-->
                 <el-form-item label="名称" prop="Name">
                   <el-input v-model="form.name" placeholder="请输入名称" />
                 </el-form-item>
@@ -209,9 +244,12 @@
                   <el-input v-model="form.no" placeholder="请输入编号" :disabled="title === '修改执法仪'" />
                 </el-form-item>
               </el-col>
+            </el-row>
+
+            <!-- 状态信息 -->
+            <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="是否可用">
-                  <!--当用户选择一个单选按钮时，form.status 的值将被更新为该按钮的 label（或者更准确地说是 :label 绑定的值）。-->
                   <el-radio-group v-model="form.enableUse">
                     <el-radio
                       v-for="dict in enableUseOptions"
@@ -223,7 +261,6 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="状态">
-                  <!--当用户选择一个单选按钮时，form.status 的值将被更新为该按钮的 label（或者更准确地说是 :label 绑定的值）。-->
                   <el-radio-group v-model="form.state">
                     <el-radio
                       v-for="dict in stateOptions"
@@ -233,6 +270,10 @@
                   </el-radio-group>
                 </el-form-item>
               </el-col>
+            </el-row>
+
+            <!-- 硬件配置 -->
+            <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="CPU">
                   <el-input v-model="form.cpu" placeholder="请输入CPU" />
@@ -258,6 +299,10 @@
                   <el-input-number v-model="form.usbNum" />
                 </el-form-item>
               </el-col>
+            </el-row>
+
+            <!-- 系统信息 -->
+            <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="操作系统">
                   <el-input v-model="form.system" placeholder="操作系统" maxlength="20" />
@@ -268,15 +313,19 @@
                   <el-input v-model="form.version" placeholder="版本" maxlength="20" />
                 </el-form-item>
               </el-col>
-              <el-col :span="12">
+            </el-row>
+
+            <!-- 备注 -->
+            <el-row>
+              <el-col :span="24">
                 <el-form-item label="备注">
                   <el-input v-model="form.remark" />
                 </el-form-item>
               </el-col>
             </el-row>
           </el-form>
+
           <div slot="footer" class="dialog-footer">
-            <!--primary 类型通常具有一个更明显的样式，比如蓝色背景-->
             <el-button type="primary" @click="submitForm">确 定</el-button>
             <el-button @click="cancel">取 消</el-button>
           </div>
@@ -332,14 +381,16 @@ export default {
       // 是否显示增加执法仪对话框
       open: false,
       ViewOpen: false,
-      // 部门树选项
-      deptOptions: undefined,
+      // 组织树选项
+      orgOptions: undefined,
       userOptions: undefined,
       // 查询参数
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
-        Name: undefined
+        Name: undefined,
+        managerOrgId: undefined,
+        managerId: undefined
       },
       AttributeValueList: [],
       ColumnNameConvert: new Map([
@@ -368,14 +419,21 @@ export default {
     }
   },
   watch: {
-    'form.managerDeptId': function(newVal) {
-      // 当 form.managerDeptId 更新时，调用 getUser
+    'form.managerOrgId': function(newVal) {
+      // 当 form.managerOrgId 更新时，调用 getUser
       if (newVal) {
         if (this.firstLoad !== true) { // 首次打开对话框，不需要清空管理人员
           this.form.managerId = null // 清空管理人员选择
         }
         this.firstLoad = false
-        this.getUser()
+        this.getFormUser()
+      }
+    },
+    'queryParams.managerOrgId': function(newVal) {
+      // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
+      if (newVal) {
+        this.queryParams.managerId = null // 清空管理人员选择
+        this.getQueryUser()
       }
     }
   },
@@ -409,14 +467,20 @@ export default {
     enableUseFormat(row) {
       return this.selectDictLabel(this.enableUseOptions, parseInt(row.enableUse))
     },
-    /** 查询部门下拉树结构 */
+    /** 查询组织下拉树结构 */
     getTreeselect() {
       orgTreeSelect().then(response => {
-        this.deptOptions = response.data // 返回数组类型；[id:    label(部门名称):  children []]})，这里将返回所有部门
+        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
       })
     },
-    getUser() {
-      listUser({ deptId: '/' + this.form.managerDeptId + '/' }).then(response => {
+    getFormUser() {
+      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(response => {
+        this.userOptions = response.data.list
+      })
+    },
+
+    getQueryUser() {
+      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(response => {
         this.userOptions = response.data.list
       })
     },
@@ -424,9 +488,9 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        managerDeptId: undefined,
+        managerOrgId: undefined,
         managerId: undefined,
-        requisitionorDeptId: undefined,
+        requisitionorOrgId: undefined,
         requisitionorId: undefined,
         name: undefined,
         no: undefined,

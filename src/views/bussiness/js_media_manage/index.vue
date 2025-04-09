@@ -48,7 +48,7 @@
             >搜索</el-button>
           </el-form-item>
         </el-form>
-        <!--deptList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
+        <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
         <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 id
           作为每行数据的唯一键。这有助于 Vue 跟踪每行数据的变化，提高渲染性能。-->
         <!--tree-props 是一个对象，用于指定树形表格的数据结构。
@@ -149,11 +149,11 @@ export default {
     })
   },
   methods: {
-    /** 查询部门列表 */
+    /** 查询组织列表 */
     getList() {
       this.loading = true
       get_js_media_list(this.queryParams).then(response => {
-        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根部门的信息（其中孩子又是一个数组，包含若干个对象，即若干个子部门）}]
+        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
         this.js_media_list = response.data
         this.loading = false
       })

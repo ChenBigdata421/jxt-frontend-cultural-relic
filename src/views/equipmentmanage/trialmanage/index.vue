@@ -3,54 +3,68 @@
     <template #wrapper>
       <el-card class="box-card">
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="名称" prop="Name">
+          <el-form-item label="场地编号" prop="No">
+            <el-input
+              v-model="queryParams.No"
+              placeholder="请输入场地编号"
+              clearable
+              style="width: 170px;"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="场地名称" prop="Name">
             <el-input
               v-model="queryParams.Name"
               placeholder="请输入场地名称"
               clearable
-              size="small"
-              style="width: 160px"
+              style="width: 170px;"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="归属单位" prop="OrgName">
-            <el-input
-              v-model="queryParams.OrgName"
-              placeholder="请输入归属单位"
-              clearable
-              size="small"
-              style="width: 160px"
-              @keyup.enter.native="handleQuery"
+          <el-form-item label="管理组织" prop="managerOrgId">
+            <treeselect
+              v-model="queryParams.managerOrgId"
+              :options="orgOptions"
+              placeholder="请选择管理组织"
+              style="width: 170px;"
             />
           </el-form-item>
-          <el-form-item label="状态" prop="State">
+          <el-form-item label="管理人员">
             <el-select
-              v-model="queryParams.State"
-              placeholder="角色状态"
+              v-model="queryParams.managerId"
+              placeholder="请选择管理人员"
+              style="width: 170px;"
               clearable
-              size="small"
-              style="width: 160px"
+              @change="$forceUpdate()"
             >
               <el-option
-                v-for="dict in statusOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
+                v-for="item in userOptions"
+                :key="item.userId"
+                :label="item.userName"
+                :value="item.userId"
               />
             </el-select>
           </el-form-item>
-          <!-- <el-form-item label="创建时间">
-            <el-date-picker
-              v-model="dateRange"
-              size="small"
-              style="width: 240px"
-              value-format="yyyy-MM-dd"
-              type="daterange"
-              range-separator="-"
-              start-placeholder="开始日期"
-              end-placeholder="结束日期"
+          <el-form-item label="状态" prop="State">
+            <el-select v-model="queryParams.State" placeholder="状态" clearable style="width: 170px;">
+              <el-option
+                v-for="dict in stateOptions"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+                style="width: 150px;"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="品牌名称" prop="BrandName">
+            <el-input
+              v-model="queryParams.BrandName"
+              placeholder="请输入品牌名称"
+              clearable
+              style="width: 170px;"
+              @keyup.enter.native="handleQuery"
             />
-          </el-form-item> -->
+          </el-form-item>
           <el-form-item>
             <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
             <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -60,7 +74,7 @@
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:add']"
+              v-permisaction="['equipment:trial:create']"
               type="primary"
               icon="el-icon-plus"
               size="mini"
@@ -69,7 +83,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:update']"
+              v-permisaction="['equipment:trial:edit']"
               type="success"
               icon="el-icon-edit"
               size="mini"
@@ -79,7 +93,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:remove']"
+              v-permisaction="['equipment:trial:remove']"
               type="danger"
               icon="el-icon-delete"
               size="mini"
@@ -89,7 +103,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:export']"
+              v-permisaction="['equipment:trial:export']"
               type="warning"
               icon="el-icon-download"
               size="mini"
@@ -109,10 +123,10 @@
           <el-table-column label="编号" sortable="true" prop="No" width="80" />
           <el-table-column label="名称" sortable="true" prop="Name" width="80" />
           <el-table-column label="品牌名称" prop="BrandName" width="80" />
+          <el-table-column prop="managerName" label="管理员" width="80" />
+          <el-table-column prop="managerOrgFullName" label="管理员所在组织" width="150" />
           <el-table-column label="IP" prop="Ip" :show-overflow-tooltip="true" width="80" />
           <el-table-column label="地址" prop="Address" width="80" />
-          <el-table-column label="管理员" prop="AdminPoliceName" width="80" />
-          <el-table-column label="归属单位" prop="OrgName" width="80" />
           <el-table-column label="版本号" prop="Version" width="80" />
           <el-table-column label="状态" width="80">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
@@ -133,21 +147,21 @@
           >
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['admin:sysRole:update']"
+                v-permisaction="['equipment:trial:browse']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row)"
               >浏览</el-button>
               <el-button
-                v-permisaction="['admin:sysRole:update']"
+                v-permisaction="['equipment:trial:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
               >修改</el-button>
               <el-button
-                v-permisaction="['admin:sysRole:remove']"
+                v-permisaction="['equipment:trial:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
@@ -173,49 +187,108 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
         <!-- 添加或修改角色配置对话框 -->
         <el-dialog v-if="open" :title="title" :visible.sync="open" width="500px" :close-on-click-modal="false">
           <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-            <el-form-item label="编号" prop="No">
-              <el-input v-model="form.No" placeholder="请输入编号" />
-            </el-form-item>
-            <el-form-item label="名称" prop="Name">
-              <el-input v-model="form.Name" placeholder="请输入名称" />
-            </el-form-item>
-            <el-form-item label="IP" prop="Ip">
-              <el-input v-model="form.Ip" placeholder="请输入IP" />
-            </el-form-item>
-            <el-form-item label="地址" prop="Address">
-              <el-input v-model="form.Address" placeholder="请输入地址" />
-            </el-form-item>
-            <el-form-item label="播放地址" prop="Http">
-              <el-input v-model="form.Http" placeholder="请输入播放地址" />
-            </el-form-item>
-            <el-form-item label="密钥" prop="SecretKey">
-              <el-input v-model="form.SecretKey" placeholder="请输入密钥" />
-            </el-form-item>
-            <el-form-item label="管理员" prop="AdminPoliceName">
-              <el-input v-model="form.AdminPoliceName" placeholder="请输入管理员" />
-            </el-form-item>
-            <el-form-item label="归属单位" prop="OrgName">
-              <el-input v-model="form.OrgName" placeholder="请输入归属单位" />
-            </el-form-item>
-            <el-form-item label="版本号" prop="Version">
-              <el-input v-model="form.Version" placeholder="请输入版本号" />
-            </el-form-item>
-            <el-form-item label="状态">
-              <el-radio-group v-model="form.State">
-                <el-radio
-                  v-for="dict in statusOptions"
-                  :key="dict.value"
-                  :label="dict.value"
-                >{{ dict.label }}</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="备注">
-              <el-input v-model="form.Remark" type="textarea" placeholder="请输入内容" />
-            </el-form-item>
-            <el-form-item label="品牌名称" prop="BrandName">
-              <el-input v-model="form.BrandName" placeholder="请输入品牌名称" />
-            </el-form-item>
+            <!-- 管理信息 -->
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="管理组织" prop="managerOrgId">
+                  <treeselect
+                    v-model="form.managerOrgId"
+                    :options="orgOptions"
+                    placeholder="请选择管理组织"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="管理人员">
+                  <el-select v-model="form.managerId" placeholder="请选择" @change="$forceUpdate()">
+                    <el-option
+                      v-for="item in userOptions"
+                      :key="item.userId"
+                      :label="item.userName"
+                      :value="item.userId"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <!-- 基础信息 -->
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="编号" prop="No">
+                  <el-input v-model="form.No" placeholder="请输入编号" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="名称" prop="Name">
+                  <el-input v-model="form.Name" placeholder="请输入名称" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <!-- 网络信息 -->
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="IP" prop="Ip">
+                  <el-input v-model="form.Ip" placeholder="请输入IP" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="地址" prop="Address">
+                  <el-input v-model="form.Address" placeholder="请输入地址" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <!-- 扩展信息 -->
+            <el-row :gutter="20">
+              <el-col :span="24">
+                <el-form-item label="播放地址" prop="Http">
+                  <el-input v-model="form.Http" placeholder="请输入播放地址" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="24">
+                <el-form-item label="密钥" prop="SecretKey">
+                  <el-input v-model="form.SecretKey" placeholder="请输入密钥" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <!-- 系统信息 -->
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="版本号" prop="Version">
+                  <el-input v-model="form.Version" placeholder="请输入版本号" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="品牌名称" prop="BrandName">
+                  <el-input v-model="form.BrandName" placeholder="请输入品牌名称" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <!-- 状态与备注 -->
+            <el-row>
+              <el-col :span="24">
+                <el-form-item label="状态">
+                  <el-radio-group v-model="form.State">
+                    <el-radio
+                      v-for="dict in statusOptions"
+                      :key="dict.value"
+                      :label="dict.value"
+                    >{{ dict.label }}</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+              </el-col>
+              <el-col :span="24">
+                <el-form-item label="备注">
+                  <el-input v-model="form.Remark" type="textarea" placeholder="请输入内容" />
+                </el-form-item>
+              </el-col>
+            </el-row>
           </el-form>
+
           <div slot="footer" class="dialog-footer">
             <el-button type="primary" @click="submitForm">确 定</el-button>
             <el-button @click="cancel">取 消</el-button>
@@ -241,16 +314,18 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
 <script>
 import { listEquipmentTrial, getEquipmentTrial, delEquipmentTrial, addEquipmentTrial, updateEquipmentTrial } from '@/api/admin/equipment_manage_api'
 import { formatJson } from '@/utils'
-
+import { orgTreeSelect } from '@/api/admin/sys-org'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import { listUser } from '@/api/admin/sys-user'
 export default {
   name: 'Trial',
-  components: {
-
-  },
+  components: { Treeselect },
   data() {
     return {
       // 遮罩层
       loading: true,
+      firstLoad: null,
       // 选中数组
       trialIds: [],
       // 非单个禁用
@@ -266,6 +341,9 @@ export default {
       // 是否显示弹出层
       open: false,
       ViewOpen: false,
+      // 组织树选项
+      orgOptions: undefined,
+      userOptions: undefined,
       AttributeValueList: [],
       // 是否显示弹出层（数据权限）
       openDataScope: false,
@@ -317,8 +395,28 @@ export default {
       }
     }
   },
+  watch: {
+    'form.managerOrgId': function(newVal) {
+      // 当 form.managerOrgId 更新时，调用 getUser
+      if (newVal) {
+        if (this.firstLoad !== true) { // 首次打开对话框，不需要清空管理人员
+          this.form.managerId = null // 清空管理人员选择
+        }
+        this.firstLoad = false
+        this.getFormUser()
+      }
+    },
+    'queryParams.managerOrgId': function(newVal) {
+      // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
+      if (newVal) {
+        this.queryParams.managerId = null // 清空管理人员选择
+        this.getQueryUser()
+      }
+    }
+  },
   created() {
     this.getList()
+    this.getTreeselect()
     this.getDicts('trial_status').then(response => {
       this.statusOptions = response.data
     })
@@ -343,6 +441,8 @@ export default {
     // 表单重置
     reset() {
       this.form = {
+        managerOrgId: undefined,
+        managerId: undefined,
         No: undefined,
         Name: undefined,
         Ip: undefined,
@@ -362,6 +462,23 @@ export default {
     // 字典翻译
     StateFormat(row) {
       return this.selectDictLabel(this.statusOptions, parseInt(row.State))
+    },
+    /** 查询组织下拉树结构 */
+    getTreeselect() {
+      orgTreeSelect().then(response => {
+        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
+      })
+    },
+    getFormUser() {
+      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(response => {
+        this.userOptions = response.data.list
+      })
+    },
+
+    getQueryUser() {
+      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(response => {
+        this.userOptions = response.data.list
+      })
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -397,12 +514,12 @@ export default {
       } else {
         this.queryParams[prop + 'Order'] = undefined
       }
-      console.log(this.queryParams)
       this.getList()
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset()
+      this.firstLoad = true
       const trialId = row.Id || this.trialIds
       getEquipmentTrial(trialId).then(response => {
         this.form = response.data

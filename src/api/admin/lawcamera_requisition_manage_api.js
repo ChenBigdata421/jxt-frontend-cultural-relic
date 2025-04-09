@@ -19,7 +19,7 @@ export function getLawCameraLogList(query) {
 }
 
 // 领用执法仪
-export function lawcameraCollect(data) {
+export function lawcameraRequisition(data) {
   return request({
     url: '/api/v1/requisition/lawcamera/requisition',
     method: 'put',

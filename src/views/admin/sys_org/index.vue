@@ -109,7 +109,7 @@
           </el-table-column>
         </el-table>
 
-        <!-- 添加或修改部门对话框 -->
+        <!-- 添加或修改组织对话框 -->
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
@@ -186,7 +186,7 @@
 </template>
 
 <script>
-import { getOrgList, getOrg, delOrg, addOrg, updateOrg, orgTreeselect } from '@/api/admin/sys-organization'
+import { getOrgList, getOrg, delOrg, addOrg, updateOrg } from '@/api/admin/sys-organization'
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
@@ -257,11 +257,11 @@ export default {
     })
   },
   methods: {
-    /** 查询部门列表 */
+    /** 查询组织列表 */
     getList() {
       this.loading = true
       getOrgList(this.queryParams).then(response => {
-        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根部门的信息（其中孩子又是一个数组，包含若干个对象，即若干个子部门）}]
+        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
         this.orgList = response.data
         this.loading = false
       })
@@ -272,7 +272,7 @@ export default {
     /* 虽然 normalizer 函数本身不包含递归逻辑，但如果它被用在一个自动处理树形数据的组件中，
     如 Treeselect，它会被组件自动多次调用，每次处理一个节点。这样的设计允许函数保持简单和专注于
     单个节点的处理，而复杂的遍历逻辑由组件内部管理。 */
-    /** 转换部门数据结构 */
+    /** 转换组织数据结构 */
     normalizer(node) {
       if (node.children && !node.children.length) {
         delete node.children
@@ -283,7 +283,7 @@ export default {
         children: node.children
       }
     },
-    /** 查询部门下拉树结构 */
+    /** 查询组织下拉树结构 */
     getTreeselect(e) {
       getOrgList().then(response => {
         this.orgOptions = []
@@ -382,9 +382,9 @@ export default {
     },
     /** 删除按钮操作 */
     /* 这种写法在 JavaScript 中是一种常见的技巧，用于根据条件简洁地设置变量值。
-    如果 row.deptId 存在且其值为真值（truthy，即不是 null、undefined、0、NaN、"" 或 false），
-    则整个表达式的结果将是 [row.deptId]，这是一个只包含 row.deptId 的数组 ，Ids 将被赋值为该数组
-    如果 row.deptId 不存在或其为假值（falsy），则(row.deptId && [row.deptId]) 表达式的结果将是 false，
+    如果 row.orgId 存在且其值为真值（truthy，即不是 null、undefined、0、NaN、"" 或 false），
+    则整个表达式的结果将是 [row.orgId]，这是一个只包含 row.orgId 的数组 ，Ids 将被赋值为该数组
+    如果 row.orgId 不存在或其为假值（falsy），则(row.orgId && [row.orgId]) 表达式的结果将是 false，
     此时Ids 将被赋值为 this.ids*/
     handleDelete(row) {
       const Ids = (row.orgId && [row.orgId]) || this.ids

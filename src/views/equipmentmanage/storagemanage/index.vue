@@ -24,23 +24,29 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="管理员" prop="AdminPoliceName">
-            <el-input
-              v-model="queryParams.AdminPoliceName"
-              placeholder="请输入管理员"
-              clearable
+          <el-form-item label="管理组织" prop="managerOrgId">
+            <treeselect
+              v-model="queryParams.managerOrgId"
+              :options="orgOptions"
+              placeholder="请选择管理组织"
               style="width: 170px;"
-              @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="归属单位" prop="OrgName">
-            <el-input
-              v-model="queryParams.OrgName"
-              placeholder="请输入归属单位"
-              clearable
+          <el-form-item label="管理人员">
+            <el-select
+              v-model="queryParams.managerId"
+              placeholder="请选择管理人员"
               style="width: 170px;"
-              @keyup.enter.native="handleQuery"
-            />
+              clearable
+              @change="$forceUpdate()"
+            >
+              <el-option
+                v-for="item in userOptions"
+                :key="item.userId"
+                :label="item.userName"
+                :value="item.userId"
+              />
+            </el-select>
           </el-form-item>
           <el-form-item label="状态" prop="State">
             <el-select v-model="queryParams.State" placeholder="状态" clearable style="width: 170px;">
@@ -71,7 +77,7 @@
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:add']"
+              v-permisaction="['equipment:storage:create']"
               type="primary"
               icon="el-icon-plus"
               size="mini"
@@ -80,7 +86,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:update']"
+              v-permisaction="['equipment:storage:edit']"
               type="success"
               icon="el-icon-edit"
               size="mini"
@@ -90,7 +96,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:remove']"
+              v-permisaction="['equipment:storage:remove']"
               type="danger"
               icon="el-icon-delete"
               size="mini"
@@ -100,7 +106,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysRole:export']"
+              v-permisaction="['equipment:storage:export']"
               type="warning"
               icon="el-icon-download"
               size="mini"
@@ -108,7 +114,7 @@
             >导出</el-button>
           </el-col>
         </el-row>
-        <!--deptList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
+        <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
         <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 id
           作为每行数据的唯一键。这有助于 Vue 跟踪每行数据的变化，提高渲染性能。-->
         <!--tree-props 是一个对象，用于指定树形表格的数据结构。
@@ -129,9 +135,9 @@
           <el-table-column prop="Name" label="名称" width="100" />
           <el-table-column prop="No" label="编号" width="100" />
           <el-table-column prop="BrandName" label="品牌名称" width="100" />
+          <el-table-column prop="managerName" label="管理员" width="80" />
+          <el-table-column prop="managerOrgFullName" label="管理员所在组织" width="150" />
           <el-table-column prop="Ip" label="Ip" width="100" />
-          <el-table-column prop="AdminPoliceName" label="管理员" width="100" />
-          <el-table-column prop="OrgName" label="归属单位" width="100" />
           <el-table-column prop="State" label="状态" width="100">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
@@ -152,21 +158,21 @@
           >
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['admin:sysRole:update']"
+                v-permisaction="['equipment:storage:browse']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row)"
               >浏览</el-button>
               <el-button
-                v-permisaction="['admin:sysRole:update']"
+                v-permisaction="['equipment:storage:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
               >修改</el-button>
               <el-button
-                v-permisaction="['admin:sysRole:remove']"
+                v-permisaction="['equipment:storage:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
@@ -186,9 +192,35 @@
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
-        <el-dialog :title="title" :visible.sync="open" width="700px" :close-on-click-modal="false">
+        <el-dialog :title="title" :visible.sync="open" width="750px" :close-on-click-modal="false">
           <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-            <el-row>
+            <!-- 管理信息 -->
+            <el-row :gutter="15">
+              <el-col :span="12">
+                <el-form-item label="管理组织" prop="managerOrgId" label-width="100px">
+                  <treeselect
+                    v-model="form.managerOrgId"
+                    :options="orgOptions"
+                    placeholder="请选择管理组织"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="管理人员" label-width="100px">
+                  <el-select v-model="form.managerId" placeholder="请选择" class="full-width" clearable @change="$forceUpdate()">
+                    <el-option
+                      v-for="item in userOptions"
+                      :key="item.userId"
+                      :label="item.userName"
+                      :value="item.userId"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <!-- 基础信息 -->
+            <el-row :gutter="15">
               <el-col :span="12">
                 <el-form-item label="名称" prop="Name" label-width="100px">
                   <el-input v-model="form.Name" placeholder="请输入名称" />
@@ -199,43 +231,18 @@
                   <el-input v-model="form.No" placeholder="请输入编号" />
                 </el-form-item>
               </el-col>
+            </el-row>
+
+            <!-- 设备信息 -->
+            <el-row :gutter="15">
               <el-col :span="12">
-                <!-- prop="deptName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 deptName 规则进行校验。-->
                 <el-form-item label="品牌名称" prop="BrandName" label-width="100px">
                   <el-input v-model="form.BrandName" placeholder="请输入品牌名称" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="IP" prop="Ip" label-width="100px">
-                  <el-input v-model="form.Ip" placeholder="请输入IP" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="地址" prop="Address" label-width="100px">
-                  <el-input v-model="form.Address" placeholder="请输入品牌地址" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <!-- prop="deptName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 deptName 规则进行校验。-->
-                <el-form-item label="播放地址" prop="Http" label-width="100px">
-                  <el-input v-model="form.Http" placeholder="请输入播放地址" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <!-- prop="deptName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 deptName 规则进行校验。-->
-                <el-form-item label="管理员" prop="AdminPoliceName" label-width="100px">
-                  <el-input v-model="form.AdminPoliceName" placeholder="请输入管理员" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="归属单位" prop="OrgName" label-width="100px">
-                  <el-input v-model="form.OrgName" placeholder="请输入归属单位" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="状态" label-width="100px">
-                  <!--当用户选择一个单选按钮时，form.status 的值将被更新为该按钮的 label（或者更准确地说是 :label 绑定的值）。-->
-                  <el-radio-group v-model="form.State">
+                <el-form-item label="设备状态" label-width="100px">
+                  <el-radio-group v-model="form.State" class="radio-group">
                     <el-radio
                       v-for="dict in stateOptions"
                       :key="dict.value"
@@ -244,50 +251,87 @@
                   </el-radio-group>
                 </el-form-item>
               </el-col>
+            </el-row>
+
+            <!-- 网络配置 -->
+            <el-row :gutter="15">
               <el-col :span="12">
-                <el-form-item label="在线总时长" label-width="100px">
-                  <el-input-number v-model="form.OnlineTimeTotal" placeholder="请输入在线总时长" />
+                <el-form-item label="IP地址" prop="Ip" label-width="100px">
+                  <el-input v-model="form.Ip" placeholder="请输入IP地址" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="CPU" label-width="100px">
-                  <el-input v-model="form.Cpu" placeholder="请输入CPU" />
+                <el-form-item label="物理地址" prop="Address" label-width="100px">
+                  <el-input v-model="form.Address" placeholder="请输入物理地址" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="内存(G)" label-width="100px">
-                  <el-input-number v-model="form.Memory" placeholder="请输入内存大小" />
+                <el-form-item label="播放地址" prop="Http" label-width="100px">
+                  <el-input v-model="form.Http" placeholder="请输入播放地址" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <!-- 硬件配置 -->
+            <el-row :gutter="15">
+              <el-col :span="12">
+                <el-form-item label="CPU型号" label-width="100px">
+                  <el-input v-model="form.Cpu" placeholder="请输入CPU型号" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="购置时间" label-width="100px">
-                  <el-date-picker v-model="form.BuyTime" type="datetime" placeholder="请输入购置时间" format="yyyy-MM-ddTHH:mm:ssZ" value-format="yyyy-MM-ddTHH:mm:ssZ"></el-date-picker>
+                <el-form-item label="内存容量" label-width="100px">
+                  <el-input-number
+                    v-model="form.Memory"
+                    placeholder="单位：GB"
+                    :min="0"
+                    controls-position="right"
+                    class="full-width"
+                  />
                 </el-form-item>
               </el-col>
+            </el-row>
+
+            <!-- 系统信息 -->
+            <el-row :gutter="15">
               <el-col :span="12">
                 <el-form-item label="操作系统" label-width="100px">
-                  <el-input v-model="form.System" placeholder="操作系统" maxlength="20" />
+                  <el-input v-model="form.System" placeholder="请输入系统名称" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="版本" label-width="100px">
-                  <el-input v-model="form.Version" placeholder="版本" maxlength="20" />
+                <el-form-item label="系统版本" label-width="100px">
+                  <el-input v-model="form.Version" placeholder="请输入版本号" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <!-- 其他信息 -->
+            <el-row :gutter="15">
+              <el-col :span="12">
+                <el-form-item label="购置时间" label-width="100px">
+                  <el-date-picker
+                    v-model="form.BuyTime"
+                    type="datetime"
+                    placeholder="选择购置时间"
+                    value-format="yyyy-MM-ddTHH:mm:ssZ"
+                    class="full-width"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="备注" label-width="100px">
-                  <el-input v-model="form.Remark" />
+                <el-form-item label="备注说明" label-width="100px">
+                  <el-input v-model="form.Remark" placeholder="请输入备注信息" />
                 </el-form-item>
               </el-col>
             </el-row>
           </el-form>
+
           <div slot="footer" class="dialog-footer">
-            <!--primary 类型通常具有一个更明显的样式，比如蓝色背景-->
             <el-button type="primary" @click="submitForm">确 定</el-button>
             <el-button @click="cancel">取 消</el-button>
           </div>
         </el-dialog>
-
         <!--显示详情-->
         <el-dialog :title="title" :visible.sync="ViewOpen" width="593px" :close-on-click-modal="false">
           <el-tabs v-model="ActiveLab">
@@ -321,16 +365,18 @@
 <script>
 import { listEquipmentStorage, delEquipmentStorage, getEquipmentStorage, getEquipmentStorageConfig, addEquipmentStorage, updateEquipmentStorage } from '@/api/admin/equipment_manage_api'
 import { formatJson } from '@/utils'
-
+import { orgTreeSelect } from '@/api/admin/sys-org'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import { listUser } from '@/api/admin/sys-user'
 export default {
-  name: 'LawCarema',
-  components: {
-
-  },
+  name: 'Storage',
+  components: { Treeselect },
   data() {
     return {
       // 遮罩层
       loading: true,
+      firstLoad: null,
       // 选中数组
       StorageIds: [],
       // 可否修改
@@ -350,6 +396,9 @@ export default {
       open: false,
       // 是否显示查看存储详情对话框
       ViewOpen: false,
+      // 组织树选项
+      orgOptions: undefined,
+      userOptions: undefined,
       ActiveLab: 'first',
       SelectedRow: undefined,
       // 查询参数
@@ -358,8 +407,8 @@ export default {
         pageSize: 10,
         No: undefined,
         Name: undefined,
-        AdminPoliceName: undefined,
-        OrgName: undefined,
+        managerOrgId: undefined,
+        managerId: undefined,
         State: undefined,
         BrandName: undefined
       },
@@ -408,8 +457,28 @@ export default {
 
     }
   },
+  watch: {
+    'form.managerOrgId': function(newVal) {
+      // 当 form.managerOrgId 更新时，调用 getUser
+      if (newVal) {
+        if (this.firstLoad !== true) { // 首次打开对话框，不需要清空管理人员
+          this.form.managerId = null // 清空管理人员选择
+        }
+        this.firstLoad = false
+        this.getFormUser()
+      }
+    },
+    'queryParams.managerOrgId': function(newVal) {
+      // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
+      if (newVal) {
+        this.queryParams.managerId = null // 清空管理人员选择
+        this.getQueryUser()
+      }
+    }
+  },
   created() {
     this.getList()
+    this.getTreeselect()
     this.getDicts('site_status').then(response => {
       this.stateOptions = response.data
     })
@@ -431,9 +500,29 @@ export default {
       return this.selectDictLabel(this.stateOptions, parseInt(row.State))
     },
 
+    /** 查询组织下拉树结构 */
+    getTreeselect() {
+      orgTreeSelect().then(response => {
+        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
+      })
+    },
+    getFormUser() {
+      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(response => {
+        this.userOptions = response.data.list
+      })
+    },
+
+    getQueryUser() {
+      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(response => {
+        this.userOptions = response.data.list
+      })
+    },
+
     // 表单重置
     reset() {
       this.form = {
+        managerOrgId: undefined,
+        managerId: undefined,
         No: undefined,
         Name: undefined,
         Ip: undefined,
@@ -496,6 +585,7 @@ export default {
     /** 修改按钮操作 ,该函数可以优化，没有必要从服务端获取数据。查询到的所有记录都缓存在了前端*/
     handleUpdate(row) {
       this.reset()
+      this.firstLoad = true
       const StorageId = row.Id || this.StorageIds
       getEquipmentStorage(StorageId).then(response => {
         this.form = response.data

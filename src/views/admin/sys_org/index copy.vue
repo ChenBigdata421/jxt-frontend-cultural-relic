@@ -108,7 +108,7 @@
           </el-table-column>
         </el-table>
 
-        <!-- 添加或修改部门对话框 -->
+        <!-- 添加或修改组织对话框 -->
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
@@ -258,7 +258,7 @@ export default {
     getList() {
       this.loading = true
       getOrgList(this.queryParams).then(response => {
-        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根部门的信息（其中孩子又是一个数组，包含若干个对象，即若干个子部门）}]
+        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
         this.orgList = response.data
         this.loading = false
       })
@@ -269,7 +269,7 @@ export default {
     /* 虽然 normalizer 函数本身不包含递归逻辑，但如果它被用在一个自动处理树形数据的组件中，
     如 Treeselect，它会被组件自动多次调用，每次处理一个节点。这样的设计允许函数保持简单和专注于
     单个节点的处理，而复杂的遍历逻辑由组件内部管理。 */
-    /** 转换部门数据结构 */
+    /** 转换组织数据结构 */
     normalizer(node) {
       if (node.children && !node.children.length) {
         delete node.children
@@ -285,7 +285,7 @@ export default {
       getOrgList().then(response => {
         this.orgOptions = []
         /* isDisabled: true，这个属性通常用于控制节点的可交互性。设置为 true 表示这个节点在
-        用户界面上不能被选择或操作。 在这里，根节点不可被操作，也即整个部门树是不可被操作的.既然<treeselect>组件使用了disabled属性，这里就没有必要再做特殊处理了
+        用户界面上不能被选择或操作。 在这里，根节点不可被操作，也即整个组织树是不可被操作的.既然<treeselect>组件使用了disabled属性，这里就没有必要再做特殊处理了
         if (e === 'update') {
           const dept = { deptId: 0, deptName: '主类目', children: [], isDisabled: true }
           dept.children = response.data

@@ -7,7 +7,7 @@ const state = {
   token: getToken(),
   name: '',
   userid: 0,
-  deptid: 0,
+  orgid: 0,
   avatar: '',
   introduction: '',
   roles: [],
@@ -28,8 +28,8 @@ const mutations = {
   SET_USERID: (state, userId) => {
     state.userid = userId
   },
-  SET_DEPTID: (state, deptId) => {
-    state.deptid = deptId
+  SET_ORGID: (state, orgId) => {
+    state.orgid = orgId
   },
   SET_AVATAR: (state, avatar) => {
     if (avatar.indexOf('http') !== -1) {
@@ -71,7 +71,7 @@ const actions = {
           resolve()
         }
 
-        const { roles, name, userId, deptId, introduction, permissions } = response.data
+        const { roles, name, userId, orgId, introduction, permissions } = response.data
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {
           reject('getInfo: roles must be a non-null array!')
@@ -80,7 +80,7 @@ const actions = {
         commit('SET_ROLES', roles)
         commit('SET_NAME', name)
         commit('SET_USERID', userId)
-        commit('SET_DEPTID', deptId)
+        commit('SET_ORGID', orgId)
         commit('SET_INTRODUCTION', introduction)
         resolve(response) // response作为执行getInfo（是promise实例）之后待处理的结果。从router.beforeEach函数实现来看，这里应该是resolve(response.data)，而不是resolve(response)
       }).catch(error => {

@@ -25,8 +25,8 @@
                   <div class="pull-right">{{ user.email }}</div>
                 </li>
                 <li class="list-group-item">
-                  <svg-icon icon-class="tree" />所属部门
-                  <div class="pull-right">{{ deptName }}</div>
+                  <svg-icon icon-class="tree" />所属组织
+                  <div class="pull-right">{{ orgName }}</div>
                 </li>
                 <li class="list-group-item">
                   <svg-icon icon-class="peoples" />所属角色
@@ -74,14 +74,14 @@ export default {
       user: {},
       roleGroup: {},
       postGroup: {},
-      deptGroup: {},
+      orgGroup: {},
       activeTab: 'userinfo',
       roleIds: undefined,
       postIds: undefined,
       roleName: undefined,
       postName: undefined,
-      dept: {},
-      deptName: undefined
+      org: {},
+      orgName: undefined
     }
   },
   created() {
@@ -103,8 +103,8 @@ export default {
         } else {
           this.roleName = '暂无'
         }
-        this.dept = response.data.user.dept
-        this.deptName = this.dept.deptName
+        this.org = response.data.user.org
+        this.orgName = this.org.orgName
       })
     }
   }
