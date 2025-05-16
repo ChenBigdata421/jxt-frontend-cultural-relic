@@ -15,10 +15,10 @@ services:
     command:  ["nginx", "-g", "daemon off;"]
     
     networks:
-      - security-management_jxt_web
+      - security-management_jxt-web
 
 
 networks:
-  security-management_jxt_web:
+  security-management_jxt-web:
     external: true
 
