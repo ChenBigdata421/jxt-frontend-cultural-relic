@@ -396,6 +396,10 @@ export default {
       ColumnNameConvert: new Map([
         ['no', '编号'],
         ['name', '名称'],
+        ['managerName','管理员'],
+        ['managerOrgFullName','管理员所在组织'],
+        ['enableUse','是否可用'],
+        ['state','状态'],
         ['cpu', 'CPU'],
         ['memory', '内存(G)'],
         ['disk', '存储(G)'],
@@ -565,9 +569,17 @@ export default {
     handleView(row) {
       this.AttributeValueList = []
       Object.keys(row).forEach(key => {
+        var attributeName = this.ColumnNameConvert.get(key)
+        var value = row[key]
+        if (key === 'state') {
+            value = this.stateFormat(row)
+        }
+        if (key === 'enableUse') {
+            value = this.enableUseFormat(row)
+        }
         const attributeValue = {
-          AttributeName: this.ColumnNameConvert.get(key),
-          Value: row[key]
+          AttributeName: attributeName,
+          Value: value
         }
         if (attributeValue.AttributeName !== undefined) {
           this.AttributeValueList.push(attributeValue)

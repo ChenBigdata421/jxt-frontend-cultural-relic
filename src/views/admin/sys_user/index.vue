@@ -40,6 +40,22 @@
                   @keyup.enter.native="handleQuery"
                 />
               </el-form-item>
+              <el-form-item label="性别" prop="sex">
+                <el-select
+                  v-model="queryParams.sex"
+                  placeholder="请选择"
+                  clearable
+                  size="small"
+                  style="width: 160px"
+                >
+                  <el-option
+                    v-for="dict in sexOptions"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
+                  />
+                </el-select>
+              </el-form-item>
               <el-form-item label="手机号码" prop="phone">
                 <el-input
                   v-model="queryParams.phone"
@@ -49,6 +65,28 @@
                   style="width: 160px"
                   @keyup.enter.native="handleQuery"
                 />
+              </el-form-item>
+              <el-form-item label="角色" prop="roleId">
+                <el-select v-model="queryParams.roleId" placeholder="请选择角色" clearable @change="$forceUpdate()">
+                  <el-option
+                    v-for="item in roleOptions"
+                    :key="item.roleId"
+                    :label="item.roleName"
+                    :value="item.roleId"
+                    :disabled="item.status == 1"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="岗位" prop="postId">
+                <el-select v-model="queryParams.postId" placeholder="请选择岗位" clearable @change="$forceUpdate()">
+                  <el-option
+                    v-for="item in postOptions"
+                    :key="item.postId"
+                    :label="item.postName"
+                    :value="item.postId"
+                    :disabled="item.status == 1"
+                  />
+                </el-select>
               </el-form-item>
               <el-form-item label="状态" prop="status">
                 <el-select
@@ -267,7 +305,7 @@
 
             <el-col :span="12">
               <el-form-item label="岗位">
-                <el-select v-model="form.postId" placeholder="请选择" @change="$forceUpdate()">
+                <el-select v-model="form.postId" placeholder="请选择岗位" @change="$forceUpdate()">
                   <el-option
                     v-for="item in postOptions"
                     :key="item.postId"
@@ -280,7 +318,7 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="角色">
-                <el-select v-model="form.roleId" placeholder="请选择" @change="$forceUpdate()">
+                <el-select v-model="form.roleId" placeholder="请选择角色" @change="$forceUpdate()">
                   <el-option
                     v-for="item in roleOptions"
                     :key="item.roleId"
@@ -413,9 +451,12 @@ export default {
         pageIndex: 1,
         pageSize: 10,
         userName: undefined,
+        sex:undefined,
         phone: undefined,
         status: undefined,
-        orgId: undefined
+        orgId: undefined,
+        roleId:undefined,
+        postId:undefined
       },
       // 表单校验
       rules: {
@@ -451,6 +492,12 @@ export default {
     })
     this.getConfigKey('sys_user_initPassword').then(response => {
       this.initPassword = response.data.configValue
+    })
+    listPost({ pageSize: 1000 }).then(response => {
+      this.postOptions = response.data.list
+    })
+    listRole({ pageSize: 1000 }).then(response => {
+      this.roleOptions = response.data.list
     })
   },
   methods: {
@@ -551,8 +598,8 @@ export default {
         sex: undefined,
         status: '2',
         remark: undefined,
-        postIds: undefined,
-        roleIds: undefined
+        postId: undefined,
+        roleId: undefined
       }
       this.resetForm('form')
     },
@@ -579,12 +626,6 @@ export default {
       this.reset()
       this.getTreeselect()
 
-      listPost({ pageSize: 1000 }).then(response => {
-        this.postOptions = response.data.list
-      })
-      listRole({ pageSize: 1000 }).then(response => {
-        this.roleOptions = response.data.list
-      })
       this.open = true
       this.title = '添加用户'
       this.form.password = this.initPassword
