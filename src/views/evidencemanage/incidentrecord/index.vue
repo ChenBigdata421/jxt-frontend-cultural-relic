@@ -43,14 +43,14 @@
               @select="handleOrgSelect"
             />
           </el-form-item>
-          <el-form-item label="处警人员">
+          <el-form-item label="处警人员" prop="processPoliceIds">
             <el-select
-              v-model="selectedPoliceId"
+              v-model="queryParams.processPoliceIds"
               :options="userOptions"
               placeholder="请选择处警人员"
+              multiple
               style="width: 170px;"
               clearable
-              @change="handleSelectedPoliceIdChange"
             >
               <el-option
                 v-for="item in userOptions"
@@ -132,14 +132,14 @@
           @sort-change="handleSortChang"
         >
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
-          <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
+          <!--:formatter 是一个属性绑定（也称为"v-bind"或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column type="selection" width="60" align="center" />
           <el-table-column prop="code" label="警情号" width="80" />
           <el-table-column prop="name" label="报警人姓名" width="100" />
           <el-table-column prop="title" label="警情标题" width="80" />
           <el-table-column prop="tel" label="报警电话" width="150" />
           <el-table-column prop="address" label="警情地址" width="150" />
-          <el-table-column prop="processPolices" label="处警人" width="100" />
+          <el-table-column prop="processPoliceNames" label="处警人" width="100" />
           <el-table-column prop="orgPaths" label="处警组织" width="100" />
           <el-table-column prop="result" label="处警结果" width="100" />
           <el-table-column prop="superviseType" label="警情监督类型" width="100" />
@@ -205,194 +205,187 @@
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
-         <el-dialog :title="title" :visible.sync="open" width="750px" :close-on-click-modal="false">
-            <div class="form-container">
-                <el-form ref="form" :model="form" :rules="rules" label-width="100px">
-                    <!-- 基础信息 -->
-                    <div class="form-section">
-                        <div class="form-section-title">基础信息</div>
-                        <el-row :gutter="20">
-                            <el-col :span="12">
-                                <el-form-item label="报警人姓名：" prop="name">
-                                    <el-input v-model="form.name" placeholder="请输入报警人姓名" />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="报警电话：" prop="tel">
-                                    <el-input v-model="form.tel" placeholder="请输入报警电话" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        
-                        <el-row :gutter="20">
-                            <el-col :span="24">
-                                <el-form-item label="警情标题：" prop="title">
-                                    <el-input v-model="form.title" placeholder="请输入警情标题" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        
-                        <el-row :gutter="20">
-                            <el-col :span="24">
-                                <el-form-item label="报警内容：" prop="context">
-                                    <el-input 
-                                        type="textarea" 
-                                        :rows="2" 
-                                        v-model="form.context" 
-                                        placeholder="请输入报警内容" 
-                                    />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        
-                        <el-row :gutter="20">
-                            <el-col :span="24">
-                                <el-form-item label="报警地址：" prop="address">
-                                    <el-input v-model="form.address" placeholder="请输入报警地址" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row :gutter="20">
-                            <el-col :span="12">
-                              <el-form-item label="处警组织：" prop="orgId">
-                                <treeselect
-                                    v-model="form.orgId"
-                                    :options="orgOptions"
-                                    placeholder="请选择处警组织"
-                                />
-                              </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                              <el-form-item label="处警人员：">
-                                <el-select 
-                                  v-model="selectedPoliceIds" 
-                                  placeholder="请选择处警人员" 
-                                  multiple
-                                  collapse-tags
-                                  collapse-tags-tooltip
-                                  @change="handleSelectedPoliceIdsChange"
-                                >
-                                  <el-option
-                                     v-for="item in userOptions"
-                                     :key="item.userId"
-                                     :label="item.userName"
-                                     :value="item.userId"
-                                  />
-                                </el-select>
-                              </el-form-item>
-                            </el-col>
-                        </el-row>
-                      </div>
+        <el-dialog :title="title" :visible.sync="open" width="750px" :close-on-click-modal="false">
+          <div class="form-container">
+            <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+              <!-- 基础信息 -->
+              <div class="form-section">
+                <div class="form-section-title">基础信息</div>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="报警人姓名：" prop="name">
+                      <el-input v-model="form.name" placeholder="请输入报警人姓名" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="报警电话：" prop="tel">
+                      <el-input v-model="form.tel" placeholder="请输入报警电话" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="24">
+                    <el-form-item label="警情标题：" prop="title">
+                      <el-input v-model="form.title" placeholder="请输入警情标题" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="24">
+                    <el-form-item label="报警内容：" prop="context">
+                      <el-input
+                        v-model="form.context"
+                        type="textarea"
+                        :rows="2"
+                        placeholder="请输入报警内容"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="24">
+                    <el-form-item label="报警地址：" prop="address">
+                      <el-input v-model="form.address" placeholder="请输入报警地址" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="处警组织：" prop="orgId">
+                      <treeselect
+                        v-model="form.orgId"
+                        :options="orgOptions"
+                        placeholder="请选择处警组织"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="处警人员：">
+                      <el-select
+                        v-model="form.processPoliceIds"
+                        placeholder="请选择处警人员"
+                        multiple
+                        collapse-tags
+                        collapse-tags-tooltip
+                      >
+                        <el-option
+                          v-for="item in userOptions"
+                          :key="item.userId"
+                          :label="item.userName"
+                          :value="item.userId"
+                        />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
 
-                    <!-- 时间信息 -->
-                    <div class="form-section">
-                        <div class="form-section-title">时间信息</div>
-                        <el-row :gutter="20">
-                            <el-col :span="12">
-                                <el-form-item label="创建时间：">
-                                    <el-date-picker
-                                        v-model="form.createTime"
-                                        type="datetime"
-                                        placeholder="选择创建时间"
-                                        value-format="yyyy-MM-ddTHH:mm:ssZ"
-                                        class="full-width"
-                                    />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="报警时间：">
-                                    <el-date-picker
-                                        v-model="form.reportTime"
-                                        type="datetime"
-                                        placeholder="选择报警时间"
-                                        value-format="yyyy-MM-ddTHH:mm:ssZ"
-                                        class="full-width"
-                                    />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        
-                        <el-row :gutter="20">
-                            <el-col :span="12">
-                                <el-form-item label="接警时间：">
-                                    <el-date-picker
-                                        v-model="form.receiveTime"
-                                        type="datetime"
-                                        placeholder="选择接警时间"
-                                        value-format="yyyy-MM-ddTHH:mm:ssZ"
-                                        class="full-width"
-                                    />
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="处警时间：">
-                                    <el-date-picker
-                                        v-model="form.processTime"
-                                        type="datetime"
-                                        placeholder="选择处警时间"
-                                        value-format="yyyy-MM-ddTHH:mm:ssZ"
-                                        class="full-width"
-                                    />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        
-                        <el-row :gutter="20">
-                            <el-col :span="12">
-                                <el-form-item label="结束时间：">
-                                    <el-date-picker
-                                        v-model="form.endTime"
-                                        type="datetime"
-                                        placeholder="选择结束时间"
-                                        value-format="yyyy-MM-ddTHH:mm:ssZ"
-                                        class="full-width"
-                                    />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                    </div>
+              <!-- 时间信息 -->
+              <div class="form-section">
+                <div class="form-section-title">时间信息</div>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="创建时间：">
+                      <el-date-picker
+                        v-model="form.createTime"
+                        type="datetime"
+                        placeholder="选择创建时间"
+                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="报警时间：">
+                      <el-date-picker
+                        v-model="form.reportTime"
+                        type="datetime"
+                        placeholder="选择报警时间"
+                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="接警时间：">
+                      <el-date-picker
+                        v-model="form.receiveTime"
+                        type="datetime"
+                        placeholder="选择接警时间"
+                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="处警时间：">
+                      <el-date-picker
+                        v-model="form.processTime"
+                        type="datetime"
+                        placeholder="选择处警时间"
+                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="结束时间：">
+                      <el-date-picker
+                        v-model="form.endTime"
+                        type="datetime"
+                        placeholder="选择结束时间"
+                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
 
-                    <!-- 处警信息 -->
-                    <div class="form-section">
-                        <div class="form-section-title">处警信息</div>
-                        <el-row :gutter="20">
-                            <el-col :span="12">
-                                <el-form-item label="警情监督类型：" prop="superviseType">
-                                    <el-select v-model="form.superviseType" placeholder="请选择" class="full-width">
-                                        <el-option label="类型一" value="1"></el-option>
-                                        <el-option label="类型二" value="2"></el-option>
-                                        <el-option label="类型三" value="3"></el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="12">
-                                <el-form-item label="处警结果：" prop="result">
-                                    <el-input v-model="form.result" placeholder="请输入处警结果" />
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        
-                        <el-row :gutter="20">
-                            <el-col :span="24">
-                                <el-form-item label="状态：">
-                                    <el-radio-group v-model="form.status">
-                                        <el-radio
-                                            v-for="dict in statusOptions"
-                                            :key="parseInt(dict.value)"
-                                            :label="parseInt(dict.value)"
-                                        >{{ dict.label }}</el-radio>
-                                    </el-radio-group>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                    </div>
-                </el-form>
-            </div>
+              <!-- 处警信息 -->
+              <div class="form-section">
+                <div class="form-section-title">处警信息</div>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="警情监督类型：" prop="superviseType">
+                      <el-select v-model="form.superviseType" placeholder="请选择" class="full-width">
+                        <el-option label="类型一" value="1"></el-option>
+                        <el-option label="类型二" value="2"></el-option>
+                        <el-option label="类型三" value="3"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="处警结果：" prop="result">
+                      <el-input v-model="form.result" placeholder="请输入处警结果" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="24">
+                    <el-form-item label="状态：">
+                      <el-radio-group v-model="form.status">
+                        <el-radio
+                          v-for="dict in statusOptions"
+                          :key="parseInt(dict.value)"
+                          :label="parseInt(dict.value)"
+                        >{{ dict.label }}</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-form>
+          </div>
 
-            <div slot="footer" class="dialog-footer">
-                <el-button @click="cancel">取 消</el-button>
-                <el-button type="primary" @click="submitForm">确 定</el-button>
-            </div>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="cancel">取 消</el-button>
+            <el-button type="primary" @click="submitForm">确 定</el-button>
+          </div>
         </el-dialog>
 
         <!--显示详情-->
@@ -411,8 +404,8 @@
   </BasicLayout>
 </template>
 <script>
-import { delIncidentRecordById, addIncidentRecord, updateIncidentRecord, batchDelIncidentRecord } from '@/api/admin/evidence_manage_command_api'
-import { getIncidentRecordList, getIncidentRecord } from '@/api/admin/evidence_manage_query_api'
+import { delIncidentRecordById, addIncidentRecord, updateIncidentRecord, batchDelIncidentRecord } from '@/api/evidence/evidence_manage_command_api'
+import { getIncidentRecordList } from '@/api/evidence/evidence_manage_query_api'
 import { formatJson } from '@/utils'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import Treeselect from '@riophae/vue-treeselect'
@@ -437,13 +430,12 @@ export default {
       // 警情数据
       incidentRecordList: [],
       selectedPoliceIds: [], // 多选的处警人
-      selectedPoliceId:undefined,
-      selectedOrgId:undefined,
+      selectedOrgId: undefined,
       // 状态数据字典
       statusOptions: [],
       // 关联状态数据字典
       incidentRelationStatusOptions: [],
-       // 弹出层标题
+      // 弹出层标题
       title: '',
       isEdit: false,
       // 是否显示增加警情对话框
@@ -456,12 +448,12 @@ export default {
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
-        code:undefined,
+        code: undefined,
         name: undefined,
         title: undefined,
         orgPaths: undefined,
-        processPolices: undefined,
-        status:undefined
+        processPoliceIds: undefined,
+        status: undefined
       },
       AttributeValueList: [],
       ColumnNameConvert: new Map([
@@ -471,8 +463,8 @@ export default {
         ['tel', '报警电话'],
         ['context', '报警内容'],
         ['address', '警情发生地址'],
-        ['processPolices','处警人'],
-        ['orgPaths','处警组织'],
+        ['processPoliceNames', '处警人'],
+        ['orgPaths', '处警组织'],
         ['createTime', '创建时间'],
         ['reportTime', '报警时间'],
         ['receiveTime', '接警时间'],
@@ -485,7 +477,6 @@ export default {
       ]),
       // 表单参数
       form: {
-        processPolices: undefined,
       },
       // 表单校验,触发时机（trigger: 'blur'）：当输入框失去焦点（blur 事件）时触发验证。
       rules: {
@@ -501,8 +492,7 @@ export default {
       // 当 form.orgId 更新时，调用 getUser
       if (newVal) {
         if (this.firstLoad !== true) { // 首次打开对话框，不需要清空管理人员
-          this.form.managerId = null // 清空管理人员选择
-          this.selectedPoliceIds = []
+          this.form.processPoliceIds = []
         }
         this.firstLoad = false
         this.getFormUser()
@@ -515,63 +505,33 @@ export default {
     this.getDicts('incident_status').then(response => {
       this.statusOptions = response.data
     })
-    
     this.getDicts('incident_relation_status').then(response => {
       this.incidentRelationStatusOptions = response.data
     })
   },
   methods: {
-    handleSelectedPoliceIdsChange(selectedPoliceIds) {
-       // 根据选中的userId数组，获取对应的userName数组
-       const selectedNames = selectedPoliceIds.map(userId => {
-           const user = this.userOptions.find(item => item.userId === userId)
-           return user ? user.userName : ''
-       }).filter(name => name); // 过滤掉空值
-    
-       // 将userName数组转换为逗号隔开的字符串
-       this.form.processPolices = selectedNames.join(',')
-    
-       this.$forceUpdate();
-    },
-    handleSelectedPoliceIdChange(selectedPoliceId) {
-      const user = this.userOptions.find(item => item.userId === selectedPoliceId)
-      this.queryParams.processPolices = user ? user.userName : undefined
-      this.$forceUpdate();
-    },
-    
     handleOrgSelect(node) {
-       // node 参数包含完整的节点信息
+      // node 参数包含完整的节点信息
       this.queryParams.orgPaths = node ? node.label : undefined
       listUser({ orgId: '/' + node.id + '/' }).then(response => {
         this.userOptions = response.data.list
       })
     },
 
-    // 初始化时调用，将字符串转换为选中数组
-    initSelectedUserIds(processPolices) {
-      if (processPolices) {
-        const names = processPolices.split(',');
-        this.selectedPoliceIds = this.userOptions
-          .filter(item => names.includes(item.userName))
-          .map(item => item.userId);
-      } else {
-        this.selectedPoliceIds = [];
-      }
-      console.log(this.selectedPoliceIds)
-    },
     /** 查询警情列表 */
     getList() {
       this.loading = true
-      //保证this.queryParams每项，如果没有内容，则必须为undefined，否则会携带一个空串到后台，这是不希望的。
-      this.queryParams.code = this.queryParams.code === '' ? undefined : this.queryParams.code;
-      this.queryParams.name = this.queryParams.name === '' ? undefined : this.queryParams.name;
-      this.queryParams.title = this.queryParams.title === '' ? undefined : this.queryParams.title;
-      this.queryParams.orgPaths = this.selectedOrgId === undefined ? undefined : this.queryParams.orgPaths;
-      this.queryParams.processPolices = this.selectedPoliceId === '' ? undefined : this.queryParams.processPolices;
-      this.queryParams.status = this.queryParams.status === '' ? undefined : this.queryParams.status;
+      // 保证this.queryParams每项，如果没有内容，则必须为undefined，否则会携带一个空串到后台，这是不希望的。
+      this.queryParams.code = this.queryParams.code === '' ? undefined : this.queryParams.code
+      this.queryParams.name = this.queryParams.name === '' ? undefined : this.queryParams.name
+      this.queryParams.title = this.queryParams.title === '' ? undefined : this.queryParams.title
+      this.queryParams.orgPaths = this.selectedOrgId === undefined ? undefined : this.queryParams.orgPaths
+      this.queryParams.status = this.queryParams.status === '' ? undefined : this.queryParams.status
+      console.log(this.queryParams)
       getIncidentRecordList(this.queryParams).then(response => {
         // 注意：response.data是数组类型，数组的元素是对象
         this.incidentRecordList = response.data.list
+        console.log(this.incidentRecordList)
         this.total = response.data.count
         this.loading = false
       })
@@ -591,33 +551,32 @@ export default {
         this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
       })
     },
-    
+
     getFormUser() {
       return new Promise((resolve, reject) => {
-          listUser({ orgId: '/' + this.form.orgId + '/' }).then(response => {
-             this.userOptions = response.data.list
-             resolve('true')
-          }).catch(error => {
-            console.error('获取用户失败:', error);
-            this.userOptions = [];
-            reject(error)
-          });
-      });
+        listUser({ orgId: '/' + this.form.orgId + '/' }).then(response => {
+          this.userOptions = response.data.list
+          resolve('true')
+        }).catch(error => {
+          console.error('获取用户失败:', error)
+          this.userOptions = []
+          reject(error)
+        })
+      })
     },
 
     // 表单重置
     reset() {
       this.form = {
-        
       }
       this.resetForm('form')
     },
     /** 重置按钮操作 */
     resetQuery() {
       this.resetForm('queryForm')
-      //清空树状选择框与普通选择框后，值有差异，前者为undefined，后者为'',要注意
+      // 清空树状选择框与普通选择框后，值有差异，前者为undefined，后者为'',要注意
       this.selectedOrgId = undefined
-      this.selectedPoliceId = ''
+      this.userOptions = []
       this.handleQuery()
     },
     // 取消按钮
@@ -636,7 +595,7 @@ export default {
       this.multiple = !selection.length
     },
     /** 新增按钮操作*/
-    handleAdd(row) {
+    handleAdd() {
       this.reset()
       this.open = true
       this.title = '添加警情'
@@ -658,16 +617,13 @@ export default {
 
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset()
       this.firstLoad = true
-      this.form = row
+      // 使用对象展开运算符创建新对象
+      this.form = { ...row }
       this.title = '修改警情'
       this.isEdit = true
       this.open = true
-      this.getFormUser().then(() => {
-        console.log(row.processPolices)
-        this.initSelectedUserIds(row.processPolices);
-      })
+      this.getFormUser()
     },
     /** 浏览按钮操作 */
     handleView(row) {
@@ -676,10 +632,10 @@ export default {
         var attributeName = this.ColumnNameConvert.get(key)
         var value = row[key]
         if (key === 'status') {
-            value = this.statusFormat(row)
+          value = this.statusFormat(row)
         }
         if (key === 'isRelation') {
-            value = this.relationStatusFormat(row)
+          value = this.relationStatusFormat(row)
         }
         const attributeValue = {
           AttributeName: attributeName,
@@ -703,7 +659,9 @@ export default {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
                 this.open = false
-                this.getList()
+                setTimeout(() => {
+                            this.getList()
+                          }, 1000);
               } else {
                 this.msgError(response.msg)
               }
@@ -713,7 +671,10 @@ export default {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
                 this.open = false
-                this.getList()
+                setTimeout(() => {
+                            this.getList()
+                          }, 1000);
+                
               } else {
                 this.msgError(response.msg)
               }
@@ -724,7 +685,7 @@ export default {
     },
 
     handleDelete(row) {
-      //const IncidentRecordId = (row.id && [row.id]) || this.IncidentRecordIds
+      // const IncidentRecordId = (row.id && [row.id]) || this.IncidentRecordIds
       var IncidentRecordId
       if (this.IncidentRecordIds.length > 1) {
         IncidentRecordId = this.IncidentRecordIds
@@ -737,12 +698,14 @@ export default {
         type: 'warning'
       }).then(function() {
         if (Array.isArray(IncidentRecordId)) {
-           return batchDelIncidentRecord({ 'ids': IncidentRecordId })
+          return batchDelIncidentRecord({ 'ids': IncidentRecordId })
         } else {
-           return delIncidentRecordById(IncidentRecordId)
+          return delIncidentRecordById(IncidentRecordId)
         }
       }).then((response) => {
-        this.getList()
+        setTimeout(() => {
+                            this.getList()
+                          }, 1000);
         this.msgSuccess(response.msg)
       }).catch(function() {})
     },
@@ -803,3 +766,4 @@ export default {
             border-top: 1px solid #e6e6e6;
         }
     </style>
+@/api/evidence/evidence_manage_command_api@/api/evidence/evidence_manage_query_api
