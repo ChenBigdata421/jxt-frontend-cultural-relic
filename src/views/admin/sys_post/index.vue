@@ -85,7 +85,10 @@
           <el-table-column label="岗位名称" align="center" prop="postName" sortable="custom" />
           <el-table-column label="岗位排序" align="center" prop="sort" sortable="custom" />
           <el-table-column label="状态" align="center" prop="status" sortable="custom" :formatter="statusFormat">
+            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
+              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
+                否则为 'success'（通常显示为绿色）。-->
               <el-tag
                 :type="scope.row.status === 1 ? 'danger' : 'success'"
                 disable-transitions

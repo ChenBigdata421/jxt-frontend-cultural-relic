@@ -66,14 +66,13 @@
           <el-table-column prop="sort" label="排序" width="100" />
           <!--<el-table-column prop="status" label="状态" :formatter="statusFormat" width="100">在<template slot-scope="scope">中已经调用了statusFormat，这里就不需要了-->
           <el-table-column prop="status" label="状态" width="100">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
-              <el-tag
-                :type="scope.row.status === 1 ? 'danger' : 'success'"
-                disable-transitions
-              >{{ statusFormat(scope.row) }}</el-tag>
+              <el-switch
+                v-model="scope.row.status"
+                active-value="2"
+                inactive-value="1"
+                @change="handleStatusChange(scope.row)"
+              />
             </template>
           </el-table-column>
           <el-table-column label="创建时间" align="center" prop="createdAt" width="200">
@@ -160,18 +159,6 @@
                   <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="50" />
                 </el-form-item>
               </el-col>
-              <el-col :span="12">
-                <el-form-item label="组织状态">
-                  <!--当用户选择一个单选按钮时，form.status 的值将被更新为该按钮的 label（或者更准确地说是 :label 绑定的值）。-->
-                  <el-radio-group v-model="form.status">
-                    <el-radio
-                      v-for="dict in statusOptions"
-                      :key="dict.value"
-                      :label="dict.value"
-                    >{{ dict.label }}</el-radio>
-                  </el-radio-group>
-                </el-form-item>
-              </el-col>
             </el-row>
           </el-form>
           <div slot="footer" class="dialog-footer">
@@ -186,7 +173,7 @@
 </template>
 
 <script>
-import { getOrgList, getOrg, delOrg, addOrg, updateOrg } from '@/api/admin/sys-organization'
+import { getOrgList, getOrg, delOrg, addOrg, updateOrg, changeOrgStatus } from '@/api/admin/sys-organization'
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
@@ -255,7 +242,7 @@ export default {
     this.getDicts('sys_normal_disable').then(response => {
       this.statusOptions = response.data
     })
-  },
+  },  
   methods: {
     /** 查询组织列表 */
     getList() {
@@ -343,7 +330,6 @@ export default {
 
       getOrg(row.orgId).then(response => {
         this.form = response.data// 只返回一个组织的信息，则是一个对象类型，如果返回的是多个组织信息，则为数组类型
-        this.form.status = String(this.form.status)
         this.form.sort = String(this.form.sort)
         this.open = true
         this.title = '修改组织'
@@ -354,7 +340,6 @@ export default {
     submitForm: function() {
       this.$refs['form'].validate(valid => {
         if (valid) {
-          this.form.status = parseInt(this.form.status)
           this.form.sort = parseInt(this.form.sort)
           if (this.form.orgId !== undefined) {
             updateOrg(this.form, this.form.orgId).then(response => {
@@ -408,6 +393,22 @@ export default {
             this.msgError(response.msg)
           }
         }).catch(function() {})
+    },
+    // 组织状态修改
+    handleStatusChange(row) {
+      const text = row.status === '2' ? '启用' : '停用'
+      this.$confirm('确认要"' + text + '""' + row.orgName + '"组织吗?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(function() {
+        return changeOrgStatus(row.orgId, row.status)
+      }).then((res) => {
+        console.log('res', res)
+        this.msgSuccess(res.msg)
+      }).catch(function() {
+        row.status = row.status === '2' ? '1' : '2'
+      })
     }
   }
 }

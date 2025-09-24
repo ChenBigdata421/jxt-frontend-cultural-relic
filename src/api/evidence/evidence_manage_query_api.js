@@ -33,3 +33,29 @@ export function getMedia(mediaId) {
     method: 'get'
   })
 }
+
+// 查询执法类型列表
+export function getEnforcementTypeList(query) {
+  return request({
+    url: '/api/v1/enforcement-types',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询执法类型详细
+export function getEnforcementType(id) {
+  return request({
+    url: '/api/v1/enforcement-types/' + id,
+    method: 'get'
+  })
+}
+
+// 查询执法类型树形结构
+export function getEnforcementTypeTree(query) {
+  return request({
+    url: '/api/v1/enforcement-types/tree',
+    method: 'get',
+    params: query
+  })
+}

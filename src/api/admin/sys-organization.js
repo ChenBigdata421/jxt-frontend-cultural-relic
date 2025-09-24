@@ -58,3 +58,16 @@ export function delOrg(data) {
     data: data
   })
 }
+
+// 组织状态修改
+export function changeOrgStatus(orgId, status) {
+  const data = {
+    orgId,
+    status
+  }
+  return request({
+    url: '/api/v1/org/org-status',
+    method: 'put',
+    data: data
+  })
+}
