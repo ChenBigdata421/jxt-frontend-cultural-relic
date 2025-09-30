@@ -16,7 +16,6 @@ export function getIncidentRecord(lawcameraId) {
   })
 }
 
-////媒体
 // 查询 Media 列表
 export function listMedia(query) {
   return request({
@@ -26,7 +25,7 @@ export function listMedia(query) {
   })
 }
 
-// 根据 id 查询 Media 
+// 根据 id 查询 Media
 export function getMedia(mediaId) {
   return request({
     url: '/api/v1/media/' + mediaId,

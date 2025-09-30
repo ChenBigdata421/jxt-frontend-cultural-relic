@@ -35,7 +35,7 @@
           </el-form-item>
           <el-form-item label="处警组织" prop="orgId">
             <treeselect
-              v-model="selectedOrgId"
+              v-model="queryParams.orgId"
               :options="orgOptions"
               placeholder="请选择处警组织"
               style="width: 170px;"
@@ -167,7 +167,7 @@
             label="操作"
             align="left"
             class-name="small-padding fixed-width"
-            width="150"
+            width="220"
           >
             <template slot-scope="scope">
               <el-button
@@ -191,6 +191,13 @@
                 icon="el-icon-delete"
                 @click="handleDelete(scope.row)"
               >删除</el-button>
+              <el-button
+                v-permisaction="['incidentrecord:lawcamera:link']"
+                size="mini"
+                type="text"
+                icon="el-icon-link"
+                @click="handleLinkMedia(scope.row)"
+              >关联媒体</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -353,9 +360,9 @@
                   <el-col :span="12">
                     <el-form-item label="警情监督类型：" prop="superviseType">
                       <el-select v-model="form.superviseType" placeholder="请选择" class="full-width">
-                        <el-option label="类型一" value="1"></el-option>
-                        <el-option label="类型二" value="2"></el-option>
-                        <el-option label="类型三" value="3"></el-option>
+                        <el-option label="类型一" value="1" />
+                        <el-option label="类型二" value="2" />
+                        <el-option label="类型三" value="3" />
                       </el-select>
                     </el-form-item>
                   </el-col>
@@ -399,13 +406,175 @@
             <el-table-column prop="Value" label="值" width="450" align="center" />
           </el-table>
         </el-dialog>
+
+        <!--关联媒体对话框-->
+        <el-dialog title="关联媒体" :visible.sync="linkMediaOpen" width="1400px" :close-on-click-modal="false">
+          <!-- 查询条件 -->
+          <el-form :inline="true" ref="mediaQueryForm" :model="mediaQueryParams" class="demo-form-inline" size="small">
+            <el-form-item label="拍摄时间">
+              <el-date-picker
+                v-model="mediaQueryParams.shotTimeStart"
+                type="datetime"
+                placeholder="请选择时间">
+              </el-date-picker>
+              <span>至</span>
+              <el-date-picker
+                v-model="mediaQueryParams.shotTimeEnd"
+                type="datetime"
+                placeholder="请选择时间">
+              </el-date-picker>
+            </el-form-item>
+            <el-form-item label="单位组织">
+              <div class="horizontal-container">
+                <treeselect
+                  v-model="mediaQueryParams.orgId"
+                  :options="orgOptions"
+                  placeholder="请选择单位组织"
+                  style="width: 200px;"
+                  clearable
+                  @select="handleMediaOrgSelect"
+                />
+                <el-checkbox v-model="mediaQueryParams.includeSubUnits">包含下级</el-checkbox>
+              </div>
+            </el-form-item>
+            <el-form-item label="拍摄警员">
+              <el-select
+                v-model="mediaQueryParams.policeId"
+                placeholder="请选择拍摄警员"
+                clearable
+                style="width: 200px;"
+                @change="handleMediaPoliceSelect"
+              >
+                <el-option
+                  v-for="item in mediaUserOptions"
+                  :key="item.userId"
+                  :label="item.userName"
+                  :value="item.userId"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="default" icon="el-icon-more" size="mini" @click="toggleMediaMore">更多</el-button>
+              <el-button type="primary" icon="el-icon-search" size="mini" @click="handleMediaQuery">查询</el-button>
+              <el-button type="default" icon="el-icon-refresh" size="mini" @click="resetMediaQuery">重置</el-button>
+            </el-form-item>
+            <!-- 更多查询条件 -->
+            <el-form-item label="媒体类型" prop="mediaCate">
+              <el-select
+                v-model="mediaQueryParams.mediaCate"
+                placeholder="媒体类型"
+                clearable
+                size="small"
+                style="width: 160px"
+              >
+                <el-option
+                  v-for="dict in mediaCateOptions"
+                  :key="dict.value"
+                  :label="dict.label"
+                  :value="parseInt(dict.value)"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item v-if="mediaShowMore" label="导入时间">
+              <el-date-picker
+                v-model="mediaQueryParams.importTimeStart"
+                type="datetime"
+                placeholder="请选择时间">
+              </el-date-picker>
+              <span>至</span>
+              <el-date-picker
+                v-model="mediaQueryParams.importTimeEnd"
+                type="datetime"
+                placeholder="请选择时间">
+              </el-date-picker>
+            </el-form-item>
+            <el-form-item v-if="mediaShowMore" label="执法仪编号">
+              <el-input v-model="mediaQueryParams.recorderId" placeholder="请输入执法仪编号" />
+            </el-form-item>
+            <el-form-item v-if="mediaShowMore" label="数据来源">
+              <el-select v-model="mediaQueryParams.dataSource" placeholder="请选择">
+                <el-option label="采集站" value="0" />
+                <el-option label="采集客户端" value="1" />
+              </el-select>
+            </el-form-item>
+            <el-form-item v-if="mediaShowMore" label="存储方式" prop="storageType">
+              <el-select
+                v-model="mediaQueryParams.storageType"
+                placeholder="存储方式"
+                clearable
+                size="small"
+                style="width: 160px"
+              >
+                <el-option
+                  v-for="dict in storageTypeOptions"
+                  :key="dict.value"
+                  :label="dict.label"
+                  :value="dict.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item v-if="mediaShowMore" label="执法类型">
+              <treeselect
+                v-model="mediaQueryParams.enforType"
+                :options="enforcementTypeOptions"
+                :normalizer="normalizeEnforcementType"
+                placeholder="请选择执法类型"
+                style="width: 200px;"
+                clearable
+              />
+            </el-form-item>
+            <el-form-item v-if="mediaShowMore" label="媒体名称">
+              <el-input v-model="mediaQueryParams.mediaName" placeholder="请输入媒体名称" />
+            </el-form-item>
+          </el-form>
+
+          <!-- 媒体列表 -->
+          <el-table
+            v-loading="mediaLoading"
+            :data="mediaList"
+            border
+            @selection-change="handleMediaSelectionChange"
+            @sort-change="handleMediaSortChange"
+          >
+            <el-table-column type="selection" width="55" align="center" />
+            <el-table-column prop="shotTimeStart" label="拍摄开始时间" width="170" align="center" sortable="custom" />
+            <el-table-column prop="shotTime" label="拍摄结束时间" width="170" align="center" sortable="custom" />
+            <el-table-column label="警员" align="center" width="100">
+              <template slot-scope="{ row }">
+                {{ formatMediaPoliceName(row) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="单位组织" align="center" width="150">
+              <template slot-scope="{ row }">
+                {{ formatMediaOrgName(row) }}
+              </template>
+            </el-table-column>
+            <el-table-column v-show="false" prop="mediaSuffix" label="媒体后缀" align="center" sortable="custom" />
+            <el-table-column v-show="false" prop="mediaName" label="媒体名称" align="center" sortable="custom" />
+            <el-table-column v-show="false" prop="createdAt" label="导入时间" width="170" align="center" sortable="custom" />
+          </el-table>
+
+          <!-- 分页 -->
+          <pagination
+            v-show="mediaTotal > 0"
+            :total="mediaTotal"
+            :page.sync="mediaQueryParams.pageIndex"
+            :limit.sync="mediaQueryParams.pageSize"
+            @pagination="getMediaList"
+          />
+
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="cancelLinkMedia">取 消</el-button>
+            <el-button type="primary" @click="confirmLinkMedia">确 定</el-button>
+          </div>
+        </el-dialog>
       </el-card>
     </template>
   </BasicLayout>
 </template>
 <script>
 import { delIncidentRecordById, addIncidentRecord, updateIncidentRecord, batchDelIncidentRecord } from '@/api/evidence/evidence_manage_command_api'
-import { getIncidentRecordList } from '@/api/evidence/evidence_manage_query_api'
+import { getIncidentRecordList, listMedia, getEnforcementTypeTree } from '@/api/evidence/evidence_manage_query_api'
 import { formatJson } from '@/utils'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import Treeselect from '@riophae/vue-treeselect'
@@ -430,7 +599,6 @@ export default {
       // 警情数据
       incidentRecordList: [],
       selectedPoliceIds: [], // 多选的处警人
-      selectedOrgId: undefined,
       // 状态数据字典
       statusOptions: [],
       // 关联状态数据字典
@@ -441,9 +609,43 @@ export default {
       // 是否显示增加警情对话框
       open: false,
       ViewOpen: false,
+      // 是否显示关联媒体对话框
+      linkMediaOpen: false,
+      // 当前选中的警情记录
+      currentIncidentRecord: null,
       // 组织树选项
       orgOptions: undefined,
       userOptions: undefined,
+      // 媒体相关数据
+      mediaLoading: false,
+      mediaList: [],
+      mediaTotal: 0,
+      mediaUserOptions: [],
+      mediaCateOptions: [],
+      storageTypeOptions: [],
+      enforcementTypeOptions: [],
+      selectedMediaIds: [],
+      mediaShowMore: false,
+      mediaOrder: '',
+      mediaQueryParams: {
+        pageIndex: 1,
+        pageSize: 10,
+        orderBy: '',
+        isDesc: true,
+        shotTimeStart: undefined,
+        shotTimeEnd: undefined,
+        orgId: undefined,
+        includeSubUnits: true,
+        policeId: undefined,
+        mediaCate: undefined,
+        importTimeStart: undefined,
+        importTimeEnd: undefined,
+        recorderId: undefined,
+        dataSource: undefined,
+        storageType: undefined,
+        enforType: undefined,
+        mediaName: undefined
+      },
       // 查询参数
       queryParams: {
         pageIndex: 1,
@@ -451,7 +653,7 @@ export default {
         code: undefined,
         name: undefined,
         title: undefined,
-        orgPaths: undefined,
+        orgId: undefined,
         processPoliceIds: undefined,
         status: undefined
       },
@@ -508,11 +710,16 @@ export default {
     this.getDicts('incident_relation_status').then(response => {
       this.incidentRelationStatusOptions = response.data
     })
+    this.getDicts('evidence_media_type').then(response => {
+      this.mediaCateOptions = response.data
+    })
+    this.getDicts('evidence_storage_type').then(response => {
+      this.storageTypeOptions = response.data
+    })
+    this.getEnforcementTypeTreeselect()
   },
   methods: {
     handleOrgSelect(node) {
-      // node 参数包含完整的节点信息
-      this.queryParams.orgPaths = node ? node.label : undefined
       listUser({ orgId: '/' + node.id + '/' }).then(response => {
         this.userOptions = response.data.list
       })
@@ -521,13 +728,6 @@ export default {
     /** 查询警情列表 */
     getList() {
       this.loading = true
-      // 保证this.queryParams每项，如果没有内容，则必须为undefined，否则会携带一个空串到后台，这是不希望的。
-      this.queryParams.code = this.queryParams.code === '' ? undefined : this.queryParams.code
-      this.queryParams.name = this.queryParams.name === '' ? undefined : this.queryParams.name
-      this.queryParams.title = this.queryParams.title === '' ? undefined : this.queryParams.title
-      this.queryParams.orgPaths = this.selectedOrgId === undefined ? undefined : this.queryParams.orgPaths
-      this.queryParams.status = this.queryParams.status === '' ? undefined : this.queryParams.status
-      console.log(this.queryParams)
       getIncidentRecordList(this.queryParams).then(response => {
         // 注意：response.data是数组类型，数组的元素是对象
         this.incidentRecordList = response.data.list
@@ -573,9 +773,8 @@ export default {
     },
     /** 重置按钮操作 */
     resetQuery() {
+      // 将queryForm中每项元素所绑定的变量置于初始值
       this.resetForm('queryForm')
-      // 清空树状选择框与普通选择框后，值有差异，前者为undefined，后者为'',要注意
-      this.selectedOrgId = undefined
       this.userOptions = []
       this.handleQuery()
     },
@@ -660,8 +859,8 @@ export default {
                 this.msgSuccess(response.msg)
                 this.open = false
                 setTimeout(() => {
-                            this.getList()
-                          }, 1000);
+                  this.getList()
+                }, 1000)
               } else {
                 this.msgError(response.msg)
               }
@@ -672,9 +871,8 @@ export default {
                 this.msgSuccess(response.msg)
                 this.open = false
                 setTimeout(() => {
-                            this.getList()
-                          }, 1000);
-                
+                  this.getList()
+                }, 1000)
               } else {
                 this.msgError(response.msg)
               }
@@ -704,8 +902,8 @@ export default {
         }
       }).then((response) => {
         setTimeout(() => {
-                            this.getList()
-                          }, 1000);
+          this.getList()
+        }, 1000)
         this.msgSuccess(response.msg)
       }).catch(function() {})
     },
@@ -733,6 +931,190 @@ export default {
           this.downloadLoading = false
         })
       })
+    },
+
+    /** 获取执法类型树形数据 */
+    getEnforcementTypeTreeselect() {
+      getEnforcementTypeTree().then(response => {
+        this.enforcementTypeOptions = response.data.list || response.data || []
+      }).catch(() => {
+        this.enforcementTypeOptions = []
+      })
+    },
+
+    /** 执法类型数据结构转换 */
+    normalizeEnforcementType(node) {
+      if (node.children && !node.children.length) {
+        delete node.children
+      }
+      return {
+        id: node.id,
+        label: node.enforcementTypeName || node.label || '未知',
+        children: node.children
+      }
+    },
+
+    /** 关联媒体按钮操作 */
+    handleLinkMedia(row) {
+      this.currentIncidentRecord = row
+      this.linkMediaOpen = true
+      this.resetMediaQuery()
+      this.getMediaList()
+    },
+
+    /** 查询媒体列表 */
+    getMediaList() {
+      this.mediaLoading = true
+      listMedia(this.mediaQueryParams).then(response => {
+        this.mediaList = response.data.list || []
+        this.mediaTotal = response.data.count || 0
+        this.mediaLoading = false
+      }).catch(() => {
+        this.mediaLoading = false
+      })
+    },
+
+    /** 媒体查询按钮操作 */
+    handleMediaQuery() {
+      this.mediaQueryParams.pageIndex = 1
+      this.getMediaList()
+    },
+
+    /** 媒体重置按钮操作 */
+    resetMediaQuery() {
+      this.mediaQueryParams = {
+        pageIndex: 1,
+        pageSize: 10,
+        orderBy: '',
+        isDesc: true,
+        shotTimeStart: undefined,
+        shotTimeEnd: undefined,
+        orgId: undefined,
+        includeSubUnits: true,
+        policeId: undefined,
+        mediaCate: undefined,
+        importTimeStart: undefined,
+        importTimeEnd: undefined,
+        recorderId: undefined,
+        dataSource: undefined,
+        storageType: undefined,
+        enforType: undefined,
+        mediaName: undefined
+      }
+      this.mediaUserOptions = []
+      this.selectedMediaIds = []
+      this.mediaShowMore = false
+      if (this.$refs.mediaQueryForm) {
+        this.$refs.mediaQueryForm.resetFields()
+      }
+    },
+
+    /** 媒体更多条件切换 */
+    toggleMediaMore() {
+      this.mediaShowMore = !this.mediaShowMore
+    },
+
+    /** 媒体排序回调函数 */
+    handleMediaSortChange(column, prop, order) {
+      prop = column.prop
+      order = column.order
+      if (this.mediaOrder !== '' && this.mediaOrder !== prop + 'Order') {
+        this.mediaQueryParams[this.mediaOrder] = undefined
+      }
+      if (order === 'descending') {
+        this.mediaQueryParams[prop + 'Order'] = 'desc'
+        this.mediaOrder = prop + 'Order'
+      } else if (order === 'ascending') {
+        this.mediaQueryParams[prop + 'Order'] = 'asc'
+        this.mediaOrder = prop + 'Order'
+      } else {
+        this.mediaQueryParams[prop + 'Order'] = undefined
+      }
+      this.getMediaList()
+    },
+
+    /** 媒体组织选择事件 */
+    handleMediaOrgSelect(node) {
+      this.mediaQueryParams.orgId = node ? node.id : undefined
+      if (node) {
+        listUser({ orgId: '/' + node.id + '/' }).then(response => {
+          this.mediaUserOptions = response.data.list
+        })
+      } else {
+        this.mediaUserOptions = []
+        this.mediaQueryParams.policeId = undefined
+      }
+    },
+
+    /** 媒体警员选择事件 */
+    handleMediaPoliceSelect(policeId) {
+      this.mediaQueryParams.policeId = policeId
+    },
+
+    /** 媒体多选框选中数据 */
+    handleMediaSelectionChange(selection) {
+      this.selectedMediaIds = selection.map(item => item.mediaId || item.id)
+    },
+
+    /** 格式化媒体警员姓名 */
+    formatMediaPoliceName(row) {
+      if (row.policeName) {
+        return row.policeName
+      }
+      if (row.policeNo && this.mediaUserOptions.length > 0) {
+        const user = this.mediaUserOptions.find(user => user.userId === row.policeNo || user.userCode === row.policeNo)
+        return user ? user.userName : row.policeNo
+      }
+      return row.policeNo || '-'
+    },
+
+    /** 格式化媒体组织名称 */
+    formatMediaOrgName(row) {
+      if (row.orgPaths) {
+        return row.orgPaths
+      }
+      if (row.orgFullName) {
+        return row.orgFullName
+      }
+      if (row.organizationName) {
+        return row.organizationName
+      }
+      return row.orgId || '-'
+    },
+
+    /** 格式化媒体类型 */
+    formatMediaType(row) {
+      if (this.mediaCateOptions.length > 0) {
+        const option = this.mediaCateOptions.find(opt => parseInt(opt.value) === parseInt(row.mediaCate))
+        return option ? option.label : row.mediaCate
+      }
+      return row.mediaCate || '-'
+    },
+
+    /** 取消关联媒体 */
+    cancelLinkMedia() {
+      this.linkMediaOpen = false
+      this.currentIncidentRecord = null
+      this.selectedMediaIds = []
+    },
+
+    /** 确认关联媒体 */
+    confirmLinkMedia() {
+      if (this.selectedMediaIds.length === 0) {
+        this.msgWarning('请选择要关联的媒体')
+        return
+      }
+
+      // 这里可以调用关联媒体的API
+      console.log('关联媒体:', {
+        incidentRecordId: this.currentIncidentRecord.id,
+        mediaIds: this.selectedMediaIds
+      })
+
+      this.msgSuccess(`成功关联 ${this.selectedMediaIds.length} 个媒体`)
+      this.linkMediaOpen = false
+      this.currentIncidentRecord = null
+      this.selectedMediaIds = []
     }
   }
 }
@@ -764,6 +1146,11 @@ export default {
             text-align: right;
             padding: 20px;
             border-top: 1px solid #e6e6e6;
+        }
+        .horizontal-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
     </style>
 @/api/evidence/evidence_manage_command_api@/api/evidence/evidence_manage_query_api

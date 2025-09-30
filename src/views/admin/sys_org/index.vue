@@ -242,7 +242,7 @@ export default {
     this.getDicts('sys_normal_disable').then(response => {
       this.statusOptions = response.data
     })
-  },  
+  },
   methods: {
     /** 查询组织列表 */
     getList() {

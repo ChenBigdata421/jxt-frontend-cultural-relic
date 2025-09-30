@@ -108,7 +108,7 @@
                 <el-form-item label="上级执法类型" prop="parentId">
                   <treeselect
                     v-model="form.parentId"
-                    :options="enforcementTypeOptions"
+                    :options="enforcementTypeLabel"
                     :normalizer="normalizer"
                     :show-count="true"
                     placeholder="选择上级执法类型"
@@ -176,7 +176,7 @@ export default {
       // 表格树数据
       enforcementTypeList: [],
       // 执法类型树选项
-      enforcementTypeOptions: [],
+      enforcementTypeLabel: [],
       // 弹出层标题
       title: '',
       isEdit: false,
@@ -230,8 +230,7 @@ export default {
       this.loading = true
       // 优先使用树形接口，如果不存在则使用普通列表接口
       getEnforcementTypeList(this.queryParams).then(response => {
-        let data = response.data.list || response.data
-        this.enforcementTypeList = data
+        this.enforcementTypeList = response.data.list || response.data
         this.loading = false
       })
     },
@@ -254,33 +253,11 @@ export default {
     },
     /** 查询执法类型下拉树结构 */
     getTreeselect() {
-      // 优先使用树形接口，如果不存在则使用普通列表接口
-      const apiCall = getEnforcementTypeTree || getEnforcementTypeList
-      return apiCall().then(response => {
-        this.enforcementTypeOptions = []
-        let data = response.data.list || response.data
-        // 检查数据是否已经是树形结构，如果不是则构建树形结构
-        if (Array.isArray(data) && data.length > 0 && !data[0].children) {
-          // 如果数据是平铺的，构建树形结构
-          data = this.buildTree(data)
-        }
-        const enforcementType = { id: 0, enforcementTypeName: '主类目', children: [] }
-        enforcementType.children = data
-        this.enforcementTypeOptions.push(enforcementType)
+      getEnforcementTypeTree().then(response => {
+        this.enforcementTypeLabel = response.data.list || response.data || []
       }).catch(() => {
-        // 如果树形接口不存在，使用普通列表接口
-        return getEnforcementTypeList().then(response => {
-          this.enforcementTypeOptions = []
-          let data = response.data.list || response.data
-          // 检查数据是否已经是树形结构，如果不是则构建树形结构
-          if (Array.isArray(data) && data.length > 0 && !data[0].children) {
-            // 如果数据是平铺的，构建树形结构
-            data = this.buildTree(data)
-          }
-          const enforcementType = { id: 0, enforcementTypeName: '主类目', children: [] }
-          enforcementType.children = data
-          this.enforcementTypeOptions.push(enforcementType)
-        })
+        // 如果树形接口不存在，设置为空数组
+        this.enforcementTypeLabel = []
       })
     },
     // 取消按钮
@@ -307,25 +284,24 @@ export default {
     /** 新增按钮操作*/
     handleAdd(row) {
       this.reset()
-      this.getTreeselect().then(() => {
-        if (row !== undefined) {
-          this.form.parentId = row.id
-        }
-        this.open = true
-        this.title = '添加执法类型'
-        this.isEdit = false
-      })
+      this.getTreeselect()
+      if (row !== undefined) {
+        this.form.parentId = row.id
+      }
+      this.open = true
+      this.title = '添加执法类型'
+      this.isEdit = false
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset()
-      this.getTreeselect().then(() => {
-        getEnforcementType(row.id).then(response => {
-          this.form = response.data
-          this.open = true
-          this.title = '修改执法类型'
-          this.isEdit = true
-        })
+      this.getTreeselect()
+      this.form.parentId = row.id
+      getEnforcementType(row.id).then(response => {
+        this.form = response.data
+        this.open = true
+        this.title = '修改执法类型'
+        this.isEdit = true
       })
     },
     /** 提交按钮 */

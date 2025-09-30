@@ -30,7 +30,6 @@ export function delIncidentRecordById(id) {
     method: 'delete'
   })
 }
-////媒体
 
 // 新增 Media
 export function addMedia(data) {

@@ -1,206 +1,161 @@
 <template>
   <BasicLayout>
-  <template #wrapper>
-    <el-card class="box-card">
-    <!-- 查询条件 -->
-    <el-form :inline="true" ref="queryForm" :model="queryParams" class="demo-form-inline" size="small">
-      <el-form-item label="拍摄时间">
-        <el-date-picker
-          v-model="queryParams.shotTimeStart"
-          type="datetime"
-          placeholder="请选择时间">
-        </el-date-picker>
-        <span>至</span>
-        <el-date-picker
-          v-model="queryParams.shotTimeEnd"
-          type="datetime"
-          placeholder="请选择时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="单位组织">
-        <div class="horizontal-container">
-          <treeselect
-            v-model="selectedOrgId"
-            :options="orgOptions"
-            placeholder="请选择单位组织"
-            style="width: 200px;"
-            clearable
-            @select="handleOrgSelect"
-          />
-          <el-checkbox v-model="queryParams.includeSubUnits">包含下级</el-checkbox>
-        </div>
-      </el-form-item>
+    <template #wrapper>
+      <el-card class="box-card">
+        <!-- 查询条件 -->
+        <el-form ref="queryForm" :inline="true" :model="queryParams" class="demo-form-inline" size="small">
+          <el-form-item label="拍摄时间">
+            <el-date-picker v-model="queryParams.shotTimeStart" type="datetime" placeholder="请选择时间" />
+            <span>至</span>
+            <el-date-picker v-model="queryParams.shotTimeEnd" type="datetime" placeholder="请选择时间" />
+          </el-form-item>
+          <el-form-item label="单位组织">
+            <div class="horizontal-container">
+              <treeselect
+                v-model="queryParams.orgId"
+                :options="orgOptions"
+                placeholder="请选择单位组织"
+                style="width: 200px;"
+                clearable
+                @select="handleOrgSelect"
+              />
+              <el-checkbox v-model="queryParams.includeSubUnits">包含下级</el-checkbox>
+            </div>
+          </el-form-item>
 
-      <el-form-item label="拍摄警员">
-        <el-select
-          v-model="selectedPoliceId"
-          placeholder="请选择拍摄警员"
-          clearable
-          style="width: 200px;"
-          @change="handlePoliceSelect"
-        >
-          <el-option
-            v-for="item in userOptions"
-            :key="item.userId"
-            :label="item.userName"
-            :value="item.userId"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="default" icon="el-icon-more" size="mini" @click="toggleMore">更多</el-button>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">查询</el-button>
-        <el-button type="default" icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+          <el-form-item label="拍摄警员">
+            <el-select
+              v-model="queryParams.policeId"
+              placeholder="请选择拍摄警员"
+              clearable
+              style="width: 200px;"
+            >
+              <el-option v-for="item in userOptions" :key="item.userId" :label="item.userName" :value="item.userId" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="default" icon="el-icon-more" size="mini" @click="toggleMore">更多</el-button>
+            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">查询</el-button>
+            <el-button type="default" icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
 
-      </el-form-item>
-      <!-- 更多查询条件 -->
-      <!-- <el-form-item v-if="showMore" label="媒体类型">
+          </el-form-item>
+          <!-- 更多查询条件 -->
+          <!-- <el-form-item v-if="showMore" label="媒体类型">
         <el-select v-model="queryParams.mediaCate" placeholder="请选择">
           <el-option label="音频" value="1"></el-option>
           <el-option label="视频" value="2"></el-option>
           <el-option label="照片" value="0"></el-option>
         </el-select>
       </el-form-item> -->
-      <el-form-item label="媒体类型" prop="mediaCate">
-        <el-select
-          v-model="queryParams.mediaCate"
-          placeholder="媒体类型"
-          clearable
-          size="small"
-          style="width: 160px"
-        >
-          <el-option
-            v-for="dict in mediaCateOptions"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item v-if="showMore" label="导入时间">
-        <el-date-picker
-          v-model="queryParams.importTimeStart"
-          type="datetime"
-          placeholder="请选择时间">
-        </el-date-picker>
-        <span>至</span>
-        <el-date-picker
-          v-model="queryParams.importTimeEnd"
-          type="datetime"
-          placeholder="请选择时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item v-if="showMore" label="执法仪编号">
-        <el-input v-model="queryParams.recorderId" placeholder="请输入执法仪编号"></el-input>
-      </el-form-item>
-      <el-form-item v-if="showMore" label="数据来源">
-        <el-select v-model="queryParams.dataSource" placeholder="请选择">
-          <el-option label="采集站" value="0"></el-option>
-          <el-option label="采集客户端" value="1"></el-option>
-        </el-select>
-      </el-form-item>
-      <!-- <el-form-item v-if="showMore" label="存储方式">
+          <el-form-item label="媒体类型" prop="mediaCate">
+            <el-select v-model="queryParams.mediaCate" placeholder="媒体类型" clearable size="small" style="width: 160px">
+              <el-option v-for="dict in mediaCateOptions" :key="dict.value" :label="dict.label" :value="parseInt(dict.value)" />
+            </el-select>
+          </el-form-item>
+          <el-form-item v-if="showMore" label="导入时间">
+            <el-date-picker v-model="queryParams.importTimeStart" type="datetime" placeholder="请选择时间" />
+            <span>至</span>
+            <el-date-picker v-model="queryParams.importTimeEnd" type="datetime" placeholder="请选择时间" />
+          </el-form-item>
+          <el-form-item v-if="showMore" label="执法仪编号">
+            <el-input v-model="queryParams.recorderId" placeholder="请输入执法仪编号" />
+          </el-form-item>
+          <el-form-item v-if="showMore" label="数据来源">
+            <el-select v-model="queryParams.dataSource" placeholder="请选择">
+              <el-option label="采集站" value="0" />
+              <el-option label="采集客户端" value="1" />
+            </el-select>
+          </el-form-item>
+          <!-- <el-form-item v-if="showMore" label="存储方式">
         <el-select v-model="queryParams.storageType" placeholder="请选择">
           <el-option label="采集站" value="0"></el-option>
           <el-option label="存储服务器" value="1"></el-option>
         </el-select>
       </el-form-item> -->
-      <el-form-item v-if="showMore" label="存储方式" prop="storageType">
-        <el-select
-          v-model="queryParams.storageType"
-          placeholder="存储方式"
-          clearable
-          size="small"
-          style="width: 160px"
+          <el-form-item v-if="showMore" label="存储方式" prop="storageType">
+            <el-select v-model="queryParams.storageType" placeholder="存储方式" clearable size="small" style="width: 160px">
+              <el-option v-for="dict in storageTypeOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item v-if="showMore" label="执法类型">
+            <treeselect
+              v-model="queryParams.enforType"
+              :options="enforcementTypeLabel"
+              :normalizer="normalizeEnforcementType"
+              placeholder="请选择执法类型"
+              style="width: 200px;"
+              clearable
+            />
+          </el-form-item>
+          <el-form-item v-if="showMore" label="媒体名称">
+            <el-input v-model="queryParams.mediaName" placeholder="请输入媒体名称" />
+          </el-form-item>
+        </el-form>
+
+        <!-- 功能菜单 -->
+        <el-row :gutter="10" class="mb8">
+          <el-col :span="1.5">
+            <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd">新增媒体</el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="success"
+              icon="el-icon-edit"
+              size="mini"
+              :disabled="single"
+              @click="handleUpdate"
+            >修改</el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="danger"
+              icon="el-icon-delete"
+              size="mini"
+              :disabled="multiple"
+              @click="handleDelete"
+            >删除</el-button>
+          </el-col>
+          <el-button icon="el-icon-edit" type="primary" size="mini" @click="onSmartMark">智能标注</el-button>
+          <el-button icon="el-icon-document" type="success" size="mini" @click="onManualMark">手动标注</el-button>
+          <el-button icon="el-icon-close" type="danger" size="mini" @click="onNoMark">标注不是执法视频</el-button>
+          <el-button icon="el-icon-setting" size="mini" @click="onLog">日志管理</el-button>
+          <el-button
+            v-show="showDownload"
+            icon="el-icon-download"
+            type="warning"
+            size="mini"
+            @click="onDownload"
+          >下载</el-button>
+          <el-button v-show="showTransfer" icon="el-icon-s-custom" size="mini" @click="onTransfer">移交</el-button>
+          <el-button icon="el-icon-save" size="mini" @click="onSaveCols">保存列头</el-button>
+        </el-row>
+
+        <el-table
+          v-loading="loading"
+          :data="mediaList"
+          border
+          @selection-change="handleSelectionChange"
+          @sort-change="handleSortChange"
         >
-          <el-option
-            v-for="dict in storageTypeOptions"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item v-if="showMore" label="执法类型">
-        <treeselect
-          v-model="queryParams.enforType"
-          :options="enforcementTypeOptions"
-          :normalizer="normalizeEnforcementType"
-          placeholder="请选择执法类型"
-          style="width: 200px;"
-          clearable
-        />
-      </el-form-item>
-      <el-form-item v-if="showMore" label="媒体名称">
-        <el-input v-model="queryParams.mediaName" placeholder="请输入媒体名称"></el-input>
-      </el-form-item>
-    </el-form>
-
-    <!-- 功能菜单 -->
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-        >新增媒体</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          icon="el-icon-edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          icon="el-icon-delete"
-          size="mini"
-          :disabled="multiple"
-          @click="handleDelete"
-        >删除</el-button>
-      </el-col>
-      <el-button icon="el-icon-edit" type="primary" size="mini" @click="onSmartMark">智能标注</el-button>
-      <el-button icon="el-icon-document" type="success" size="mini" @click="onManualMark">手动标注</el-button>
-      <el-button icon="el-icon-close" type="danger" size="mini" @click="onNoMark">标注不是执法视频</el-button>
-      <el-button icon="el-icon-setting" size="mini" @click="onLog">日志管理</el-button>
-      <el-button icon="el-icon-download" type="warning" size="mini" @click="onDownload" v-show="showDownload">下载</el-button>
-      <el-button icon="el-icon-s-custom" size="mini" @click="onTransfer" v-show="showTransfer">移交</el-button>
-      <el-button icon="el-icon-save" size="mini" @click="onSaveCols">保存列头</el-button>
-    </el-row>
-
-<el-table
-    v-loading="loading"
-    :data="mediaList"
-    border
-    @selection-change="handleSelectionChange"
-    @sort-change="handleSortChange"
-  >
-    <el-table-column type="selection" width="55" align="center" />
-    <el-table-column prop="shotTimeStart" label="拍摄开始时间" width="170" align="center" sortable="custom" />
-    <el-table-column prop="shotTime" label="拍摄结束时间" width="170" align="center" sortable="custom" />
-    <!-- <el-table-column label="视频时长" width="100" align="center" sortable="custom">
+          <el-table-column type="selection" width="55" align="center" />
+          <el-table-column prop="shotTimeStart" label="拍摄开始时间" width="170" align="center" sortable="custom" />
+          <el-table-column prop="shotTime" label="拍摄结束时间" width="170" align="center" sortable="custom" />
+          <!-- <el-table-column label="视频时长" width="100" align="center" sortable="custom">
       <template slot-scope="{ row }">
         {{ formatMediaDuration(row.videoDuration) }}
       </template>
-    </el-table-column> -->
-    <el-table-column prop="policeNo" label="警员编号" align="center" v-show="false"/>
-    <!-- <el-table-column prop="policeName" label="拍摄警员" align="center"/> -->
-    <el-table-column prop="orgId" label="单位组织编号" align="center" sortable="custom" v-show="false" />
-    <!-- <el-table-column prop="organizationName" label="单位组织名称" align="center"/> -->
-    <!-- <el-table-column label="执法类型" align="center">
+</el-table-column> -->
+          <el-table-column prop="policeName" label="警员" align="center" width="100" />
+          <el-table-column prop="orgFullName" label="单位组织" align="center" width="150" />
+          <!-- <el-table-column label="执法类型" align="center">
       <template slot-scope="{ row }">
         {{ formatEnforType(row) }}
       </template>
     </el-table-column> -->
-    <el-table-column prop="mediaSuffix" label="媒体后缀" align="center" sortable="custom" v-show="false" />
-    <el-table-column prop="mediaName" label="媒体名称" align="center" sortable="custom" v-show="false" />
-    <el-table-column prop="createdAt" label="导入时间" width="170" align="center" sortable="custom" v-show="false" />
-    <!-- <el-table-column prop="zipNo" label="身份证号" align="center" v-show="false" />
+          <el-table-column v-show="false" prop="mediaSuffix" label="媒体后缀" align="center" sortable="custom" />
+          <el-table-column v-show="false" prop="mediaName" label="媒体名称" align="center" sortable="custom" />
+          <el-table-column v-show="false" prop="createdAt" label="导入时间" width="170" align="center" sortable="custom" />
+          <!-- <el-table-column prop="zipNo" label="身份证号" align="center" v-show="false" />
     <el-table-column prop="siteNo" label="站点编号" align="center" v-show="false" />
     <el-table-column prop="siteName" label="站点名称" align="center" v-show="false" />
     <el-table-column prop="recordNo" label="执法仪编号" align="center" v-show="false" />
@@ -221,217 +176,219 @@
         ></i>
       </template>
     </el-table-column> -->
-    <el-table-column  label="操作"  width="60"  align="center">
-      <template slot-scope="scope">
-        <el-button @click="handleOperation(scope.row)">操作</el-button>
-      </template>
-    </el-table-column>
-  </el-table>
+          <el-table-column label="操作" width="60" align="center">
+            <template slot-scope="scope">
+              <el-button @click="handleOperation(scope.row)">操作</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
 
-          <pagination
-          v-show="total>0"
+        <pagination
+          v-show="total > 0"
           :total="total"
           :page.sync="queryParams.pageIndex"
           :limit.sync="queryParams.pageSize"
           @pagination="getList"
         />
 
-    <!-- 下载类型选择对话框 -->
-    <el-dialog title="选择下载类型" :visible.sync="downloadDialogVisible">
-      <el-form ref="downloadForm">
-        <el-form-item label="文件类型">
-          <el-radio-group v-model="downloadForm.fileType">
-            <el-radio label="3">FLV文件</el-radio>
-            <el-radio label="2">MP4文件</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="downloadDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="onSubmitDownload">确 定</el-button>
-      </div>
-    </el-dialog>
+        <!-- 下载类型选择对话框 -->
+        <el-dialog title="选择下载类型" :visible.sync="downloadDialogVisible">
+          <el-form ref="downloadForm">
+            <el-form-item label="文件类型">
+              <el-radio-group v-model="downloadForm.fileType">
+                <el-radio label="3">FLV文件</el-radio>
+                <el-radio label="2">MP4文件</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="downloadDialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="onSubmitDownload">确 定</el-button>
+          </div>
+        </el-dialog>
 
-    <!-- 添加或修改媒体对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="750px" :close-on-click-modal="false">
-      <div class="form-container">
-        <el-form ref="form" :model="form" :rules="rules" label-width="120px">
-          <!-- 基础信息 -->
-          <div class="form-section">
-            <div class="form-section-title">基础信息</div>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="媒体名称：" prop="mediaName">
-                  <el-input v-model="form.mediaName" placeholder="请输入媒体名称" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="媒体类型：" prop="mediaCate">
-                  <el-select v-model="form.mediaCate" placeholder="请选择媒体类型" class="full-width">
-                    <el-option
-                      v-for="dict in mediaCateOptions"
-                      :key="dict.value"
-                      :label="dict.label"
-                      :value="parseInt(dict.value)"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+        <!-- 添加或修改媒体对话框 -->
+        <el-dialog :title="title" :visible.sync="open" width="750px" :close-on-click-modal="false">
+          <div class="form-container">
+            <el-form ref="form" :model="form" :rules="rules" label-width="120px">
+              <!-- 基础信息 -->
+              <div class="form-section">
+                <div class="form-section-title">基础信息</div>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="媒体名称：" prop="mediaName">
+                      <el-input v-model="form.mediaName" placeholder="请输入媒体名称" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="媒体类型：" prop="mediaCate">
+                      <el-select v-model="form.mediaCate" placeholder="请选择媒体类型" class="full-width">
+                        <el-option
+                          v-for="dict in mediaCateOptions"
+                          :key="dict.value"
+                          :label="dict.label"
+                          :value="parseInt(dict.value)"
+                        />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
 
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="单位组织：" prop="orgId">
-                  <treeselect
-                    v-model="form.orgId"
-                    :options="orgOptions"
-                    placeholder="请选择单位组织"
-                    @select="handleFormOrgSelect"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="拍摄警员：" prop="policeId">
-                  <el-select
-                    v-model="form.policeId"
-                    placeholder="请选择拍摄警员"
-                    clearable
-                    class="full-width"
-                    @change="handleFormPoliceSelect"
-                  >
-                    <el-option
-                      v-for="item in userOptions"
-                      :key="item.userId"
-                      :label="item.userName"
-                      :value="item.userId"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="单位组织：" prop="orgId">
+                      <treeselect
+                        v-model="form.orgId"
+                        :options="orgOptions"
+                        placeholder="请选择单位组织"
+                        @select="handleFormOrgSelect"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="拍摄警员：" prop="policeId">
+                      <el-select
+                        v-model="form.policeId"
+                        placeholder="请选择拍摄警员"
+                        clearable
+                        class="full-width"
+                        @change="handleFormPoliceSelect"
+                      >
+                        <el-option
+                          v-for="item in userOptions"
+                          :key="item.userId"
+                          :label="item.userName"
+                          :value="item.userId"
+                        />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
 
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="执法仪：" prop="recorderId">
-                  <el-select
-                    v-model="form.recorderId"
-                    placeholder="请选择执法仪"
-                    clearable
-                    class="full-width"
-                  >
-                    <el-option
-                      v-for="item in lawcameraOptions"
-                      :key="item.id"
-                      :label="item.name"
-                      :value="item.id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="存储方式：" prop="storageType">
-                  <el-select v-model="form.storageType" placeholder="请选择存储方式" class="full-width">
-                    <el-option
-                      v-for="dict in storageTypeOptions"
-                      :key="dict.value"
-                      :label="dict.label"
-                      :value="parseInt(dict.value)"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="执法仪：" prop="recorderId">
+                      <el-select v-model="form.recorderId" placeholder="请选择执法仪" clearable class="full-width">
+                        <el-option
+                          v-for="item in lawcameraOptions"
+                          :key="item.id"
+                          :label="item.name"
+                          :value="item.id"
+                        />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="存储方式：" prop="storageType">
+                      <el-select v-model="form.storageType" placeholder="请选择存储方式" class="full-width">
+                        <el-option
+                          v-for="dict in storageTypeOptions"
+                          :key="dict.value"
+                          :label="dict.label"
+                          :value="parseInt(dict.value)"
+                        />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
 
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="数据来源：" prop="dataSource">
-                  <el-select v-model="form.dataSource" placeholder="请选择数据来源" class="full-width">
-                    <el-option label="采集站" value="0"></el-option>
-                    <el-option label="采集客户端" value="1"></el-option>
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="执法类型：" prop="enforType">
-                  <el-input v-model="form.enforType" placeholder="请输入执法类型" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="认证码：" prop="authKey">
-                  <el-input v-model="form.authKey" placeholder="请输认证码" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="媒体后缀：" prop="mediaSuffix">
-                  <el-input v-model="form.mediaSuffix" placeholder="请输媒体后缀" />
-                </el-form-item>
-              </el-col>
-            </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="数据来源：" prop="dataSource">
+                      <el-select v-model="form.dataSource" placeholder="请选择数据来源" class="full-width">
+                        <el-option label="采集站" value="0" />
+                        <el-option label="采集客户端" value="1" />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="执法类型：" prop="enforType">
+                      <treeselect
+                        v-model="form.enforType"
+                        :options="enforcementTypeLabel"
+                        :normalizer="normalizeEnforcementType"
+                        placeholder="请选择执法类型"
+                        style="width: 200px;"
+                        clearable
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="认证码：" prop="authKey">
+                      <el-input v-model="form.authKey" placeholder="请输认证码" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="媒体后缀：" prop="mediaSuffix">
+                      <el-input v-model="form.mediaSuffix" placeholder="请输媒体后缀" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+
+              <!-- 时间信息 -->
+              <div class="form-section">
+                <div class="form-section-title">时间信息</div>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="拍摄开始时间：" prop="shotTimeStart">
+                      <el-date-picker
+                        v-model="form.shotTimeStart"
+                        type="datetime"
+                        placeholder="选择拍摄开始时间"
+                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="拍摄结束时间：" prop="shotTime">
+                      <el-date-picker
+                        v-model="form.shotTime"
+                        type="datetime"
+                        placeholder="选择拍摄结束时间"
+                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="导入开始时间：" prop="importTimeStart">
+                      <el-date-picker
+                        v-model="form.importTimeStart"
+                        type="datetime"
+                        placeholder="选择导入开始时间"
+                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="导入结束时间：" prop="importTimeEnd">
+                      <el-date-picker
+                        v-model="form.importTimeEnd"
+                        type="datetime"
+                        placeholder="选择导入结束时间"
+                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-form>
           </div>
 
-          <!-- 时间信息 -->
-          <div class="form-section">
-            <div class="form-section-title">时间信息</div>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="拍摄开始时间：" prop="shotTimeStart">
-                  <el-date-picker
-                    v-model="form.shotTimeStart"
-                    type="datetime"
-                    placeholder="选择拍摄开始时间"
-                    value-format="yyyy-MM-ddTHH:mm:ssZ"
-                    class="full-width"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="拍摄结束时间：" prop="shotTime">
-                  <el-date-picker
-                    v-model="form.shotTime"
-                    type="datetime"
-                    placeholder="选择拍摄结束时间"
-                    value-format="yyyy-MM-ddTHH:mm:ssZ"
-                    class="full-width"
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
-
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="导入开始时间：" prop="importTimeStart">
-                  <el-date-picker
-                    v-model="form.importTimeStart"
-                    type="datetime"
-                    placeholder="选择导入开始时间"
-                    value-format="yyyy-MM-ddTHH:mm:ssZ"
-                    class="full-width"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="导入结束时间：" prop="importTimeEnd">
-                  <el-date-picker
-                    v-model="form.importTimeEnd"
-                    type="datetime"
-                    placeholder="选择导入结束时间"
-                    value-format="yyyy-MM-ddTHH:mm:ssZ"
-                    class="full-width"
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="cancel">取 消</el-button>
+            <el-button type="primary" @click="submitForm">确 定</el-button>
           </div>
-        </el-form>
-      </div>
-
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-      </div>
-    </el-dialog>
-    </el-card>
-  </template>
+        </el-dialog>
+      </el-card>
+    </template>
   </BasicLayout>
 </template>
 
@@ -455,19 +412,19 @@ export default {
         pageSize: 10,
         orderBy: '',
         isDesc: true,
-        shotTimeStart: '',
-        shotTimeEnd: '',
-        orgId: '',
+        shotTimeStart: undefined,
+        shotTimeEnd: undefined,
+        orgId: undefined,
         includeSubUnits: true,
-        policeNo: '',
+        policeId: undefined,
         mediaCate: undefined,
-        importTimeStart: '',
-        importTimeEnd: '',
-        recorderId: '',
-        dataSource: '',
-        storageType: '',
+        importTimeStart: undefined,
+        importTimeEnd: undefined,
+        recorderId: undefined,
+        dataSource: undefined,
+        storageType: undefined,
         enforType: undefined,
-        mediaName: ''
+        mediaName: undefined
       },
       showMore: false,
       // 遮罩层
@@ -493,11 +450,8 @@ export default {
       // 执法仪选项
       lawcameraOptions: [],
       // 执法类型选项
-      enforcementTypeOptions: [],
-      // 选中的组织ID（用于查询条件）
-      selectedOrgId: undefined,
+      enforcementTypeLabel: [],
       // 选中的警员ID（用于查询条件）
-      selectedPoliceId: undefined,
       // 是否显示下载文件类型选择对话框
       downloadDialogVisible: false,
       downloadForm: {
@@ -555,22 +509,22 @@ export default {
     /** 获取执法类型树形数据 */
     getEnforcementTypeTreeselect() {
       getEnforcementTypeTree().then(response => {
-        this.enforcementTypeOptions = response.data.list || response.data || []
+        this.enforcementTypeLabel = response.data.list || response.data || []
       }).catch(() => {
         // 如果树形接口不存在，设置为空数组
-        this.enforcementTypeOptions = []
+        this.enforcementTypeLabel = []
       })
     },
 
-    /** 执法类型数据结构转换 */
+    /** 执法类型数据结构转换 当你的数据格式与 vue-treeselect 默认期望的格式不一致时，使用 normalizer 进行格式转换*/
     normalizeEnforcementType(node) {
       if (node.children && !node.children.length) {
         delete node.children
       }
       return {
-        id: node.id,
-        label: node.enforcementTypeName || node.label || '未知',
-        children: node.children
+        id: node.id, // 将你数据中的 node.id 映射为 vue-treeselect 的id
+        label: node.enforcementTypeName || node.label || '未知', // 将你数据中的 node.enforcementTypeName 映射为 vue-treeselect 的label
+        children: node.children // 将你的数据中的 children 映射为 children
       }
     },
     /** 搜索按钮操作 */
@@ -585,23 +539,21 @@ export default {
         pageSize: 10,
         orderBy: '',
         isDesc: true,
-        shotTimeStart: '',
-        shotTimeEnd: '',
-        orgId: '',
+        shotTimeStart: undefined,
+        shotTimeEnd: undefined,
+        orgId: undefined,
         includeSubUnits: true,
-        policeId: '',
+        policeId: undefined,
         mediaCate: undefined,
-        importTimeStart: '',
-        importTimeEnd: '',
-        recorderId: '',
-        dataSource: '',
-        storageType: '',
+        importTimeStart: undefined,
+        importTimeEnd: undefined,
+        recorderId: undefined,
+        dataSource: undefined,
+        storageType: undefined,
         enforType: undefined,
-        mediaName: ''
+        mediaName: undefined
       }
       // 重置选择状态
-      this.selectedOrgId = undefined
-      this.selectedPoliceId = undefined
       this.userOptions = []
       if (this.$refs.queryForm) {
         this.$refs.queryForm.resetFields()
@@ -630,7 +582,7 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.id)
+      this.ids = selection.map(item => item.mediaId)
       this.single = selection.length !== 1
       this.multiple = !selection.length
     },
@@ -671,7 +623,7 @@ export default {
         storageType: undefined,
         dataSource: undefined,
         enforType: undefined,
-        mediaSuffix:undefined,
+        mediaSuffix: undefined,
         shotTimeStart: undefined,
         shotTime: undefined,
         importTimeStart: undefined,
@@ -762,9 +714,11 @@ export default {
           return delMedia(mediaIds)
         }
       }).then((response) => {
-        this.getList()
+        setTimeout(() => {
+          this.getList()
+        }, 2000)
         this.msgSuccess(response.msg)
-      }).catch(() => {})
+      }).catch(() => { })
     },
 
     handleOperation(row) {
@@ -781,20 +735,13 @@ export default {
 
     /** 查询条件-组织选择事件 */
     handleOrgSelect(node) {
-      this.queryParams.orgId = node ? node.id : undefined
       if (node) {
         listUser({ orgId: '/' + node.id + '/' }).then(response => {
           this.userOptions = response.data.list
         })
       } else {
         this.userOptions = []
-        this.selectedPoliceId = undefined
       }
-    },
-
-    /** 查询条件-警员选择事件 */
-    handlePoliceSelect(policeId) {
-      this.queryParams.policeId = policeId
     },
 
     /** 表单-组织选择事件 */
