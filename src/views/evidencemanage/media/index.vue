@@ -2,194 +2,68 @@
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <!-- 查询条件 -->
-        <el-form ref="queryForm" :inline="true" :model="queryParams" class="demo-form-inline" size="small">
-          <el-form-item label="拍摄时间">
-            <el-date-picker v-model="queryParams.shotTimeStart" type="datetime" placeholder="请选择时间" />
-            <span>至</span>
-            <el-date-picker v-model="queryParams.shotTimeEnd" type="datetime" placeholder="请选择时间" />
-          </el-form-item>
-          <el-form-item label="单位组织">
-            <div class="horizontal-container">
-              <treeselect
-                v-model="queryParams.orgId"
-                :options="orgOptions"
-                placeholder="请选择单位组织"
-                style="width: 200px;"
-                clearable
-                @select="handleOrgSelect"
-              />
-              <el-checkbox v-model="queryParams.includeSubUnits">包含下级</el-checkbox>
-            </div>
-          </el-form-item>
-
-          <el-form-item label="拍摄警员">
-            <el-select
-              v-model="queryParams.policeId"
-              placeholder="请选择拍摄警员"
-              clearable
-              style="width: 200px;"
-            >
-              <el-option v-for="item in userOptions" :key="item.userId" :label="item.userName" :value="item.userId" />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="default" icon="el-icon-more" size="mini" @click="toggleMore">更多</el-button>
-            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">查询</el-button>
-            <el-button type="default" icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-
-          </el-form-item>
-          <!-- 更多查询条件 -->
-          <!-- <el-form-item v-if="showMore" label="媒体类型">
-        <el-select v-model="queryParams.mediaCate" placeholder="请选择">
-          <el-option label="音频" value="1"></el-option>
-          <el-option label="视频" value="2"></el-option>
-          <el-option label="照片" value="0"></el-option>
-        </el-select>
-      </el-form-item> -->
-          <el-form-item label="媒体类型" prop="mediaCate">
-            <el-select v-model="queryParams.mediaCate" placeholder="媒体类型" clearable size="small" style="width: 160px">
-              <el-option v-for="dict in mediaCateOptions" :key="dict.value" :label="dict.label" :value="parseInt(dict.value)" />
-            </el-select>
-          </el-form-item>
-          <el-form-item v-if="showMore" label="导入时间">
-            <el-date-picker v-model="queryParams.importTimeStart" type="datetime" placeholder="请选择时间" />
-            <span>至</span>
-            <el-date-picker v-model="queryParams.importTimeEnd" type="datetime" placeholder="请选择时间" />
-          </el-form-item>
-          <el-form-item v-if="showMore" label="执法仪编号">
-            <el-input v-model="queryParams.recorderId" placeholder="请输入执法仪编号" />
-          </el-form-item>
-          <el-form-item v-if="showMore" label="数据来源">
-            <el-select v-model="queryParams.dataSource" placeholder="请选择">
-              <el-option label="采集站" value="0" />
-              <el-option label="采集客户端" value="1" />
-            </el-select>
-          </el-form-item>
-          <!-- <el-form-item v-if="showMore" label="存储方式">
-        <el-select v-model="queryParams.storageType" placeholder="请选择">
-          <el-option label="采集站" value="0"></el-option>
-          <el-option label="存储服务器" value="1"></el-option>
-        </el-select>
-      </el-form-item> -->
-          <el-form-item v-if="showMore" label="存储方式" prop="storageType">
-            <el-select v-model="queryParams.storageType" placeholder="存储方式" clearable size="small" style="width: 160px">
-              <el-option v-for="dict in storageTypeOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
-            </el-select>
-          </el-form-item>
-          <el-form-item v-if="showMore" label="执法类型">
-            <treeselect
-              v-model="queryParams.enforType"
-              :options="enforcementTypeLabel"
-              :normalizer="normalizeEnforcementType"
-              placeholder="请选择执法类型"
-              style="width: 200px;"
-              clearable
-            />
-          </el-form-item>
-          <el-form-item v-if="showMore" label="媒体名称">
-            <el-input v-model="queryParams.mediaName" placeholder="请输入媒体名称" />
-          </el-form-item>
-        </el-form>
-
-        <!-- 功能菜单 -->
-        <el-row :gutter="10" class="mb8">
-          <el-col :span="1.5">
-            <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd">新增媒体</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              type="success"
-              icon="el-icon-edit"
-              size="mini"
-              :disabled="single"
-              @click="handleUpdate"
-            >修改</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              type="danger"
-              icon="el-icon-delete"
-              size="mini"
-              :disabled="multiple"
-              @click="handleDelete"
-            >删除</el-button>
-          </el-col>
-          <el-button icon="el-icon-edit" type="primary" size="mini" @click="onSmartMark">智能标注</el-button>
-          <el-button icon="el-icon-document" type="success" size="mini" @click="onManualMark">手动标注</el-button>
-          <el-button icon="el-icon-close" type="danger" size="mini" @click="onNoMark">标注不是执法视频</el-button>
-          <el-button icon="el-icon-setting" size="mini" @click="onLog">日志管理</el-button>
-          <el-button
-            v-show="showDownload"
-            icon="el-icon-download"
-            type="warning"
-            size="mini"
-            @click="onDownload"
-          >下载</el-button>
-          <el-button v-show="showTransfer" icon="el-icon-s-custom" size="mini" @click="onTransfer">移交</el-button>
-          <el-button icon="el-icon-save" size="mini" @click="onSaveCols">保存列头</el-button>
-        </el-row>
-
-        <el-table
-          v-loading="loading"
-          :data="mediaList"
-          border
+        <!-- 使用媒体选择器组件 -->
+        <MediaSelector
+          ref="mediaSelector"
+          :selection-mode="false"
+          @add="handleAdd"
+          @update="handleUpdate"
+          @delete="handleDelete"
+          @operation="handleOperation"
           @selection-change="handleSelectionChange"
-          @sort-change="handleSortChange"
         >
-          <el-table-column type="selection" width="55" align="center" />
-          <el-table-column prop="shotTimeStart" label="拍摄开始时间" width="170" align="center" sortable="custom" />
-          <el-table-column prop="shotTime" label="拍摄结束时间" width="170" align="center" sortable="custom" />
-          <!-- <el-table-column label="视频时长" width="100" align="center" sortable="custom">
-      <template slot-scope="{ row }">
-        {{ formatMediaDuration(row.videoDuration) }}
-      </template>
-</el-table-column> -->
-          <el-table-column prop="policeName" label="警员" align="center" width="100" />
-          <el-table-column prop="orgFullName" label="单位组织" align="center" width="150" />
-          <!-- <el-table-column label="执法类型" align="center">
-      <template slot-scope="{ row }">
-        {{ formatEnforType(row) }}
-      </template>
-    </el-table-column> -->
-          <el-table-column v-show="false" prop="mediaSuffix" label="媒体后缀" align="center" sortable="custom" />
-          <el-table-column v-show="false" prop="mediaName" label="媒体名称" align="center" sortable="custom" />
-          <el-table-column v-show="false" prop="createdAt" label="导入时间" width="170" align="center" sortable="custom" />
-          <!-- <el-table-column prop="zipNo" label="身份证号" align="center" v-show="false" />
-    <el-table-column prop="siteNo" label="站点编号" align="center" v-show="false" />
-    <el-table-column prop="siteName" label="站点名称" align="center" v-show="false" />
-    <el-table-column prop="recordNo" label="执法仪编号" align="center" v-show="false" />
-    <el-table-column prop="storageWay" label="存储方式" align="center" v-show="false" />
-    <el-table-column label="缩略图" width="90" align="center" >
-      <template slot-scope="{ row }">
-        <img v-if="row.thumbnailUri" @click="handlePlayImg(row)" :src="row.thumbnailUri" style="width: 45px; height: 45px; cursor: pointer;" />
-        <span v-else>-</span>
-      </template>
-    </el-table-column>
-    <el-table-column label="媒体类型" width="100" align="center" sortable="custom">
-      <template slot-scope="{ row }">
-        <i
-          :class="getMediaCateIcon(row)"
-          @click="handlePlay(row)"
-          title="点击播放"
-          style="cursor: pointer;"
-        ></i>
-      </template>
-    </el-table-column> -->
-          <el-table-column label="操作" width="60" align="center">
-            <template slot-scope="scope">
-              <el-button @click="handleOperation(scope.row)">操作</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <pagination
-          v-show="total > 0"
-          :total="total"
-          :page.sync="queryParams.pageIndex"
-          :limit.sync="queryParams.pageSize"
-          @pagination="getList"
-        />
+          <!-- 自定义工具栏 -->
+          <template #toolbar>
+            <el-col :span="1.5">
+              <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd">新增媒体</el-button>
+            </el-col>
+            <el-col :span="1.5">
+              <el-button
+                type="success"
+                icon="el-icon-edit"
+                size="mini"
+                :disabled="single"
+                @click="handleUpdate"
+              >修改</el-button>
+            </el-col>
+            <el-col :span="1.5">
+              <el-button
+                type="danger"
+                icon="el-icon-delete"
+                size="mini"
+                :disabled="multiple"
+                @click="handleDelete"
+              >删除</el-button>
+            </el-col>
+            <el-col :span="1.5">
+              <el-button icon="el-icon-edit" type="primary" size="mini" @click="onSmartMark">智能标注</el-button>
+            </el-col>
+            <el-col :span="1.5">
+              <el-button icon="el-icon-document" type="success" size="mini" @click="onManualMark">手动标注</el-button>
+            </el-col>
+            <el-col :span="1.5">
+              <el-button icon="el-icon-close" type="danger" size="mini" @click="onNoMark">标注不是执法视频</el-button>
+            </el-col>
+            <el-col :span="1.5">
+              <el-button icon="el-icon-setting" size="mini" @click="onLog">日志管理</el-button>
+            </el-col>
+            <el-col :span="1.5">
+              <el-button
+                v-show="showDownload"
+                icon="el-icon-download"
+                type="warning"
+                size="mini"
+                @click="onDownload"
+              >下载</el-button>
+            </el-col>
+            <el-col :span="1.5">
+              <el-button v-show="showTransfer" icon="el-icon-s-custom" size="mini" @click="onTransfer">移交</el-button>
+            </el-col>
+            <el-col :span="1.5">
+              <el-button icon="el-icon-save" size="mini" @click="onSaveCols">保存列头</el-button>
+            </el-col>
+          </template>
+        </MediaSelector>
 
         <!-- 下载类型选择对话框 -->
         <el-dialog title="选择下载类型" :visible.sync="downloadDialogVisible">
@@ -394,64 +268,28 @@
 
 <script>
 import { delMedia, addMedia, updateMedia, batchDelMedia } from '@/api/evidence/evidence_manage_command_api'
-import { listMedia, getMedia, getEnforcementTypeTree } from '@/api/evidence/evidence_manage_query_api'
+import { getMedia, getEnforcementTypeTree } from '@/api/evidence/evidence_manage_query_api'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
 import { getEquipmentLawcameraList } from '@/api/admin/equipment_manage_api'
+import MediaSelector from '@/components/MediaSelector'
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
 export default {
   name: 'MediaManage',
-  components: { Treeselect },
+  components: {
+    MediaSelector,
+    Treeselect
+  },
   data() {
     return {
-      // 查询参数
-      queryParams: {
-        pageIndex: 1,
-        pageSize: 10,
-        orderBy: '',
-        isDesc: true,
-        shotTimeStart: undefined,
-        shotTimeEnd: undefined,
-        orgId: undefined,
-        includeSubUnits: true,
-        policeId: undefined,
-        mediaCate: undefined,
-        importTimeStart: undefined,
-        importTimeEnd: undefined,
-        recorderId: undefined,
-        dataSource: undefined,
-        storageType: undefined,
-        enforType: undefined,
-        mediaName: undefined
-      },
-      showMore: false,
-      // 遮罩层
-      loading: false,
       // 选中数组
       ids: [],
       // 非单个禁用
       single: true,
       // 非多个禁用
       multiple: true,
-      // 总条数
-      total: 0,
-      // 媒体表格数据
-      mediaList: [],
-      // 媒体类型数据字典
-      mediaCateOptions: [],
-      // 存储类型数据字典
-      storageTypeOptions: [],
-      // 组织树选项
-      orgOptions: undefined,
-      // 用户选项
-      userOptions: [],
-      // 执法仪选项
-      lawcameraOptions: [],
-      // 执法类型选项
-      enforcementTypeLabel: [],
-      // 选中的警员ID（用于查询条件）
       // 是否显示下载文件类型选择对话框
       downloadDialogVisible: false,
       downloadForm: {
@@ -465,6 +303,14 @@ export default {
       open: false,
       // 表单参数
       form: {},
+      // 组织树选项
+      orgOptions: undefined,
+      // 用户选项
+      userOptions: [],
+      // 执法仪选项
+      lawcameraOptions: [],
+      // 媒体类型数据字典
+      mediaCateOptions: [],
       // 表单校验
       rules: {
         mediaName: [
@@ -485,7 +331,6 @@ export default {
     }
   },
   created() {
-    this.getList()
     this.getTreeselect()
     this.getEnforcementTypeTreeselect()
     this.getDicts('evidence_media_type').then(response => {
@@ -494,16 +339,15 @@ export default {
     this.getDicts('evidence_storage_type').then(response => {
       this.storageTypeOptions = response.data
     })
+    this.getDicts('relation_status').then(response => {
+      this.mediaRelationStatusOptions = response.data
+    })
   },
   methods: {
-    /** 查询媒体列表 */
-    getList() {
-      this.loading = true
-      listMedia(this.queryParams).then(response => {
-        this.mediaList = response.data.list
-        this.total = response.data.count
-        this.loading = false
-      })
+
+   // 字典状态字典翻译
+    relationStatusFormat(row) {
+      return this.selectDictLabel(this.mediaRelationStatusOptions, parseInt(row.isAssociated))
     },
 
     /** 获取执法类型树形数据 */
@@ -527,59 +371,7 @@ export default {
         children: node.children // 将你的数据中的 children 映射为 children
       }
     },
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageIndex = 1
-      this.getList()
-    },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.queryParams = {
-        pageIndex: 1,
-        pageSize: 10,
-        orderBy: '',
-        isDesc: true,
-        shotTimeStart: undefined,
-        shotTimeEnd: undefined,
-        orgId: undefined,
-        includeSubUnits: true,
-        policeId: undefined,
-        mediaCate: undefined,
-        importTimeStart: undefined,
-        importTimeEnd: undefined,
-        recorderId: undefined,
-        dataSource: undefined,
-        storageType: undefined,
-        enforType: undefined,
-        mediaName: undefined
-      }
-      // 重置选择状态
-      this.userOptions = []
-      if (this.$refs.queryForm) {
-        this.$refs.queryForm.resetFields()
-      }
-    },
-    toggleMore() {
-      this.showMore = !this.showMore
-    },
-    /** 排序回调函数 */
-    handleSortChange(column, prop, order) {
-      prop = column.prop
-      order = column.order
-      if (this.order !== '' && this.order !== prop + 'Order') {
-        this.queryParams[this.order] = undefined
-      }
-      if (order === 'descending') {
-        this.queryParams[prop + 'Order'] = 'desc'
-        this.order = prop + 'Order'
-      } else if (order === 'ascending') {
-        this.queryParams[prop + 'Order'] = 'asc'
-        this.order = prop + 'Order'
-      } else {
-        this.queryParams[prop + 'Order'] = undefined
-      }
-      this.getList()
-    },
+
     // 多选框选中数据
     handleSelectionChange(selection) {
       this.ids = selection.map(item => item.mediaId)
@@ -670,7 +462,7 @@ export default {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
                 this.open = false
-                this.getList()
+                this.$refs.mediaSelector.refresh()
               } else {
                 this.msgError(response.msg)
               }
@@ -680,7 +472,7 @@ export default {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
                 this.open = false
-                this.getList()
+                this.$refs.mediaSelector.refresh()
               } else {
                 this.msgError(response.msg)
               }
@@ -715,7 +507,7 @@ export default {
         }
       }).then((response) => {
         setTimeout(() => {
-          this.getList()
+          this.$refs.mediaSelector.refresh()
         }, 2000)
         this.msgSuccess(response.msg)
       }).catch(() => { })

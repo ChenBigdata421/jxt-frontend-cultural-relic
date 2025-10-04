@@ -254,10 +254,10 @@ export default {
     /** 查询执法类型下拉树结构 */
     getTreeselect() {
       getEnforcementTypeTree().then(response => {
-        this.enforcementTypeLabel = response.data.list || response.data || []
-      }).catch(() => {
-        // 如果树形接口不存在，设置为空数组
         this.enforcementTypeLabel = []
+        const enforcementType = { id: 0, enforcementTypeName: '主类目', children: [] }
+          enforcementType.children = response.data
+          this.enforcementTypeLabel.push(enforcementType)
       })
     },
     // 取消按钮

@@ -1,4 +1,4 @@
-import request from '@/utils/evidence_query_request'
+import request from '@/utils/request'
 
 // 执法仪API
 export function getIncidentRecordList(query) {
@@ -56,5 +56,21 @@ export function getEnforcementTypeTree(query) {
     url: '/api/v1/enforcement-types/tree',
     method: 'get',
     params: query
+  })
+}
+
+// 查询警情媒体关联关系列表
+export function getIncidentRecordMediaRelationsByIncidentRecord(incidentRecordId) {
+  return request({
+    url: '/api/v1/incidentrecord-media-relations/media-relations/' + incidentRecordId,
+    method: 'get'
+  })
+}
+
+// 查询警情媒体关联关系列表
+export function getIncidentRecordMediaRelationsByMedia(mediaId) {
+  return request({
+    url: '/api/v1/incidentrecord-media-relations/incidentrecord-relations/' + mediaId,
+    method: 'get'
   })
 }

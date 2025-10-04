@@ -1,4 +1,4 @@
-import request from '@/utils/evidence_command_request'
+import request from '@/utils/request'
 
 export function addIncidentRecord(data) {
   return request({
@@ -88,6 +88,23 @@ export function updateEnforcementType(data, id) {
 export function delEnforcementType(id) {
   return request({
     url: '/api/v1/enforcement-types/' + id,
+    method: 'delete'
+  })
+}
+
+// 新增警情媒体关联关系
+export function addIncidentRecordMediaRelations(data) {
+  return request({
+    url: '/api/v1/incidentrecord-media-relations/batch',
+    method: 'post',
+    data: data
+  })
+}
+
+// 删除警情媒体关联关系
+export function delIncidentRecordMediaRelations(id) {
+  return request({
+    url: '/api/v1/incidentrecord-media-relations/' + id,
     method: 'delete'
   })
 }
