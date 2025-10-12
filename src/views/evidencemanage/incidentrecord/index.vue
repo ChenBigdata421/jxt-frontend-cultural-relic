@@ -169,7 +169,7 @@
             label="操作"
             align="left"
             class-name="small-padding fixed-width"
-            width="220"
+            width="300"
           >
             <template slot-scope="scope">
               <el-button
@@ -225,7 +225,6 @@
             border
             style="margin-top: 10px;"
           >
-            <el-table-column prop="id" label="关联ID" width="80" align="center" />
             <el-table-column prop="incidentRecordCode" label="警情编号" width="120" align="center" />
             <el-table-column prop="mediaName" label="媒体名称" width="200" />
             <el-table-column prop="mediaCate" label="媒体类别" width="100" align="center">
@@ -585,7 +584,7 @@ export default {
   created() {
     this.getList()
     this.getTreeselect()
-        this.getDicts('incident_status').then(response => {
+        this.getDicts('incidentrecord_status').then(response => {
       this.statusOptions = response.data
     })
         this.getDicts('relation_status').then(response => {

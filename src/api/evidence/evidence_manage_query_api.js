@@ -74,3 +74,12 @@ export function getIncidentRecordMediaRelationsByMedia(mediaId) {
     method: 'get'
   })
 }
+
+// 查询警情媒体信息列表
+export function getIncidentRecordMediaInfos(query) {
+  return request({
+    url: '/api/v1/incidentrecord-media-info',
+    method: 'get',
+    params: query
+  })
+}

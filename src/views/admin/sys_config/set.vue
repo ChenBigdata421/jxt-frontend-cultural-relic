@@ -150,7 +150,9 @@ export default {
     },
     uploadSuccess(response, file, fileList) {
       console.log('sss')
-      this.form.sys_app_logo = process.env.VUE_APP_BASE_API + response.data.full_path
+      console.log('response:', response)
+      // 使用相对路径，让nginx处理静态文件
+      this.form.sys_app_logo = response.data.full_path
       console.log(response.data.full_path)
     },
     /** 查询参数列表 */

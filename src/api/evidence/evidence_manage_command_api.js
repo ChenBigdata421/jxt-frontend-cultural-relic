@@ -108,3 +108,21 @@ export function delIncidentRecordMediaRelations(id) {
     method: 'delete'
   })
 }
+
+// 新增警情媒体关联信息
+export function addIncidentRecordMediaInfo(data) {
+  return request({
+    url: '/api/v1/incidentrecord-media-info',
+    method: 'post',
+    data: data
+  })
+}
+
+// 修改警情媒体关联信息
+export function updateIncidentRecordMediaInfo(data, id) {
+  return request({
+    url: '/api/v1/incidentrecord-media-info/' + id,
+    method: 'put',
+    data: data
+  })
+}
