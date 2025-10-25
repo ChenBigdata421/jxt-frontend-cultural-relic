@@ -23,7 +23,7 @@ RUN cnpm list --depth=0
 #将当前上下文（通常是Dockerfile所在的目录及其子目录）中的所有文件复制到工作目录中。这一步通常包括源代码文件。
 COPY . .
 #运行npm脚本build:prod，这通常是在package.json中定义的，用于构建生产环境的代码。
-RUN npm run build:dev
+RUN npm run build:prod
 
 # 第二个阶段开始，使用Nginx作为基础镜像。这标志着多阶段构建中生产阶段的开始。
 FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/nginx:alpine  

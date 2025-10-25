@@ -64,14 +64,31 @@ export function addDateRange(params, dateRange) {
 /* Object.keys(datas) 是 JavaScript 中的一个内置方法，用于获取 datas 的所有
 可枚举属性的键名（如果datas是数组，则键名就是元素序号：0，1，2...），并将它们作为一个新的数组返回。 */
 export function selectDictLabel(datas, value) {
+  // 防护检查：确保datas是有效的数组或对象
+  if (!datas || (typeof datas !== 'object') || (Array.isArray(datas) && datas.length === 0)) {
+    return '-'
+  }
+
+  // 防护检查：确保value不是null或undefined
+  if (value === null || value === undefined) {
+    return '-'
+  }
+
   var actions = []
-  Object.keys(datas).map((key) => {
-    if (datas[key].value === ('' + value)) {
-      actions.push(datas[key].label)
-      return false
-    }
-  })
-  return actions.join('')
+  try {
+    Object.keys(datas).map((key) => {
+      // 确保datas[key]存在且有value属性
+      if (datas[key] && datas[key].value !== undefined && datas[key].value === ('' + value)) {
+        actions.push(datas[key].label || '')
+        return false
+      }
+    })
+  } catch (error) {
+    console.warn('selectDictLabel error:', error, 'datas:', datas, 'value:', value)
+    return '-'
+  }
+
+  return actions.length > 0 ? actions.join('') : '-'
 }
 
 export function selectItemsLabel(datas, value) {

@@ -99,26 +99,6 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['incidentrecord:lawcamera:edit']"
-              type="success"
-              icon="el-icon-edit"
-              size="mini"
-              :disabled="single"
-              @click="handleUpdate"
-            >修改</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['incidentrecord:lawcamera:remove']"
-              type="danger"
-              icon="el-icon-delete"
-              size="mini"
-              :disabled="multiple"
-              @click="handleDelete"
-            >删除</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
               v-permisaction="['incidentrecord:lawcamera:export']"
               type="warning"
               icon="el-icon-download"
@@ -141,6 +121,7 @@
           :data="incidentRecordList"
           :key="'incident-table-' + incidentRecordList.length"
           border
+          @select="handleSelect" 
           @selection-change="handleSelectionChange"
           @sort-change="handleSortChang"
         >
@@ -191,19 +172,12 @@
                 @click="handleView(scope.row)"
               >浏览</el-button>
               <el-button
-                v-permisaction="['incidentrecord:lawcamera:edit']"
+                v-permisaction="['incidentrecord:lawcamera:link']"
                 size="mini"
                 type="text"
-                icon="el-icon-edit"
-                @click="handleUpdate(scope.row)"
-              >修改</el-button>
-              <el-button
-                v-permisaction="['incidentrecord:lawcamera:remove']"
-                size="mini"
-                type="text"
-                icon="el-icon-delete"
-                @click="handleDelete(scope.row)"
-              >删除</el-button>
+                icon="el-icon-link"
+                @click="handleLinkMedia(scope.row)"
+              >关联媒体</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -215,6 +189,47 @@
           @pagination="getList"
         />
 
+        <!-- 警情媒体关联列表 -->
+        <div v-if="currentSelectedIncident" class="media-relations-section">
+          <el-divider content-position="left">
+            <span style="font-weight: bold; color: #409EFF;">
+              警情媒体关联列表
+            </span>
+          </el-divider>
+
+          <el-table
+            v-loading="mediaRelationsLoading"
+            :data="mediaRelationsList"
+            border
+            style="margin-top: 10px;"
+          >
+            <el-table-column prop="incidentRecordCode" label="警情编号" width="120" align="center" />
+            <el-table-column prop="mediaName" label="媒体名称" width="200" />
+            <el-table-column prop="mediaCate" label="媒体类别" width="100" align="center">
+              <template slot-scope="scope">
+                {{ mediaCateFormat(scope.row) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="policeName" label="警员" width="120" align="center" />
+            <el-table-column prop="orgFullName" label="组织" width="200" />
+            <el-table-column prop="relationTime" label="关联时间" width="170" align="center" />
+            <el-table-column label="操作" width="100" align="center">
+              <template slot-scope="scope">
+                <el-button
+                  size="mini"
+                  type="text"
+                  icon="el-icon-delete"
+                  style="color: #F56C6C;"
+                  @click="handleUnlinkMedia(scope.row)"
+                >取消关联</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div v-if="mediaRelationsList.length === 0" class="empty-data">
+            <el-empty description="暂无关联媒体" :image-size="100" />
+          </div>
+        </div>
         <!-- 添加或修改警情对话框 -->
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
@@ -413,6 +428,17 @@
             <el-table-column prop="Value" label="值" width="450" align="center" />
           </el-table>
         </el-dialog>
+
+        <!--关联媒体对话框-->
+        <MediaSelectorDialog
+          ref="mediaSelector"
+          title="关联媒体"
+          :visible.sync="linkMediaOpen"
+          :multiple="true"
+          :currentIncidentRecord="currentIncidentRecord"
+          @confirm="confirmLinkMedia"
+          @cancel="cancelLinkMedia"
+        />
       </el-card>
     </template>
   </BasicLayout>
@@ -459,6 +485,8 @@ export default {
       // 是否显示增加警情对话框
       open: false,
       ViewOpen: false,
+      // 是否显示关联媒体对话框
+      linkMediaOpen: false,
       // 当前选中的警情记录
       currentIncidentRecord: null,
       // 组织树选项
@@ -466,6 +494,8 @@ export default {
       userOptions: undefined,
       // 选中的媒体数据
       selectedMediaData: [],
+      // 当前选中的警情记录（用于显示媒体关联列表）
+      currentSelectedIncident: null,
       // 警情媒体关联列表
       mediaRelationsList: [],
       // 媒体关联列表加载状态
@@ -562,6 +592,19 @@ export default {
         this.incidentRecordList = response.data.list
         this.total = response.data.count
         this.loading = false
+
+        // 默认选中第一条警情
+        this.$nextTick(() => {
+          if (this.incidentRecordList.length > 0) {
+            const firstIncident = this.incidentRecordList[0]
+            this.$refs.incidentTable.clearSelection()
+            this.$refs.incidentTable.toggleRowSelection(firstIncident, true)
+            this.currentSelectedIncident = firstIncident
+          } else {
+            this.currentSelectedIncident = null
+            this.mediaRelationsList = []
+          }
+        })
       })
     },
 
@@ -619,11 +662,12 @@ export default {
     handleQuery() {
       this.getList()
     },
-    // 多选框选中数据
-    handleSelectionChange(selection) {
-      this.IncidentRecordIds = selection.map(item => item.id)
-      this.single = selection.length !== 1
-      this.multiple = !selection.length
+    // 单个选择框点击事件,selection表示所有被选中的行，row表示当前点击的行
+    handleSelect(selection, row) {
+      this.currentSelectedIncident = row
+      this.loadMediaRelations(row.id)
+      this.$refs.incidentTable.clearSelection()
+      this.$refs.incidentTable.toggleRowSelection(row, true)
     },
     /** 新增按钮操作*/
     handleAdd() {
@@ -647,16 +691,6 @@ export default {
       this.getList()
     },
 
-    /** 修改按钮操作 */
-    handleUpdate(row) {
-      this.firstLoad = true
-      // 使用对象展开运算符创建新对象
-      this.form = { ...row }
-      this.title = '修改警情'
-      this.isEdit = true
-      this.open = true
-      this.getFormUser()
-    },
     /** 浏览按钮操作 */
     handleView(row) {
       this.AttributeValueList = []
@@ -686,19 +720,7 @@ export default {
         if (valid) {
           this.form.state = parseInt(this.form.state)
           this.form.enableUse = parseInt(this.form.enableUse)
-          if (this.form.id !== undefined) {
-            updateIncidentRecord(this.form, this.form.id).then(response => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                setTimeout(() => {
-                  this.getList()
-                }, 1000)
-              } else {
-                this.msgError(response.msg)
-              }
-            })
-          } else {
+          if (this.form.id === undefined) {
             addIncidentRecord(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
@@ -713,32 +735,6 @@ export default {
           }
         }
       })
-    },
-
-    handleDelete(row) {
-      // const IncidentRecordId = (row.id && [row.id]) || this.IncidentRecordIds
-      var IncidentRecordId
-      if (this.IncidentRecordIds.length > 1) {
-        IncidentRecordId = this.IncidentRecordIds
-      } else {
-        IncidentRecordId = row.id || this.IncidentRecordIds[0]
-      }
-      this.$confirm('是否确认删除警情编号为"' + IncidentRecordId + '"的数据项?', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(function() {
-        if (Array.isArray(IncidentRecordId)) {
-          return batchDelIncidentRecord({ 'ids': IncidentRecordId })
-        } else {
-          return delIncidentRecordById(IncidentRecordId)
-        }
-      }).then((response) => {
-        setTimeout(() => {
-          this.getList()
-        }, 1000)
-        this.msgSuccess(response.msg)
-      }).catch(function() {})
     },
 
     /** 导出按钮操作 */
@@ -785,6 +781,84 @@ export default {
         label: node.enforcementTypeName || node.label || '未知',
         children: node.children
       }
+    },
+
+    /** 关联媒体按钮操作 */
+    handleLinkMedia(row) {
+      this.currentIncidentRecord = row
+      // 自动选中该行
+      this.$refs.incidentTable.clearSelection()
+      this.$refs.incidentTable.toggleRowSelection(row, true)
+      this.$refs.mediaSelector.refresh()
+      this.linkMediaOpen = true
+    },
+
+    /** 取消关联媒体 */
+    cancelLinkMedia() {
+      this.linkMediaOpen = false
+      this.currentIncidentRecord = null
+      this.selectedMediaData = []
+    },
+
+    /** 确认关联媒体 */
+    confirmLinkMedia(selectedMedia) {
+      // 过滤掉已经与该警情关联的媒体
+      const selectedMediaRelations = selectedMedia.filter(item => item.incidentRecordCode !== this.currentIncidentRecord.code)
+      // 检查是否选中了媒体
+      if (!selectedMediaRelations || selectedMediaRelations.length === 0) {
+        this.msgError('请选择要关联的媒体')
+        return
+      }
+
+      // 调用关联媒体的API
+      const data = {
+        incidentRecordId: this.currentIncidentRecord.id,
+        mediaIds: selectedMediaRelations.map(item => item.mediaId)
+      }
+
+      addIncidentRecordMediaRelations(data).then(response => {
+        this.msgSuccess(`成功关联 ${selectedMediaRelations.length} 个媒体`)
+        this.linkMediaOpen = false
+
+        // 延迟2秒后刷新媒体关联列表
+        setTimeout(() => {
+          this.loadMediaRelations(this.currentIncidentRecord.id)
+        }, 2000)
+      }).catch(error => {
+        this.msgError('关联媒体失败：' + (error.message || '未知错误'))
+      })
+    },
+
+    /** 加载警情媒体关联列表 */
+    loadMediaRelations(incidentRecordId) {
+      this.mediaRelationsLoading = true
+      getIncidentRecordMediaRelationsByIncidentRecord(incidentRecordId).then(response => {
+        this.mediaRelationsList = response.data.list || []
+        this.mediaRelationsLoading = false
+      }).catch(error => {
+        console.error('加载媒体关联列表失败:', error)
+        this.mediaRelationsList = []
+        this.mediaRelationsLoading = false
+      })
+    },
+
+    /** 取消关联媒体 */
+    handleUnlinkMedia(row) {
+      this.$confirm('确认取消关联该媒体吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        delIncidentRecordMediaRelations(row.id).then(response => {
+          this.msgSuccess('取消关联成功')
+          // 延迟2秒后刷新媒体关联列表
+          setTimeout(() => {
+            this.loadMediaRelations(this.currentSelectedIncident.id)
+          }, 2000)
+        }).catch(error => {
+          this.msgError('取消关联失败：' + (error.message || '未知错误'))
+        })
+      })
     },
 
   }

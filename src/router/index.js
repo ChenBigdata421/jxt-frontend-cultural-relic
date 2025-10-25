@@ -1,9 +1,9 @@
-import Vue from 'vue'
+﻿import Vue from 'vue'
 import Router from 'vue-router'
 
 Vue.use(Router)
-//@ 符号通常是一个别名，代表项目的根目录。这个别名在 Webpack 配置中定义
-//从项目的根目录下的 layout 文件夹导入 Layout 组件
+// @ 符号通常是一个别名，代表项目的根目录。这个别名在 Webpack 配置中定义
+// 从项目的根目录下 layout 文件夹导入 Layout 组件
 /* Layout */
 import Layout from '@/layout'
 
@@ -55,8 +55,7 @@ export const constantRoutes = [
     path: '/login',
     component: () => import('@/views/login/index'),
     // 登录页面不需要导航栏
-    // 是一个自定义属性，我们主动添加之后，在模板中通过读取该属性值，来做出
-    // 一定的判断，从而满足相应的需求。
+    // 是一个自定义属性，我们主动添加之后，在模板中通过读取该属性值，来做一定的判断，从而满足相应的需求
     hidden: true
   },
   {
@@ -109,10 +108,10 @@ export const constantRoutes = [
  * the routes that need to be dynamically loaded based on user roles
  */
 export const asyncRoutes = [
-
+  
 ]
 // scrollBehavior 是一个函数，用于定义路由跳转时的滚动行为。这里，它简单地返回一个对象，将页面滚动到顶部（y: 0）
-// constantRoutes 可能包含了应用的静态路由，而动态路由（需要根据用户状态或其他条件动态生成的路由）可能是在创建 Router 实例之后通过其他方式添加的。
+// constantRoutes 可能包含了应用的静态路由，而动态路由（需要根据用户状态或其他条件动态生成的路由）可能是在创建 Router 实例之后通过其他方式添加的
 const createRouter = () => new Router({
   mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
