@@ -33,6 +33,33 @@ export function getMedia(mediaId) {
   })
 }
 
+// 根据案件ID查询关联的媒体列表
+export function getMediaByCaseId(caseId, query) {
+  return request({
+    url: `/api/v1/media/case/${caseId}`,
+    method: 'get',
+    params: query
+  })
+}
+
+// 根据案件ID查询源证据媒体列表
+export function getSourceMediaByCaseId(caseId, query) {
+  return request({
+    url: `/api/v1/media/case/${caseId}/source`,
+    method: 'get',
+    params: query
+  })
+}
+
+// 根据案件ID查询证据媒体列表
+export function getEvidenceMediaByCaseId(caseId, query) {
+  return request({
+    url: `/api/v1/media/case/${caseId}/evidence`,
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询执法类型列表
 export function getEnforcementTypeList(query) {
   return request({

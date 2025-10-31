@@ -218,6 +218,11 @@ export default {
     initialQuery: {
       type: Object,
       default: () => ({})
+    },
+    // 自定义媒体列表API函数
+    customListApi: {
+      type: Function,
+      default: null
     }
   },
   data() {
@@ -286,7 +291,9 @@ export default {
     /** 查询媒体列表 */
     getList() {
       this.loading = true
-      listMedia(this.queryParams).then(response => {
+      // 如果提供了自定义API函数,使用自定义API,否则使用默认的listMedia
+      const apiFunc = this.customListApi || listMedia
+      apiFunc(this.queryParams).then(response => {
         this.mediaList = response.data.list || response.data
         this.total = response.data.total || response.data.length
         this.loading = false

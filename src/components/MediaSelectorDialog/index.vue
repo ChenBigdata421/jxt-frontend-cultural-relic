@@ -12,6 +12,7 @@
       :selection-mode="true"
       :multiple="multiple"
       :initial-query="initialQuery"
+      :custom-list-api="customListApi"
       @select="handleSelect"
       @selection-change="handleSelectionChange"
     />
@@ -25,6 +26,8 @@
 
 <script>
 import MediaSelector from '@/components/MediaSelector'
+import { getUnassociatedMediaList } from '@/api/evidence/case_media_relation_api'
+import { listMedia } from '@/api/evidence/evidence_manage_query_api'
 
 export default {
   name: 'MediaSelectorDialog',
@@ -61,6 +64,11 @@ export default {
     currentIncidentRecord: {
       type: Object,
       default: null
+    },
+    // 当前案件（用于过滤已关联的媒体）
+    currentCase: {
+      type: Object,
+      default: null
     }
   },
   data() {
@@ -79,6 +87,17 @@ export default {
       set(val) {
         this.$emit('update:visible', val) //如果dialogVisible被设置为false，并向父组件发送事件，linkMediaOpen同步被设置为false，则子组件的visible也会被设置为false，从而el-dialog的visible也被设置为false，即对话框关闭。实际上也不需要这么复杂，dialogVisible为false时，el-dialog的visible也会被设置为false，即对话框关闭。
       }
+    },
+    // 自定义媒体列表API函数
+    customListApi() {
+      // 如果有当前案件,使用未关联媒体API
+      if (this.currentCase && this.currentCase.id) {
+        return (queryParams) => {
+          return getUnassociatedMediaList(this.currentCase.id, queryParams)
+        }
+      }
+      // 否则返回null,使用默认API
+      return null
     }
   },
   methods: {
