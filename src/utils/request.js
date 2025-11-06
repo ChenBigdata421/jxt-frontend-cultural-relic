@@ -64,21 +64,6 @@ service.interceptors.response.use(
           location.reload() // 为了重新实例化vue-router对象 避免bug
         })
       }
-    } else if (code === 400 || code === 403) {
-      Message({
-        message: response.data.msg,
-        type: 'error',
-        duration: 5 * 1000
-      })
-    } else if (code !== 200) {
-      // Notification.error({
-      //   title: response.data.msg
-      // })
-      Message({
-        message: response.data.msg,
-        type: 'error'
-      })
-      return Promise.reject('error')
     } else {
       if ('token' in response.headers) {
         const { token } = response.headers
