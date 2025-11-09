@@ -10,9 +10,9 @@ import request from '@/utils/request'
  * @param {number} data.operatorId - 操作员ID
  * @returns {Promise}
  */
-export function batchAddEvidenceSourceMedia(data) {
+export function batchAddEvidenceMedia(data) {
   return request({
-    url: '/api/v1/evidence-source-media/batch',
+    url: '/api/v1/evidence-media/batch',
     method: 'post',
     data: data
   })
@@ -24,9 +24,9 @@ export function batchAddEvidenceSourceMedia(data) {
  * @param {string} mediaId - 媒体ID (UUID格式)
  * @returns {Promise}
  */
-export function removeEvidenceSourceMedia(caseId, mediaId) {
+export function removeEvidenceMedia(caseId, mediaId) {
   return request({
-    url: `/api/v1/evidence-source-media/${caseId}/${mediaId}`,
+    url: `/api/v1/evidence-media/${caseId}/${mediaId}`,
     method: 'delete'
   })
 }
@@ -37,7 +37,7 @@ export function removeEvidenceSourceMedia(caseId, mediaId) {
  */
 export function healthCheck() {
   return request({
-    url: '/api/v1/evidence-source-media/health',
+    url: '/api/v1/evidence-media/health',
     method: 'get'
   })
 }
