@@ -66,6 +66,15 @@ export function batchDelMedia(data) {
   })
 }
 
+// 批量标注媒体是否为执法媒体
+export function batchMarkMediaNoEnforcementStatus(data) {
+  return request({
+    url: '/api/v1/media/batch/mark-no-enforcement-media-status',
+    method: 'post',
+    data: data
+  })
+}
+
 // 新增执法类型
 export function addEnforcementType(data) {
   return request({

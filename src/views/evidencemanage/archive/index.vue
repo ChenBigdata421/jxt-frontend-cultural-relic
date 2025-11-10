@@ -2,163 +2,58 @@
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <!-- 查询表单 -->
-        <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="档案编号" prop="archiveCode">
-            <el-input
-              v-model="queryParams.archiveCode"
-              placeholder="请输入档案编号"
-              clearable
-              style="width: 170px;"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="档案标题" prop="archiveTitle">
-            <el-input
-              v-model="queryParams.archiveTitle"
-              placeholder="请输入档案标题"
-              clearable
-              style="width: 170px;"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="档案类型" prop="archiveType">
-            <el-select v-model="queryParams.archiveType" placeholder="请选择档案类型" clearable style="width: 170px;">
-              <el-option
-                v-for="dict in archiveTypeOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="管理部门" prop="orgId">
-            <treeselect
-              v-model="queryParams.orgId"
-              :options="orgOptions"
-              placeholder="请选择管理部门"
-              style="width: 170px;"
-              clearable
-            />
-          </el-form-item>
-          <el-form-item label="状态" prop="status">
-            <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 170px;">
-              <el-option
-                v-for="dict in statusOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-          </el-form-item>
-        </el-form>
-
-        <!-- 操作按钮 -->
-        <el-row :gutter="10" class="mb8">
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['archive:create']"
-              type="primary"
-              icon="el-icon-plus"
-              size="mini"
-              @click="handleAdd"
-            >新增</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['archive:edit']"
-              type="success"
-              icon="el-icon-edit"
-              size="mini"
-              :disabled="single"
-              @click="handleUpdate"
-            >修改</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['archive:remove']"
-              type="danger"
-              icon="el-icon-delete"
-              size="mini"
-              :disabled="multiple"
-              @click="handleDelete"
-            >删除</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['archive:export']"
-              type="warning"
-              icon="el-icon-download"
-              size="mini"
-              @click="handleExport"
-            >导出</el-button>
-          </el-col>
-        </el-row>
-
-        <!-- 数据表格 -->
-        <el-table
-          ref="archiveTable"
-          v-loading="loading"
-          :data="archiveList"
-          border
+        <!-- 使用档案选择器组件 -->
+        <ArchiveSelector
+          ref="archiveSelector"
+          :selection-mode="false"
+          @add="handleAdd"
+          @update="handleUpdate"
+          @delete="handleDelete"
+          @operation="handleOperation"
           @selection-change="handleSelectionChange"
-          @sort-change="handleSortChange"
         >
-          <el-table-column type="selection" width="60" align="center" />
-          <el-table-column prop="archiveCode" label="档案编号" width="180" sortable="custom" />
-          <el-table-column prop="archiveTitle" label="档案标题" min-width="200" show-overflow-tooltip />
-          <el-table-column prop="archiveType" label="档案类型" width="120" :formatter="archiveTypeFormatter" />
-          <el-table-column prop="orgName" label="管理部门" width="150" show-overflow-tooltip />
-          <el-table-column prop="storageDuration" label="保存期限(月)" width="120" align="center" />
-          <el-table-column prop="expirationTime" label="过期时间" width="160" :formatter="dateFormatter" />
-          <el-table-column prop="status" label="状态" width="100" :formatter="statusFormatter">
-            <template slot-scope="scope">
-              <el-tag :type="getStatusType(scope.row.status)">
-                {{ statusFormatter(scope.row) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="createUserName" label="录入人员" width="120" />
-          <el-table-column prop="createdAt" label="录入时间" width="160" :formatter="dateFormatter" />
-          <el-table-column label="操作" align="center" width="180" fixed="right">
-            <template slot-scope="scope">
+          <!-- 自定义工具栏 -->
+          <template #toolbar>
+            <el-col :span="1.5">
+              <el-button
+                v-permisaction="['archive:create']"
+                type="primary"
+                icon="el-icon-plus"
+                size="mini"
+                @click="handleAdd"
+              >新增</el-button>
+            </el-col>
+            <el-col :span="1.5">
               <el-button
                 v-permisaction="['archive:edit']"
-                size="mini"
-                type="text"
+                type="success"
                 icon="el-icon-edit"
-                @click="handleUpdate(scope.row)"
+                size="mini"
+                :disabled="single"
+                @click="handleUpdate"
               >修改</el-button>
+            </el-col>
+            <el-col :span="1.5">
               <el-button
                 v-permisaction="['archive:remove']"
-                size="mini"
-                type="text"
+                type="danger"
                 icon="el-icon-delete"
-                @click="handleDelete(scope.row)"
-              >删除</el-button>
-              <el-button
-                v-permisaction="['archive:view']"
                 size="mini"
-                type="text"
-                icon="el-icon-view"
-                @click="handleView(scope.row)"
-              >详情</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <!-- 分页 -->
-        <pagination
-          v-show="total>0"
-          :total="total"
-          :page.sync="queryParams.pageIndex"
-          :limit.sync="queryParams.pageSize"
-          @pagination="getList"
-        />
+                :disabled="multiple"
+                @click="handleDelete"
+              >删除</el-button>
+            </el-col>
+            <el-col :span="1.5">
+              <el-button
+                v-permisaction="['archive:export']"
+                type="warning"
+                icon="el-icon-download"
+                size="mini"
+                @click="handleExport"
+              >导出</el-button>
+            </el-col>
+          </template>
+        </ArchiveSelector>
       </el-card>
 
       <!-- 新增/修改对话框 -->
@@ -271,34 +166,24 @@
 </template>
 
 <script>
-import { listArchives, getArchive, addArchive, updateArchive, delArchive, batchDelArchives } from '@/api/evidence/archive_api'
-import { getOrgList } from '@/api/admin/sys-organization'
+import { getArchive, addArchive, updateArchive, delArchive, batchDelArchives } from '@/api/evidence/archive_api'
 import BasicLayout from '@/layout/BasicLayout'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import Pagination from '@/components/Pagination'
+import ArchiveSelector from '@/components/ArchiveSelector'
 
 export default {
   name: 'Archive',
   components: {
     BasicLayout,
-    Treeselect,
-    Pagination
+    ArchiveSelector
   },
   data() {
     return {
-      // 遮罩层
-      loading: true,
       // 选中数组
       ids: [],
       // 非单个禁用
       single: true,
       // 非多个禁用
       multiple: true,
-      // 总条数
-      total: 0,
-      // 档案表格数据
-      archiveList: [],
       // 弹出层标题
       title: '',
       // 是否显示弹出层
@@ -307,18 +192,6 @@ export default {
       viewOpen: false,
       // 详情数据
       viewData: {},
-      // 组织树选项
-      orgOptions: [],
-      // 查询参数
-      queryParams: {
-        pageIndex: 1,
-        pageSize: 10,
-        archiveCode: undefined,
-        archiveTitle: undefined,
-        archiveType: undefined,
-        orgId: undefined,
-        status: undefined
-      },
       // 表单参数
       form: {},
       // 表单校验
@@ -346,75 +219,9 @@ export default {
     }
   },
   created() {
-    this.getList()
-    this.getOrgTree()
+    // 组件初始化时不需要调用getList，由ArchiveSelector组件自己处理
   },
   methods: {
-    /** 查询档案列表 */
-    getList() {
-      this.loading = true
-      listArchives(this.queryParams).then(response => {
-        if (response.code === 200) {
-          this.archiveList = response.data.list || []
-          this.total = response.data.total || 0
-        }
-        this.loading = false
-      }).catch(() => {
-        this.loading = false
-      })
-    },
-    /** 查询组织树结构 */
-    getOrgTree() {
-      getOrgList().then(response => {
-        if (response.code === 200) {
-          this.orgOptions = this.handleTree(response.data, 'orgId', 'parentId')
-        }
-      })
-    },
-    /** 转换组织数据为树形结构 */
-    handleTree(data, id, parentId, children) {
-      const config = {
-        id: id || 'id',
-        parentId: parentId || 'parentId',
-        childrenList: children || 'children'
-      }
-
-      const childrenListMap = {}
-      const nodeIds = {}
-      const tree = []
-
-      for (const d of data) {
-        const parentId = d[config.parentId]
-        if (childrenListMap[parentId] == null) {
-          childrenListMap[parentId] = []
-        }
-        nodeIds[d[config.id]] = d
-        childrenListMap[parentId].push(d)
-      }
-
-      for (const d of data) {
-        const parentId = d[config.parentId]
-        if (nodeIds[parentId] == null) {
-          tree.push(d)
-        }
-      }
-
-      for (const t of tree) {
-        adaptToChildrenList(t)
-      }
-
-      function adaptToChildrenList(o) {
-        if (childrenListMap[o[config.id]] !== null) {
-          o[config.childrenList] = childrenListMap[o[config.id]]
-        }
-        if (o[config.childrenList]) {
-          for (const c of o[config.childrenList]) {
-            adaptToChildrenList(c)
-          }
-        }
-      }
-      return tree
-    },
     /** 档案类型格式化 */
     archiveTypeFormatter(row) {
       const type = this.archiveTypeOptions.find(item => item.value === row.archiveType)
@@ -446,27 +253,11 @@ export default {
       const seconds = String(date.getSeconds()).padStart(2, '0')
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
     },
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageIndex = 1
-      this.getList()
-    },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm('queryForm')
-      this.handleQuery()
-    },
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
       this.ids = selection.map(item => item.archiveId)
       this.single = selection.length !== 1
       this.multiple = !selection.length
-    },
-    /** 排序触发事件 */
-    handleSortChange(column) {
-      this.queryParams.orderByColumn = column.prop
-      this.queryParams.isAsc = column.order === 'ascending' ? 'asc' : 'desc'
-      this.getList()
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -477,7 +268,7 @@ export default {
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset()
-      const archiveId = row.archiveId || this.ids[0]
+      const archiveId = row ? row.archiveId : this.ids[0]
       getArchive(archiveId).then(response => {
         if (response.code === 200) {
           this.form = response.data
@@ -496,6 +287,22 @@ export default {
         }
       })
     },
+    /** 操作按钮处理 */
+    handleOperation(row, action) {
+      switch (action) {
+        case 'edit':
+          this.handleUpdate(row)
+          break
+        case 'delete':
+          this.handleDelete(row)
+          break
+        case 'view':
+          this.handleView(row)
+          break
+        default:
+          break
+      }
+    },
     /** 提交按钮 */
     submitForm() {
       this.$refs['form'].validate(valid => {
@@ -505,7 +312,7 @@ export default {
               if (response.code === 200) {
                 this.msgSuccess('修改成功')
                 this.open = false
-                this.getList()
+                this.$refs.archiveSelector.refresh()
               }
             })
           } else {
@@ -513,7 +320,7 @@ export default {
               if (response.code === 200) {
                 this.msgSuccess('新增成功')
                 this.open = false
-                this.getList()
+                this.$refs.archiveSelector.refresh()
               }
             })
           }
@@ -522,10 +329,12 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const archiveIds = row.archiveId ? [row.archiveId] : this.ids
-      const archiveTitles = row.archiveTitle ? row.archiveTitle : this.archiveList.filter(item => archiveIds.includes(item.archiveId)).map(item => item.archiveTitle).join('、')
+      const archiveIds = row && row.archiveId ? [row.archiveId] : this.ids
+      const confirmMessage = row && row.archiveTitle 
+        ? `是否确认删除档案"${row.archiveTitle}"？`
+        : `是否确认删除选中的${archiveIds.length}条档案数据？`
 
-      this.$confirm('是否确认删除档案"' + archiveTitles + '"？', '警告', {
+      this.$confirm(confirmMessage, '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -537,7 +346,7 @@ export default {
         }
       }).then((response) => {
         if (response.code === 200) {
-          this.getList()
+          this.$refs.archiveSelector.refresh()
           this.msgSuccess('删除成功')
         }
       }).catch(() => {})

@@ -15,7 +15,13 @@
           <!-- 自定义工具栏 -->
           <template #toolbar>
             <el-col :span="1.5">
-              <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd">新增媒体</el-button>
+              <el-button
+                type="primary"
+                icon="el-icon-plus"
+                size="mini"
+                @click="handleAdd"
+                >新增媒体</el-button
+              >
             </el-col>
             <el-col :span="1.5">
               <el-button
@@ -24,7 +30,8 @@
                 size="mini"
                 :disabled="single"
                 @click="handleUpdate"
-              >修改</el-button>
+                >修改</el-button
+              >
             </el-col>
             <el-col :span="1.5">
               <el-button
@@ -33,19 +40,40 @@
                 size="mini"
                 :disabled="multiple"
                 @click="handleDelete"
-              >删除</el-button>
+                >删除</el-button
+              >
             </el-col>
             <el-col :span="1.5">
-              <el-button icon="el-icon-edit" type="primary" size="mini" @click="onSmartMark">智能标注</el-button>
+              <el-button
+                icon="el-icon-edit"
+                type="primary"
+                size="mini"
+                @click="onSmartMark"
+                >智能标注</el-button
+              >
             </el-col>
             <el-col :span="1.5">
-              <el-button icon="el-icon-document" type="success" size="mini" @click="onManualMark">手动标注</el-button>
+              <el-button
+                icon="el-icon-document"
+                type="success"
+                size="mini"
+                @click="onManualMark"
+                >手动标注</el-button
+              >
             </el-col>
             <el-col :span="1.5">
-              <el-button icon="el-icon-close" type="danger" size="mini" @click="onNoMark">标注不是执法视频</el-button>
+              <el-button
+                icon="el-icon-close"
+                type="danger"
+                size="mini"
+                @click="onNoMark"
+                >标注不是执法视频</el-button
+              >
             </el-col>
             <el-col :span="1.5">
-              <el-button icon="el-icon-setting" size="mini" @click="onLog">日志管理</el-button>
+              <el-button icon="el-icon-setting" size="mini" @click="onLog"
+                >日志管理</el-button
+              >
             </el-col>
             <el-col :span="1.5">
               <el-button
@@ -54,13 +82,22 @@
                 type="warning"
                 size="mini"
                 @click="onDownload"
-              >下载</el-button>
+                >下载</el-button
+              >
             </el-col>
             <el-col :span="1.5">
-              <el-button v-show="showTransfer" icon="el-icon-s-custom" size="mini" @click="onTransfer">移交</el-button>
+              <el-button
+                v-show="showTransfer"
+                icon="el-icon-s-custom"
+                size="mini"
+                @click="onTransfer"
+                >移交</el-button
+              >
             </el-col>
             <el-col :span="1.5">
-              <el-button icon="el-icon-save" size="mini" @click="onSaveCols">保存列头</el-button>
+              <el-button icon="el-icon-save" size="mini" @click="onSaveCols"
+                >保存列头</el-button
+              >
             </el-col>
           </template>
         </MediaSelector>
@@ -77,26 +114,69 @@
           </el-form>
           <div slot="footer" class="dialog-footer">
             <el-button @click="downloadDialogVisible = false">取 消</el-button>
-            <el-button type="primary" @click="onSubmitDownload">确 定</el-button>
+            <el-button type="primary" @click="onSubmitDownload"
+              >确 定</el-button
+            >
+          </div>
+        </el-dialog>
+
+        <!-- 标注不是执法视频确认对话框 -->
+        <el-dialog
+          title="标注不是执法视频"
+          :visible.sync="noMarkDialogVisible"
+          width="400px"
+        >
+          <div style="text-align: center; padding: 20px">
+            <i
+              class="el-icon-warning"
+              style="font-size: 48px; color: #e6a23c"
+            ></i>
+            <p style="margin-top: 20px; font-size: 16px">
+              确认将选中的媒体标注为非执法视频吗？
+            </p>
+            <p style="color: #909399; font-size: 14px">
+              已选中 {{ ids.length }} 条媒体
+            </p>
+          </div>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="noMarkDialogVisible = false">否</el-button>
+            <el-button type="primary" @click="confirmNoMark">是</el-button>
           </div>
         </el-dialog>
 
         <!-- 添加或修改媒体对话框 -->
-        <el-dialog :title="title" :visible.sync="open" width="750px" :close-on-click-modal="false">
+        <el-dialog
+          :title="title"
+          :visible.sync="open"
+          width="750px"
+          :close-on-click-modal="false"
+        >
           <div class="form-container">
-            <el-form ref="form" :model="form" :rules="rules" label-width="120px">
+            <el-form
+              ref="form"
+              :model="form"
+              :rules="rules"
+              label-width="120px"
+            >
               <!-- 基础信息 -->
               <div class="form-section">
                 <div class="form-section-title">基础信息</div>
                 <el-row :gutter="20">
                   <el-col :span="12">
                     <el-form-item label="媒体名称：" prop="mediaName">
-                      <el-input v-model="form.mediaName" placeholder="请输入媒体名称" />
+                      <el-input
+                        v-model="form.mediaName"
+                        placeholder="请输入媒体名称"
+                      />
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
                     <el-form-item label="媒体类型：" prop="mediaCate">
-                      <el-select v-model="form.mediaCate" placeholder="请选择媒体类型" class="full-width">
+                      <el-select
+                        v-model="form.mediaCate"
+                        placeholder="请选择媒体类型"
+                        class="full-width"
+                      >
                         <el-option
                           v-for="dict in mediaCateOptions"
                           :key="dict.value"
@@ -142,7 +222,12 @@
                 <el-row :gutter="20">
                   <el-col :span="12">
                     <el-form-item label="执法仪：" prop="recorderId">
-                      <el-select v-model="form.recorderId" placeholder="请选择执法仪" clearable class="full-width">
+                      <el-select
+                        v-model="form.recorderId"
+                        placeholder="请选择执法仪"
+                        clearable
+                        class="full-width"
+                      >
                         <el-option
                           v-for="item in lawcameraOptions"
                           :key="item.id"
@@ -154,7 +239,11 @@
                   </el-col>
                   <el-col :span="12">
                     <el-form-item label="存储方式：" prop="storageType">
-                      <el-select v-model="form.storageType" placeholder="请选择存储方式" class="full-width">
+                      <el-select
+                        v-model="form.storageType"
+                        placeholder="请选择存储方式"
+                        class="full-width"
+                      >
                         <el-option
                           v-for="dict in storageTypeOptions"
                           :key="dict.value"
@@ -169,7 +258,11 @@
                 <el-row :gutter="20">
                   <el-col :span="12">
                     <el-form-item label="数据来源：" prop="dataSource">
-                      <el-select v-model="form.dataSource" placeholder="请选择数据来源" class="full-width">
+                      <el-select
+                        v-model="form.dataSource"
+                        placeholder="请选择数据来源"
+                        class="full-width"
+                      >
                         <el-option label="采集站" value="0" />
                         <el-option label="采集客户端" value="1" />
                       </el-select>
@@ -182,19 +275,25 @@
                         :options="enforcementTypeLabel"
                         :normalizer="normalizeEnforcementType"
                         placeholder="请选择执法类型"
-                        style="width: 200px;"
+                        style="width: 200px"
                         clearable
                       />
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
                     <el-form-item label="认证码：" prop="authKey">
-                      <el-input v-model="form.authKey" placeholder="请输认证码" />
+                      <el-input
+                        v-model="form.authKey"
+                        placeholder="请输认证码"
+                      />
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
                     <el-form-item label="媒体后缀：" prop="mediaSuffix">
-                      <el-input v-model="form.mediaSuffix" placeholder="请输媒体后缀" />
+                      <el-input
+                        v-model="form.mediaSuffix"
+                        placeholder="请输媒体后缀"
+                      />
                     </el-form-item>
                   </el-col>
                 </el-row>
@@ -261,26 +360,136 @@
             <el-button type="primary" @click="submitForm">确 定</el-button>
           </div>
         </el-dialog>
+
+        <!-- 一键归档对话框 -->
+        <el-dialog
+          title="一键归档"
+          :visible.sync="archiveDialogVisible"
+          width="600px"
+          :close-on-click-modal="false"
+        >
+          <el-form label-width="120px">
+            <!-- 媒体基本信息 -->
+            <div v-if="currentArchivingMedia" class="media-info-section">
+              <el-descriptions :column="2" border size="small">
+                <el-descriptions-item label="媒体名称">
+                  {{ currentArchivingMedia.mediaName || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="媒体类别">
+                  {{ currentArchivingMedia.mediaCate || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="警员">
+                  {{ currentArchivingMedia.policeName || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="单位组织">
+                  {{ currentArchivingMedia.orgFullName || "-" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </div>
+
+            <el-form-item label="归档方式">
+              <el-radio-group v-model="archiveType">
+                <el-radio label="existing">选择现有档案</el-radio>
+                <el-radio label="new">新增档案</el-radio>
+              </el-radio-group>
+            </el-form-item>
+
+            <!-- 选择现有档案 -->
+            <div v-if="archiveType === 'existing'">
+              <el-form-item label="档案编号：">
+                <el-input
+                  v-model="archiveForm.archiveCode"
+                  placeholder="请选择档案"
+                  readonly
+                  style="width: 300px"
+                >
+                  <el-button
+                    slot="append"
+                    icon="el-icon-search"
+                    @click="openArchiveSelector"
+                    >选择</el-button
+                  >
+                </el-input>
+              </el-form-item>
+            </div>
+
+            <!-- 新增档案 -->
+            <div v-if="archiveType === 'new'">
+              <el-form-item label="档案标题：">
+                <el-input
+                  v-model="archiveForm.archiveTitle"
+                  placeholder="请输入档案标题"
+                  maxlength="255"
+                  style="width: 400px"
+                />
+              </el-form-item>
+              <el-form-item label="档案类型：">
+                <el-select
+                  v-model="archiveForm.archiveType"
+                  placeholder="请选择档案类型"
+                  style="width: 400px"
+                >
+                  <el-option
+                    v-for="dict in archiveTypeOptions"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </div>
+          </el-form>
+
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="cancelArchive">取 消</el-button>
+            <el-button type="primary" @click="submitArchive">确 定</el-button>
+          </div>
+        </el-dialog>
+
+        <!-- 档案选择对话框 -->
+        <ArchiveSelectorDialog
+          ref="archiveSelector"
+          title="选择档案"
+          :visible.sync="archiveSelectorVisible"
+          :multiple="false"
+          @confirm="confirmSelectArchive"
+          @cancel="cancelSelectArchive"
+        />
       </el-card>
     </template>
   </BasicLayout>
 </template>
 
 <script>
-import { delMedia, addMedia, updateMedia, batchDelMedia } from '@/api/evidence/evidence_manage_command_api'
-import { getMedia, getEnforcementTypeTree } from '@/api/evidence/evidence_manage_query_api'
-import { orgTreeSelect } from '@/api/admin/sys-org'
-import { listUser } from '@/api/admin/sys-user'
-import { getEquipmentLawcameraList } from '@/api/admin/equipment_manage_api'
-import MediaSelector from '@/components/MediaSelector'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import {
+  delMedia,
+  addMedia,
+  updateMedia,
+  batchDelMedia,
+  batchMarkMediaNoEnforcementStatus,
+} from "@/api/evidence/evidence_manage_command_api";
+import {
+  getMedia,
+  getEnforcementTypeTree,
+} from "@/api/evidence/evidence_manage_query_api";
+import { orgTreeSelect } from "@/api/admin/sys-org";
+import { listUser } from "@/api/admin/sys-user";
+import { getEquipmentLawcameraList } from "@/api/admin/equipment_manage_api";
+import {
+  addArchive,
+  addArchiveMediaRelation,
+} from "@/api/evidence/archive_api";
+import MediaSelector from "@/components/MediaSelector";
+import ArchiveSelectorDialog from "@/components/ArchiveSelectorDialog";
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
-  name: 'MediaManage',
+  name: "MediaManage",
   components: {
     MediaSelector,
-    Treeselect
+    ArchiveSelectorDialog,
+    Treeselect,
   },
   data() {
     return {
@@ -293,12 +502,32 @@ export default {
       // 是否显示下载文件类型选择对话框
       downloadDialogVisible: false,
       downloadForm: {
-        fileType: ''
+        fileType: "",
       },
+      // 是否显示标注不是执法视频对话框
+      noMarkDialogVisible: false,
       showDownload: false,
       showTransfer: false,
+      // 一键归档相关
+      archiveDialogVisible: false,
+      archiveType: "existing", // 'existing' 或 'new'
+      archiveForm: {
+        archiveCode: "",
+        archiveId: "",
+        archiveTitle: "",
+        archiveType: undefined,
+      },
+      currentArchivingMedia: null, // 当前要归档的媒体
+      archiveSelectorVisible: false,
+      // 档案类型选项
+      archiveTypeOptions: [
+        { label: "案件档案", value: 1 },
+        { label: "证据档案", value: 2 },
+        { label: "执法档案", value: 3 },
+        { label: "其他档案", value: 4 },
+      ],
       // 弹出层标题
-      title: '',
+      title: "",
       // 是否显示弹出层
       open: false,
       // 表单参数
@@ -314,69 +543,73 @@ export default {
       // 表单校验
       rules: {
         mediaName: [
-          { required: true, message: '媒体名称不能为空', trigger: 'blur' }
+          { required: true, message: "媒体名称不能为空", trigger: "blur" },
         ],
         mediaCate: [
-          { required: true, message: '媒体类型不能为空', trigger: 'change' }
-        ]
-      }
-    }
+          { required: true, message: "媒体类型不能为空", trigger: "change" },
+        ],
+      },
+    };
   },
   watch: {
-    'form.orgId': function(newVal) {
+    "form.orgId": function (newVal) {
       // 当表单中的组织ID变化时，自动获取该组织的用户列表
       if (newVal) {
-        this.handleFormOrgSelect({ id: newVal })
+        this.handleFormOrgSelect({ id: newVal });
       }
-    }
+    },
   },
   created() {
-    this.getTreeselect()
-    this.getEnforcementTypeTreeselect()
-    this.getDicts('evidence_media_type').then(response => {
-      this.mediaCateOptions = response.data
-    })
-    this.getDicts('evidence_storage_type').then(response => {
-      this.storageTypeOptions = response.data
-    })
-    this.getDicts('relation_status').then(response => {
-      this.mediaRelationStatusOptions = response.data
-    })
+    this.getTreeselect();
+    this.getEnforcementTypeTreeselect();
+    this.getDicts("evidence_media_type").then((response) => {
+      this.mediaCateOptions = response.data;
+    });
+    this.getDicts("evidence_storage_type").then((response) => {
+      this.storageTypeOptions = response.data;
+    });
+    this.getDicts("relation_status").then((response) => {
+      this.mediaRelationStatusOptions = response.data;
+    });
   },
   methods: {
-
-   // 字典状态字典翻译
+    // 字典状态字典翻译
     relationStatusFormat(row) {
-      return this.selectDictLabel(this.mediaRelationStatusOptions, parseInt(row.isAssociated))
+      return this.selectDictLabel(
+        this.mediaRelationStatusOptions,
+        parseInt(row.isAssociated)
+      );
     },
 
     /** 获取执法类型树形数据 */
     getEnforcementTypeTreeselect() {
-      getEnforcementTypeTree().then(response => {
-        this.enforcementTypeLabel = response.data.list || response.data || []
-      }).catch(() => {
-        // 如果树形接口不存在，设置为空数组
-        this.enforcementTypeLabel = []
-      })
+      getEnforcementTypeTree()
+        .then((response) => {
+          this.enforcementTypeLabel = response.data.list || response.data || [];
+        })
+        .catch(() => {
+          // 如果树形接口不存在，设置为空数组
+          this.enforcementTypeLabel = [];
+        });
     },
 
     /** 执法类型数据结构转换 当你的数据格式与 vue-treeselect 默认期望的格式不一致时，使用 normalizer 进行格式转换*/
     normalizeEnforcementType(node) {
       if (node.children && !node.children.length) {
-        delete node.children
+        delete node.children;
       }
       return {
         id: node.id, // 将你数据中的 node.id 映射为 vue-treeselect 的id
-        label: node.enforcementTypeName || node.label || '未知', // 将你数据中的 node.enforcementTypeName 映射为 vue-treeselect 的label
-        children: node.children // 将你的数据中的 children 映射为 children
-      }
+        label: node.enforcementTypeName || node.label || "未知", // 将你数据中的 node.enforcementTypeName 映射为 vue-treeselect 的label
+        children: node.children, // 将你的数据中的 children 映射为 children
+      };
     },
 
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.mediaId)
-      this.single = selection.length !== 1
-      this.multiple = !selection.length
+      this.ids = selection.map((item) => item.mediaId);
+      this.single = selection.length !== 1;
+      this.multiple = !selection.length;
     },
     onSmartMark() {
       // 智能标注逻辑
@@ -385,13 +618,39 @@ export default {
       // 手动标注逻辑
     },
     onNoMark() {
-      // 标注不是执法视频逻辑
+      if (this.multiple) {
+        this.$message.warning("请至少选择一条媒体数据");
+        return;
+      }
+      this.noMarkDialogVisible = true;
+    },
+    confirmNoMark() {
+      const mediaIds = this.ids;
+      batchMarkMediaNoEnforcementStatus({
+        ids: mediaIds,
+        isNonEnforcementMedia: 1,
+      })
+        .then((response) => {
+          if (response.code === 200) {
+            this.msgSuccess("标注成功");
+            this.noMarkDialogVisible = false;
+            // 刷新列表
+            setTimeout(() => {
+              this.$refs.mediaSelector.refresh();
+            }, 2000);
+          } else {
+            this.msgError(response.msg || "标注失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError("标注失败：" + (error.message || "未知错误"));
+        });
     },
     onLog() {
       // 日志管理逻辑
     },
     onDownload() {
-      this.downloadDialogVisible = true
+      this.downloadDialogVisible = true;
     },
     onTransfer() {
       // 移交逻辑
@@ -401,7 +660,7 @@ export default {
     },
     onSubmitDownload() {
       // 提交下载逻辑
-      this.downloadDialogVisible = false
+      this.downloadDialogVisible = false;
     },
 
     // 表单重置
@@ -419,138 +678,267 @@ export default {
         shotTimeStart: undefined,
         shotTime: undefined,
         importTimeStart: undefined,
-        importTimeEnd: undefined
-      }
+        importTimeEnd: undefined,
+      };
       // 重置下拉选项
-      this.userOptions = []
-      this.lawcameraOptions = []
+      this.userOptions = [];
+      this.lawcameraOptions = [];
       if (this.$refs.form) {
-        this.$refs.form.resetFields()
+        this.$refs.form.resetFields();
       }
     },
 
     // 取消按钮
     cancel() {
-      this.open = false
-      this.reset()
+      this.open = false;
+      this.reset();
     },
 
     /** 新增按钮操作 */
     handleAdd() {
-      this.reset()
-      this.open = true
-      this.title = '添加媒体'
+      this.reset();
+      this.open = true;
+      this.title = "添加媒体";
     },
 
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset()
-      const mediaId = row.id || this.ids[0]
-      getMedia(mediaId).then(response => {
-        this.form = response.data
-        this.open = true
-        this.title = '修改媒体'
-      })
+      this.reset();
+      const mediaId = row.id || this.ids[0];
+      getMedia(mediaId).then((response) => {
+        this.form = response.data;
+        this.open = true;
+        this.title = "修改媒体";
+      });
     },
 
     /** 提交按钮 */
     submitForm() {
-      this.$refs['form'].validate(valid => {
+      this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id !== undefined) {
-            updateMedia(this.form, this.form.id).then(response => {
+            updateMedia(this.form, this.form.id).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                this.$refs.mediaSelector.refresh()
+                this.msgSuccess(response.msg);
+                this.open = false;
+                this.$refs.mediaSelector.refresh();
               } else {
-                this.msgError(response.msg)
+                this.msgError(response.msg);
               }
-            })
+            });
           } else {
-            addMedia(this.form).then(response => {
+            addMedia(this.form).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                this.$refs.mediaSelector.refresh()
+                this.msgSuccess(response.msg);
+                this.open = false;
+                this.$refs.mediaSelector.refresh();
               } else {
-                this.msgError(response.msg)
+                this.msgError(response.msg);
               }
-            })
+            });
           }
         }
-      })
+      });
     },
 
     /** 删除按钮操作 */
     handleDelete(row) {
-      var mediaIds
+      var mediaIds;
       if (this.ids.length > 1) {
-        mediaIds = this.ids
+        mediaIds = this.ids;
       } else {
-        mediaIds = row.id || this.ids[0]
+        mediaIds = row.id || this.ids[0];
       }
 
       const confirmMessage = Array.isArray(mediaIds)
         ? `是否确认删除选中的${mediaIds.length}条媒体数据项?`
-        : '是否确认删除选中的媒体数据项?'
+        : "是否确认删除选中的媒体数据项?";
 
-      this.$confirm(confirmMessage, '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        if (Array.isArray(mediaIds)) {
-          return batchDelMedia({ 'ids': mediaIds })
-        } else {
-          return delMedia(mediaIds)
-        }
-      }).then((response) => {
-        setTimeout(() => {
-          this.$refs.mediaSelector.refresh()
-        }, 2000)
-        this.msgSuccess(response.msg)
-      }).catch(() => { })
+      this.$confirm(confirmMessage, "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          if (Array.isArray(mediaIds)) {
+            return batchDelMedia({ ids: mediaIds });
+          } else {
+            return delMedia(mediaIds);
+          }
+        })
+        .then((response) => {
+          setTimeout(() => {
+            this.$refs.mediaSelector.refresh();
+          }, 2000);
+          this.msgSuccess(response.msg);
+        })
+        .catch(() => {});
     },
 
-    handleOperation(row) {
+    handleOperation(row, action) {
       // 操作按钮逻辑
-      console.log('操作', row)
+      console.log("操作", row, action);
+      if (action === "edit") {
+        // 一键归档
+        this.handleQuickArchive(row);
+      }
+    },
+
+    /** 一键归档 */
+    handleQuickArchive(row) {
+      this.currentArchivingMedia = row;
+      this.archiveType = "existing";
+      this.archiveForm = {
+        archiveCode: "",
+        archiveId: "",
+        archiveTitle: "",
+        archiveType: undefined,
+      };
+      this.archiveDialogVisible = true;
+    },
+
+    /** 取消归档 */
+    cancelArchive() {
+      this.archiveDialogVisible = false;
+      this.currentArchivingMedia = null;
+      this.archiveForm = {
+        archiveCode: "",
+        archiveId: "",
+        archiveTitle: "",
+        archiveType: undefined,
+      };
+    },
+
+    /** 打开档案选择对话框 */
+    openArchiveSelector() {
+      this.archiveSelectorVisible = true;
+    },
+
+    /** 确认选择档案 */
+    confirmSelectArchive(selectedArchives) {
+      if (selectedArchives && selectedArchives.length > 0) {
+        const archive = selectedArchives[0];
+        this.archiveForm.archiveCode = archive.archiveCode;
+        this.archiveForm.archiveId = archive.archiveId;
+      }
+      this.archiveSelectorVisible = false;
+    },
+
+    /** 取消选择档案 */
+    cancelSelectArchive() {
+      this.archiveSelectorVisible = false;
+    },
+
+    /** 提交归档 */
+    submitArchive() {
+      if (!this.currentArchivingMedia) {
+        this.msgError("未选择要归档的媒体");
+        return;
+      }
+
+      if (this.archiveType === "existing") {
+        // 选择现有档案
+        if (!this.archiveForm.archiveCode) {
+          this.msgError("请选择档案");
+          return;
+        }
+        this.linkMediaToArchive();
+      } else {
+        // 新增档案
+        if (!this.archiveForm.archiveTitle) {
+          this.msgError("请输入档案标题");
+          return;
+        }
+        if (!this.archiveForm.archiveType) {
+          this.msgError("请选择档案类型");
+          return;
+        }
+        this.createArchiveAndLink();
+      }
+    },
+
+    /** 关联媒体到现有档案 */
+    linkMediaToArchive() {
+      const data = {
+        archiveId: this.archiveForm.archiveId,
+        mediaId:
+          this.currentArchivingMedia.mediaId || this.currentArchivingMedia.id,
+      };
+
+      addArchiveMediaRelation(data)
+        .then((response) => {
+          if (response.code === 200) {
+            this.msgSuccess("归档成功");
+            this.archiveDialogVisible = false;
+            this.$refs.mediaSelector.refresh();
+          } else {
+            this.msgError(response.msg || "归档失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError("归档失败：" + (error.message || "未知错误"));
+        });
+    },
+
+    /** 创建新档案并关联 */
+    createArchiveAndLink() {
+      const archiveData = {
+        archiveTitle: this.archiveForm.archiveTitle,
+        archiveType: this.archiveForm.archiveType,
+        storageDuration: 120, // 默认保存期限120个月
+      };
+
+      // 先创建档案
+      addArchive(archiveData)
+        .then((response) => {
+          if (response.code === 200) {
+            // 档案创建成功，获取档案ID和编码
+            this.archiveForm.archiveId = response.data;
+            // 然后关联媒体
+            return this.linkMediaToArchive();
+          } else {
+            this.msgError(response.msg || "创建档案失败");
+            return Promise.reject(new Error(response.msg));
+          }
+        })
+        .catch((error) => {
+          this.msgError("创建档案失败：" + (error.message || "未知错误"));
+        });
     },
 
     /** 查询组织下拉树结构 */
     getTreeselect() {
-      orgTreeSelect().then(response => {
-        this.orgOptions = response.data
-      })
+      orgTreeSelect().then((response) => {
+        this.orgOptions = response.data;
+      });
     },
 
     /** 查询条件-组织选择事件 */
     handleOrgSelect(node) {
       if (node) {
-        listUser({ orgId: '/' + node.id + '/' }).then(response => {
-          this.userOptions = response.data.list
-        })
+        listUser({ orgId: "/" + node.id + "/" }).then((response) => {
+          this.userOptions = response.data.list;
+        });
       } else {
-        this.userOptions = []
+        this.userOptions = [];
       }
     },
 
     /** 表单-组织选择事件 */
     handleFormOrgSelect(node) {
       if (node) {
-        listUser({ orgId: '/' + node.id + '/' }).then(response => {
-          this.userOptions = response.data.list
-        })
+        listUser({ orgId: "/" + node.id + "/" }).then((response) => {
+          this.userOptions = response.data.list;
+        });
         // 清空警员和执法仪选择
-        this.form.policeId = undefined
-        this.form.recorderId = undefined
-        this.lawcameraOptions = []
+        this.form.policeId = undefined;
+        this.form.recorderId = undefined;
+        this.lawcameraOptions = [];
       } else {
-        this.userOptions = []
-        this.form.policeId = undefined
-        this.form.recorderId = undefined
-        this.lawcameraOptions = []
+        this.userOptions = [];
+        this.form.policeId = undefined;
+        this.form.recorderId = undefined;
+        this.lawcameraOptions = [];
       }
     },
 
@@ -558,18 +946,18 @@ export default {
     handleFormPoliceSelect(policeId) {
       if (policeId) {
         // 根据警员ID获取其管理的执法仪列表
-        getEquipmentLawcameraList({ managerId: policeId }).then(response => {
-          this.lawcameraOptions = response.data.list || []
-        })
+        getEquipmentLawcameraList({ managerId: policeId }).then((response) => {
+          this.lawcameraOptions = response.data.list || [];
+        });
         // 清空执法仪选择
-        this.form.recorderId = undefined
+        this.form.recorderId = undefined;
       } else {
-        this.lawcameraOptions = []
-        this.form.recorderId = undefined
+        this.lawcameraOptions = [];
+        this.form.recorderId = undefined;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -600,12 +988,12 @@ export default {
   padding: 15px;
   background: #f9f9f9;
   border-radius: 4px;
-  border-left: 4px solid #409EFF;
+  border-left: 4px solid #409eff;
 }
 
 .form-section-title {
   font-size: 16px;
-  color: #409EFF;
+  color: #409eff;
   margin-bottom: 15px;
   font-weight: bold;
 }
@@ -622,6 +1010,14 @@ export default {
   text-align: right;
   padding: 20px;
   border-top: 1px solid #e6e6e6;
+}
+
+/* 媒体信息区域样式 */
+.media-info-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f5f7fa;
+  border-radius: 4px;
 }
 
 /* Treeselect组件样式 */
