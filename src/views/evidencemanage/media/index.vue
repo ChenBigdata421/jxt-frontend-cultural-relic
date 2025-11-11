@@ -455,6 +455,13 @@
           @confirm="confirmSelectArchive"
           @cancel="cancelSelectArchive"
         />
+
+        <!-- 视频播放对话框 -->
+        <VideoPlayerDialog
+          :visible.sync="videoPlayerVisible"
+          :initial-url="currentVideoUrl"
+          @close="handleVideoPlayerClose"
+        />
       </el-card>
     </template>
   </BasicLayout>
@@ -481,6 +488,7 @@ import {
 } from "@/api/evidence/archive_api";
 import MediaSelector from "@/components/MediaSelector";
 import ArchiveSelectorDialog from "@/components/ArchiveSelectorDialog";
+import VideoPlayerDialog from "@/components/VideoPlayerDialog";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
@@ -489,6 +497,7 @@ export default {
   components: {
     MediaSelector,
     ArchiveSelectorDialog,
+    VideoPlayerDialog,
     Treeselect,
   },
   data() {
@@ -526,6 +535,9 @@ export default {
         { label: "执法档案", value: 3 },
         { label: "其他档案", value: 4 },
       ],
+      // 视频播放相关
+      videoPlayerVisible: false,
+      currentVideoUrl: "",
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -781,7 +793,24 @@ export default {
       if (action === "edit") {
         // 一键归档
         this.handleQuickArchive(row);
+      } else if (action === "play") {
+        // 播放视频
+        this.handlePlayVideo(row);
       }
+    },
+
+    /** 播放视频 */
+    handlePlayVideo(row) {
+      console.log("播放视频", row);
+      // 这里可以根据row中的信息构建视频URL
+      // 暂时设置为空，让用户手动输入
+      this.currentVideoUrl = "";
+      this.videoPlayerVisible = true;
+    },
+
+    /** 视频播放器关闭 */
+    handleVideoPlayerClose() {
+      this.currentVideoUrl = "";
     },
 
     /** 一键归档 */
