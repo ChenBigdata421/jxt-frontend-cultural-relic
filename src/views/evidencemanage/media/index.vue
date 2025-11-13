@@ -462,6 +462,275 @@
           :initial-url="currentVideoUrl"
           @close="handleVideoPlayerClose"
         />
+        <!-- 任务处理对话框 -->
+        <el-dialog
+          :title="'处理任务 - ' + processForm.task_name"
+          :visible.sync="taskProcessOpen"
+          width="900px"
+          append-to-body
+        >
+          <el-form
+            ref="taskProcessForm"
+            :model="processForm"
+            :rules="processRules"
+            label-width="120px"
+          >
+            <el-row :gutter="20">
+              <el-col :span="8">
+                <el-form-item label="任务名称">
+                  <span>{{ processForm.task_name }}</span>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="流程名称">
+                  <span>{{ processForm.workflow_name }}</span>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="优先级">
+                  <el-tag v-if="processForm.priority === 'high'" type="danger"
+                    >高</el-tag
+                  >
+                  <el-tag
+                    v-else-if="processForm.priority === 'medium'"
+                    type="warning"
+                    >中</el-tag
+                  >
+                  <el-tag v-else-if="processForm.priority === 'low'" type="info"
+                    >低</el-tag
+                  >
+                  <span v-else>{{ processForm.priority || "-" }}</span>
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <!-- 显示驳回信息（如果有） -->
+            <el-alert
+              v-if="processForm.rejection_info"
+              title="任务被驳回"
+              type="warning"
+              :closable="false"
+              style="margin-bottom: 20px"
+            >
+              <div style="margin-top: 10px">
+                <p>
+                  <strong>驳回人：</strong
+                  >{{ processForm.rejection_info.rejected_by }}
+                </p>
+                <p>
+                  <strong>驳回时间：</strong
+                  >{{ processForm.rejection_info.rejected_at }}
+                </p>
+                <p>
+                  <strong>驳回原因：</strong
+                  >{{ processForm.rejection_info.rejection_reason }}
+                </p>
+              </div>
+            </el-alert>
+
+            <!-- 显示所有前序任务的处理历史 -->
+            <div
+              v-if="
+                processForm.previous_tasks_history &&
+                processForm.previous_tasks_history.length > 0
+              "
+              style="margin-bottom: 20px"
+            >
+              <el-divider>流程处理历史</el-divider>
+              <el-timeline>
+                <el-timeline-item
+                  v-for="(
+                    taskHistory, index
+                  ) in processForm.previous_tasks_history"
+                  :key="index"
+                  :timestamp="taskHistory.completed_at"
+                  placement="top"
+                >
+                  <el-card shadow="hover" style="margin-bottom: 10px">
+                    <div
+                      slot="header"
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                      "
+                    >
+                      <span style="font-weight: bold; font-size: 16px">
+                        {{ index + 1 }}. {{ taskHistory.task_name }}
+                      </span>
+                      <el-tag
+                        :type="
+                          taskHistory.result === '通过' ||
+                          taskHistory.result === '完成'
+                            ? 'success'
+                            : 'danger'
+                        "
+                        size="small"
+                      >
+                        {{ taskHistory.result }}
+                      </el-tag>
+                    </div>
+
+                    <!-- 处理意见 -->
+                    <div v-if="taskHistory.comment" style="margin-bottom: 15px">
+                      <div
+                        style="
+                          color: #909399;
+                          font-size: 12px;
+                          margin-bottom: 5px;
+                        "
+                      >
+                        处理意见：
+                      </div>
+                      <div
+                        style="
+                          padding: 10px;
+                          background-color: #f5f7fa;
+                          border-radius: 4px;
+                          color: #606266;
+                        "
+                      >
+                        {{ taskHistory.comment }}
+                      </div>
+                    </div>
+
+                    <!-- 表单字段数据 -->
+                    <div
+                      v-if="
+                        taskHistory.output &&
+                        Object.keys(taskHistory.output).length > 0
+                      "
+                    >
+                      <div
+                        style="
+                          color: #909399;
+                          font-size: 12px;
+                          margin-bottom: 5px;
+                        "
+                      >
+                        提交信息：
+                      </div>
+                      <el-descriptions :column="2" border size="small">
+                        <el-descriptions-item
+                          v-for="(value, key) in taskHistory.output"
+                          :key="key"
+                          :label="getFieldLabel(key)"
+                        >
+                          <template v-if="typeof value === 'boolean'">
+                            <el-tag v-if="value" type="success">是</el-tag>
+                            <el-tag v-else type="info">否</el-tag>
+                          </template>
+                          <template v-else>
+                            {{ value }}
+                          </template>
+                        </el-descriptions-item>
+                      </el-descriptions>
+                    </div>
+
+                    <!-- 处理人信息 -->
+                    <div
+                      style="margin-top: 10px; color: #909399; font-size: 12px"
+                    >
+                      处理人：{{ taskHistory.assignee }}
+                    </div>
+                  </el-card>
+                </el-timeline-item>
+              </el-timeline>
+            </div>
+
+            <!-- 根据 form_fields 动态生成表单 -->
+            <el-divider>填写信息</el-divider>
+
+            <template
+              v-if="
+                processForm.form_fields && processForm.form_fields.length > 0
+              "
+            >
+              <el-form-item
+                v-for="field in processForm.form_fields"
+                :key="field"
+                :label="getFieldLabel(field)"
+                :prop="'formData.' + field"
+                :required="true"
+              >
+                <!-- 日期类型字段 -->
+                <el-date-picker
+                  v-if="getFieldType(field) === 'date'"
+                  v-model="processForm.formData[field]"
+                  type="date"
+                  :placeholder="getFieldPlaceholder(field)"
+                  value-format="yyyy-MM-dd"
+                  style="width: 100%"
+                />
+                <!-- 日期时间类型字段 -->
+                <el-date-picker
+                  v-else-if="getFieldType(field) === 'datetime'"
+                  v-model="processForm.formData[field]"
+                  type="datetime"
+                  :placeholder="getFieldPlaceholder(field)"
+                  value-format="yyyy-MM-dd HH:mm:ss"
+                  style="width: 100%"
+                />
+                <!-- 时间类型字段 -->
+                <el-time-picker
+                  v-else-if="getFieldType(field) === 'time'"
+                  v-model="processForm.formData[field]"
+                  :placeholder="getFieldPlaceholder(field)"
+                  value-format="HH:mm:ss"
+                  style="width: 100%"
+                />
+                <!-- 文本域类型字段 -->
+                <el-input
+                  v-else-if="getFieldType(field) === 'textarea'"
+                  v-model="processForm.formData[field]"
+                  type="textarea"
+                  :rows="3"
+                  :placeholder="getFieldPlaceholder(field)"
+                />
+                <!-- 默认文本输入框 -->
+                <el-input
+                  v-else
+                  v-model="processForm.formData[field]"
+                  :placeholder="getFieldPlaceholder(field)"
+                  clearable
+                />
+              </el-form-item>
+            </template>
+
+            <!-- 如果没有定义 form_fields，显示传统的输出数据输入框 -->
+            <el-form-item v-else label="输出数据" prop="output">
+              <el-input
+                v-model="processForm.output"
+                type="textarea"
+                :rows="4"
+                placeholder="请输入输出数据(JSON格式)"
+              />
+            </el-form-item>
+
+            <!-- 处理意见 -->
+            <el-form-item label="处理意见" prop="comment">
+              <el-input
+                v-model="processForm.comment"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入处理意见"
+              />
+            </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button type="success" @click="submitTaskApprove"
+              >通过</el-button
+            >
+            <el-button
+              type="danger"
+              @click="submitTaskReject"
+              :disabled="isFirstTask"
+            >
+              驳回{{ isFirstTask ? "（第一个任务不可驳回）" : "" }}
+            </el-button>
+            <el-button @click="taskProcessOpen = false">取消</el-button>
+          </div>
+        </el-dialog>
       </el-card>
     </template>
   </BasicLayout>
@@ -486,6 +755,14 @@ import {
   addArchive,
   addArchiveMediaRelation,
 } from "@/api/evidence/archive_api";
+import { listWorkflows, getWorkflow } from "@/api/process/workflow";
+import { startInstance } from "@/api/process/instance";
+import {
+  listMyTodoTasks,
+  getTask,
+  approveTask,
+  rejectTask,
+} from "@/api/process/task";
 import MediaSelector from "@/components/MediaSelector";
 import ArchiveSelectorDialog from "@/components/ArchiveSelectorDialog";
 import VideoPlayerDialog from "@/components/VideoPlayerDialog";
@@ -559,6 +836,20 @@ export default {
         ],
         mediaCate: [
           { required: true, message: "媒体类型不能为空", trigger: "change" },
+        ],
+      },
+      // 工作流相关
+      deleteWorkflowId: null, // 文档删除申请流程ID
+      currentDeleteMedia: null, // 当前要删除的媒体
+      // 任务处理对话框
+      taskProcessOpen: false,
+      currentTaskId: null,
+      currentTask: null,
+      isFirstTask: false,
+      processForm: {},
+      processRules: {
+        comment: [
+          { required: true, message: "处理意见不能为空", trigger: "blur" },
         ],
       },
     };
@@ -755,36 +1046,19 @@ export default {
 
     /** 删除按钮操作 */
     handleDelete(row) {
-      var mediaIds;
+      // 只支持单个删除
+      const mediaId = row.id || this.ids[0];
+
       if (this.ids.length > 1) {
-        mediaIds = this.ids;
-      } else {
-        mediaIds = row.id || this.ids[0];
+        this.msgWarning("删除操作需要通过工作流审批，暂不支持批量删除");
+        return;
       }
 
-      const confirmMessage = Array.isArray(mediaIds)
-        ? `是否确认删除选中的${mediaIds.length}条媒体数据项?`
-        : "是否确认删除选中的媒体数据项?";
+      // 保存当前要删除的媒体信息
+      this.currentDeleteMedia = row;
 
-      this.$confirm(confirmMessage, "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
-        .then(() => {
-          if (Array.isArray(mediaIds)) {
-            return batchDelMedia({ ids: mediaIds });
-          } else {
-            return delMedia(mediaIds);
-          }
-        })
-        .then((response) => {
-          setTimeout(() => {
-            this.$refs.mediaSelector.refresh();
-          }, 2000);
-          this.msgSuccess(response.msg);
-        })
-        .catch(() => {});
+      // 查询工作流列表，找到"文档删除申请流程"
+      this.startDeleteWorkflow(mediaId);
     },
 
     handleOperation(row, action) {
@@ -796,6 +1070,10 @@ export default {
       } else if (action === "play") {
         // 播放视频
         this.handlePlayVideo(row);
+      }
+      if (action === "delete") {
+        // 删除
+        this.handleDelete(row);
       }
     },
 
@@ -983,6 +1261,424 @@ export default {
       } else {
         this.lawcameraOptions = [];
         this.form.recorderId = undefined;
+      }
+    },
+
+    /** 启动删除工作流 */
+    startDeleteWorkflow(mediaId) {
+      let instanceId = null;
+
+      // 查询工作流列表
+      listWorkflows({ limit: 100, offset: 0 })
+        .then((response) => {
+          if (response.code === 200) {
+            const workflows = response.data.items || response.data || [];
+            // 查找名称为"文档删除申请流程"的工作流
+            const deleteWorkflow = workflows.find(
+              (wf) => wf.name === "文档删除申请流程"
+            );
+
+            if (!deleteWorkflow) {
+              this.msgError('未找到"文档删除申请流程"工作流，请先创建该工作流');
+              return;
+            }
+
+            this.deleteWorkflowId = deleteWorkflow.id;
+
+            // 创建工作流实例
+            const instanceData = {
+              workflow_id: deleteWorkflow.id,
+              input: JSON.stringify({
+                media_id: mediaId,
+                media_name: this.currentDeleteMedia?.mediaName || "",
+                applicant: this.$store.state.user.name || "当前用户",
+              }),
+            };
+
+            return startInstance(instanceData);
+          } else {
+            this.msgError(response.msg || "查询工作流失败");
+            throw new Error(response.msg || "查询工作流失败");
+          }
+        })
+        .then((instanceResponse) => {
+          if (instanceResponse && instanceResponse.code === 200) {
+            instanceId = instanceResponse.data.id || instanceResponse.data;
+            this.msgSuccess("工作流实例创建成功，正在查询任务...");
+
+            // 后端会自动创建第一个任务，查询待办任务列表
+            // 稍微延迟一下，确保后端任务已创建
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(listMyTodoTasks({ limit: 100, offset: 0 }));
+              }, 500);
+            });
+          } else {
+            this.msgError(instanceResponse.msg || "创建工作流实例失败");
+            throw new Error(instanceResponse.msg || "创建工作流实例失败");
+          }
+        })
+        .then((todoResponse) => {
+          if (todoResponse && todoResponse.code === 200) {
+            const tasks = todoResponse.data.items || todoResponse.data || [];
+
+            // 查找刚创建的任务（通过实例ID匹配）
+            const newTask = tasks.find(
+              (task) => task.instance_id === instanceId
+            );
+
+            if (!newTask) {
+              this.msgError("未找到刚创建的任务，请稍后在待办任务中查看");
+              throw new Error("未找到刚创建的任务");
+            }
+
+            this.msgSuccess("找到任务，正在打开处理对话框...");
+
+            // 打开任务处理对话框
+            this.handleProcessTask(newTask.id);
+          } else {
+            this.msgError(todoResponse.msg || "查询待办任务失败");
+            throw new Error(todoResponse.msg || "查询待办任务失败");
+          }
+        })
+        .catch((error) => {
+          if (error.message) {
+            console.error("启动删除工作流失败:", error);
+          }
+        });
+    },
+
+    /** 处理任务 */
+    handleProcessTask(taskId) {
+      this.currentTaskId = taskId;
+
+      // 获取任务详情
+      getTask(taskId)
+        .then((response) => {
+          if (response.code === 200) {
+            const task = response.data;
+            this.currentTask = task;
+
+            // 获取工作流定义以判断是否是第一个任务
+            return getWorkflow(task.workflow_id);
+          } else {
+            this.msgError(response.msg || "获取任务详情失败");
+            throw new Error(response.msg || "获取任务详情失败");
+          }
+        })
+        .then((workflowResponse) => {
+          if (workflowResponse.code === 200) {
+            const task = this.currentTask;
+            const workflow = workflowResponse.data;
+
+            // 解析工作流定义
+            let definition = {};
+            try {
+              definition =
+                typeof workflow.definition === "string"
+                  ? JSON.parse(workflow.definition)
+                  : workflow.definition;
+            } catch (e) {
+              console.error("解析工作流定义失败:", e);
+            }
+
+            // 判断是否是第一个任务
+            if (definition.steps && definition.steps.length > 0) {
+              const firstStepId = definition.steps[0].id;
+              this.isFirstTask = task.task_key === firstStepId;
+            } else {
+              this.isFirstTask = false;
+            }
+
+            // 解析 form_data
+            let formDataObj = {};
+            if (task.form_data) {
+              try {
+                if (typeof task.form_data === "string") {
+                  formDataObj = JSON.parse(task.form_data);
+                } else if (typeof task.form_data === "object") {
+                  formDataObj = task.form_data;
+                }
+              } catch (e) {
+                console.error("解析 form_data 失败:", e);
+              }
+            }
+
+            // 解析 form_fields
+            let formFields = [];
+            if (formDataObj && formDataObj.form_fields) {
+              formFields = formDataObj.form_fields;
+            }
+
+            // 初始化表单数据对象
+            const formData = {};
+            formFields.forEach((field) => {
+              const fieldType = this.getFieldTypeForInit(field);
+              if (fieldType === "boolean") {
+                formData[field] = false;
+              } else if (fieldType === "number") {
+                formData[field] = null;
+              } else {
+                formData[field] = "";
+              }
+            });
+
+            // 解析任务数据
+            let taskData = {};
+            let rejectionInfo = null;
+            let previousTasksHistory = [];
+
+            if (task.task_data) {
+              try {
+                if (typeof task.task_data === "string") {
+                  taskData = JSON.parse(task.task_data);
+                  if (typeof taskData === "string") {
+                    taskData = JSON.parse(taskData);
+                  }
+                } else if (
+                  typeof task.task_data === "object" &&
+                  task.task_data !== null
+                ) {
+                  taskData = task.task_data;
+                }
+
+                if (taskData.rejected_by) {
+                  rejectionInfo = {
+                    rejected_by: taskData.rejected_by,
+                    rejected_at: taskData.rejected_at,
+                    rejection_reason: taskData.rejection_reason,
+                    rejected_task_id: taskData.rejected_task_id,
+                  };
+                }
+
+                if (
+                  taskData.previous_tasks_history &&
+                  Array.isArray(taskData.previous_tasks_history)
+                ) {
+                  previousTasksHistory = taskData.previous_tasks_history;
+                }
+              } catch (e) {
+                console.error("解析任务数据失败:", e);
+                taskData = {};
+              }
+            }
+
+            const finalTaskData =
+              taskData && typeof taskData === "object" ? taskData : {};
+
+            this.processForm = {
+              task_name: task.task_name,
+              workflow_name: task.workflow_name,
+              priority: task.priority || "medium",
+              task_data: finalTaskData,
+              previous_tasks_history: previousTasksHistory,
+              form_fields: formFields,
+              formData: formData,
+              comment: "",
+              output: "",
+              rejection_info: rejectionInfo,
+            };
+
+            // 动态生成表单验证规则
+            this.generateFormRules(formFields);
+
+            this.taskProcessOpen = true;
+          } else {
+            this.msgError(workflowResponse.msg || "获取工作流定义失败");
+          }
+        })
+        .catch((error) => {
+          if (error.message) {
+            this.msgError("获取任务详情失败：" + error.message);
+          }
+        });
+    },
+
+    /** 提交审批通过 */
+    submitTaskApprove() {
+      this.$refs["taskProcessForm"].validate((valid) => {
+        if (valid) {
+          // 构建输出数据
+          let outputData = "";
+          if (
+            this.processForm.form_fields &&
+            this.processForm.form_fields.length > 0
+          ) {
+            outputData = JSON.stringify(this.processForm.formData);
+          } else {
+            outputData = this.processForm.output || "{}";
+          }
+
+          const data = {
+            comment: this.processForm.comment || "审批通过",
+            output: outputData,
+          };
+
+          approveTask(this.currentTaskId, data)
+            .then((response) => {
+              if (response.code === 200) {
+                this.msgSuccess("审批通过");
+                this.taskProcessOpen = false;
+                this.$refs.mediaSelector.refresh();
+              } else {
+                this.msgError(response.msg || "审批失败");
+              }
+            })
+            .catch((error) => {
+              this.msgError("审批失败：" + (error.message || "未知错误"));
+            });
+        }
+      });
+    },
+
+    /** 提交审批驳回 */
+    submitTaskReject() {
+      this.$refs["taskProcessForm"].validate((valid) => {
+        if (valid) {
+          this.$confirm("确认驳回该任务吗？", "警告", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning",
+          })
+            .then(() => {
+              const data = {
+                comment: this.processForm.comment,
+                reason: this.processForm.comment,
+              };
+              return rejectTask(this.currentTaskId, data);
+            })
+            .then((response) => {
+              if (response.code === 200) {
+                this.msgSuccess("已驳回");
+                this.taskProcessOpen = false;
+                this.$refs.mediaSelector.refresh();
+              } else {
+                this.msgError(response.msg || "驳回失败");
+              }
+            })
+            .catch((error) => {
+              if (error !== "cancel") {
+                this.msgError("驳回失败：" + (error.message || "未知错误"));
+              }
+            });
+        }
+      });
+    },
+
+    /** 获取字段标签 */
+    getFieldLabel(field) {
+      const labelMap = {
+        applicant: "申请人",
+        description: "描述",
+        comment: "备注",
+        reason: "原因",
+        media_id: "媒体编号",
+        media_name: "媒体名称",
+        delete_reason: "删除原因",
+        approval_opinion: "审批意见",
+      };
+
+      if (labelMap[field]) {
+        return labelMap[field];
+      }
+
+      // 智能转换
+      const parts = field.split("_");
+      const wordMap = {
+        id: "ID",
+        name: "名称",
+        type: "类型",
+        date: "日期",
+        time: "时间",
+        reason: "原因",
+        comment: "意见",
+        description: "描述",
+        media: "媒体",
+        delete: "删除",
+        approval: "审批",
+        opinion: "意见",
+      };
+
+      const translated = parts
+        .map((part) => wordMap[part.toLowerCase()] || part)
+        .join("");
+      return translated || field;
+    },
+
+    /** 获取字段类型 */
+    getFieldType(field) {
+      const fieldLower = field.toLowerCase();
+
+      if (fieldLower.includes("date") && !fieldLower.includes("time")) {
+        return "date";
+      }
+
+      if (fieldLower.includes("datetime") || fieldLower.includes("_at")) {
+        return "datetime";
+      }
+
+      if (fieldLower.includes("time") && !fieldLower.includes("datetime")) {
+        return "time";
+      }
+
+      if (
+        fieldLower.includes("description") ||
+        fieldLower.includes("reason") ||
+        fieldLower.includes("comment") ||
+        fieldLower.includes("opinion")
+      ) {
+        return "textarea";
+      }
+
+      return "text";
+    },
+
+    /** 获取字段占位符 */
+    getFieldPlaceholder(field) {
+      const fieldType = this.getFieldType(field);
+      const fieldLabel = this.getFieldLabel(field);
+
+      const placeholderMap = {
+        date: `请选择${fieldLabel}`,
+        datetime: `请选择${fieldLabel}`,
+        time: `请选择${fieldLabel}`,
+        textarea: `请输入${fieldLabel}`,
+        text: `请输入${fieldLabel}`,
+      };
+
+      return placeholderMap[fieldType] || `请输入${fieldLabel}`;
+    },
+
+    /** 获取字段类型（用于初始化） */
+    getFieldTypeForInit(field) {
+      return this.getFieldType(field);
+    },
+
+    /** 动态生成表单验证规则 */
+    generateFormRules(formFields) {
+      this.processRules = {
+        comment: [
+          { required: true, message: "处理意见不能为空", trigger: "blur" },
+        ],
+      };
+
+      if (formFields && formFields.length > 0) {
+        formFields.forEach((field) => {
+          const fieldLabel = this.getFieldLabel(field);
+          const fieldType = this.getFieldType(field);
+
+          if (fieldType === "boolean") {
+            return;
+          }
+
+          this.processRules[`formData.${field}`] = [
+            {
+              required: true,
+              message: `${fieldLabel}不能为空`,
+              trigger: "blur",
+            },
+          ];
+        });
       }
     },
   },

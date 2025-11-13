@@ -1514,7 +1514,13 @@ export default {
           return;
         }
       });
-
+      if (
+        this.uploadForm.deviceCode === "" ||
+        this.uploadForm.policeCode === ""
+      ) {
+        this.msgError("请输入设备编号和警员编号");
+        return;
+      }
       // 检查是否选择了文件
       if (!this.fileList || this.fileList.length === 0) {
         this.msgError("请选择要上传的文件");
