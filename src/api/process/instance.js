@@ -80,3 +80,15 @@ export function getInstanceTasks(instanceId, query) {
   })
 }
 
+/**
+ * 删除工作流实例
+ * @param {String} id - 实例ID
+ * @returns {Promise}
+ */
+export function deleteInstance(id) {
+  return request({
+    url: '/api/instances/' + id,
+    method: 'delete'
+  })
+}
+
