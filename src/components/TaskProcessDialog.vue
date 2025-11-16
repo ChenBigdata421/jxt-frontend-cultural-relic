@@ -77,13 +77,79 @@
             :timestamp="history.completed_at"
             placement="top"
           >
-            <el-card>
-              <h4>{{ history.task_name }}</h4>
-              <p><strong>处理人:</strong> {{ history.assignee }}</p>
-              <p><strong>处理结果:</strong> {{ history.result }}</p>
-              <p v-if="history.comment">
-                <strong>处理意见:</strong> {{ history.comment }}
-              </p>
+            <el-card shadow="hover" style="margin-bottom: 10px">
+              <div
+                slot="header"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span style="font-weight: bold; font-size: 16px">
+                  {{ index + 1 }}. {{ history.task_name }}
+                </span>
+                <el-tag
+                  :type="
+                    history.result === '通过' || history.result === '完成'
+                      ? 'success'
+                      : 'danger'
+                  "
+                  size="small"
+                >
+                  {{ history.result }}
+                </el-tag>
+              </div>
+
+              <!-- 处理意见 -->
+              <div v-if="history.comment" style="margin-bottom: 15px">
+                <div
+                  style="color: #909399; font-size: 12px; margin-bottom: 5px"
+                >
+                  处理意见：
+                </div>
+                <div
+                  style="
+                    padding: 10px;
+                    background-color: #f5f7fa;
+                    border-radius: 4px;
+                    color: #606266;
+                  "
+                >
+                  {{ history.comment }}
+                </div>
+              </div>
+
+              <!-- 表单字段数据 -->
+              <div
+                v-if="history.output && Object.keys(history.output).length > 0"
+              >
+                <div
+                  style="color: #909399; font-size: 12px; margin-bottom: 5px"
+                >
+                  提交信息：
+                </div>
+                <el-descriptions :column="2" border size="small">
+                  <el-descriptions-item
+                    v-for="(value, key) in history.output"
+                    :key="key"
+                    :label="getFieldLabel(key)"
+                  >
+                    <template v-if="typeof value === 'boolean'">
+                      <el-tag v-if="value" type="success">是</el-tag>
+                      <el-tag v-else type="info">否</el-tag>
+                    </template>
+                    <template v-else>
+                      {{ value }}
+                    </template>
+                  </el-descriptions-item>
+                </el-descriptions>
+              </div>
+
+              <!-- 处理人信息 -->
+              <div style="margin-top: 10px; color: #909399; font-size: 12px">
+                处理人：{{ history.assignee }}
+              </div>
             </el-card>
           </el-timeline-item>
         </el-timeline>
@@ -99,43 +165,50 @@
           :key="field"
           :label="getFieldLabel(field)"
           :prop="'formData.' + field"
+          :required="true"
         >
-          <!-- 日期选择器 -->
+          <!-- 日期类型字段 -->
           <el-date-picker
             v-if="getFieldType(field) === 'date'"
             v-model="processForm.formData[field]"
             type="date"
             :placeholder="getFieldPlaceholder(field)"
+            value-format="yyyy-MM-dd"
             style="width: 100%"
           />
-          <!-- 日期时间选择器 -->
+          <!-- 日期时间类型字段 -->
           <el-date-picker
             v-else-if="getFieldType(field) === 'datetime'"
             v-model="processForm.formData[field]"
             type="datetime"
             :placeholder="getFieldPlaceholder(field)"
+            value-format="yyyy-MM-dd HH:mm:ss"
             style="width: 100%"
           />
-          <!-- 时间选择器 -->
+          <!-- 时间类型字段 -->
           <el-time-picker
             v-else-if="getFieldType(field) === 'time'"
             v-model="processForm.formData[field]"
             :placeholder="getFieldPlaceholder(field)"
+            value-format="HH:mm:ss"
             style="width: 100%"
           />
-          <!-- 数字输入框 -->
+          <!-- 数字类型字段 -->
           <el-input-number
             v-else-if="getFieldType(field) === 'number'"
             v-model="processForm.formData[field]"
             :placeholder="getFieldPlaceholder(field)"
             style="width: 100%"
+            :controls="true"
           />
-          <!-- 开关 -->
+          <!-- 布尔类型字段使用开关 -->
           <el-switch
             v-else-if="getFieldType(field) === 'boolean'"
             v-model="processForm.formData[field]"
+            active-text="是"
+            inactive-text="否"
           />
-          <!-- 文本域 -->
+          <!-- 文本域类型字段 -->
           <el-input
             v-else-if="getFieldType(field) === 'textarea'"
             v-model="processForm.formData[field]"
@@ -143,35 +216,49 @@
             :rows="3"
             :placeholder="getFieldPlaceholder(field)"
           />
-          <!-- 邮箱输入框 -->
+          <!-- 邮箱类型字段 -->
           <el-input
             v-else-if="getFieldType(field) === 'email'"
             v-model="processForm.formData[field]"
             type="email"
             :placeholder="getFieldPlaceholder(field)"
+            clearable
           />
-          <!-- 电话输入框 -->
+          <!-- 电话类型字段 -->
           <el-input
             v-else-if="getFieldType(field) === 'tel'"
             v-model="processForm.formData[field]"
             type="tel"
             :placeholder="getFieldPlaceholder(field)"
+            clearable
           />
-          <!-- URL输入框 -->
+          <!-- URL类型字段 -->
           <el-input
             v-else-if="getFieldType(field) === 'url'"
             v-model="processForm.formData[field]"
             type="url"
             :placeholder="getFieldPlaceholder(field)"
+            clearable
           />
           <!-- 默认文本输入框 -->
           <el-input
             v-else
             v-model="processForm.formData[field]"
             :placeholder="getFieldPlaceholder(field)"
+            clearable
           />
         </el-form-item>
       </template>
+
+      <!-- 如果没有定义 form_fields，显示传统的输出数据输入框 -->
+      <el-form-item v-else label="输出数据" prop="output">
+        <el-input
+          v-model="processForm.output"
+          type="textarea"
+          :rows="4"
+          placeholder="请输入输出数据(JSON格式)"
+        />
+      </el-form-item>
 
       <!-- 处理意见 -->
       <el-form-item label="处理意见" prop="comment">
