@@ -166,9 +166,40 @@
     </el-form>
 
     <!-- 自定义工具栏插槽 -->
-    <div v-if="!selectionMode" class="toolbar-container">
-      <el-row :gutter="10" type="flex">
-        <slot name="toolbar"></slot>
+    <div class="toolbar-container">
+      <el-row :gutter="10" type="flex" justify="space-between">
+        <el-col :span="20">
+          <slot name="toolbar"></slot>
+        </el-col>
+        <el-col :span="4" class="column-settings-trigger">
+          <el-popover placement="bottom-end" width="300" trigger="click">
+            <div class="column-settings">
+              <div class="column-settings-header">
+                <span>列显示设置</span>
+                <el-button type="text" size="mini" @click="resetColumns"
+                  >重置</el-button
+                >
+              </div>
+              <el-checkbox-group
+                v-model="visibleColumns"
+                @change="handleColumnChange"
+              >
+                <div
+                  v-for="col in columnOptions"
+                  :key="col.prop"
+                  class="column-item"
+                >
+                  <el-checkbox :label="col.prop" :disabled="col.fixed">
+                    {{ col.label }}
+                  </el-checkbox>
+                </div>
+              </el-checkbox-group>
+            </div>
+            <el-button slot="reference" size="mini" icon="el-icon-setting"
+              >列设置</el-button
+            >
+          </el-popover>
+        </el-col>
       </el-row>
     </div>
 
@@ -182,89 +213,13 @@
       @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column
-        v-show="false"
-        prop="mediaName"
-        label="媒体名称"
-        align="center"
-        sortable="custom"
-      />
-      <el-table-column prop="isAssociated" label="关联状态" width="100">
-        <template slot-scope="scope">
-          <el-tag disable-transitions>{{
-            relationStatusFormat(scope.row)
-          }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="mediaCate" label="类别" width="100">
-        <template slot-scope="scope">
-          <el-tag disable-transitions>{{ mediaCateFormat(scope.row) }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="警员" align="center" width="100">
-        <template slot-scope="{ row }">
-          {{ formatPoliceName(row) }}
-        </template>
-      </el-table-column>
-
-      <el-table-column label="单位组织" align="center" width="150">
-        <template slot-scope="{ row }">
-          {{ formatOrgName(row) }}
-        </template>
-      </el-table-column>
-      <el-table-column
-        prop="isNonEnforcementMedia"
-        label="是否执法媒体"
-        width="100"
-      >
-        <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-        <template slot-scope="scope">
-          <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
-          <el-tag
-            :type="scope.row.isNonEnforcementMedia === 0 ? 'success' : 'danger'"
-            disable-transitions
-          >
-            {{ scope.row.isNonEnforcementMedia === 0 ? "是" : "否" }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column
-        v-show="false"
-        prop="mediaSuffix"
-        label="媒体后缀"
-        align="center"
-        sortable="custom"
-      />
-      <el-table-column
-        prop="shotTimeStart"
-        label="拍摄开始时间"
-        width="170"
-        align="center"
-        sortable="custom"
-      />
-      <el-table-column
-        prop="shotTime"
-        label="拍摄结束时间"
-        width="170"
-        align="center"
-        sortable="custom"
-      />
-      <el-table-column
-        v-show="false"
-        prop="createdAt"
-        label="导入时间"
-        width="170"
-        align="center"
-        sortable="custom"
-      />
-
       <!-- 操作列 (仅在非选择模式下显示) -->
       <el-table-column
         v-if="!selectionMode"
         label="操作"
         width="260"
         align="center"
+        fixed="left"
       >
         <template slot-scope="scope">
           <el-button
@@ -304,6 +259,416 @@
             @click="handleOperation(scope.row, 'track')"
             >视频轨迹</el-button
           >
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('mediaName')"
+        prop="mediaName"
+        label="媒体名称"
+        min-width="160"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('mediaCate')"
+        prop="mediaCate"
+        label="媒体类型"
+        width="120"
+      >
+        <template slot-scope="scope">
+          <el-tag disable-transitions>{{ mediaCateFormat(scope.row) }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('mediaSuffix')"
+        prop="mediaSuffix"
+        label="媒体后缀"
+        width="120"
+      />
+      <el-table-column
+        v-if="isColumnVisible('shotTimeStart')"
+        prop="shotTimeStart"
+        label="拍摄开始时间"
+        width="180"
+      >
+        <template slot-scope="{ row }">
+          {{ parseTime(row.shotTimeStart) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('shotTime')"
+        prop="shotTime"
+        label="拍摄时间"
+        width="180"
+      >
+        <template slot-scope="{ row }">
+          {{ parseTime(row.shotTime) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('videoClarity')"
+        prop="videoClarity"
+        label="视频清晰度"
+        width="120"
+      >
+        <template slot-scope="{ row }">
+          {{ formatVideoClarity(row.videoClarity) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('videoDuration')"
+        prop="videoDuration"
+        label="视频时长(毫秒)"
+        width="140"
+      >
+        <template slot-scope="{ row }">
+          {{ formatVideoDuration(row.videoDuration) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('importantLevel')"
+        prop="importantLevel"
+        label="重要级别(平台)"
+        width="140"
+      />
+      <el-table-column
+        v-if="isColumnVisible('importantLevelRec')"
+        prop="importantLevelRec"
+        label="重要级别(设备)"
+        width="150"
+      />
+      <el-table-column
+        v-if="isColumnVisible('width')"
+        prop="width"
+        label="图片宽度"
+        width="110"
+      />
+      <el-table-column
+        v-if="isColumnVisible('height')"
+        prop="height"
+        label="图片高度"
+        width="110"
+      />
+      <el-table-column
+        v-if="isColumnVisible('isNonEnforcementMedia')"
+        prop="isNonEnforcementMedia"
+        label="是否执法媒体"
+        width="140"
+      >
+        <template slot-scope="scope">
+          <el-tag
+            :type="scope.row.isNonEnforcementMedia === 0 ? 'success' : 'danger'"
+            disable-transitions
+          >
+            {{ scope.row.isNonEnforcementMedia === 0 ? "是" : "否" }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('comments')"
+        prop="comments"
+        label="标注内容"
+        min-width="180"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('sequence')"
+        prop="sequence"
+        label="视频序列标识"
+        min-width="180"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('enforceType')"
+        prop="enforceType"
+        label="执法类型"
+        width="120"
+      />
+      <el-table-column
+        v-if="isColumnVisible('eenforeTypeNames')"
+        prop="eenforeTypeNames"
+        label="执法类型名称"
+        min-width="180"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('isLocked')"
+        prop="isLocked"
+        label="是否锁定"
+        width="120"
+      >
+        <template slot-scope="{ row }">
+          {{ formatYesNo(row.isLocked) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('expiryTime')"
+        prop="expiryTime"
+        label="过期时间"
+        width="180"
+      >
+        <template slot-scope="{ row }">
+          {{ parseTime(row.expiryTime) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('archiveId')"
+        prop="archiveId"
+        label="档案编号"
+        width="140"
+      />
+      <el-table-column
+        v-if="isColumnVisible('isArchive')"
+        prop="isArchive"
+        label="是否归档"
+        width="120"
+      >
+        <template slot-scope="{ row }">
+          {{ formatYesNo(row.isArchive) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('archiveDate')"
+        prop="archiveDate"
+        label="归档时间"
+        width="180"
+      >
+        <template slot-scope="{ row }">
+          {{ parseTime(row.archiveDate) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('fileIdentity')"
+        prop="fileIdentity"
+        label="文件标识"
+        min-width="200"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('fileName')"
+        prop="fileName"
+        label="文件名称"
+        min-width="200"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('fileSize')"
+        prop="fileSize"
+        label="文件大小"
+        width="140"
+      >
+        <template slot-scope="{ row }">
+          {{ formatFileSize(row.fileSize) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('fileMd5')"
+        prop="fileMd5"
+        label="文件MD5"
+        min-width="200"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('fileType')"
+        prop="fileType"
+        label="文件类型"
+        width="120"
+      />
+      <el-table-column
+        v-if="isColumnVisible('contentType')"
+        prop="contentType"
+        label="MIME类型"
+        min-width="200"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('siteNo')"
+        prop="siteNo"
+        label="采集站编号"
+        min-width="180"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('siteName')"
+        prop="siteName"
+        label="采集站名称"
+        min-width="180"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('siteHttp')"
+        prop="siteHttp"
+        label="采集站地址"
+        min-width="200"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('storageType')"
+        prop="storageType"
+        label="存储方式"
+        width="130"
+      >
+        <template slot-scope="{ row }">
+          {{ storageTypeFormat(row) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('isSendToStorage')"
+        prop="isSendToStorage"
+        label="上传至存储"
+        width="150"
+      >
+        <template slot-scope="{ row }">
+          {{ formatSendStatus(row.isSendToStorage) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('isNoticeSend')"
+        prop="isNoticeSend"
+        label="通知发送"
+        width="120"
+      >
+        <template slot-scope="{ row }">
+          {{ formatYesNo(row.isNoticeSend) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('policeNo')"
+        prop="policeNo"
+        label="警员编号"
+        min-width="160"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('policeName')"
+        label="警员姓名"
+        width="120"
+      >
+        <template slot-scope="{ row }">
+          {{ formatPoliceName(row) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('policeIdCard')"
+        prop="policeIdCard"
+        label="警员身份证号"
+        min-width="200"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('orgCode')"
+        prop="orgCode"
+        label="单位编码"
+        min-width="160"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('orgName')"
+        label="单位名称"
+        min-width="160"
+      >
+        <template slot-scope="{ row }">
+          {{ formatOrgName(row) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('orgFullName')"
+        prop="orgFullName"
+        label="单位全称"
+        min-width="200"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('orgJc')"
+        prop="orgJc"
+        label="单位简称"
+        min-width="160"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('terminalType')"
+        prop="terminalType"
+        label="终端类型"
+        width="130"
+      >
+        <template slot-scope="{ row }">
+          {{ formatTerminalType(row.terminalType) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('recorderNo')"
+        prop="recorderNo"
+        label="执法仪编号"
+        min-width="160"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('incidentRecordCode')"
+        prop="incidentRecordCode"
+        label="警情号"
+        min-width="160"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('isAssociated')"
+        prop="isAssociated"
+        label="是否关联"
+        width="120"
+      >
+        <template slot-scope="scope">
+          <el-tag disable-transitions>{{
+            relationStatusFormat(scope.row)
+          }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('associateTime')"
+        prop="associateTime"
+        label="关联时间"
+        width="180"
+      >
+        <template slot-scope="{ row }">
+          {{ parseTime(row.associateTime) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('requestIdentity')"
+        prop="requestIdentity"
+        label="请求标识"
+        min-width="200"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('authKey')"
+        prop="authKey"
+        label="认证码"
+        min-width="200"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('traceCode')"
+        prop="traceCode"
+        label="追溯码"
+        min-width="200"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('importTime')"
+        prop="importTime"
+        label="导入时间"
+        width="180"
+      >
+        <template slot-scope="{ row }">
+          {{ parseTime(row.importTime) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('acquisitionTime')"
+        prop="acquisitionTime"
+        label="接收时间"
+        width="180"
+      >
+        <template slot-scope="{ row }">
+          {{ parseTime(row.acquisitionTime) }}
         </template>
       </el-table-column>
     </el-table>
@@ -400,11 +765,101 @@ export default {
       storageTypeOptions: [],
       // 执法类型选项
       enforcementTypeOptions: [],
+      // 列配置选项
+      columnOptions: [
+        {
+          prop: "mediaName",
+          label: "媒体名称",
+          fixed: true,
+          defaultVisible: true,
+        },
+        { prop: "mediaCate", label: "媒体类型", defaultVisible: true },
+        { prop: "mediaSuffix", label: "媒体后缀", defaultVisible: false },
+        { prop: "shotTimeStart", label: "拍摄开始时间", defaultVisible: true },
+        { prop: "shotTime", label: "拍摄时间", defaultVisible: true },
+        { prop: "videoClarity", label: "视频清晰度", defaultVisible: false },
+        {
+          prop: "videoDuration",
+          label: "视频时长(毫秒)",
+          defaultVisible: false,
+        },
+        {
+          prop: "importantLevel",
+          label: "重要级别(平台)",
+          defaultVisible: false,
+        },
+        {
+          prop: "importantLevelRec",
+          label: "重要级别(设备)",
+          defaultVisible: false,
+        },
+        { prop: "width", label: "图片宽度", defaultVisible: false },
+        { prop: "height", label: "图片高度", defaultVisible: false },
+        {
+          prop: "isNonEnforcementMedia",
+          label: "是否执法媒体",
+          defaultVisible: true,
+        },
+        { prop: "comments", label: "标注内容", defaultVisible: false },
+        { prop: "sequence", label: "视频序列标识", defaultVisible: false },
+        { prop: "enforceType", label: "执法类型", defaultVisible: false },
+        {
+          prop: "eenforeTypeNames",
+          label: "执法类型名称",
+          defaultVisible: false,
+        },
+        { prop: "isLocked", label: "是否锁定", defaultVisible: false },
+        { prop: "expiryTime", label: "过期时间", defaultVisible: false },
+        { prop: "archiveId", label: "档案编号", defaultVisible: false },
+        { prop: "isArchive", label: "是否归档", defaultVisible: false },
+        { prop: "archiveDate", label: "归档时间", defaultVisible: false },
+        { prop: "fileIdentity", label: "文件标识", defaultVisible: false },
+        { prop: "fileName", label: "文件名称", defaultVisible: false },
+        { prop: "fileSize", label: "文件大小(KB)", defaultVisible: false },
+        { prop: "fileMd5", label: "文件MD5", defaultVisible: false },
+        { prop: "fileType", label: "文件类型", defaultVisible: false },
+        { prop: "contentType", label: "MIME类型", defaultVisible: false },
+        { prop: "siteNo", label: "采集站编号", defaultVisible: false },
+        { prop: "siteName", label: "采集站名称", defaultVisible: false },
+        { prop: "siteHttp", label: "采集站地址", defaultVisible: false },
+        { prop: "storageType", label: "存储方式", defaultVisible: false },
+        {
+          prop: "isSendToStorage",
+          label: "是否上传至存储",
+          defaultVisible: false,
+        },
+        { prop: "isNoticeSend", label: "是否通知发送", defaultVisible: false },
+        { prop: "policeNo", label: "警员编号", defaultVisible: false },
+        { prop: "policeName", label: "警员姓名", defaultVisible: true },
+        { prop: "policeIdCard", label: "警员身份证号", defaultVisible: false },
+        { prop: "orgCode", label: "单位编码", defaultVisible: false },
+        { prop: "orgName", label: "单位名称", defaultVisible: true },
+        { prop: "orgFullName", label: "单位全称", defaultVisible: false },
+        { prop: "orgJc", label: "单位简称", defaultVisible: false },
+        { prop: "terminalType", label: "终端类型", defaultVisible: false },
+        { prop: "recorderNo", label: "执法仪编号", defaultVisible: false },
+        { prop: "incidentRecordCode", label: "警情号", defaultVisible: false },
+        {
+          prop: "isAssociated",
+          label: "是否关联",
+          fixed: true,
+          defaultVisible: true,
+        },
+        { prop: "associateTime", label: "关联时间", defaultVisible: false },
+        { prop: "requestIdentity", label: "请求标识", defaultVisible: false },
+        { prop: "authKey", label: "认证码", defaultVisible: false },
+        { prop: "traceCode", label: "追溯码", defaultVisible: false },
+        { prop: "importTime", label: "导入时间", defaultVisible: true },
+        { prop: "acquisitionTime", label: "接收时间", defaultVisible: false },
+      ],
+      // 可见列
+      visibleColumns: [],
     };
   },
   created() {
     // 合并初始查询参数
     this.queryParams = { ...this.queryParams, ...this.initialQuery };
+    this.initVisibleColumns();
     this.getList();
     this.getOrgTreeSelect();
     this.getUserList();
@@ -417,6 +872,51 @@ export default {
     });
   },
   methods: {
+    /** 默认可见列 */
+    getDefaultVisibleColumns() {
+      return this.columnOptions
+        .filter((item) => item.defaultVisible !== false)
+        .map((item) => item.prop);
+    },
+
+    /** 初始化列显示配置 */
+    initVisibleColumns() {
+      const saved = localStorage.getItem("media_selector_visible_columns");
+      if (saved) {
+        try {
+          this.visibleColumns = JSON.parse(saved);
+          return;
+        } catch (error) {
+          console.warn("解析列显示配置失败，使用默认列", error);
+        }
+      }
+      this.visibleColumns = this.getDefaultVisibleColumns();
+    },
+
+    /** 判断列是否显示 */
+    isColumnVisible(prop) {
+      return this.visibleColumns.includes(prop);
+    },
+
+    /** 列显示变更 */
+    handleColumnChange(value) {
+      this.visibleColumns = value;
+      localStorage.setItem(
+        "media_selector_visible_columns",
+        JSON.stringify(this.visibleColumns)
+      );
+    },
+
+    /** 重置列显示 */
+    resetColumns() {
+      this.visibleColumns = this.getDefaultVisibleColumns();
+      localStorage.setItem(
+        "media_selector_visible_columns",
+        JSON.stringify(this.visibleColumns)
+      );
+      this.$message.success("已重置为默认显示");
+    },
+
     /** 查询媒体列表 */
     getList() {
       this.loading = true;
@@ -578,6 +1078,88 @@ export default {
       };
     },
 
+    /** 视频清晰度枚举 */
+    formatVideoClarity(value) {
+      const map = {
+        0: "标清",
+        1: "高清",
+        2: "超清",
+      };
+      return map[value] || "-";
+    },
+
+    /** 视频时长（毫秒）格式化为 HH:MM:SS */
+    formatVideoDuration(value) {
+      if (value === null || value === undefined) {
+        return "-";
+      }
+      const totalSeconds = Math.floor(Number(value) / 1000);
+      const hours = Math.floor(totalSeconds / 3600)
+        .toString()
+        .padStart(2, "0");
+      const minutes = Math.floor((totalSeconds % 3600) / 60)
+        .toString()
+        .padStart(2, "0");
+      const seconds = Math.floor(totalSeconds % 60)
+        .toString()
+        .padStart(2, "0");
+      return `${hours}:${minutes}:${seconds}`;
+    },
+
+    /** 通用 是/否 */
+    formatYesNo(value) {
+      if (value === 1) return "是";
+      if (value === 0) return "否";
+      return "-";
+    },
+
+    /** 文件大小（KB）转换 */
+    formatFileSize(value) {
+      if (value === null || value === undefined) {
+        return "-";
+      }
+      const size = Number(value) * 1024; // 转换为字节
+      if (!size) return "-";
+      const units = ["B", "KB", "MB", "GB", "TB"];
+      let index = 0;
+      let current = size;
+      while (current >= 1024 && index < units.length - 1) {
+        current /= 1024;
+        index++;
+      }
+      return `${current.toFixed(2)} ${units[index]}`;
+    },
+
+    /** 存储方式字典翻译 */
+    storageTypeFormat(row) {
+      if (!row || row.storageType === undefined || row.storageType === null) {
+        return "-";
+      }
+      return this.selectDictLabel(
+        this.storageTypeOptions,
+        parseInt(row.storageType, 10)
+      );
+    },
+
+    /** 上传至存储状态 */
+    formatSendStatus(value) {
+      const map = {
+        "-1": "文件不存在",
+        0: "未上传",
+        1: "已上传",
+      };
+      return map[value] || map[String(value)] || "-";
+    },
+
+    /** 终端类型 */
+    formatTerminalType(value) {
+      const map = {
+        1: "执法仪",
+        2: "采集站",
+      };
+      return map[value] || "-";
+    },
+
     // 以下方法仅在非选择模式下使用
     /** 新增按钮操作 */
     handleAdd() {
@@ -633,6 +1215,38 @@ export default {
 
 .toolbar-container .el-col {
   margin-bottom: 5px;
+}
+
+.column-settings-trigger {
+  text-align: right;
+}
+
+.column-settings {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.column-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #e4e7ed;
+  font-weight: bold;
+}
+
+.column-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.column-item:last-child {
+  border-bottom: none;
+}
+
+.column-item .el-checkbox {
+  width: 100%;
 }
 
 .horizontal-container {

@@ -11,7 +11,7 @@
               v-model="queryParams.No"
               placeholder="请输入采集站编号"
               clearable
-              style="width: 170px;"
+              style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
@@ -20,7 +20,7 @@
               v-model="queryParams.Name"
               placeholder="请输入采集站名称"
               clearable
-              style="width: 170px;"
+              style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
@@ -29,14 +29,14 @@
               v-model="queryParams.managerOrgId"
               :options="orgOptions"
               placeholder="请选择管理组织"
-              style="width: 170px;"
+              style="width: 170px"
             />
           </el-form-item>
           <el-form-item label="管理人员">
             <el-select
               v-model="queryParams.managerId"
               placeholder="请选择管理人员"
-              style="width: 170px;"
+              style="width: 170px"
               @change="$forceUpdate()"
             >
               <el-option
@@ -48,13 +48,18 @@
             </el-select>
           </el-form-item>
           <el-form-item label="状态" prop="State">
-            <el-select v-model="queryParams.State" placeholder="状态" clearable style="width: 170px;">
+            <el-select
+              v-model="queryParams.State"
+              placeholder="状态"
+              clearable
+              style="width: 170px"
+            >
               <el-option
                 v-for="dict in stateOptions"
                 :key="dict.value"
                 :label="dict.label"
                 :value="dict.value"
-                style="width: 150px;"
+                style="width: 150px"
               />
             </el-select>
           </el-form-item>
@@ -63,53 +68,98 @@
               v-model="queryParams.BrandName"
               placeholder="请输入品牌名称"
               clearable
-              style="width: 170px;"
+              style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+            <el-button
+              type="primary"
+              icon="el-icon-search"
+              size="mini"
+              @click="handleQuery"
+              >搜索</el-button
+            >
+            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
+              >重置</el-button
+            >
           </el-form-item>
         </el-form>
-        <el-row :gutter="10" class="mb8">
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['equipment:site:create']"
-              type="primary"
-              icon="el-icon-plus"
-              size="mini"
-              @click="handleAdd"
-            >新增</el-button>
+        <el-row :gutter="10" class="mb8" type="flex" justify="space-between">
+          <el-col :span="18">
+            <el-row :gutter="10">
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['equipment:site:create']"
+                  type="primary"
+                  icon="el-icon-plus"
+                  size="mini"
+                  @click="handleAdd"
+                  >新增</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['equipment:site:edit']"
+                  type="success"
+                  icon="el-icon-edit"
+                  size="mini"
+                  :disabled="UpdateDisabled"
+                  @click="handleUpdate"
+                  >修改</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['equipment:site:remove']"
+                  type="danger"
+                  icon="el-icon-delete"
+                  size="mini"
+                  :disabled="DeleteDisabled"
+                  @click="handleDelete"
+                  >删除</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['equipment:site:export']"
+                  type="warning"
+                  icon="el-icon-download"
+                  size="mini"
+                  @click="handleExport"
+                  >导出</el-button
+                >
+              </el-col>
+            </el-row>
           </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['equipment:site:edit']"
-              type="success"
-              icon="el-icon-edit"
-              size="mini"
-              :disabled="UpdateDisabled"
-              @click="handleUpdate"
-            >修改</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['equipment:site:remove']"
-              type="danger"
-              icon="el-icon-delete"
-              size="mini"
-              :disabled="DeleteDisabled"
-              @click="handleDelete"
-            >删除</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['equipment:site:export']"
-              type="warning"
-              icon="el-icon-download"
-              size="mini"
-              @click="handleExport"
-            >导出</el-button>
+          <el-col :span="6" class="column-settings-trigger">
+            <el-popover placement="bottom-end" width="280" trigger="click">
+              <div class="column-settings">
+                <div class="column-settings-header">
+                  <span>列显示设置</span>
+                  <el-button type="text" size="mini" @click="resetColumns"
+                    >重置</el-button
+                  >
+                </div>
+                <el-checkbox-group
+                  v-model="visibleColumns"
+                  @change="handleColumnChange"
+                >
+                  <div
+                    v-for="col in columnOptions"
+                    :key="col.prop"
+                    class="column-item"
+                  >
+                    <el-checkbox :label="col.prop" :disabled="col.fixed">
+                      {{ col.label }}
+                    </el-checkbox>
+                  </div>
+                </el-checkbox-group>
+              </div>
+              <el-button slot="reference" size="mini" icon="el-icon-setting"
+                >列设置</el-button
+              >
+            </el-popover>
           </el-col>
         </el-row>
         <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
@@ -130,23 +180,13 @@
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column type="selection" width="55" align="center" />
-          <el-table-column prop="Name" label="名称" width="100" />
-          <el-table-column prop="No" label="编号" width="100" />
-          <el-table-column prop="BrandName" label="品牌名称" width="100" />
-          <el-table-column prop="Ip" label="Ip" width="100" />
-          <el-table-column prop="managerName" label="管理人员" width="80" />
-          <el-table-column prop="managerOrgFullName" label="管理组织" width="150" />
-          <el-table-column prop="State" label="状态" width="100">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-            <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
-              <el-tag disable-transitions>{{ stateFormat(scope.row) }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="System" label="操作系统" width="100" />
-          <el-table-column prop="Version" label="版本" width="60" />
-          <el-table-column label="操作" align="left" class-name="small-padding fixed-width" width="180">
+          <el-table-column
+            label="操作"
+            align="left"
+            class-name="small-padding fixed-width"
+            width="180"
+            fixed="left"
+          >
             <template slot-scope="scope">
               <el-button
                 v-permisaction="['equipment:site:browse']"
@@ -154,23 +194,152 @@
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row)"
-              >浏览</el-button>
+                >浏览</el-button
+              >
               <el-button
                 v-permisaction="['equipment:site:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
-              >修改</el-button>
+                >修改</el-button
+              >
               <el-button
                 v-permisaction="['equipment:site:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
                 @click="handleDelete(scope.row)"
-              >删除</el-button>
+                >删除</el-button
+              >
             </template>
           </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('Name')"
+            prop="Name"
+            label="名称"
+            min-width="140"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('No')"
+            prop="No"
+            label="编号"
+            width="120"
+          />
+          <el-table-column
+            v-if="isColumnVisible('BrandName')"
+            prop="BrandName"
+            label="品牌名称"
+            min-width="140"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('Ip')"
+            prop="Ip"
+            label="IP地址"
+            width="140"
+          />
+          <el-table-column
+            v-if="isColumnVisible('Address')"
+            prop="Address"
+            label="地址"
+            min-width="160"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('Http')"
+            prop="Http"
+            label="播放地址"
+            min-width="160"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('managerName')"
+            prop="managerName"
+            label="管理人员"
+            width="120"
+          />
+          <el-table-column
+            v-if="isColumnVisible('managerOrgFullName')"
+            prop="managerOrgFullName"
+            label="管理组织"
+            min-width="180"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('State')"
+            prop="State"
+            label="状态"
+            width="110"
+          >
+            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
+            <template slot-scope="scope">
+              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
+                否则为 'success'（通常显示为绿色）。-->
+              <el-tag disable-transitions>{{ stateFormat(scope.row) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('OnlineTimeTotal')"
+            prop="OnlineTimeTotal"
+            label="在线总时长"
+            width="140"
+          />
+          <el-table-column
+            v-if="isColumnVisible('Cpu')"
+            prop="Cpu"
+            label="CPU"
+            width="140"
+          />
+          <el-table-column
+            v-if="isColumnVisible('Memory')"
+            prop="Memory"
+            label="内存(G)"
+            width="140"
+          />
+          <el-table-column
+            v-if="isColumnVisible('Disk')"
+            prop="Disk"
+            label="存储(G)"
+            width="140"
+          />
+          <el-table-column
+            v-if="isColumnVisible('UsbNum')"
+            prop="UsbNum"
+            label="USB数量"
+            width="120"
+          />
+          <el-table-column
+            v-if="isColumnVisible('System')"
+            prop="System"
+            label="操作系统"
+            min-width="160"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('Version')"
+            prop="Version"
+            label="版本"
+            width="120"
+          />
+          <el-table-column
+            v-if="isColumnVisible('BuyTime')"
+            prop="BuyTime"
+            label="购买时间"
+            width="180"
+          >
+            <template slot-scope="{ row }">
+              {{ parseTime(row.BuyTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('Remark')"
+            prop="Remark"
+            label="备注"
+            min-width="160"
+            :show-overflow-tooltip="true"
+          />
         </el-table>
         <pagination
           v-show="total > 0"
@@ -183,18 +352,31 @@
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
-        <el-dialog :title="title" :visible.sync="open" width="700px" :close-on-click-modal="false">
+        <el-dialog
+          :title="title"
+          :visible.sync="open"
+          width="700px"
+          :close-on-click-modal="false"
+        >
           <el-form ref="form" :model="form" :rules="rules" label-width="100px">
             <!-- 管理信息 -->
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="管理组织" prop="managerOrgId">
-                  <treeselect v-model="form.managerOrgId" :options="orgOptions" placeholder="请选择管理组织" />
+                  <treeselect
+                    v-model="form.managerOrgId"
+                    :options="orgOptions"
+                    placeholder="请选择管理组织"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="管理人员">
-                  <el-select v-model="form.managerId" placeholder="请选择" @change="$forceUpdate()">
+                  <el-select
+                    v-model="form.managerId"
+                    placeholder="请选择"
+                    @change="$forceUpdate()"
+                  >
                     <el-option
                       v-for="item in userOptions"
                       :key="item.userId"
@@ -220,7 +402,10 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="品牌名称" prop="BrandName">
-                  <el-input v-model="form.BrandName" placeholder="请输入品牌名称" />
+                  <el-input
+                    v-model="form.BrandName"
+                    placeholder="请输入品牌名称"
+                  />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -234,7 +419,10 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="地址" prop="Address">
-                  <el-input v-model="form.Address" placeholder="请输入品牌地址" />
+                  <el-input
+                    v-model="form.Address"
+                    placeholder="请输入品牌地址"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -258,12 +446,18 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="内存(G)">
-                  <el-input-number v-model="form.Memory" placeholder="请输入内存大小" />
+                  <el-input-number
+                    v-model="form.Memory"
+                    placeholder="请输入内存大小"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="存储(G)">
-                  <el-input-number v-model="form.Disk" placeholder="请输入磁盘大小" />
+                  <el-input-number
+                    v-model="form.Disk"
+                    placeholder="请输入磁盘大小"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -311,8 +505,12 @@
               <el-col :span="24">
                 <el-form-item label="状态">
                   <el-radio-group v-model="form.State">
-                    <el-radio v-for="dict in stateOptions" :key="dict.value" :label="dict.value">{{ dict.label
-                    }}</el-radio>
+                    <el-radio
+                      v-for="dict in stateOptions"
+                      :key="dict.value"
+                      :label="dict.value"
+                      >{{ dict.label }}</el-radio
+                    >
                   </el-radio-group>
                 </el-form-item>
               </el-col>
@@ -331,18 +529,47 @@
         </el-dialog>
 
         <!--显示详情-->
-        <el-dialog :title="title" :visible.sync="ViewOpen" width="593px" :close-on-click-modal="false">
+        <el-dialog
+          :title="title"
+          :visible.sync="ViewOpen"
+          width="593px"
+          :close-on-click-modal="false"
+        >
           <el-tabs v-model="ActiveLab">
             <el-tab-pane label="采集站信息" name="first">
               <el-table v-loading="loading" :data="AttributeValueList" border>
-                <el-table-column prop="AttributeName" label="属性" width="100" align="center" />
-                <el-table-column prop="Value" label="值" width="450" align="center" />
+                <el-table-column
+                  prop="AttributeName"
+                  label="属性"
+                  width="100"
+                  align="center"
+                />
+                <el-table-column
+                  prop="Value"
+                  label="值"
+                  width="450"
+                  align="center"
+                />
               </el-table>
             </el-tab-pane>
             <el-tab-pane label="采集站配置" name="second">
-              <el-table v-loading="loading" :data="AttributeValueConfigList" border>
-                <el-table-column prop="AttributeName" label="属性" width="200" align="center" />
-                <el-table-column prop="Value" label="值" width="350" align="center" />
+              <el-table
+                v-loading="loading"
+                :data="AttributeValueConfigList"
+                border
+              >
+                <el-table-column
+                  prop="AttributeName"
+                  label="属性"
+                  width="200"
+                  align="center"
+                />
+                <el-table-column
+                  prop="Value"
+                  label="值"
+                  width="350"
+                  align="center"
+                />
               </el-table>
             </el-tab-pane>
           </el-tabs>
@@ -353,14 +580,21 @@
 </template>
 
 <script>
-import { listEquipmentSite, delEquipmentSite, getEquipmentSite, getEquipmentSiteConfig, addEquipmentSite, updateEquipmentSite } from '@/api/admin/equipment_manage_api'
-import { formatJson } from '@/utils'
-import { orgTreeSelect } from '@/api/admin/sys-org'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import { listUser } from '@/api/admin/sys-user'
+import {
+  listEquipmentSite,
+  delEquipmentSite,
+  getEquipmentSite,
+  getEquipmentSiteConfig,
+  addEquipmentSite,
+  updateEquipmentSite,
+} from "@/api/admin/equipment_manage_api";
+import { formatJson } from "@/utils";
+import { orgTreeSelect } from "@/api/admin/sys-org";
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import { listUser } from "@/api/admin/sys-user";
 export default {
-  name: 'Site',
+  name: "Site",
   components: { Treeselect },
   data() {
     return {
@@ -379,8 +613,35 @@ export default {
       SiteList: [],
       // 状态数据字典
       stateOptions: [],
+      // 列配置
+      columnOptions: [
+        { prop: "Name", label: "名称", defaultVisible: true },
+        { prop: "No", label: "编号", defaultVisible: true },
+        { prop: "BrandName", label: "品牌名称", defaultVisible: true },
+        { prop: "Ip", label: "IP地址", defaultVisible: true },
+        { prop: "Address", label: "地址", defaultVisible: true },
+        { prop: "Http", label: "播放地址", defaultVisible: false },
+        { prop: "managerName", label: "管理人员", defaultVisible: true },
+        {
+          prop: "managerOrgFullName",
+          label: "管理组织",
+          defaultVisible: true,
+        },
+        { prop: "State", label: "状态", defaultVisible: true },
+        { prop: "OnlineTimeTotal", label: "在线总时长", defaultVisible: false },
+        { prop: "Cpu", label: "CPU", defaultVisible: false },
+        { prop: "Memory", label: "内存(G)", defaultVisible: false },
+        { prop: "Disk", label: "存储(G)", defaultVisible: false },
+        { prop: "UsbNum", label: "USB数量", defaultVisible: false },
+        { prop: "System", label: "操作系统", defaultVisible: false },
+        { prop: "Version", label: "版本", defaultVisible: false },
+        { prop: "BuyTime", label: "购买时间", defaultVisible: false },
+        { prop: "Remark", label: "备注", defaultVisible: false },
+      ],
+      // 可见列
+      visibleColumns: [],
       // 弹出层标题
-      title: '',
+      title: "",
       isEdit: false,
       // 是否显示增加采集站对话框
       open: false,
@@ -389,7 +650,7 @@ export default {
       // 组织树选项
       orgOptions: undefined,
       userOptions: undefined,
-      ActiveLab: 'first',
+      ActiveLab: "first",
       SelectedRow: undefined,
       // 查询参数
       queryParams: {
@@ -400,114 +661,152 @@ export default {
         No: undefined,
         Name: undefined,
         State: undefined,
-        BrandName: undefined
+        BrandName: undefined,
       },
       AttributeValueList: [],
       AttributeValueConfigList: [],
       // 表单参数
       form: {
-        State: '1'
+        State: "1",
       },
       ColumnNameConvert: new Map([
-        ['Id', 'ID:'],
-        ['Name', '名称:'],
-        ['No', '编号:'],
-        ['BrandName', '品牌名称:'],
-        ['Ip', 'IP:'],
-        ['Address', '地址:'],
-        ['Http', '播放地址:'],
-        ['SecretKey', '密钥:'],
-        ['AdminPoliceName', '管理员:'],
-        ['OrgName', '归属单位:'],
-        ['State', '状态:'],
-        ['OnlineTimeTotal', '在线总时长:'],
-        ['Cpu', 'CPU:'],
-        ['Memory', '内存(G):'],
-        ['Disk', '磁盘(G):'],
-        ['BuyTime', '购置时间:'],
-        ['UsbNum', 'USB数量:'],
-        ['System', '操作系统:'],
-        ['Version', '版本:'],
-        ['Remark', '备注:']
+        ["Id", "ID:"],
+        ["Name", "名称:"],
+        ["No", "编号:"],
+        ["BrandName", "品牌名称:"],
+        ["Ip", "IP:"],
+        ["Address", "地址:"],
+        ["Http", "播放地址:"],
+        ["SecretKey", "密钥:"],
+        ["AdminPoliceName", "管理员:"],
+        ["OrgName", "归属单位:"],
+        ["State", "状态:"],
+        ["OnlineTimeTotal", "在线总时长:"],
+        ["Cpu", "CPU:"],
+        ["Memory", "内存(G):"],
+        ["Disk", "磁盘(G):"],
+        ["BuyTime", "购置时间:"],
+        ["UsbNum", "USB数量:"],
+        ["System", "操作系统:"],
+        ["Version", "版本:"],
+        ["Remark", "备注:"],
       ]),
       ColumnNameConfigConvert: new Map([
-        ['Id', '主键ID'],
-        ['Name', '采集站名称'],
-        ['HeartBeatTimeSpace', '采集站心跳包间隔时间'],
-        ['FileRootPath', '采集站文件保存路径'],
-        ['StorageName', '存储服务器'],
-        ['UploadSpeed', '采集站上传文件速率'],
-        ['UploadTime', '采集站上传文件时间']
+        ["Id", "主键ID"],
+        ["Name", "采集站名称"],
+        ["HeartBeatTimeSpace", "采集站心跳包间隔时间"],
+        ["FileRootPath", "采集站文件保存路径"],
+        ["StorageName", "存储服务器"],
+        ["UploadSpeed", "采集站上传文件速率"],
+        ["UploadTime", "采集站上传文件时间"],
       ]),
       // 表单校验,触发时机（trigger: 'blur'）：当输入框失去焦点（blur 事件）时触发验证。
       rules: {
-        no: [
-          { required: true, message: '编号不能为空', trigger: 'blur' }
-        ]
-      }
-
-    }
+        no: [{ required: true, message: "编号不能为空", trigger: "blur" }],
+      },
+    };
   },
   watch: {
-    'form.managerOrgId': function(newVal) {
+    "form.managerOrgId": function (newVal) {
       // 当 form.managerOrgId 更新时，调用 getFormUser
       if (newVal) {
-        if (this.firstLoad !== true) { // 首次打开对话框，不需要清空管理人员
-          this.form.managerId = null // 清空管理人员选择
+        if (this.firstLoad !== true) {
+          // 首次打开对话框，不需要清空管理人员
+          this.form.managerId = null; // 清空管理人员选择
         }
-        this.firstLoad = false
-        this.getFormUser()
+        this.firstLoad = false;
+        this.getFormUser();
       }
     },
-    'queryParams.managerOrgId': function(newVal) {
+    "queryParams.managerOrgId": function (newVal) {
       // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
       if (newVal) {
-        this.queryParams.managerId = null // 清空管理人员选择
-        this.getQueryUser()
+        this.queryParams.managerId = null; // 清空管理人员选择
+        this.getQueryUser();
       }
-    }
+    },
   },
   created() {
-    this.getList()
-    this.getTreeselect()
-    this.getDicts('site_status').then(response => {
-      this.stateOptions = response.data
-    })
+    this.getList();
+    this.getTreeselect();
+    this.getDicts("site_status").then((response) => {
+      this.stateOptions = response.data;
+    });
+    this.initVisibleColumns();
   },
   methods: {
+    getDefaultVisibleColumns() {
+      return this.columnOptions
+        .filter((item) => item.defaultVisible !== false)
+        .map((item) => item.prop);
+    },
+    initVisibleColumns() {
+      const saved = localStorage.getItem("site_manage_visible_columns");
+      if (saved) {
+        try {
+          this.visibleColumns = JSON.parse(saved);
+          return;
+        } catch (error) {
+          console.warn("解析列配置失败，使用默认列", error);
+        }
+      }
+      this.visibleColumns = this.getDefaultVisibleColumns();
+    },
+    isColumnVisible(prop) {
+      return this.visibleColumns.includes(prop);
+    },
+    handleColumnChange(value) {
+      this.visibleColumns = value;
+      localStorage.setItem(
+        "site_manage_visible_columns",
+        JSON.stringify(this.visibleColumns)
+      );
+    },
+    resetColumns() {
+      this.visibleColumns = this.getDefaultVisibleColumns();
+      localStorage.setItem(
+        "site_manage_visible_columns",
+        JSON.stringify(this.visibleColumns)
+      );
+      this.$message.success("已重置为默认显示");
+    },
     /** 查询执法仪列表 */
     getList() {
-      this.loading = true
-      listEquipmentSite(this.queryParams).then(response => {
+      this.loading = true;
+      listEquipmentSite(this.queryParams).then((response) => {
         // 注意：response.data是数组类型，数组的元素是对象
-        this.SiteList = response.data.list
-        this.total = response.data.count
-        this.loading = false
-      })
+        this.SiteList = response.data.list;
+        this.total = response.data.count;
+        this.loading = false;
+      });
     },
 
     // 字典状态字典翻译
     stateFormat(row) {
-      return this.selectDictLabel(this.stateOptions, parseInt(row.State))
+      return this.selectDictLabel(this.stateOptions, parseInt(row.State));
     },
 
     /** 查询组织下拉树结构 */
     getTreeselect() {
-      orgTreeSelect().then(response => {
-        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
-      })
+      orgTreeSelect().then((response) => {
+        this.orgOptions = response.data; // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
+      });
     },
 
     getFormUser() {
-      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(response => {
-        this.userOptions = response.data.list
-      })
+      listUser({ orgId: "/" + this.form.managerOrgId + "/" }).then(
+        (response) => {
+          this.userOptions = response.data.list;
+        }
+      );
     },
 
     getQueryUser() {
-      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(response => {
-        this.userOptions = response.data.list
-      })
+      listUser({ orgId: "/" + this.queryParams.managerOrgId + "/" }).then(
+        (response) => {
+          this.userOptions = response.data.list;
+        }
+      );
     },
 
     // 表单重置
@@ -524,7 +823,7 @@ export default {
         SecretKey: undefined,
         AdminPoliceName: undefined,
         OrgName: undefined,
-        State: '1',
+        State: "1",
         OnlineTimeTotal: undefined,
         Cpu: undefined,
         Memory: undefined,
@@ -533,154 +832,235 @@ export default {
         UsbNum: undefined,
         System: undefined,
         Version: undefined,
-        Remark: undefined
-      }
-      this.resetForm('form')
+        Remark: undefined,
+      };
+      this.resetForm("form");
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm('queryForm')
-      this.handleQuery()
+      this.resetForm("queryForm");
+      this.handleQuery();
     },
     // 取消按钮
     cancel() {
-      this.open = false
-      this.reset()
+      this.open = false;
+      this.reset();
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.getList()
+      this.getList();
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.SiteIds = selection.map(item => item.Id)
-      this.UpdateDisabled = selection.length !== 1
-      this.DeleteDisabled = !selection.length
+      this.SiteIds = selection.map((item) => item.Id);
+      this.UpdateDisabled = selection.length !== 1;
+      this.DeleteDisabled = !selection.length;
     },
     /** 新增按钮操作*/
     handleAdd(row) {
-      this.reset()
-      this.open = true
-      this.title = '添加采集站'
-      this.isEdit = false
+      this.reset();
+      this.open = true;
+      this.title = "添加采集站";
+      this.isEdit = false;
     },
 
     handleSortChang(column, prop, order) {
-      prop = column.prop
-      order = column.order
-      if (order === 'descending') {
-        this.queryParams[prop + 'Order'] = 'desc'
-      } else if (order === 'ascending') {
-        this.queryParams[prop + 'Order'] = 'asc'
+      prop = column.prop;
+      order = column.order;
+      if (order === "descending") {
+        this.queryParams[prop + "Order"] = "desc";
+      } else if (order === "ascending") {
+        this.queryParams[prop + "Order"] = "asc";
       } else {
-        this.queryParams[prop + 'Order'] = undefined
+        this.queryParams[prop + "Order"] = undefined;
       }
-      this.getList()
+      this.getList();
     },
     /** 修改按钮操作 ,该函数可以优化，没有必要从服务端获取数据。查询到的所有记录都缓存在了前端*/
     handleUpdate(row) {
-      this.reset()
-      this.firstLoad = true
-      const SiteId = row.Id || this.SiteIds
-      getEquipmentSite(SiteId).then(response => {
-        this.form = response.data
-        this.form.State = String(this.form.State)
-        this.title = '修改采集站'
-        this.isEdit = true
-        this.open = true
-      })
+      this.reset();
+      this.firstLoad = true;
+      const SiteId = row.Id || this.SiteIds;
+      getEquipmentSite(SiteId).then((response) => {
+        this.form = response.data;
+        this.form.State = String(this.form.State);
+        this.title = "修改采集站";
+        this.isEdit = true;
+        this.open = true;
+      });
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      this.AttributeValueList = []
-      Object.keys(row).forEach(key => {
+      this.AttributeValueList = [];
+      Object.keys(row).forEach((key) => {
         const attributeValue = {
           AttributeName: this.ColumnNameConvert.get(key),
-          Value: row[key]
-        }
-        this.AttributeValueList.push(attributeValue)
-      })
-      this.AttributeValueConfigList = []
-      getEquipmentSiteConfig(row.Id).then(response => {
-        Object.keys(response.data).forEach(key => {
+          Value: row[key],
+        };
+        this.AttributeValueList.push(attributeValue);
+      });
+      this.AttributeValueConfigList = [];
+      getEquipmentSiteConfig(row.Id).then((response) => {
+        Object.keys(response.data).forEach((key) => {
           const attributeValue = {
             AttributeName: this.ColumnNameConfigConvert.get(key),
-            Value: response.data[key]
-          }
-          this.AttributeValueConfigList.push(attributeValue)
-        })
-      })
-      this.ViewOpen = true
-      this.title = ''
+            Value: response.data[key],
+          };
+          this.AttributeValueConfigList.push(attributeValue);
+        });
+      });
+      this.ViewOpen = true;
+      this.title = "";
     },
     /** 提交按钮 */
-    submitForm: function() {
-      this.$refs['form'].validate(valid => {
+    submitForm: function () {
+      this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.State = parseInt(this.form.State)
+          this.form.State = parseInt(this.form.State);
           if (this.form.Id !== undefined) {
-            updateEquipmentSite(this.form, this.form.Id).then(response => {
+            updateEquipmentSite(this.form, this.form.Id).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                this.getList()
+                this.msgSuccess(response.msg);
+                this.open = false;
+                this.getList();
               } else {
-                this.msgError(response.msg)
+                this.msgError(response.msg);
               }
-            })
+            });
           } else {
-            addEquipmentSite(this.form).then(response => {
+            addEquipmentSite(this.form).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                this.getList()
+                this.msgSuccess(response.msg);
+                this.open = false;
+                this.getList();
               } else {
-                this.msgError(response.msg)
+                this.msgError(response.msg);
               }
-            })
+            });
           }
         }
-      })
+      });
     },
 
     handleDelete(row) {
-      const SiteId = (row.Id && [row.Id]) || this.SiteIds
-      this.$confirm('是否确认删除采集站编号为"' + SiteId + '"的数据项?', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(function() {
-        return delEquipmentSite({ 'ids': SiteId })
-      }).then((response) => {
-        this.getList()
-        this.msgSuccess(response.msg)
-      }).catch(function() { })
+      const SiteId = (row.Id && [row.Id]) || this.SiteIds;
+      this.$confirm(
+        '是否确认删除采集站编号为"' + SiteId + '"的数据项?',
+        "警告",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        }
+      )
+        .then(function () {
+          return delEquipmentSite({ ids: SiteId });
+        })
+        .then((response) => {
+          this.getList();
+          this.msgSuccess(response.msg);
+        })
+        .catch(function () {});
     },
 
     /** 导出按钮操作 */
     handleExport() {
-      this.$confirm('是否确认导出所有采集站数据项?', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
+      this.$confirm("是否确认导出所有采集站数据项?", "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
       }).then(() => {
-        this.downloadLoading = true
-        import('@/vendor/Export2Excel').then(excel => {
-          const tHeader = ['名称', '编号', '品牌名称', 'Ip', '地址', '播放地址', '密钥', '管理员', '归属单位', '状态', '在线总时长', 'CPU', '内存', '存储', 'USB数量', '操作系统', '购置时间', '版本', '备注']
-          const filterVal = ['Name', 'No', 'BrandName', 'Ip', 'Address', 'Http', 'SecretKey', 'AdminPoliceName', 'OrgName', 'State', 'OnlineTimeTotal', 'Cpu', 'Memory', 'Disk', 'UsbNum', 'System', 'BuyTime', 'Version', 'Remark']
-          const list = this.SiteList
-          const data = formatJson(filterVal, list)
+        this.downloadLoading = true;
+        import("@/vendor/Export2Excel").then((excel) => {
+          const tHeader = [
+            "名称",
+            "编号",
+            "品牌名称",
+            "Ip",
+            "地址",
+            "播放地址",
+            "密钥",
+            "管理员",
+            "归属单位",
+            "状态",
+            "在线总时长",
+            "CPU",
+            "内存",
+            "存储",
+            "USB数量",
+            "操作系统",
+            "购置时间",
+            "版本",
+            "备注",
+          ];
+          const filterVal = [
+            "Name",
+            "No",
+            "BrandName",
+            "Ip",
+            "Address",
+            "Http",
+            "SecretKey",
+            "AdminPoliceName",
+            "OrgName",
+            "State",
+            "OnlineTimeTotal",
+            "Cpu",
+            "Memory",
+            "Disk",
+            "UsbNum",
+            "System",
+            "BuyTime",
+            "Version",
+            "Remark",
+          ];
+          const list = this.SiteList;
+          const data = formatJson(filterVal, list);
           excel.export_json_to_excel({
             header: tHeader,
             data,
-            filename: '采集站列表',
+            filename: "采集站列表",
             autoWidth: true, // Optional
-            bookType: 'xlsx' // Optional
-          })
-          this.downloadLoading = false
-        })
-      })
-    }
-  }
-}
+            bookType: "xlsx", // Optional
+          });
+          this.downloadLoading = false;
+        });
+      });
+    },
+  },
+};
 </script>
+
+<style scoped>
+.column-settings-trigger {
+  text-align: right;
+}
+
+.column-settings {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.column-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e4e7ed;
+  font-weight: bold;
+}
+
+.column-item {
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.column-item:last-child {
+  border-bottom: none;
+}
+
+.column-item .el-checkbox {
+  width: 100%;
+}
+</style>

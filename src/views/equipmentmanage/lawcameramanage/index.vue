@@ -11,7 +11,7 @@
               v-model="queryParams.no"
               placeholder="请输入执法仪编号"
               clearable
-              style="width: 170px;"
+              style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
@@ -20,7 +20,7 @@
               v-model="queryParams.name"
               placeholder="请输入执法仪名称"
               clearable
-              style="width: 170px;"
+              style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
@@ -29,14 +29,14 @@
               v-model="queryParams.managerOrgId"
               :options="orgOptions"
               placeholder="请选择管理组织"
-              style="width: 170px;"
+              style="width: 170px"
             />
           </el-form-item>
           <el-form-item label="管理人员">
             <el-select
               v-model="queryParams.managerId"
               placeholder="请选择管理人员"
-              style="width: 170px;"
+              style="width: 170px"
               clearable
               @change="$forceUpdate()"
             >
@@ -49,18 +49,28 @@
             </el-select>
           </el-form-item>
           <el-form-item label="状态" prop="state">
-            <el-select v-model="queryParams.state" placeholder="状态" clearable style="width: 170px;">
+            <el-select
+              v-model="queryParams.state"
+              placeholder="状态"
+              clearable
+              style="width: 170px"
+            >
               <el-option
                 v-for="dict in stateOptions"
                 :key="dict.value"
                 :label="dict.label"
                 :value="dict.value"
-                style="width: 150px;"
+                style="width: 150px"
               />
             </el-select>
           </el-form-item>
           <el-form-item label="是否可用">
-            <el-select v-model="queryParams.enableUse" placeholder="是否可用" clearable style="width: 170px;">
+            <el-select
+              v-model="queryParams.enableUse"
+              placeholder="是否可用"
+              clearable
+              style="width: 170px"
+            >
               <el-option
                 v-for="dict in enableUseOptions"
                 :key="dict.value"
@@ -70,48 +80,93 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+            <el-button
+              type="primary"
+              icon="el-icon-search"
+              size="mini"
+              @click="handleQuery"
+              >搜索</el-button
+            >
+            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
+              >重置</el-button
+            >
           </el-form-item>
         </el-form>
-        <el-row :gutter="10" class="mb8">
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['equipment:lawcamera:create']"
-              type="primary"
-              icon="el-icon-plus"
-              size="mini"
-              @click="handleAdd"
-            >新增</el-button>
+        <el-row :gutter="10" class="mb8" type="flex" justify="space-between">
+          <el-col :span="18">
+            <el-row :gutter="10">
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['equipment:lawcamera:create']"
+                  type="primary"
+                  icon="el-icon-plus"
+                  size="mini"
+                  @click="handleAdd"
+                  >新增</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['equipment:lawcamera:edit']"
+                  type="success"
+                  icon="el-icon-edit"
+                  size="mini"
+                  :disabled="single"
+                  @click="handleUpdate"
+                  >修改</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['equipment:lawcamera:remove']"
+                  type="danger"
+                  icon="el-icon-delete"
+                  size="mini"
+                  :disabled="multiple"
+                  @click="handleDelete"
+                  >删除</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['equipment:lawcamera:export']"
+                  type="warning"
+                  icon="el-icon-download"
+                  size="mini"
+                  @click="handleExport"
+                  >导出</el-button
+                >
+              </el-col>
+            </el-row>
           </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['equipment:lawcamera:edit']"
-              type="success"
-              icon="el-icon-edit"
-              size="mini"
-              :disabled="single"
-              @click="handleUpdate"
-            >修改</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['equipment:lawcamera:remove']"
-              type="danger"
-              icon="el-icon-delete"
-              size="mini"
-              :disabled="multiple"
-              @click="handleDelete"
-            >删除</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['equipment:lawcamera:export']"
-              type="warning"
-              icon="el-icon-download"
-              size="mini"
-              @click="handleExport"
-            >导出</el-button>
+          <el-col :span="6" class="column-settings-trigger">
+            <el-popover placement="bottom-end" width="280" trigger="click">
+              <div class="column-settings">
+                <div class="column-settings-header">
+                  <span>列显示设置</span>
+                  <el-button type="text" size="mini" @click="resetColumns"
+                    >重置</el-button
+                  >
+                </div>
+                <el-checkbox-group
+                  v-model="visibleColumns"
+                  @change="handleColumnChange"
+                >
+                  <div
+                    v-for="col in columnOptions"
+                    :key="col.prop"
+                    class="column-item"
+                  >
+                    <el-checkbox :label="col.prop" :disabled="col.fixed">
+                      {{ col.label }}
+                    </el-checkbox>
+                  </div>
+                </el-checkbox-group>
+              </div>
+              <el-button slot="reference" size="mini" icon="el-icon-setting"
+                >列设置</el-button
+              >
+            </el-popover>
           </el-col>
         </el-row>
         <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
@@ -132,42 +187,12 @@
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column type="selection" width="55" align="center" />
-          <el-table-column prop="no" label="编号" width="80" />
-          <el-table-column prop="name" label="名称" width="100" />
-          <el-table-column prop="managerName" label="管理员" width="80" />
-          <el-table-column prop="managerOrgFullName" label="管理员所在组织" width="150" />
-          <el-table-column prop="enableUse" label="是否可用" width="100">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-            <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
-              <el-tag
-                :type="scope.row.enableUse === 1 ? 'success' : 'danger'"
-                disable-transitions
-              >{{ enableUseFormat(scope.row) }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="state" label="状态" width="100">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-            <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
-              <el-tag
-                disable-transitions
-              >{{ stateFormat(scope.row) }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="cpu" label="Cpu" width="100" />
-          <el-table-column prop="memory" label="内存(G)" width="100" />
-          <el-table-column prop="disk" label="存储(G)" width="100" />
-          <el-table-column prop="system" label="操作系统" width="100" />
-          <el-table-column prop="version" label="版本" width="100" />
-          <el-table-column prop="remark" label="备注" width="100" />
           <el-table-column
             label="操作"
             align="left"
             class-name="small-padding fixed-width"
-            width="150"
+            width="200"
+            fixed="left"
           >
             <template slot-scope="scope">
               <el-button
@@ -176,26 +201,146 @@
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row)"
-              >浏览</el-button>
+                >浏览</el-button
+              >
               <el-button
                 v-permisaction="['equipment:lawcamera:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
-              >修改</el-button>
+                >修改</el-button
+              >
               <el-button
                 v-permisaction="['equipment:lawcamera:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
                 @click="handleDelete(scope.row)"
-              >删除</el-button>
+                >删除</el-button
+              >
             </template>
           </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('no')"
+            prop="no"
+            label="编号"
+            width="120"
+          />
+          <el-table-column
+            v-if="isColumnVisible('name')"
+            prop="name"
+            label="名称"
+            width="140"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('managerName')"
+            prop="managerName"
+            label="管理员"
+            width="120"
+          />
+          <el-table-column
+            v-if="isColumnVisible('managerOrgFullName')"
+            prop="managerOrgFullName"
+            label="管理员所在组织"
+            width="180"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('enableUse')"
+            prop="enableUse"
+            label="是否可用"
+            width="120"
+          >
+            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
+            <template slot-scope="scope">
+              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
+                否则为 'success'（通常显示为绿色）。-->
+              <el-tag
+                :type="scope.row.enableUse === 1 ? 'success' : 'danger'"
+                disable-transitions
+                >{{ enableUseFormat(scope.row) }}</el-tag
+              >
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('state')"
+            prop="state"
+            label="状态"
+            width="120"
+          >
+            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
+            <template slot-scope="scope">
+              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
+                否则为 'success'（通常显示为绿色）。-->
+              <el-tag disable-transitions>{{ stateFormat(scope.row) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('cpu')"
+            prop="cpu"
+            label="CPU"
+            width="140"
+          />
+          <el-table-column
+            v-if="isColumnVisible('memory')"
+            prop="memory"
+            label="内存(G)"
+            width="140"
+          />
+          <el-table-column
+            v-if="isColumnVisible('disk')"
+            prop="disk"
+            label="存储(G)"
+            width="140"
+          />
+          <el-table-column
+            v-if="isColumnVisible('networkCard')"
+            prop="networkCard"
+            label="网卡"
+            min-width="160"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('usbNum')"
+            prop="usbNum"
+            label="USB数量"
+            width="120"
+          />
+          <el-table-column
+            v-if="isColumnVisible('system')"
+            prop="system"
+            label="操作系统"
+            min-width="160"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('version')"
+            prop="version"
+            label="版本"
+            width="140"
+          />
+          <el-table-column
+            v-if="isColumnVisible('buyTime')"
+            prop="buyTime"
+            label="购买时间"
+            width="180"
+          >
+            <template slot-scope="{ row }">
+              {{ parseTime(row.buyTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('remark')"
+            prop="remark"
+            label="备注"
+            min-width="160"
+            :show-overflow-tooltip="true"
+          />
         </el-table>
         <pagination
-          v-show="total>0"
+          v-show="total > 0"
           :total="total"
           :page.sync="queryParams.pageIndex"
           :limit.sync="queryParams.pageSize"
@@ -205,7 +350,12 @@
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
-        <el-dialog :title="title" :visible.sync="open" width="600px" :close-on-click-modal="false">
+        <el-dialog
+          :title="title"
+          :visible.sync="open"
+          width="600px"
+          :close-on-click-modal="false"
+        >
           <el-form ref="form" :model="form" :rules="rules" label-width="80px">
             <!-- 管理信息 -->
             <el-row :gutter="20">
@@ -220,7 +370,11 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="管理人员">
-                  <el-select v-model="form.managerId" placeholder="请选择" @change="$forceUpdate()">
+                  <el-select
+                    v-model="form.managerId"
+                    placeholder="请选择"
+                    @change="$forceUpdate()"
+                  >
                     <el-option
                       v-for="item in userOptions"
                       :key="item.userId"
@@ -241,7 +395,11 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="编号" prop="No">
-                  <el-input v-model="form.no" placeholder="请输入编号" :disabled="title === '修改执法仪'" />
+                  <el-input
+                    v-model="form.no"
+                    placeholder="请输入编号"
+                    :disabled="title === '修改执法仪'"
+                  />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -255,7 +413,8 @@
                       v-for="dict in enableUseOptions"
                       :key="parseInt(dict.value)"
                       :label="parseInt(dict.value)"
-                    >{{ dict.label }}</el-radio>
+                      >{{ dict.label }}</el-radio
+                    >
                   </el-radio-group>
                 </el-form-item>
               </el-col>
@@ -266,7 +425,8 @@
                       v-for="dict in stateOptions"
                       :key="parseInt(dict.value)"
                       :label="parseInt(dict.value)"
-                    >{{ dict.label }}</el-radio>
+                      >{{ dict.label }}</el-radio
+                    >
                   </el-radio-group>
                 </el-form-item>
               </el-col>
@@ -281,17 +441,26 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="内存(G)">
-                  <el-input-number v-model="form.memory" placeholder="请输入内存大小" />
+                  <el-input-number
+                    v-model="form.memory"
+                    placeholder="请输入内存大小"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="存储(G)">
-                  <el-input-number v-model="form.disk" placeholder="请输入磁盘大小" />
+                  <el-input-number
+                    v-model="form.disk"
+                    placeholder="请输入磁盘大小"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="网卡">
-                  <el-input v-model="form.networkCard" placeholder="请输入网卡型号" />
+                  <el-input
+                    v-model="form.networkCard"
+                    placeholder="请输入网卡型号"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -305,12 +474,20 @@
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="操作系统">
-                  <el-input v-model="form.system" placeholder="操作系统" maxlength="20" />
+                  <el-input
+                    v-model="form.system"
+                    placeholder="操作系统"
+                    maxlength="20"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="版本">
-                  <el-input v-model="form.version" placeholder="版本" maxlength="20" />
+                  <el-input
+                    v-model="form.version"
+                    placeholder="版本"
+                    maxlength="20"
+                  />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -332,14 +509,25 @@
         </el-dialog>
 
         <!--显示详情-->
-        <el-dialog :title="title" :visible.sync="ViewOpen" width="593px" :close-on-click-modal="false">
-          <el-table
-            v-loading="loading"
-            :data="AttributeValueList"
-            border
-          >
-            <el-table-column prop="AttributeName" label="属性" width="100" align="center" />
-            <el-table-column prop="Value" label="值" width="450" align="center" />
+        <el-dialog
+          :title="title"
+          :visible.sync="ViewOpen"
+          width="593px"
+          :close-on-click-modal="false"
+        >
+          <el-table v-loading="loading" :data="AttributeValueList" border>
+            <el-table-column
+              prop="AttributeName"
+              label="属性"
+              width="100"
+              align="center"
+            />
+            <el-table-column
+              prop="Value"
+              label="值"
+              width="450"
+              align="center"
+            />
           </el-table>
         </el-dialog>
       </el-card>
@@ -347,14 +535,20 @@
   </BasicLayout>
 </template>
 <script>
-import { getEquipmentLawcameraList, getEquipmentLawcamera, delEquipmentLawcamera, addEquipmentLawcamera, updateEquipmentLawcamera } from '@/api/admin/equipment_manage_api'
-import { formatJson } from '@/utils'
-import { orgTreeSelect } from '@/api/admin/sys-org'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import { listUser } from '@/api/admin/sys-user'
+import {
+  getEquipmentLawcameraList,
+  getEquipmentLawcamera,
+  delEquipmentLawcamera,
+  addEquipmentLawcamera,
+  updateEquipmentLawcamera,
+} from "@/api/admin/equipment_manage_api";
+import { formatJson } from "@/utils";
+import { orgTreeSelect } from "@/api/admin/sys-org";
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import { listUser } from "@/api/admin/sys-user";
 export default {
-  name: 'LawCarema',
+  name: "LawCarema",
   components: { Treeselect },
   data() {
     return {
@@ -375,8 +569,32 @@ export default {
       stateOptions: [],
       // 是否可用数据字典
       enableUseOptions: [],
+      // 列配置
+      columnOptions: [
+        { prop: "no", label: "编号", defaultVisible: true },
+        { prop: "name", label: "名称", defaultVisible: true },
+        { prop: "managerName", label: "管理员", defaultVisible: true },
+        {
+          prop: "managerOrgFullName",
+          label: "管理员所在组织",
+          defaultVisible: true,
+        },
+        { prop: "enableUse", label: "是否可用", defaultVisible: true },
+        { prop: "state", label: "状态", defaultVisible: true },
+        { prop: "cpu", label: "CPU", defaultVisible: false },
+        { prop: "memory", label: "内存(G)", defaultVisible: false },
+        { prop: "disk", label: "存储(G)", defaultVisible: false },
+        { prop: "networkCard", label: "网卡", defaultVisible: false },
+        { prop: "usbNum", label: "USB数量", defaultVisible: false },
+        { prop: "system", label: "操作系统", defaultVisible: false },
+        { prop: "version", label: "版本", defaultVisible: false },
+        { prop: "buyTime", label: "购买时间", defaultVisible: false },
+        { prop: "remark", label: "备注", defaultVisible: false },
+      ],
+      // 可见列
+      visibleColumns: [],
       // 弹出层标题
-      title: '',
+      title: "",
       isEdit: false,
       // 是否显示增加执法仪对话框
       open: false,
@@ -390,103 +608,143 @@ export default {
         pageSize: 10,
         Name: undefined,
         managerOrgId: undefined,
-        managerId: undefined
+        managerId: undefined,
       },
       AttributeValueList: [],
       ColumnNameConvert: new Map([
-        ['no', '编号'],
-        ['name', '名称'],
-        ['managerName','管理员'],
-        ['managerOrgFullName','管理员所在组织'],
-        ['enableUse','是否可用'],
-        ['state','状态'],
-        ['cpu', 'CPU'],
-        ['memory', '内存(G)'],
-        ['disk', '存储(G)'],
-        ['networkCard', '网卡'],
-        ['usbNum', 'USB数量'],
-        ['system', '操作系统'],
-        ['version', '版本'],
-        ['buyTime', '购买时间'],
-        ['remark', '备注']
+        ["no", "编号"],
+        ["name", "名称"],
+        ["managerName", "管理员"],
+        ["managerOrgFullName", "管理员所在组织"],
+        ["enableUse", "是否可用"],
+        ["state", "状态"],
+        ["cpu", "CPU"],
+        ["memory", "内存(G)"],
+        ["disk", "存储(G)"],
+        ["networkCard", "网卡"],
+        ["usbNum", "USB数量"],
+        ["system", "操作系统"],
+        ["version", "版本"],
+        ["buyTime", "购买时间"],
+        ["remark", "备注"],
       ]),
       // 表单参数
-      form: {
-      },
+      form: {},
       // 表单校验,触发时机（trigger: 'blur'）：当输入框失去焦点（blur 事件）时触发验证。
       rules: {
-        no: [
-          { required: true, message: '编号不能为空', trigger: 'blur' }
-        ]
-      }
-
-    }
+        no: [{ required: true, message: "编号不能为空", trigger: "blur" }],
+      },
+    };
   },
   watch: {
-    'form.managerOrgId': function(newVal) {
+    "form.managerOrgId": function (newVal) {
       // 当 form.managerOrgId 更新时，调用 getUser
       if (newVal) {
-        if (this.firstLoad !== true) { // 首次打开对话框，不需要清空管理人员
-          this.form.managerId = null // 清空管理人员选择
+        if (this.firstLoad !== true) {
+          // 首次打开对话框，不需要清空管理人员
+          this.form.managerId = null; // 清空管理人员选择
         }
-        this.firstLoad = false
-        this.getFormUser()
+        this.firstLoad = false;
+        this.getFormUser();
       }
     },
-    'queryParams.managerOrgId': function(newVal) {
+    "queryParams.managerOrgId": function (newVal) {
       // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
       if (newVal) {
-        this.queryParams.managerId = null // 清空管理人员选择
-        this.getQueryUser()
+        this.queryParams.managerId = null; // 清空管理人员选择
+        this.getQueryUser();
       }
-    }
+    },
   },
   created() {
-    this.getList()
-    this.getTreeselect()
-    this.getDicts('lawcamera_state').then(response => {
-      this.stateOptions = response.data
-    })
-    this.getDicts('enableuse_state').then(response => {
-      this.enableUseOptions = response.data
-    })
+    this.getList();
+    this.getTreeselect();
+    this.getDicts("lawcamera_state").then((response) => {
+      this.stateOptions = response.data;
+    });
+    this.getDicts("enableuse_state").then((response) => {
+      this.enableUseOptions = response.data;
+    });
+    this.initVisibleColumns();
   },
   methods: {
+    getDefaultVisibleColumns() {
+      return this.columnOptions
+        .filter((item) => item.defaultVisible !== false)
+        .map((item) => item.prop);
+    },
+    initVisibleColumns() {
+      const saved = localStorage.getItem("lawcamera_manage_visible_columns");
+      if (saved) {
+        try {
+          this.visibleColumns = JSON.parse(saved);
+          return;
+        } catch (error) {
+          console.warn("解析列配置失败，使用默认列", error);
+        }
+      }
+      this.visibleColumns = this.getDefaultVisibleColumns();
+    },
+    isColumnVisible(prop) {
+      return this.visibleColumns.includes(prop);
+    },
+    handleColumnChange(value) {
+      this.visibleColumns = value;
+      localStorage.setItem(
+        "lawcamera_manage_visible_columns",
+        JSON.stringify(this.visibleColumns)
+      );
+    },
+    resetColumns() {
+      this.visibleColumns = this.getDefaultVisibleColumns();
+      localStorage.setItem(
+        "lawcamera_manage_visible_columns",
+        JSON.stringify(this.visibleColumns)
+      );
+      this.$message.success("已重置为默认显示");
+    },
     /** 查询执法仪列表 */
     getList() {
-      this.loading = true
-      getEquipmentLawcameraList(this.queryParams).then(response => {
+      this.loading = true;
+      getEquipmentLawcameraList(this.queryParams).then((response) => {
         // 注意：response.data是数组类型，数组的元素是对象
-        this.lawCameraList = response.data.list
-        this.total = response.data.count
-        this.loading = false
-      })
+        this.lawCameraList = response.data.list;
+        this.total = response.data.count;
+        this.loading = false;
+      });
     },
 
     // 字典状态字典翻译
     stateFormat(row) {
-      return this.selectDictLabel(this.stateOptions, parseInt(row.state))
+      return this.selectDictLabel(this.stateOptions, parseInt(row.state));
     },
     // 字典状态字典翻译
     enableUseFormat(row) {
-      return this.selectDictLabel(this.enableUseOptions, parseInt(row.enableUse))
+      return this.selectDictLabel(
+        this.enableUseOptions,
+        parseInt(row.enableUse)
+      );
     },
     /** 查询组织下拉树结构 */
     getTreeselect() {
-      orgTreeSelect().then(response => {
-        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
-      })
+      orgTreeSelect().then((response) => {
+        this.orgOptions = response.data; // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
+      });
     },
     getFormUser() {
-      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(response => {
-        this.userOptions = response.data.list
-      })
+      listUser({ orgId: "/" + this.form.managerOrgId + "/" }).then(
+        (response) => {
+          this.userOptions = response.data.list;
+        }
+      );
     },
 
     getQueryUser() {
-      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(response => {
-        this.userOptions = response.data.list
-      })
+      listUser({ orgId: "/" + this.queryParams.managerOrgId + "/" }).then(
+        (response) => {
+          this.userOptions = response.data.list;
+        }
+      );
     },
 
     // 表单重置
@@ -508,155 +766,224 @@ export default {
         system: undefined,
         version: undefined,
         buyTime: undefined,
-        remark: undefined
-      }
-      this.resetForm('form')
+        remark: undefined,
+      };
+      this.resetForm("form");
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm('queryForm')
-      this.handleQuery()
+      this.resetForm("queryForm");
+      this.handleQuery();
     },
     // 取消按钮
     cancel() {
-      this.open = false
-      this.reset()
+      this.open = false;
+      this.reset();
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.getList()
+      this.getList();
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.LawCameraIds = selection.map(item => item.id)
-      this.single = selection.length !== 1
-      this.multiple = !selection.length
+      this.LawCameraIds = selection.map((item) => item.id);
+      this.single = selection.length !== 1;
+      this.multiple = !selection.length;
     },
     /** 新增按钮操作*/
     handleAdd(row) {
-      this.reset()
-      this.open = true
-      this.title = '添加执法仪'
-      this.isEdit = false
+      this.reset();
+      this.open = true;
+      this.title = "添加执法仪";
+      this.isEdit = false;
     },
 
     handleSortChang(column, prop, order) {
-      prop = column.prop
-      order = column.order
-      if (order === 'descending') {
-        this.queryParams[prop + 'Order'] = 'desc'
-      } else if (order === 'ascending') {
-        this.queryParams[prop + 'Order'] = 'asc'
+      prop = column.prop;
+      order = column.order;
+      if (order === "descending") {
+        this.queryParams[prop + "Order"] = "desc";
+      } else if (order === "ascending") {
+        this.queryParams[prop + "Order"] = "asc";
       } else {
-        this.queryParams[prop + 'Order'] = undefined
+        this.queryParams[prop + "Order"] = undefined;
       }
-      this.getList()
+      this.getList();
     },
 
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset()
-      this.firstLoad = true
-      const LawCameraId = row.id || this.LawCameraIds
-      getEquipmentLawcamera(LawCameraId).then(response => {
-        this.form = response.data
-        this.title = '修改执法仪'
-        this.isEdit = true
-        this.open = true
-      })
+      this.reset();
+      this.firstLoad = true;
+      const LawCameraId = row.id || this.LawCameraIds;
+      getEquipmentLawcamera(LawCameraId).then((response) => {
+        this.form = response.data;
+        this.title = "修改执法仪";
+        this.isEdit = true;
+        this.open = true;
+      });
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      this.AttributeValueList = []
-      Object.keys(row).forEach(key => {
-        var attributeName = this.ColumnNameConvert.get(key)
-        var value = row[key]
-        if (key === 'state') {
-            value = this.stateFormat(row)
+      this.AttributeValueList = [];
+      Object.keys(row).forEach((key) => {
+        var attributeName = this.ColumnNameConvert.get(key);
+        var value = row[key];
+        if (key === "state") {
+          value = this.stateFormat(row);
         }
-        if (key === 'enableUse') {
-            value = this.enableUseFormat(row)
+        if (key === "enableUse") {
+          value = this.enableUseFormat(row);
         }
         const attributeValue = {
           AttributeName: attributeName,
-          Value: value
-        }
+          Value: value,
+        };
         if (attributeValue.AttributeName !== undefined) {
-          this.AttributeValueList.push(attributeValue)
+          this.AttributeValueList.push(attributeValue);
         }
-      })
-      this.ViewOpen = true
-      this.title = '执法仪信息'
+      });
+      this.ViewOpen = true;
+      this.title = "执法仪信息";
     },
     /** 提交按钮 */
-    submitForm: function() {
-      this.$refs['form'].validate(valid => {
+    submitForm: function () {
+      this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.state = parseInt(this.form.state)
-          this.form.enableUse = parseInt(this.form.enableUse)
+          this.form.state = parseInt(this.form.state);
+          this.form.enableUse = parseInt(this.form.enableUse);
           if (this.form.id !== undefined) {
-            updateEquipmentLawcamera(this.form, this.form.id).then(response => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                this.getList()
-              } else {
-                this.msgError(response.msg)
+            updateEquipmentLawcamera(this.form, this.form.id).then(
+              (response) => {
+                if (response.code === 200) {
+                  this.msgSuccess(response.msg);
+                  this.open = false;
+                  this.getList();
+                } else {
+                  this.msgError(response.msg);
+                }
               }
-            })
+            );
           } else {
-            addEquipmentLawcamera(this.form).then(response => {
+            addEquipmentLawcamera(this.form).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                this.getList()
+                this.msgSuccess(response.msg);
+                this.open = false;
+                this.getList();
               } else {
-                this.msgError(response.msg)
+                this.msgError(response.msg);
               }
-            })
+            });
           }
         }
-      })
+      });
     },
 
     handleDelete(row) {
-      const LawCameraId = (row.id && [row.id]) || this.LawCameraIds
-      this.$confirm('是否确认删除执法仪编号为"' + LawCameraId + '"的数据项?', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(function() {
-        return delEquipmentLawcamera({ 'ids': LawCameraId })
-      }).then((response) => {
-        this.getList()
-        this.msgSuccess(response.msg)
-      }).catch(function() {})
+      const LawCameraId = (row.id && [row.id]) || this.LawCameraIds;
+      this.$confirm(
+        '是否确认删除执法仪编号为"' + LawCameraId + '"的数据项?',
+        "警告",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        }
+      )
+        .then(function () {
+          return delEquipmentLawcamera({ ids: LawCameraId });
+        })
+        .then((response) => {
+          this.getList();
+          this.msgSuccess(response.msg);
+        })
+        .catch(function () {});
     },
 
     /** 导出按钮操作 */
     handleExport() {
-      this.$confirm('是否确认导出所有执法仪数据项?', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
+      this.$confirm("是否确认导出所有执法仪数据项?", "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
       }).then(() => {
-        this.downloadLoading = true
-        import('@/vendor/Export2Excel').then(excel => {
-          const tHeader = ['工程ID', '编号', '名称', 'CPU', '内存', '存储', '网卡', 'USB数量', '操作系统', '购置时间', '版本', '备注']
-          const filterVal = ['FactoryId', 'No', 'Name', 'Cpu', 'Memory', 'Disk', 'NetworkCard', 'UsbNum', 'System', 'BuyTime', 'Version', 'Remark']
-          const list = this.lawCameraList
-          const data = formatJson(filterVal, list)
+        this.downloadLoading = true;
+        import("@/vendor/Export2Excel").then((excel) => {
+          const tHeader = [
+            "工程ID",
+            "编号",
+            "名称",
+            "CPU",
+            "内存",
+            "存储",
+            "网卡",
+            "USB数量",
+            "操作系统",
+            "购置时间",
+            "版本",
+            "备注",
+          ];
+          const filterVal = [
+            "FactoryId",
+            "No",
+            "Name",
+            "Cpu",
+            "Memory",
+            "Disk",
+            "NetworkCard",
+            "UsbNum",
+            "System",
+            "BuyTime",
+            "Version",
+            "Remark",
+          ];
+          const list = this.lawCameraList;
+          const data = formatJson(filterVal, list);
           excel.export_json_to_excel({
             header: tHeader,
             data,
-            filename: '执法仪列表',
+            filename: "执法仪列表",
             autoWidth: true, // Optional
-            bookType: 'xlsx' // Optional
-          })
-          this.downloadLoading = false
-        })
-      })
-    }
-  }
-}
+            bookType: "xlsx", // Optional
+          });
+          this.downloadLoading = false;
+        });
+      });
+    },
+  },
+};
 </script>
+
+<style scoped>
+.column-settings-trigger {
+  text-align: right;
+}
+
+.column-settings {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.column-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e4e7ed;
+  font-weight: bold;
+}
+
+.column-item {
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.column-item:last-child {
+  border-bottom: none;
+}
+
+.column-item .el-checkbox {
+  width: 100%;
+}
+</style>

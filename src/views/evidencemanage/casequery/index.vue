@@ -9,7 +9,7 @@
               v-model="queryParams.caseCode"
               placeholder="请输入案件编号"
               clearable
-              style="width: 170px;"
+              style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
@@ -18,12 +18,18 @@
               v-model="queryParams.caseName"
               placeholder="请输入案件名称"
               clearable
-              style="width: 170px;"
+              style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
           <el-form-item label="案件类型" prop="caseType">
-            <el-select v-model="queryParams.caseType" placeholder="案件类型" clearable style="width: 170px;" @change="handleQueryCaseTypeChange">
+            <el-select
+              v-model="queryParams.caseType"
+              placeholder="案件类型"
+              clearable
+              style="width: 170px"
+              @change="handleQueryCaseTypeChange"
+            >
               <el-option
                 v-for="dict in caseTypeOptions"
                 :key="dict.value"
@@ -37,12 +43,17 @@
               v-model="queryParams.caseOrgId"
               :options="orgOptions"
               placeholder="请选择办案单位"
-              style="width: 170px;"
+              style="width: 170px"
               clearable
             />
           </el-form-item>
           <el-form-item label="案件流程" prop="caseFlow">
-            <el-select v-model="queryParams.caseFlow" placeholder="案件流程" clearable style="width: 170px;">
+            <el-select
+              v-model="queryParams.caseFlow"
+              placeholder="案件流程"
+              clearable
+              style="width: 170px"
+            >
               <el-option
                 v-for="dict in caseFlowOptions"
                 :key="dict.value"
@@ -59,35 +70,78 @@
               start-placeholder="开始时间"
               end-placeholder="结束时间"
               value-format="yyyy-MM-ddTHH:mm:ssZ"
-              style="width: 340px;"
+              style="width: 340px"
             />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+            <el-button
+              type="primary"
+              icon="el-icon-search"
+              size="mini"
+              @click="handleQuery"
+              >搜索</el-button
+            >
+            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
+              >重置</el-button
+            >
           </el-form-item>
         </el-form>
 
         <!-- 操作按钮 -->
-        <el-row :gutter="10" class="mb8">
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['case:create']"
-              type="primary"
-              icon="el-icon-plus"
-              size="mini"
-              @click="handleAdd"
-            >新增</el-button>
+        <el-row :gutter="10" class="mb8" type="flex" justify="space-between">
+          <el-col :span="18">
+            <el-row :gutter="10">
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['case:create']"
+                  type="primary"
+                  icon="el-icon-plus"
+                  size="mini"
+                  @click="handleAdd"
+                  >新增</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['case:remove']"
+                  type="danger"
+                  icon="el-icon-delete"
+                  size="mini"
+                  :disabled="multiple"
+                  @click="handleDelete"
+                  >删除</el-button
+                >
+              </el-col>
+            </el-row>
           </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['case:remove']"
-              type="danger"
-              icon="el-icon-delete"
-              size="mini"
-              :disabled="multiple"
-              @click="handleDelete"
-            >删除</el-button>
+          <el-col :span="6" class="column-settings-trigger">
+            <el-popover placement="bottom-end" width="300" trigger="click">
+              <div class="column-settings">
+                <div class="column-settings-header">
+                  <span>列显示设置</span>
+                  <el-button type="text" size="mini" @click="resetColumns"
+                    >重置</el-button
+                  >
+                </div>
+                <el-checkbox-group
+                  v-model="visibleColumns"
+                  @change="handleColumnChange"
+                >
+                  <div
+                    v-for="col in columnOptions"
+                    :key="col.prop"
+                    class="column-item"
+                  >
+                    <el-checkbox :label="col.prop" :disabled="col.fixed">
+                      {{ col.label }}
+                    </el-checkbox>
+                  </div>
+                </el-checkbox-group>
+              </div>
+              <el-button slot="reference" size="mini" icon="el-icon-setting"
+                >列设置</el-button
+              >
+            </el-popover>
           </el-col>
         </el-row>
 
@@ -98,7 +152,13 @@
           @selection-change="handleSelectionChange"
         >
           <el-table-column type="selection" width="55" align="center" />
-          <el-table-column label="操作" align="center" width="200" class-name="small-padding fixed-width">
+          <el-table-column
+            label="操作"
+            align="center"
+            width="200"
+            class-name="small-padding fixed-width"
+            fixed="left"
+          >
             <template slot-scope="scope">
               <el-button
                 v-permisaction="['case:view']"
@@ -106,57 +166,126 @@
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row)"
-              >浏览</el-button>
+                >浏览</el-button
+              >
               <el-button
                 v-permisaction="['case:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
-              >修改</el-button>
+                >修改</el-button
+              >
               <el-button
                 v-permisaction="['case:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
                 @click="handleDelete(scope.row)"
-              >删除</el-button>
+                >删除</el-button
+              >
               <el-button
                 v-permisaction="['case:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleAnnotate(scope.row)"
-              >标注</el-button>
+                >标注</el-button
+              >
             </template>
           </el-table-column>
-          <el-table-column label="案件编号" align="center" prop="caseCode" width="150" />
-          <el-table-column label="案件名称" align="center" prop="caseName" width="200" :show-overflow-tooltip="true" />
-          <el-table-column label="案件类型" align="center" prop="caseType" width="120">
+          <el-table-column
+            v-if="isColumnVisible('caseCode')"
+            label="案件编号"
+            align="center"
+            prop="caseCode"
+            width="150"
+          />
+          <el-table-column
+            v-if="isColumnVisible('caseName')"
+            label="案件名称"
+            align="center"
+            prop="caseName"
+            width="200"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('caseType')"
+            label="案件类型"
+            align="center"
+            prop="caseType"
+            width="120"
+          >
             <template slot-scope="scope">
               {{ selectDictLabel(caseTypeOptions, scope.row.caseType) }}
             </template>
           </el-table-column>
-          <el-table-column label="案件流程" align="center" prop="caseFlow" width="120">
+          <el-table-column
+            v-if="isColumnVisible('caseFlow')"
+            label="案件流程"
+            align="center"
+            prop="caseFlow"
+            width="120"
+          >
             <template slot-scope="scope">
-              {{ getCaseFlowLabel(scope.row.caseFlow,scope.row.caseType) }}
+              {{ getCaseFlowLabel(scope.row.caseFlow, scope.row.caseType) }}
             </template>
           </el-table-column>
-          <el-table-column label="案发时间" align="center" prop="caseTime" width="160">
+          <el-table-column
+            v-if="isColumnVisible('caseTime')"
+            label="案发时间"
+            align="center"
+            prop="caseTime"
+            width="160"
+          >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.caseTime) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="案发地址" align="center" prop="caseAddress" width="200" :show-overflow-tooltip="true" />
-          <el-table-column label="办案单位" align="center" prop="caseOrgName" width="150" />
-          <el-table-column label="处警人员" align="center" prop="processPoliceNames" width="150" :show-overflow-tooltip="true" />
-          <el-table-column label="是否关联" align="center" prop="isRelation" width="100">
+          <el-table-column
+            v-if="isColumnVisible('caseAddress')"
+            label="案发地址"
+            align="center"
+            prop="caseAddress"
+            width="200"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('caseOrgName')"
+            label="办案单位"
+            align="center"
+            prop="caseOrgName"
+            width="150"
+          />
+          <el-table-column
+            v-if="isColumnVisible('processPoliceNames')"
+            label="处警人员"
+            align="center"
+            prop="processPoliceNames"
+            width="150"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('isRelation')"
+            label="是否关联"
+            align="center"
+            prop="isRelation"
+            width="100"
+          >
             <template slot-scope="scope">
-              <el-tag v-if="scope.row.isRelation === 1" type="success">已关联</el-tag>
+              <el-tag v-if="scope.row.isRelation === 1" type="success"
+                >已关联</el-tag
+              >
               <el-tag v-else type="info">未关联</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="创建时间" align="center" prop="createdAt" width="160">
+          <el-table-column
+            v-if="isColumnVisible('createdAt')"
+            label="创建时间"
+            align="center"
+            prop="createdAt"
+            width="160"
+          >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.createdAt) }}</span>
             </template>
@@ -165,7 +294,7 @@
 
         <!-- 分页 -->
         <pagination
-          v-show="total>0"
+          v-show="total > 0"
           :total="total"
           :page.sync="queryParams.pageIndex"
           :limit.sync="queryParams.pageSize"
@@ -174,17 +303,30 @@
       </el-card>
 
       <!-- 新增/修改对话框 -->
-      <el-dialog :title="title" :visible.sync="open" width="800px" append-to-body>
+      <el-dialog
+        :title="title"
+        :visible.sync="open"
+        width="800px"
+        append-to-body
+      >
         <el-form ref="form" :model="form" :rules="rules" label-width="140px">
           <el-row>
             <el-col :span="12">
               <el-form-item label="案件名称" prop="caseName">
-                <el-input v-model="form.caseName" placeholder="请输入案件名称" />
+                <el-input
+                  v-model="form.caseName"
+                  placeholder="请输入案件名称"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="案件类型" prop="caseType">
-                <el-select v-model="form.caseType" placeholder="请选择案件类型" style="width: 100%;" @change="handleCaseTypeChange">
+                <el-select
+                  v-model="form.caseType"
+                  placeholder="请选择案件类型"
+                  style="width: 100%"
+                  @change="handleCaseTypeChange"
+                >
                   <el-option
                     v-for="dict in caseTypeOptions"
                     :key="dict.value"
@@ -198,7 +340,11 @@
           <el-row>
             <el-col :span="12">
               <el-form-item label="案件流程" prop="caseFlow">
-                <el-select v-model="form.caseFlow" placeholder="请选择案件流程" style="width: 100%;">
+                <el-select
+                  v-model="form.caseFlow"
+                  placeholder="请选择案件流程"
+                  style="width: 100%"
+                >
                   <el-option
                     v-for="dict in formCaseFlowOptions"
                     :key="dict.value"
@@ -215,7 +361,7 @@
                   type="datetime"
                   placeholder="选择案发时间"
                   value-format="yyyy-MM-ddTHH:mm:ssZ"
-                  style="width: 100%;"
+                  style="width: 100%"
                 />
               </el-form-item>
             </el-col>
@@ -243,19 +389,28 @@
           <el-row>
             <el-col :span="12">
               <el-form-item label="接警编号" prop="receiptIncidentRecordNum">
-                <el-input v-model="form.receiptIncidentRecordNum" placeholder="请输入接警编号" />
+                <el-input
+                  v-model="form.receiptIncidentRecordNum"
+                  placeholder="请输入接警编号"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="处警编号" prop="disposalIncidentRecordNum">
-                <el-input v-model="form.disposalIncidentRecordNum" placeholder="请输入处警编号" />
+                <el-input
+                  v-model="form.disposalIncidentRecordNum"
+                  placeholder="请输入处警编号"
+                />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row>
             <el-col :span="24">
               <el-form-item label="案发地址" prop="caseAddress">
-                <el-input v-model="form.caseAddress" placeholder="请输入案发地址" />
+                <el-input
+                  v-model="form.caseAddress"
+                  placeholder="请输入案发地址"
+                />
               </el-form-item>
             </el-col>
           </el-row>
@@ -267,7 +422,7 @@
                   type="datetime"
                   placeholder="选择处警时间"
                   value-format="yyyy-MM-ddTHH:mm:ssZ"
-                  style="width: 100%;"
+                  style="width: 100%"
                 />
               </el-form-item>
             </el-col>
@@ -279,7 +434,7 @@
                   multiple
                   collapse-tags
                   collapse-tags-tooltip
-                  style="width: 100%;"
+                  style="width: 100%"
                 >
                   <el-option
                     v-for="item in formUserOptions"
@@ -294,14 +449,24 @@
           <el-row>
             <el-col :span="24">
               <el-form-item label="接警内容" prop="incidentRecordContext">
-                <el-input v-model="form.incidentRecordContext" type="textarea" :rows="3" placeholder="请输入接警内容" />
+                <el-input
+                  v-model="form.incidentRecordContext"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="请输入接警内容"
+                />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row>
             <el-col :span="24">
               <el-form-item label="处警过程描述" prop="procResult">
-                <el-input v-model="form.procResult" type="textarea" :rows="3" placeholder="请输入处警过程描述" />
+                <el-input
+                  v-model="form.procResult"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="请输入处警过程描述"
+                />
               </el-form-item>
             </el-col>
           </el-row>
@@ -313,10 +478,24 @@
       </el-dialog>
 
       <!-- 案件标注对话框 -->
-      <el-dialog title="案件标注" :visible.sync="annotateOpen" width="500px" append-to-body>
-        <el-form ref="annotateForm" :model="annotateForm" :rules="annotateRules" label-width="100px">
+      <el-dialog
+        title="案件标注"
+        :visible.sync="annotateOpen"
+        width="500px"
+        append-to-body
+      >
+        <el-form
+          ref="annotateForm"
+          :model="annotateForm"
+          :rules="annotateRules"
+          label-width="100px"
+        >
           <el-form-item label="案件流程" prop="caseFlow">
-            <el-select v-model="annotateForm.caseFlow" placeholder="请选择案件流程" style="width: 100%;">
+            <el-select
+              v-model="annotateForm.caseFlow"
+              placeholder="请选择案件流程"
+              style="width: 100%"
+            >
               <el-option
                 v-for="dict in annotateCaseFlowOptions"
                 :key="dict.value"
@@ -333,27 +512,64 @@
       </el-dialog>
 
       <!-- 详情对话框 -->
-      <el-dialog title="案件详情" :visible.sync="viewOpen" width="800px" append-to-body>
+      <el-dialog
+        title="案件详情"
+        :visible.sync="viewOpen"
+        width="800px"
+        append-to-body
+      >
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="案件编号">{{ viewData.caseCode }}</el-descriptions-item>
-          <el-descriptions-item label="案件名称">{{ viewData.caseName }}</el-descriptions-item>
-          <el-descriptions-item label="案件类型">{{ selectDictLabel(caseTypeOptions, viewData.caseType) }}</el-descriptions-item>
-          <el-descriptions-item label="案件流程">{{ getCaseFlowLabel(viewData.caseFlow, viewData.caseType) }}</el-descriptions-item>
-          <el-descriptions-item label="案发时间">{{ parseTime(viewData.caseTime) }}</el-descriptions-item>
-          <el-descriptions-item label="案发地址">{{ viewData.caseAddress }}</el-descriptions-item>
-          <el-descriptions-item label="办案单位">{{ viewData.caseOrgName }}</el-descriptions-item>
-          <el-descriptions-item label="处警单位">{{ viewData.procOrgName }}</el-descriptions-item>
-          <el-descriptions-item label="处警时间">{{ parseTime(viewData.procTime) }}</el-descriptions-item>
-          <el-descriptions-item label="处警人员">{{ viewData.processPoliceNames }}</el-descriptions-item>
-          <el-descriptions-item label="接警编号">{{ viewData.receiptIncidentRecordNum }}</el-descriptions-item>
-          <el-descriptions-item label="处警编号">{{ viewData.disposalIncidentRecordNum }}</el-descriptions-item>
-          <el-descriptions-item label="接警内容" :span="2">{{ viewData.incidentRecordContext }}</el-descriptions-item>
-          <el-descriptions-item label="处警过程描述" :span="2">{{ viewData.procResult }}</el-descriptions-item>
+          <el-descriptions-item label="案件编号">{{
+            viewData.caseCode
+          }}</el-descriptions-item>
+          <el-descriptions-item label="案件名称">{{
+            viewData.caseName
+          }}</el-descriptions-item>
+          <el-descriptions-item label="案件类型">{{
+            selectDictLabel(caseTypeOptions, viewData.caseType)
+          }}</el-descriptions-item>
+          <el-descriptions-item label="案件流程">{{
+            getCaseFlowLabel(viewData.caseFlow, viewData.caseType)
+          }}</el-descriptions-item>
+          <el-descriptions-item label="案发时间">{{
+            parseTime(viewData.caseTime)
+          }}</el-descriptions-item>
+          <el-descriptions-item label="案发地址">{{
+            viewData.caseAddress
+          }}</el-descriptions-item>
+          <el-descriptions-item label="办案单位">{{
+            viewData.caseOrgName
+          }}</el-descriptions-item>
+          <el-descriptions-item label="处警单位">{{
+            viewData.procOrgName
+          }}</el-descriptions-item>
+          <el-descriptions-item label="处警时间">{{
+            parseTime(viewData.procTime)
+          }}</el-descriptions-item>
+          <el-descriptions-item label="处警人员">{{
+            viewData.processPoliceNames
+          }}</el-descriptions-item>
+          <el-descriptions-item label="接警编号">{{
+            viewData.receiptIncidentRecordNum
+          }}</el-descriptions-item>
+          <el-descriptions-item label="处警编号">{{
+            viewData.disposalIncidentRecordNum
+          }}</el-descriptions-item>
+          <el-descriptions-item label="接警内容" :span="2">{{
+            viewData.incidentRecordContext
+          }}</el-descriptions-item>
+          <el-descriptions-item label="处警过程描述" :span="2">{{
+            viewData.procResult
+          }}</el-descriptions-item>
           <el-descriptions-item label="是否关联">
-            <el-tag v-if="viewData.isRelation === 1" type="success">已关联</el-tag>
+            <el-tag v-if="viewData.isRelation === 1" type="success"
+              >已关联</el-tag
+            >
             <el-tag v-else type="info">未关联</el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ parseTime(viewData.createdAt) }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{
+            parseTime(viewData.createdAt)
+          }}</el-descriptions-item>
         </el-descriptions>
         <div slot="footer" class="dialog-footer">
           <el-button @click="viewOpen = false">关 闭</el-button>
@@ -364,20 +580,28 @@
 </template>
 
 <script>
-import { listCases, getCase, addCase, updateCase, delCase, batchDelCases, updateCaseFlow } from '@/api/evidence/case_api'
-import { orgTreeselect } from '@/api/admin/sys-organization'
-import { listUser } from '@/api/admin/sys-user'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import BasicLayout from '@/layout/BasicLayout'
-import Pagination from '@/components/Pagination'
+import {
+  listCases,
+  getCase,
+  addCase,
+  updateCase,
+  delCase,
+  batchDelCases,
+  updateCaseFlow,
+} from "@/api/evidence/case_api";
+import { orgTreeselect } from "@/api/admin/sys-organization";
+import { listUser } from "@/api/admin/sys-user";
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import BasicLayout from "@/layout/BasicLayout";
+import Pagination from "@/components/Pagination";
 
 export default {
-  name: 'CaseManage',
+  name: "CaseManage",
   components: {
     BasicLayout,
     Treeselect,
-    Pagination
+    Pagination,
   },
   data() {
     return {
@@ -394,7 +618,7 @@ export default {
       // 案件表格数据
       caseList: [],
       // 弹出层标题
-      title: '',
+      title: "",
       // 是否显示弹出层
       open: false,
       // 是否显示标注对话框
@@ -430,7 +654,7 @@ export default {
         caseOrgId: undefined,
         caseFlow: undefined,
         caseTimeStart: undefined,
-        caseTimeEnd: undefined
+        caseTimeEnd: undefined,
       },
       // 表单参数
       form: {},
@@ -441,281 +665,339 @@ export default {
       // 表单校验
       rules: {
         caseName: [
-          { required: true, message: '案件名称不能为空', trigger: 'blur' }
+          { required: true, message: "案件名称不能为空", trigger: "blur" },
         ],
         caseType: [
-          { required: true, message: '案件类型不能为空', trigger: 'change' }
+          { required: true, message: "案件类型不能为空", trigger: "change" },
         ],
         caseOrgId: [
-          { required: true, message: '办案单位不能为空', trigger: 'change' }
-        ]
+          { required: true, message: "办案单位不能为空", trigger: "change" },
+        ],
       },
       // 标注表单校验
       annotateRules: {
         caseFlow: [
-          { required: true, message: '案件流程不能为空', trigger: 'change' }
-        ]
-      }
-    }
+          { required: true, message: "案件流程不能为空", trigger: "change" },
+        ],
+      },
+      // 列配置选项
+      columnOptions: [
+        { prop: "caseCode", label: "案件编号", fixed: true },
+        { prop: "caseName", label: "案件名称", fixed: false },
+        { prop: "caseType", label: "案件类型", fixed: false },
+        { prop: "caseFlow", label: "案件流程", fixed: false },
+        { prop: "caseTime", label: "案发时间", fixed: false },
+        { prop: "caseAddress", label: "案发地址", fixed: false },
+        { prop: "caseOrgName", label: "办案单位", fixed: false },
+        { prop: "processPoliceNames", label: "处警人员", fixed: false },
+        { prop: "isRelation", label: "是否关联", fixed: false },
+        { prop: "createdAt", label: "创建时间", fixed: false },
+      ],
+      // 可见列
+      visibleColumns: [],
+    };
   },
   watch: {
-    'form.procOrgId': function(newVal) {
+    "form.procOrgId": function (newVal) {
       // 当处警单位更新时，加载该单位的用户
       if (newVal) {
-        if (this.firstLoad !== true) { // 首次打开对话框，不需要清空处警人员
-          this.form.processPoliceIds = []
+        if (this.firstLoad !== true) {
+          // 首次打开对话框，不需要清空处警人员
+          this.form.processPoliceIds = [];
         }
-        this.firstLoad = false
-        this.getFormUser()
+        this.firstLoad = false;
+        this.getFormUser();
       }
-    }
+    },
   },
   created() {
-    this.getList()
-    this.getOrgTree()
-    this.getUserList()
-    this.getDicts('case_type').then(response => {
-      this.caseTypeOptions = response.data
-    })
-    this.getDicts('admin_case_process').then(response => {
-      this.adminCaseProcessOptions = response.data
-    })
-    this.getDicts('criminal_case_process').then(response => {
-      this.criminalCaseProcessOptions = response.data
-    })
+    this.initVisibleColumns();
+    this.getList();
+    this.getOrgTree();
+    this.getUserList();
+    this.getDicts("case_type").then((response) => {
+      this.caseTypeOptions = response.data;
+    });
+    this.getDicts("admin_case_process").then((response) => {
+      this.adminCaseProcessOptions = response.data;
+    });
+    this.getDicts("criminal_case_process").then((response) => {
+      this.criminalCaseProcessOptions = response.data;
+    });
   },
   methods: {
     /** 查询案件列表 */
     getList() {
-      this.loading = true
+      this.loading = true;
       // 处理时间范围
       if (this.caseTimeRange && this.caseTimeRange.length === 2) {
-        this.queryParams.caseTimeStart = this.caseTimeRange[0]
-        this.queryParams.caseTimeEnd = this.caseTimeRange[1]
+        this.queryParams.caseTimeStart = this.caseTimeRange[0];
+        this.queryParams.caseTimeEnd = this.caseTimeRange[1];
       } else {
-        this.queryParams.caseTimeStart = undefined
-        this.queryParams.caseTimeEnd = undefined
+        this.queryParams.caseTimeStart = undefined;
+        this.queryParams.caseTimeEnd = undefined;
       }
 
-      listCases(this.queryParams).then(response => {
-        this.caseList = response.data.list || []
-        this.total = response.data.count || 0
-        this.loading = false
-      })
+      listCases(this.queryParams).then((response) => {
+        this.caseList = response.data.list || [];
+        this.total = response.data.count || 0;
+        this.loading = false;
+      });
     },
     /** 获取组织树 */
     getOrgTree() {
-      orgTreeselect().then(response => {
-        this.orgOptions = response.data
-      })
+      orgTreeselect().then((response) => {
+        this.orgOptions = response.data;
+      });
     },
     /** 获取用户列表 */
     getUserList() {
-      listUser({ pageIndex: 1, pageSize: 1000 }).then(response => {
-        this.userOptions = response.data.list || []
-      })
+      listUser({ pageIndex: 1, pageSize: 1000 }).then((response) => {
+        this.userOptions = response.data.list || [];
+      });
     },
     /** 获取表单中处警单位的用户列表 */
     getFormUser() {
       return new Promise((resolve, reject) => {
-        listUser({ orgId: '/' + this.form.procOrgId + '/' }).then(response => {
-          this.formUserOptions = response.data.list || []
-          resolve('true')
-        }).catch(error => {
-          console.error('获取用户失败:', error)
-          this.formUserOptions = []
-          reject(error)
-        })
-      })
+        listUser({ orgId: "/" + this.form.procOrgId + "/" })
+          .then((response) => {
+            this.formUserOptions = response.data.list || [];
+            resolve("true");
+          })
+          .catch((error) => {
+            console.error("获取用户失败:", error);
+            this.formUserOptions = [];
+            reject(error);
+          });
+      });
     },
 
     /** 获取案件流程标签 - 用于详情显示 */
     getCaseFlowLabel(value, caseType) {
       // 根据案件类型确定字典类型
       if (this.caseTypeOptions && this.caseTypeOptions.length > 0) {
-        const caseTypeDict = this.caseTypeOptions.find(item => item.value === caseType || item.value === String(caseType))
+        const caseTypeDict = this.caseTypeOptions.find(
+          (item) => item.value === caseType || item.value === String(caseType)
+        );
         if (caseTypeDict) {
-          if (caseTypeDict.label.includes('行政')) {
-            return this.selectDictLabel(this.adminCaseProcessOptions, value)
-          } else if (caseTypeDict.label.includes('刑事')) {
-            return this.selectDictLabel(this.criminalCaseProcessOptions, value)
+          if (caseTypeDict.label.includes("行政")) {
+            return this.selectDictLabel(this.adminCaseProcessOptions, value);
+          } else if (caseTypeDict.label.includes("刑事")) {
+            return this.selectDictLabel(this.criminalCaseProcessOptions, value);
           }
         }
-      }  
-      return value    
+      }
+      return value;
     },
     /** 查询表单案件类型变更时，加载对应的流程字典 */
     handleQueryCaseTypeChange(value) {
       // 清空案件流程
-      this.queryParams.caseFlow = undefined
+      this.queryParams.caseFlow = undefined;
       // 根据案件类型加载对应的流程字典
-      this.loadCaseFlowDict(value, 'query')
+      this.loadCaseFlowDict(value, "query");
     },
     /** 添加/修改表单案件类型变更时，加载对应的流程字典 */
     handleCaseTypeChange(value) {
       // 清空案件流程
-      this.form.caseFlow = undefined
+      this.form.caseFlow = undefined;
       // 根据案件类型加载对应的流程字典
-      this.loadCaseFlowDict(value, 'form')
+      this.loadCaseFlowDict(value, "form");
     },
     /** 加载案件流程字典 */
     loadCaseFlowDict(caseTypeValue, target) {
       // 根据案件类型加载对应的流程字典
       // 行政案件 -> admin_case_process
       // 刑事案件 -> criminal_case_process
-      let dictType = ''
-      const caseTypeDict = this.caseTypeOptions.find(item => item.value === caseTypeValue || item.value === String(caseTypeValue))
+      let dictType = "";
+      const caseTypeDict = this.caseTypeOptions.find(
+        (item) =>
+          item.value === caseTypeValue || item.value === String(caseTypeValue)
+      );
       if (caseTypeDict) {
-        if (caseTypeDict.label.includes('行政')) {
-          if (target === 'query') {
-            this.caseFlowOptions = this.adminCaseProcessOptions
-          } else if (target === 'form') {
-            this.formCaseFlowOptions = this.adminCaseProcessOptions
-          } else if (target === 'annotate') {
-            this.annotateCaseFlowOptions = this.adminCaseProcessOptions
+        if (caseTypeDict.label.includes("行政")) {
+          if (target === "query") {
+            this.caseFlowOptions = this.adminCaseProcessOptions;
+          } else if (target === "form") {
+            this.formCaseFlowOptions = this.adminCaseProcessOptions;
+          } else if (target === "annotate") {
+            this.annotateCaseFlowOptions = this.adminCaseProcessOptions;
           }
-        } else if (caseTypeDict.label.includes('刑事')) {
-          if (target === 'query') {
-            this.caseFlowOptions = this.criminalCaseProcessOptions
-          } else if (target === 'form') {
-            this.formCaseFlowOptions = this.criminalCaseProcessOptions
-          } else if (target === 'annotate') {
-            this.annotateCaseFlowOptions = this.criminalCaseProcessOptions
+        } else if (caseTypeDict.label.includes("刑事")) {
+          if (target === "query") {
+            this.caseFlowOptions = this.criminalCaseProcessOptions;
+          } else if (target === "form") {
+            this.formCaseFlowOptions = this.criminalCaseProcessOptions;
+          } else if (target === "annotate") {
+            this.annotateCaseFlowOptions = this.criminalCaseProcessOptions;
           }
         }
       }
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageIndex = 1
-      this.getList()
+      this.queryParams.pageIndex = 1;
+      this.getList();
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.caseTimeRange = []
-      this.resetForm('queryForm')
-      this.handleQuery()
+      this.caseTimeRange = [];
+      this.resetForm("queryForm");
+      this.handleQuery();
     },
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.id)
-      this.single = selection.length !== 1
-      this.multiple = !selection.length
+      this.ids = selection.map((item) => item.id);
+      this.single = selection.length !== 1;
+      this.multiple = !selection.length;
     },
     /** 新增按钮操作 */
     handleAdd() {
-      this.reset()
-      this.firstLoad = true
-      this.formUserOptions = []
-      this.formCaseFlowOptions = []
-      this.open = true
-      this.title = '添加案件'
+      this.reset();
+      this.firstLoad = true;
+      this.formUserOptions = [];
+      this.formCaseFlowOptions = [];
+      this.open = true;
+      this.title = "添加案件";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset()
-      this.firstLoad = true
-      const id = row.id || this.ids[0]
-      getCase(id).then(response => {
-        this.form = response.data
-        this.open = true
-        this.title = '修改案件'
+      this.reset();
+      this.firstLoad = true;
+      const id = row.id || this.ids[0];
+      getCase(id).then((response) => {
+        this.form = response.data;
+        this.open = true;
+        this.title = "修改案件";
         // 加载对应的流程字典
         if (this.form.caseType) {
-          this.loadCaseFlowDict(this.form.caseType, 'form')
+          this.loadCaseFlowDict(this.form.caseType, "form");
         }
         // 加载对应的用户列表
         if (this.form.procOrgId) {
-          this.getFormUser()
+          this.getFormUser();
         }
-      })
+      });
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      const id = row.id
-      getCase(id).then(response => {
-        this.viewData = response.data
-        this.viewOpen = true
-      })
+      const id = row.id;
+      getCase(id).then((response) => {
+        this.viewData = response.data;
+        this.viewOpen = true;
+      });
     },
     /** 标注按钮操作 */
     handleAnnotate(row) {
       this.annotateForm = {
         id: row.id,
         caseType: row.caseType,
-        caseFlow: row.caseFlow
-      }
+        caseFlow: row.caseFlow,
+      };
       // 加载对应的流程字典
       if (row.caseType) {
-        this.loadCaseFlowDict(row.caseType, 'annotate')
+        this.loadCaseFlowDict(row.caseType, "annotate");
       }
-      this.annotateOpen = true
+      this.annotateOpen = true;
     },
     /** 提交标注 */
     submitAnnotate() {
-      this.$refs['annotateForm'].validate(valid => {
+      this.$refs["annotateForm"].validate((valid) => {
         if (valid) {
-          updateCaseFlow(this.annotateForm.id, { caseFlow: this.annotateForm.caseFlow }).then(response => {
+          updateCaseFlow(this.annotateForm.id, {
+            caseFlow: this.annotateForm.caseFlow,
+          }).then((response) => {
             if (response.code === 200) {
-              this.msgSuccess('标注成功')
-              this.annotateOpen = false
-              this.getList()
+              this.msgSuccess("标注成功");
+              this.annotateOpen = false;
+              this.getList();
             }
-          })
+          });
         }
-      })
+      });
     },
     /** 取消标注 */
     cancelAnnotate() {
-      this.annotateOpen = false
-      this.annotateForm = {}
+      this.annotateOpen = false;
+      this.annotateForm = {};
+    },
+    /** 初始化可见列 */
+    initVisibleColumns() {
+      const saved = localStorage.getItem("case_query_visible_columns");
+      if (saved) {
+        try {
+          this.visibleColumns = JSON.parse(saved);
+        } catch (error) {
+          this.visibleColumns = this.columnOptions.map((item) => item.prop);
+        }
+      } else {
+        this.visibleColumns = this.columnOptions.map((item) => item.prop);
+      }
+    },
+    /** 判断列是否显示 */
+    isColumnVisible(prop) {
+      return this.visibleColumns.includes(prop);
+    },
+    /** 列显示变更 */
+    handleColumnChange(value) {
+      localStorage.setItem("case_query_visible_columns", JSON.stringify(value));
+    },
+    /** 重置列配置 */
+    resetColumns() {
+      this.visibleColumns = this.columnOptions.map((item) => item.prop);
+      localStorage.setItem(
+        "case_query_visible_columns",
+        JSON.stringify(this.visibleColumns)
+      );
+      this.$message.success("已重置为默认显示");
     },
     /** 提交按钮 */
     submitForm() {
-      this.$refs['form'].validate(valid => {
+      this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id != null) {
-            updateCase(this.form, this.form.id).then(response => {
+            updateCase(this.form, this.form.id).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess('修改成功')
-                this.open = false
-                this.getList()
+                this.msgSuccess("修改成功");
+                this.open = false;
+                this.getList();
               }
-            })
+            });
           } else {
-            addCase(this.form).then(response => {
+            addCase(this.form).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess('新增成功')
-                this.open = false
-                this.getList()
+                this.msgSuccess("新增成功");
+                this.open = false;
+                this.getList();
               }
-            })
+            });
           }
         }
-      })
+      });
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const ids = row.id ? [row.id] : this.ids
-      this.$confirm('是否确认删除选中的案件?', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        if (ids.length === 1) {
-          return delCase(ids[0])
-        } else {
-          return batchDelCases({ ids: ids })
-        }
-      }).then(() => {
-        this.getList()
-        this.msgSuccess('删除成功')
+      const ids = row.id ? [row.id] : this.ids;
+      this.$confirm("是否确认删除选中的案件?", "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
       })
+        .then(() => {
+          if (ids.length === 1) {
+            return delCase(ids[0]);
+          } else {
+            return batchDelCases({ ids: ids });
+          }
+        })
+        .then(() => {
+          this.getList();
+          this.msgSuccess("删除成功");
+        });
     },
     /** 取消按钮 */
     cancel() {
-      this.open = false
-      this.reset()
+      this.open = false;
+      this.reset();
     },
     /** 表单重置 */
     reset() {
@@ -733,17 +1015,49 @@ export default {
         procTime: undefined,
         processPoliceIds: [],
         incidentRecordContext: undefined,
-        procResult: undefined
-      }
-      this.resetForm('form')
-    }
-  }
-}
+        procResult: undefined,
+      };
+      this.resetForm("form");
+    },
+  },
+};
 </script>
 
 <style scoped>
 .mb8 {
   margin-bottom: 8px;
+}
+
+.column-settings-trigger {
+  text-align: right;
+}
+
+.column-settings {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.column-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #e4e7ed;
+  font-weight: bold;
+}
+
+.column-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.column-item:last-child {
+  border-bottom: none;
+}
+
+.column-item .el-checkbox {
+  width: 100%;
 }
 </style>
 
