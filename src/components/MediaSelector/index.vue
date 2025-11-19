@@ -922,10 +922,28 @@ export default {
       this.loading = true;
       // 如果提供了自定义API函数,使用自定义API,否则使用默认的listMedia
       const apiFunc = this.customListApi || listMedia;
+
       apiFunc(this.queryParams)
         .then((response) => {
-          this.mediaList = response.data.list || response.data;
-          this.total = response.data.total || response.data.length;
+          // 兼容不同的数据结构
+          if (Array.isArray(response.data)) {
+            // 情况1: response.data 直接是数组 (旧版API)
+            this.mediaList = response.data;
+            this.total = response.data.length;
+          } else if (response.data.list) {
+            // 情况2: response.data.list 是数组 (标准格式)
+            this.mediaList = response.data.list;
+            // 优先使用 count,其次 total,最后使用 list.length
+            this.total =
+              response.data.count ||
+              response.data.total ||
+              response.data.list.length;
+          } else {
+            // 情况3: 其他情况
+            this.mediaList = [];
+            this.total = 0;
+          }
+
           this.loading = false;
         })
         .catch(() => {

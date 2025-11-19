@@ -95,6 +95,14 @@ export function getIncidentRecordMediaRelationsByIncidentRecord(incidentRecordId
 }
 
 // 查询警情媒体关联关系列表
+export function getIncidentRecordUnassociatedMediaByIncidentRecord(incidentRecordId) {
+  return request({
+    url: '/api/v1/incidentrecord-media-relations/unassociated-media/' + incidentRecordId,
+    method: 'get'
+  })
+}
+
+// 查询警情媒体关联关系列表
 export function getIncidentRecordMediaRelationsByMedia(mediaId) {
   return request({
     url: '/api/v1/incidentrecord-media-relations/incidentrecord-relations/' + mediaId,

@@ -220,6 +220,7 @@
           :currentCase="currentCase"
           @confirm="confirmLinkMedia"
           @cancel="cancelLinkMedia"
+          @close="cancelLinkMedia"
         />
 
         <!-- 导入证据对话框 -->
@@ -1249,7 +1250,7 @@ export default {
       // 自动选中该行
       this.$refs.caseTable.clearSelection();
       this.$refs.caseTable.toggleRowSelection(row, true);
-      this.$refs.mediaSelector.refresh();
+      // 不需要手动调用 refresh(),对话框打开时会自动刷新
       this.linkMediaOpen = true;
     },
 

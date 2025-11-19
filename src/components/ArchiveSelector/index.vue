@@ -435,7 +435,8 @@ export default {
         .then((response) => {
           if (response.code === 200) {
             this.archiveList = response.data.list || [];
-            this.total = response.data.total || 0;
+            // 修复：后端返回的是 count 字段，不是 total
+            this.total = response.data.count || 0;
           }
           this.loading = false;
         })

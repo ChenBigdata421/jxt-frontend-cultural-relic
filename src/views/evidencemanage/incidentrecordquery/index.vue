@@ -729,14 +729,12 @@ import {
 import { formatJson } from "@/utils";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
-import MediaSelectorDialog from "@/components/MediaSelectorDialog";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
   name: "LawCarema",
   components: {
-    MediaSelectorDialog,
     Treeselect,
   },
   data() {
