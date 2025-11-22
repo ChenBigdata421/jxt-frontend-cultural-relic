@@ -29,6 +29,7 @@
 import MediaSelector from "@/components/MediaSelector";
 import { getUnassociatedMediaList } from "@/api/evidence/case_media_relation_api";
 import { getIncidentRecordUnassociatedMediaByIncidentRecord } from "@/api/evidence/evidence_manage_query_api";
+import { getUnassociatedMediaByWritId } from "@/api/evidence/writ_media_relation_api";
 
 export default {
   name: "MediaSelectorDialog",
@@ -71,6 +72,11 @@ export default {
       type: Object,
       default: null,
     },
+    // 当前文书（用于过滤已关联的媒体）
+    currentWrit: {
+      type: Object,
+      default: null,
+    },
   },
   data() {
     return {
@@ -102,6 +108,12 @@ export default {
             this.currentIncidentRecord.id,
             queryParams
           );
+        };
+      }
+      // 如果有当前文书,使用未关联媒体API
+      if (this.currentWrit && this.currentWrit.id) {
+        return (queryParams) => {
+          return getUnassociatedMediaByWritId(this.currentWrit.id, queryParams);
         };
       }
       // 否则返回null,使用默认API

@@ -411,8 +411,8 @@
         </template>
       </el-table-column>
       <el-table-column
-        v-if="isColumnVisible('archiveId')"
-        prop="archiveId"
+        v-if="isColumnVisible('archiveCode')"
+        prop="archiveCode"
         label="档案编号"
         width="140"
       />
@@ -810,7 +810,7 @@ export default {
         },
         { prop: "isLocked", label: "是否锁定", defaultVisible: false },
         { prop: "expiryTime", label: "过期时间", defaultVisible: false },
-        { prop: "archiveId", label: "档案编号", defaultVisible: false },
+        { prop: "archiveCode", label: "档案编号", defaultVisible: false },
         { prop: "isArchive", label: "是否归档", defaultVisible: false },
         { prop: "archiveDate", label: "归档时间", defaultVisible: false },
         { prop: "fileIdentity", label: "文件标识", defaultVisible: false },
