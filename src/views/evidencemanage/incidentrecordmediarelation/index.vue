@@ -148,6 +148,31 @@
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为"v-bind"或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column type="selection" width="60" align="center" />
+          <el-table-column
+            label="操作"
+            align="left"
+            class-name="small-padding fixed-width"
+            width="150"
+          >
+            <template slot-scope="scope">
+              <el-button
+                v-permisaction="['incidentrecord:lawcamera:browse']"
+                size="mini"
+                type="text"
+                icon="el-icon-view"
+                @click="handleView(scope.row)"
+                >浏览</el-button
+              >
+              <el-button
+                v-permisaction="['incidentrecord:lawcamera:link']"
+                size="mini"
+                type="text"
+                icon="el-icon-link"
+                @click="handleLinkMedia(scope.row)"
+                >已关联媒体</el-button
+              >
+            </template>
+          </el-table-column>
           <el-table-column prop="code" label="警情号" width="80" />
           <el-table-column prop="name" label="报警人姓名" width="100" />
           <el-table-column prop="title" label="警情标题" width="80" />
@@ -183,31 +208,6 @@
               }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column
-            label="操作"
-            align="left"
-            class-name="small-padding fixed-width"
-            width="300"
-          >
-            <template slot-scope="scope">
-              <el-button
-                v-permisaction="['incidentrecord:lawcamera:browse']"
-                size="mini"
-                type="text"
-                icon="el-icon-view"
-                @click="handleView(scope.row)"
-                >浏览</el-button
-              >
-              <el-button
-                v-permisaction="['incidentrecord:lawcamera:link']"
-                size="mini"
-                type="text"
-                icon="el-icon-link"
-                @click="handleLinkMedia(scope.row)"
-                >关联媒体</el-button
-              >
-            </template>
-          </el-table-column>
         </el-table>
         <pagination
           v-show="total > 0"
@@ -216,20 +216,40 @@
           :limit.sync="queryParams.pageSize"
           @pagination="getList"
         />
+      </el-card>
 
-        <!-- 警情媒体关联列表 -->
-        <div v-if="currentSelectedIncident" class="media-relations-section">
-          <el-divider content-position="left">
-            <span style="font-weight: bold; color: #409eff">
-              警情媒体关联列表
-            </span>
-          </el-divider>
+      <!-- 第一层抽屉：已关联媒体列表 -->
+      <el-drawer
+        :title="`警情【${
+          currentIncidentRecord ? currentIncidentRecord.code : ''
+        }】的关联媒体`"
+        :visible.sync="showMediaDrawer"
+        direction="rtl"
+        size="60%"
+        :before-close="handleCloseMediaDrawer"
+        :append-to-body="true"
+        :destroy-on-close="false"
+        custom-class="media-drawer"
+      >
+        <!-- 关联媒体操作按钮 -->
+        <div class="drawer-content">
+          <el-row :gutter="10" class="mb8">
+            <el-col :span="1.5">
+              <el-button
+                type="primary"
+                icon="el-icon-plus"
+                size="mini"
+                @click="handleOpenMediaSelector"
+                >关联新媒体</el-button
+              >
+            </el-col>
+          </el-row>
 
+          <!-- 关联媒体列表 -->
           <el-table
             v-loading="mediaRelationsLoading"
             :data="mediaRelationsList"
             border
-            style="margin-top: 10px"
           >
             <el-table-column
               prop="incidentRecordCode"
@@ -250,7 +270,7 @@
             </el-table-column>
             <el-table-column
               prop="policeName"
-              label="警员"
+              label="关联人"
               width="120"
               align="center"
             />
@@ -279,258 +299,264 @@
             <el-empty description="暂无关联媒体" :image-size="100" />
           </div>
         </div>
-        <!-- 添加或修改警情对话框 -->
-        <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
+      </el-drawer>
+
+      <!-- 第二层抽屉：未关联媒体选择器 -->
+      <el-drawer
+        title="关联新媒体"
+        :visible.sync="mediaSelectorDrawerOpen"
+        direction="rtl"
+        size="70%"
+        :before-close="handleCloseSelectorDrawer"
+        :append-to-body="true"
+        :destroy-on-close="false"
+        custom-class="media-selector-drawer"
+      >
+        <div class="drawer-content">
+          <!-- 媒体选择器 -->
+          <MediaSelector
+            ref="mediaSelector"
+            :selection-mode="true"
+            :multiple="true"
+            :custom-list-api="getUnassociatedMediaListApi"
+            @select="handleMediaSelect"
+            @selection-change="handleMediaSelectionChange"
+          />
+        </div>
+
+        <!-- 底部操作按钮 -->
+        <div class="drawer-footer">
+          <el-button @click="handleCloseSelectorDrawer">取 消</el-button>
+          <el-button type="primary" @click="confirmLinkMedia">确 定</el-button>
+        </div>
+      </el-drawer>
+
+      <!-- 添加或修改警情对话框 -->
+      <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
-        <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
-        <el-dialog
-          :title="title"
-          :visible.sync="open"
-          width="750px"
-          :close-on-click-modal="false"
-        >
-          <div class="form-container">
-            <el-form
-              ref="form"
-              :model="form"
-              :rules="rules"
-              label-width="100px"
-            >
-              <!-- 基础信息 -->
-              <div class="form-section">
-                <div class="form-section-title">基础信息</div>
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="报警人姓名：" prop="name">
-                      <el-input
-                        v-model="form.name"
-                        placeholder="请输入报警人姓名"
+      <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
+      <el-dialog
+        :title="title"
+        :visible.sync="open"
+        width="750px"
+        :close-on-click-modal="false"
+      >
+        <div class="form-container">
+          <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+            <!-- 基础信息 -->
+            <div class="form-section">
+              <div class="form-section-title">基础信息</div>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="报警人姓名：" prop="name">
+                    <el-input
+                      v-model="form.name"
+                      placeholder="请输入报警人姓名"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="报警电话：" prop="tel">
+                    <el-input v-model="form.tel" placeholder="请输入报警电话" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="警情标题：" prop="title">
+                    <el-input
+                      v-model="form.title"
+                      placeholder="请输入警情标题"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="报警内容：" prop="context">
+                    <el-input
+                      v-model="form.context"
+                      type="textarea"
+                      :rows="2"
+                      placeholder="请输入报警内容"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="报警地址：" prop="address">
+                    <el-input
+                      v-model="form.address"
+                      placeholder="请输入报警地址"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="处警组织：" prop="orgId">
+                    <treeselect
+                      v-model="form.orgId"
+                      :options="orgOptions"
+                      placeholder="请选择处警组织"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="处警人员：">
+                    <el-select
+                      v-model="form.processPoliceIds"
+                      placeholder="请选择处警人员"
+                      multiple
+                      collapse-tags
+                      collapse-tags-tooltip
+                    >
+                      <el-option
+                        v-for="item in userOptions"
+                        :key="item.userId"
+                        :label="item.userName"
+                        :value="item.userId"
                       />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="报警电话：" prop="tel">
-                      <el-input
-                        v-model="form.tel"
-                        placeholder="请输入报警电话"
-                      />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row :gutter="20">
-                  <el-col :span="24">
-                    <el-form-item label="警情标题：" prop="title">
-                      <el-input
-                        v-model="form.title"
-                        placeholder="请输入警情标题"
-                      />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row :gutter="20">
-                  <el-col :span="24">
-                    <el-form-item label="报警内容：" prop="context">
-                      <el-input
-                        v-model="form.context"
-                        type="textarea"
-                        :rows="2"
-                        placeholder="请输入报警内容"
-                      />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row :gutter="20">
-                  <el-col :span="24">
-                    <el-form-item label="报警地址：" prop="address">
-                      <el-input
-                        v-model="form.address"
-                        placeholder="请输入报警地址"
-                      />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="处警组织：" prop="orgId">
-                      <treeselect
-                        v-model="form.orgId"
-                        :options="orgOptions"
-                        placeholder="请选择处警组织"
-                      />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="处警人员：">
-                      <el-select
-                        v-model="form.processPoliceIds"
-                        placeholder="请选择处警人员"
-                        multiple
-                        collapse-tags
-                        collapse-tags-tooltip
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </div>
+
+            <!-- 时间信息 -->
+            <div class="form-section">
+              <div class="form-section-title">时间信息</div>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="创建时间：">
+                    <el-date-picker
+                      v-model="form.createTime"
+                      type="datetime"
+                      placeholder="选择创建时间"
+                      value-format="yyyy-MM-ddTHH:mm:ssZ"
+                      class="full-width"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="报警时间：">
+                    <el-date-picker
+                      v-model="form.reportTime"
+                      type="datetime"
+                      placeholder="选择报警时间"
+                      value-format="yyyy-MM-ddTHH:mm:ssZ"
+                      class="full-width"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="接警时间：">
+                    <el-date-picker
+                      v-model="form.receiveTime"
+                      type="datetime"
+                      placeholder="选择接警时间"
+                      value-format="yyyy-MM-ddTHH:mm:ssZ"
+                      class="full-width"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="处警时间：">
+                    <el-date-picker
+                      v-model="form.processTime"
+                      type="datetime"
+                      placeholder="选择处警时间"
+                      value-format="yyyy-MM-ddTHH:mm:ssZ"
+                      class="full-width"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="结束时间：">
+                    <el-date-picker
+                      v-model="form.endTime"
+                      type="datetime"
+                      placeholder="选择结束时间"
+                      value-format="yyyy-MM-ddTHH:mm:ssZ"
+                      class="full-width"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </div>
+
+            <!-- 处警信息 -->
+            <div class="form-section">
+              <div class="form-section-title">处警信息</div>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="警情监督类型：" prop="superviseType">
+                    <el-select
+                      v-model="form.superviseType"
+                      placeholder="请选择"
+                      class="full-width"
+                    >
+                      <el-option label="类型一" value="1" />
+                      <el-option label="类型二" value="2" />
+                      <el-option label="类型三" value="3" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="处警结果：" prop="result">
+                    <el-input
+                      v-model="form.result"
+                      placeholder="请输入处警结果"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="状态：">
+                    <el-radio-group v-model="form.status">
+                      <el-radio
+                        v-for="dict in statusOptions"
+                        :key="parseInt(dict.value)"
+                        :label="parseInt(dict.value)"
+                        >{{ dict.label }}</el-radio
                       >
-                        <el-option
-                          v-for="item in userOptions"
-                          :key="item.userId"
-                          :label="item.userName"
-                          :value="item.userId"
-                        />
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-              </div>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </div>
+          </el-form>
+        </div>
 
-              <!-- 时间信息 -->
-              <div class="form-section">
-                <div class="form-section-title">时间信息</div>
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="创建时间：">
-                      <el-date-picker
-                        v-model="form.createTime"
-                        type="datetime"
-                        placeholder="选择创建时间"
-                        value-format="yyyy-MM-ddTHH:mm:ssZ"
-                        class="full-width"
-                      />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="报警时间：">
-                      <el-date-picker
-                        v-model="form.reportTime"
-                        type="datetime"
-                        placeholder="选择报警时间"
-                        value-format="yyyy-MM-ddTHH:mm:ssZ"
-                        class="full-width"
-                      />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="接警时间：">
-                      <el-date-picker
-                        v-model="form.receiveTime"
-                        type="datetime"
-                        placeholder="选择接警时间"
-                        value-format="yyyy-MM-ddTHH:mm:ssZ"
-                        class="full-width"
-                      />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="处警时间：">
-                      <el-date-picker
-                        v-model="form.processTime"
-                        type="datetime"
-                        placeholder="选择处警时间"
-                        value-format="yyyy-MM-ddTHH:mm:ssZ"
-                        class="full-width"
-                      />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="结束时间：">
-                      <el-date-picker
-                        v-model="form.endTime"
-                        type="datetime"
-                        placeholder="选择结束时间"
-                        value-format="yyyy-MM-ddTHH:mm:ssZ"
-                        class="full-width"
-                      />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-              </div>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="cancel">取 消</el-button>
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+        </div>
+      </el-dialog>
 
-              <!-- 处警信息 -->
-              <div class="form-section">
-                <div class="form-section-title">处警信息</div>
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="警情监督类型：" prop="superviseType">
-                      <el-select
-                        v-model="form.superviseType"
-                        placeholder="请选择"
-                        class="full-width"
-                      >
-                        <el-option label="类型一" value="1" />
-                        <el-option label="类型二" value="2" />
-                        <el-option label="类型三" value="3" />
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="处警结果：" prop="result">
-                      <el-input
-                        v-model="form.result"
-                        placeholder="请输入处警结果"
-                      />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row :gutter="20">
-                  <el-col :span="24">
-                    <el-form-item label="状态：">
-                      <el-radio-group v-model="form.status">
-                        <el-radio
-                          v-for="dict in statusOptions"
-                          :key="parseInt(dict.value)"
-                          :label="parseInt(dict.value)"
-                          >{{ dict.label }}</el-radio
-                        >
-                      </el-radio-group>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-              </div>
-            </el-form>
-          </div>
-
-          <div slot="footer" class="dialog-footer">
-            <el-button @click="cancel">取 消</el-button>
-            <el-button type="primary" @click="submitForm">确 定</el-button>
-          </div>
-        </el-dialog>
-
-        <!--显示详情-->
-        <el-dialog
-          :title="title"
-          :visible.sync="ViewOpen"
-          width="593px"
-          :close-on-click-modal="false"
-        >
-          <el-table v-loading="loading" :data="AttributeValueList" border>
-            <el-table-column
-              prop="AttributeName"
-              label="属性"
-              width="100"
-              align="center"
-            />
-            <el-table-column
-              prop="Value"
-              label="值"
-              width="450"
-              align="center"
-            />
-          </el-table>
-        </el-dialog>
-
-        <!--关联媒体对话框-->
-        <MediaSelectorDialog
-          ref="mediaSelector"
-          title="关联媒体"
-          :visible.sync="linkMediaOpen"
-          :multiple="true"
-          :currentIncidentRecord="currentIncidentRecord"
-          @confirm="confirmLinkMedia"
-          @cancel="cancelLinkMedia"
-          @close="cancelLinkMedia"
-        />
-      </el-card>
+      <!--显示详情-->
+      <el-dialog
+        :title="title"
+        :visible.sync="ViewOpen"
+        width="593px"
+        :close-on-click-modal="false"
+      >
+        <el-table v-loading="loading" :data="AttributeValueList" border>
+          <el-table-column
+            prop="AttributeName"
+            label="属性"
+            width="100"
+            align="center"
+          />
+          <el-table-column prop="Value" label="值" width="450" align="center" />
+        </el-table>
+      </el-dialog>
     </template>
   </BasicLayout>
 </template>
@@ -547,18 +573,19 @@ import {
   getIncidentRecordList,
   getEnforcementTypeTree,
   getIncidentRecordMediaRelationsByIncidentRecord,
+  getUnassociatedMediaByIncidentRecordId,
 } from "@/api/evidence/evidence_manage_query_api";
 import { formatJson } from "@/utils";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
-import MediaSelectorDialog from "@/components/MediaSelectorDialog";
+import MediaSelector from "@/components/MediaSelector";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
   name: "LawCarema",
   components: {
-    MediaSelectorDialog,
+    MediaSelector,
     Treeselect,
   },
   data() {
@@ -587,15 +614,17 @@ export default {
       // 是否显示增加警情对话框
       open: false,
       ViewOpen: false,
-      // 是否显示关联媒体对话框
-      linkMediaOpen: false,
+      // 是否显示第一层抽屉(已关联媒体)
+      showMediaDrawer: false,
+      // 是否显示第二层抽屉(未关联媒体选择器)
+      mediaSelectorDrawerOpen: false,
       // 当前选中的警情记录
       currentIncidentRecord: null,
       // 组织树选项
       orgOptions: undefined,
       userOptions: undefined,
-      // 选中的媒体数据
-      selectedMediaData: [],
+      // 选中的媒体列表
+      selectedMediaList: [],
       // 当前选中的警情记录（用于显示媒体关联列表）
       currentSelectedIncident: null,
       // 警情媒体关联列表
@@ -645,6 +674,22 @@ export default {
         no: [{ required: true, message: "编号不能为空", trigger: "blur" }],
       },
     };
+  },
+  computed: {
+    /** 获取未关联媒体列表API(用于媒体选择器) */
+    getUnassociatedMediaListApi() {
+      if (!this.currentIncidentRecord || !this.currentIncidentRecord.id) {
+        return (query) => {
+          return Promise.resolve({ data: { list: [], count: 0 } });
+        };
+      }
+      return (query) => {
+        return getUnassociatedMediaByIncidentRecordId(
+          this.currentIncidentRecord.id,
+          query
+        );
+      };
+    },
   },
   watch: {
     "form.orgId": function (newVal) {
@@ -918,54 +963,162 @@ export default {
       };
     },
 
-    /** 关联媒体按钮操作 */
+    /** 关联媒体按钮操作 - 打开第一层抽屉 */
     handleLinkMedia(row) {
       this.currentIncidentRecord = row;
-      // 自动选中该行
-      this.$refs.incidentTable.clearSelection();
-      this.$refs.incidentTable.toggleRowSelection(row, true);
-      // 不需要手动调用 refresh(),对话框打开时会自动刷新
-      this.linkMediaOpen = true;
+      this.showMediaDrawer = true;
+      this.loadMediaRelations(row.id);
     },
 
-    /** 取消关联媒体 */
-    cancelLinkMedia() {
-      this.linkMediaOpen = false;
+    /** 关闭第一层抽屉 */
+    handleCloseMediaDrawer(done) {
+      this.showMediaDrawer = false;
       this.currentIncidentRecord = null;
-      this.selectedMediaData = [];
+      this.mediaRelationsList = [];
+      if (done) {
+        done();
+      }
+    },
+
+    /** 打开第二层抽屉 - 关联新媒体 */
+    handleOpenMediaSelector() {
+      this.selectedMediaList = [];
+      this.mediaSelectorDrawerOpen = true;
+      // 等待抽屉打开后刷新媒体选择器
+      this.$nextTick(() => {
+        if (this.$refs.mediaSelector) {
+          this.$refs.mediaSelector.refresh();
+        }
+      });
+    },
+
+    /** 关闭第二层抽屉 */
+    handleCloseSelectorDrawer(done) {
+      this.mediaSelectorDrawerOpen = false;
+      this.selectedMediaList = [];
+      if (done) {
+        done();
+      }
+    },
+
+    /** 检查媒体关联状态(单选时触发) */
+    handleMediaSelect(row) {
+      // 检查媒体是否已经关联了警情
+      if (row.incidentRecordCode) {
+        // 如果关联的是当前警情
+        if (
+          this.currentIncidentRecord &&
+          row.incidentRecordCode === this.currentIncidentRecord.code
+        ) {
+          this.$confirm(
+            `媒体"${row.mediaName}"已与当前警情"${row.incidentRecordCode}"关联`,
+            "提示",
+            {
+              confirmButtonText: "确定",
+              showCancelButton: false,
+              type: "information",
+            }
+          );
+        } else {
+          // 如果关联的是其他警情
+          this.$confirm(
+            `本次关联之前，媒体"${row.mediaName}"将自动先与警情"${row.incidentRecordCode}"解除关联`,
+            "提示",
+            {
+              confirmButtonText: "确定",
+              showCancelButton: false,
+              type: "warning",
+            }
+          );
+        }
+      }
+    },
+
+    /** 媒体选择变化 */
+    handleMediaSelectionChange(selection) {
+      this.selectedMediaList = selection;
     },
 
     /** 确认关联媒体 */
-    confirmLinkMedia(selectedMedia) {
-      // 过滤掉已经与该警情关联的媒体
-      const selectedMediaRelations = selectedMedia.filter(
-        (item) => item.incidentRecordCode !== this.currentIncidentRecord.code
-      );
-      // 检查是否选中了媒体
-      if (!selectedMediaRelations || selectedMediaRelations.length === 0) {
+    async confirmLinkMedia() {
+      // 使用selectedMediaList而不是参数
+      if (!this.selectedMediaList || this.selectedMediaList.length === 0) {
         this.msgError("请选择要关联的媒体");
         return;
       }
 
-      // 调用关联媒体的API
-      const data = {
-        incidentRecordId: this.currentIncidentRecord.id,
-        mediaIds: selectedMediaRelations.map((item) => item.mediaId),
-      };
+      // 过滤掉已经与该警情关联的媒体
+      const selectedMediaRelations = this.selectedMediaList.filter(
+        (item) => item.incidentRecordCode !== this.currentIncidentRecord.code
+      );
 
-      addIncidentRecordMediaRelations(data)
-        .then((response) => {
-          this.msgSuccess(`成功关联 ${selectedMediaRelations.length} 个媒体`);
-          this.linkMediaOpen = false;
+      // 计算已关联其他警情的媒体数量
+      const alreadyLinkedCount =
+        this.selectedMediaList.length - selectedMediaRelations.length;
 
-          // 延迟2秒后刷新媒体关联列表
-          setTimeout(() => {
-            this.loadMediaRelations(this.currentIncidentRecord.id);
-          }, 2000);
-        })
-        .catch((error) => {
-          this.msgError("关联媒体失败：" + (error.message || "未知错误"));
+      // 如果有媒体已关联其他警情,给出提示
+      if (alreadyLinkedCount > 0) {
+        this.$message({
+          type: "warning",
+          message: `已过滤 ${alreadyLinkedCount} 个已关联当前警情的媒体`,
+          duration: 3000,
         });
+      }
+
+      // 检查过滤后是否还有媒体需要关联
+      if (!selectedMediaRelations || selectedMediaRelations.length === 0) {
+        this.msgError("所选媒体均已关联当前警情,请重新选择");
+        return;
+      }
+
+      // 鼠标切换为等待状态
+      const previousCursor = document.body.style.cursor;
+      document.body.style.cursor = "wait";
+
+      const loadingInstance = this.$loading({
+        lock: true,
+        text: "正在关联媒体...",
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
+      });
+
+      try {
+        // 调用关联媒体的API
+        const data = {
+          incidentRecordId: this.currentIncidentRecord.id,
+          mediaIds: selectedMediaRelations.map((item) => item.mediaId),
+        };
+
+        const response = await addIncidentRecordMediaRelations(data);
+
+        if (response.code === 200) {
+          // 关闭第二层抽屉
+          this.mediaSelectorDrawerOpen = false;
+
+          // 延迟2秒后刷新第一层抽屉的媒体列表
+          await this.delay(2000);
+          this.loadMediaRelations(this.currentIncidentRecord.id);
+          this.getList(); // 刷新警情列表以更新关联状态
+
+          // 显示成功消息,包含实际关联的媒体数量
+          this.msgSuccess(
+            response.msg || `成功关联 ${selectedMediaRelations.length} 个媒体`
+          );
+        } else {
+          this.msgError(response.msg || "关联失败");
+        }
+      } catch (error) {
+        this.msgError("关联失败：" + (error.message || "未知错误"));
+      } finally {
+        // 恢复鼠标状态
+        document.body.style.cursor = previousCursor;
+        loadingInstance.close();
+      }
+    },
+
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
     },
 
     /** 加载警情媒体关联列表 */
@@ -973,35 +1126,69 @@ export default {
       this.mediaRelationsLoading = true;
       getIncidentRecordMediaRelationsByIncidentRecord(incidentRecordId)
         .then((response) => {
-          this.mediaRelationsList = response.data.list || [];
+          // 必须检查response.code是否为200
+          if (response.code === 200) {
+            this.mediaRelationsList = response.data.list || [];
+          } else {
+            console.error("加载媒体关联列表失败:", response.msg);
+            this.msgError(response.msg || "加载媒体关联列表失败");
+            this.mediaRelationsList = [];
+          }
           this.mediaRelationsLoading = false;
         })
         .catch((error) => {
           console.error("加载媒体关联列表失败:", error);
+          this.msgError(
+            "加载媒体关联列表失败：" + (error.message || "未知错误")
+          );
           this.mediaRelationsList = [];
           this.mediaRelationsLoading = false;
         });
     },
 
     /** 取消关联媒体 */
-    handleUnlinkMedia(row) {
-      this.$confirm("确认取消关联该媒体吗？", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      }).then(() => {
-        delIncidentRecordMediaRelations(row.id)
-          .then((response) => {
-            this.msgSuccess("取消关联成功");
+    async handleUnlinkMedia(row) {
+      try {
+        await this.$confirm("确认取消关联该媒体吗？", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        });
+
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在取消关联...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+
+        try {
+          const response = await delIncidentRecordMediaRelations(row.id);
+
+          if (response.code === 200) {
             // 延迟2秒后刷新媒体关联列表
-            setTimeout(() => {
-              this.loadMediaRelations(this.currentSelectedIncident.id);
-            }, 2000);
-          })
-          .catch((error) => {
-            this.msgError("取消关联失败：" + (error.message || "未知错误"));
-          });
-      });
+            await this.delay(2000);
+            this.loadMediaRelations(this.currentIncidentRecord.id);
+            this.getList(); // 刷新警情列表以更新关联状态
+
+            this.msgSuccess(response.msg || "取消关联成功");
+          } else {
+            this.msgError(response.msg || "取消关联失败");
+          }
+        } finally {
+          // 恢复鼠标状态
+          document.body.style.cursor = previousCursor;
+          loadingInstance.close();
+        }
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("取消关联失败：" + (error.message || "未知错误"));
+        }
+      }
     },
   },
 };
@@ -1053,5 +1240,53 @@ export default {
   text-align: center;
   padding: 20px;
   color: #909399;
+}
+
+/* 抽屉样式 */
+.drawer-content {
+  padding: 20px;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.drawer-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  border-top: 1px solid #e8e8e8;
+  background: #fff;
+  text-align: right;
+  z-index: 1;
+}
+
+/* 第一层抽屉样式 */
+.media-drawer {
+  z-index: 1000 !important;
+}
+
+/* 第二层抽屉样式 - 更高的z-index */
+.media-selector-drawer {
+  z-index: 2000 !important;
+}
+
+/* 抽屉遮罩层样式 */
+::v-deep .el-drawer__wrapper {
+  transition: all 0.3s ease;
+}
+
+/* 第二层抽屉的遮罩层 */
+::v-deep .media-selector-drawer .el-drawer__wrapper {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 抽屉滑入滑出动画 */
+::v-deep .el-drawer {
+  transition: transform 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
+}
+
+::v-deep .el-drawer.rtl {
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
 }
 </style>

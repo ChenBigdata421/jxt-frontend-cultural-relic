@@ -10,9 +10,9 @@ import request from '@/utils/request'
  * @param {number} query.pageIndex - 页码
  * @returns {Promise}
  */
-export function getMediaListByWritId(writId, query) {
+export function getRelationListByWritId(writId, query) {
   return request({
-    url: `/api/v1/writ-media-relations/writ/${writId}/media`,
+    url: `/api/v1/writ-media-relations/writ/${writId}/relations`,
     method: 'get',
     params: query
   })

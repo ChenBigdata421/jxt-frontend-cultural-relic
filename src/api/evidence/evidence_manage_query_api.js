@@ -102,6 +102,15 @@ export function getIncidentRecordUnassociatedMediaByIncidentRecord(incidentRecor
   })
 }
 
+// 查询警情未关联的媒体列表(带分页)
+export function getUnassociatedMediaByIncidentRecordId(incidentRecordId, query) {
+  return request({
+    url: '/api/v1/incidentrecord-media-relations/unassociated-media/' + incidentRecordId,
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询警情媒体关联关系列表
 export function getIncidentRecordMediaRelationsByMedia(mediaId) {
   return request({

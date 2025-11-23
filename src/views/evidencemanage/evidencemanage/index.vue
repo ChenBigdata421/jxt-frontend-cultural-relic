@@ -67,15 +67,30 @@
         </el-form>
 
         <!-- 案件列表 -->
-        <el-table
-          ref="caseTable"
-          v-loading="loading"
-          :data="caseList"
-          border
-          @select="handleSelect"
-          @selection-change="handleSelectionChange"
-        >
-          <el-table-column type="selection" width="60" align="center" />
+        <el-table ref="caseTable" v-loading="loading" :data="caseList" border>
+          <el-table-column
+            label="操作"
+            align="left"
+            class-name="small-padding fixed-width"
+            width="300"
+          >
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-link"
+                @click="handleLinkMedia(scope.row)"
+                >已关联媒体</el-button
+              >
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-edit"
+                @click="handleEditEvidence(scope.row)"
+                >编辑证据</el-button
+              >
+            </template>
+          </el-table-column>
           <el-table-column prop="caseCode" label="案件编号" width="120" />
           <el-table-column prop="caseName" label="案件名称" width="200" />
           <el-table-column prop="caseType" label="案件类型" width="100">
@@ -90,29 +105,6 @@
               {{ caseFlowFormat(scope.row) }}
             </template>
           </el-table-column>
-          <el-table-column
-            label="操作"
-            align="left"
-            class-name="small-padding fixed-width"
-            width="300"
-          >
-            <template slot-scope="scope">
-              <el-button
-                size="mini"
-                type="text"
-                icon="el-icon-link"
-                @click="handleLinkMedia(scope.row)"
-                >关联媒体</el-button
-              >
-              <el-button
-                size="mini"
-                type="text"
-                icon="el-icon-edit"
-                @click="handleEditEvidence(scope.row)"
-                >编辑证据</el-button
-              >
-            </template>
-          </el-table-column>
         </el-table>
 
         <pagination
@@ -122,20 +114,38 @@
           :limit.sync="queryParams.pageSize"
           @pagination="getList"
         />
+      </el-card>
 
-        <!-- 案件媒体关联列表 -->
-        <div v-if="currentSelectedCase" class="media-relations-section">
-          <el-divider content-position="left">
-            <span style="font-weight: bold; color: #409eff">
-              案件媒体关联列表
-            </span>
-          </el-divider>
+      <!-- 第一层抽屉：已关联媒体列表 -->
+      <el-drawer
+        :title="`案件【${currentCase ? currentCase.caseCode : ''}】的关联媒体`"
+        :visible.sync="showMediaDrawer"
+        direction="rtl"
+        size="60%"
+        :before-close="handleCloseMediaDrawer"
+        :append-to-body="true"
+        :destroy-on-close="false"
+        custom-class="media-drawer"
+      >
+        <!-- 关联媒体操作按钮 -->
+        <div class="drawer-content">
+          <el-row :gutter="10" class="mb8">
+            <el-col :span="1.5">
+              <el-button
+                type="primary"
+                icon="el-icon-plus"
+                size="mini"
+                @click="handleOpenMediaSelector"
+                >关联新媒体</el-button
+              >
+            </el-col>
+          </el-row>
 
+          <!-- 关联媒体列表 -->
           <el-table
             v-loading="mediaRelationsLoading"
             :data="mediaRelationsList"
             border
-            style="margin-top: 10px"
           >
             <el-table-column
               prop="caseCode"
@@ -188,7 +198,7 @@
             </el-table-column>
             <el-table-column
               prop="operatorName"
-              label="操作员"
+              label="关联人"
               width="100"
               align="center"
             />
@@ -210,546 +220,551 @@
             <el-empty description="暂无关联媒体" :image-size="100" />
           </div>
         </div>
+      </el-drawer>
 
-        <!-- 关联媒体对话框 -->
-        <MediaSelectorDialog
-          ref="mediaSelector"
-          title="关联媒体"
-          :visible.sync="linkMediaOpen"
-          :multiple="true"
-          :currentCase="currentCase"
-          @confirm="confirmLinkMedia"
-          @cancel="cancelLinkMedia"
-          @close="cancelLinkMedia"
-        />
+      <!-- 第二层抽屉：未关联媒体选择器 -->
+      <el-drawer
+        title="关联新媒体"
+        :visible.sync="mediaSelectorDrawerOpen"
+        direction="rtl"
+        size="70%"
+        :before-close="handleCloseSelectorDrawer"
+        :append-to-body="true"
+        :destroy-on-close="false"
+        custom-class="media-selector-drawer"
+      >
+        <div class="drawer-content">
+          <!-- 媒体选择器 -->
+          <MediaSelector
+            ref="mediaSelector"
+            :selection-mode="true"
+            :multiple="true"
+            :custom-list-api="getUnassociatedMediaListApi"
+            @selection-change="handleMediaSelectionChange"
+          />
+        </div>
 
-        <!-- 导入证据对话框 -->
-        <el-dialog
-          :title="upload.title"
-          :visible.sync="upload.open"
-          width="650px"
-          :close-on-click-modal="false"
-          @close="handleUploadDialogClose"
+        <!-- 底部操作按钮 -->
+        <div class="drawer-footer">
+          <el-button @click="handleCloseSelectorDrawer">取 消</el-button>
+          <el-button type="primary" @click="confirmLinkMedia">确 定</el-button>
+        </div>
+      </el-drawer>
+
+      <!-- 导入证据对话框 -->
+      <el-dialog
+        :title="upload.title"
+        :visible.sync="upload.open"
+        width="650px"
+        :close-on-click-modal="false"
+        @close="handleUploadDialogClose"
+      >
+        <!-- 表单区域 -->
+        <el-form
+          ref="uploadForm"
+          :model="uploadForm"
+          :rules="uploadRules"
+          label-width="100px"
+          size="small"
         >
-          <!-- 表单区域 -->
-          <el-form
-            ref="uploadForm"
-            :model="uploadForm"
-            :rules="uploadRules"
-            label-width="100px"
-            size="small"
-          >
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="设备编号" prop="deviceCode">
-                  <el-input
-                    v-model="uploadForm.deviceCode"
-                    placeholder="请输入设备编号"
-                    clearable
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="警察编号" prop="policeCode">
-                  <el-input
-                    v-model="uploadForm.policeCode"
-                    placeholder="请输入警察编号"
-                    clearable
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="重要级别" prop="importantLevel">
-                  <el-select
-                    v-model="uploadForm.importantLevel"
-                    placeholder="请选择"
-                    style="width: 100%"
-                  >
-                    <el-option label="1级" :value="1" />
-                    <el-option label="2级" :value="2" />
-                    <el-option label="3级" :value="3" />
-                    <el-option label="4级" :value="4" />
-                    <el-option label="5级" :value="5" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="存储类型" prop="storageType">
-                  <el-select
-                    v-model="uploadForm.storageType"
-                    placeholder="请选择"
-                    style="width: 100%"
-                  >
-                    <el-option label="本地存储" :value="1" />
-                    <el-option label="OSS存储" :value="2" />
-                    <el-option label="分布式存储" :value="3" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-form-item label="标签" prop="tags">
-              <el-input
-                v-model="uploadForm.tags"
-                placeholder="请输入标签，多个标签用逗号分隔"
-                clearable
-              />
-            </el-form-item>
-            <el-form-item label="备注" prop="comments">
-              <el-input
-                v-model="uploadForm.comments"
-                type="textarea"
-                :rows="2"
-                placeholder="请输入备注信息"
-              />
-            </el-form-item>
-          </el-form>
-
-          <!-- 文件上传区域 -->
-          <div class="upload-area">
-            <el-upload
-              ref="uploadComponent"
-              :auto-upload="false"
-              :on-change="handleFileChange"
-              :file-list="[]"
-              :show-file-list="false"
-              :limit="10"
-              multiple
-              action="#"
-              drag
-              class="upload-dragger"
-            >
-              <div class="upload-dragger-content">
-                <i
-                  class="el-icon-folder"
-                  style="font-size: 48px; color: #ffc107; margin-bottom: 10px"
-                />
-                <div class="upload-text">点击选择文件或拖拽文件到此处</div>
-                <div class="upload-hint">支持多选，自动上传已禁用</div>
-                <el-button type="primary" size="small" style="margin-top: 15px"
-                  >选择文件</el-button
-                >
-              </div>
-            </el-upload>
-            <div class="upload-tip">可多选，大小限制自行判断</div>
-          </div>
-
-          <!-- 文件列表 -->
-          <div v-if="fileList.length > 0" class="file-list">
-            <div
-              v-for="(file, index) in fileList"
-              :key="index"
-              class="file-item"
-            >
-              <div class="file-info">
-                <i :class="getFileIcon(file.name)" class="file-icon" />
-                <div class="file-details">
-                  <div class="file-name">{{ file.name }}</div>
-                  <div class="file-size">{{ formatFileSize(file.size) }}</div>
-                  <div class="file-status" :class="getFileStatusClass(file)">
-                    <i :class="getFileStatusIcon(file)" />
-                    {{ getFileStatusText(file) }}
-                  </div>
-                </div>
-              </div>
-              <div class="file-actions">
-                <el-button
-                  v-if="!file.uploaded"
-                  type="primary"
-                  size="mini"
-                  @click="submitUploadForm(index, true)"
-                  >上传</el-button
-                >
-                <el-button type="danger" size="mini" @click="removeFile(index)"
-                  >删除</el-button
-                >
-              </div>
-            </div>
-          </div>
-
-          <!-- 底部按钮 -->
-          <div slot="footer" class="dialog-footer">
-            <el-button
-              v-if="fileList.length > 0"
-              type="success"
-              :loading="upload.isUploading"
-              @click="submitUploadForm(null, false)"
-              >上传全部文件</el-button
-            >
-            <el-button type="danger" @click="clearAllFiles">清空列表</el-button>
-            <el-button type="danger" @click="handleUploadDialogClose"
-              >关闭</el-button
-            >
-          </div>
-        </el-dialog>
-
-        <!-- 编辑证据对话框 -->
-        <el-dialog
-          title="编辑证据"
-          :visible.sync="editEvidenceOpen"
-          width="90%"
-          :close-on-click-modal="false"
-        >
-          <!-- 案件基本信息 -->
-          <el-card shadow="never" style="margin-bottom: 20px">
-            <div slot="header" class="clearfix">
-              <span style="font-weight: bold">案件基本信息</span>
-            </div>
-            <el-descriptions :column="3" border>
-              <el-descriptions-item label="案件编号">{{
-                currentEditCase.caseCode
-              }}</el-descriptions-item>
-              <el-descriptions-item label="案件名称">{{
-                currentEditCase.caseName
-              }}</el-descriptions-item>
-              <el-descriptions-item label="案件类型">{{
-                caseTypeFormat(currentEditCase)
-              }}</el-descriptions-item>
-              <el-descriptions-item label="案件流程">{{
-                caseFlowFormat(currentEditCase)
-              }}</el-descriptions-item>
-              <el-descriptions-item label="创建时间">{{
-                currentEditCase.createdAt
-              }}</el-descriptions-item>
-            </el-descriptions>
-          </el-card>
-
-          <!-- 当前案件已关联的媒体列表 -->
-          <el-card shadow="never" style="margin-bottom: 20px">
-            <div slot="header" class="clearfix">
-              <span style="font-weight: bold">当前案件已关联的媒体列表</span>
-            </div>
-            <el-table
-              v-loading="caseMediaListLoading"
-              :data="caseMediaList"
-              border
-              max-height="300"
-            >
-              <el-table-column prop="mediaName" label="媒体名称" width="180" />
-              <el-table-column
-                prop="mediaCate"
-                label="媒体种类"
-                width="180"
-                align="center"
-              >
-                <template slot-scope="scope">
-                  <el-tag disable-transitions>{{
-                    mediaCateFormat(scope.row)
-                  }}</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column
-                prop="mediaSuffix"
-                label="媒体后缀"
-                width="180"
-                align="center"
-              />
-              <el-table-column
-                prop="storageType"
-                label="存储方式"
-                width="180"
-                align="center"
-              >
-                <template slot-scope="scope">
-                  {{ storageTypeFormat(scope.row) }}
-                </template>
-              </el-table-column>
-              <el-table-column
-                prop="shotTimeStart"
-                label="拍摄时间"
-                width="160"
-                align="center"
-              >
-                <template slot-scope="scope">
-                  {{ parseTime(scope.row.shotTimeStart) }}
-                </template>
-              </el-table-column>
-              <el-table-column
-                prop="importTime"
-                label="导入时间"
-                width="160"
-                align="center"
-              >
-                <template slot-scope="scope">
-                  {{ parseTime(scope.row.importTime) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="200" align="center">
-                <template slot-scope="scope">
-                  <el-button
-                    size="mini"
-                    type="primary"
-                    icon="el-icon-upload"
-                    :disabled="isMediaSourceEvidence(scope.row)"
-                    @click="handleSetAsSourceEvidence(scope.row)"
-                    >设为源证据</el-button
-                  >
-                  <el-button
-                    size="mini"
-                    type="text"
-                    icon="el-icon-view"
-                    @click="handleViewMedia(scope.row)"
-                    >浏览</el-button
-                  >
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-card>
-
-          <!-- 证据媒体和源证据媒体并列显示 -->
           <el-row :gutter="20">
-            <!-- 左侧：证据媒体列表 -->
             <el-col :span="12">
-              <el-card shadow="never">
-                <div slot="header" class="clearfix">
-                  <span
-                    style="
-                      font-weight: bold;
-                      color: #67c23a;
-                      margin-right: 400px;
-                    "
-                    >证据媒体</span
-                  >
-                  <el-button
-                    v-permisaction="['admin:sysUser:import']"
-                    type="warning"
-                    icon="el-icon-upload"
-                    size="mini"
-                    @click="handleImportEvidence"
-                    >导入证据</el-button
-                  >
-                  <el-button
-                    v-permisaction="['admin:sysUser:refresh']"
-                    type="warning"
-                    icon="el-icon-refresh"
-                    size="mini"
-                    @click="handleRefreshEvidenceMediaList"
-                    >刷新</el-button
-                  >
-                </div>
-                <el-table
-                  v-loading="evidenceMediaListLoading"
-                  :data="evidenceMediaList"
-                  border
-                  max-height="400"
-                >
-                  <el-table-column
-                    prop="mediaName"
-                    label="媒体名称"
-                    width="150"
-                  />
-                  <el-table-column
-                    prop="mediaCate"
-                    label="媒体种类"
-                    width="90"
-                    align="center"
-                  >
-                    <template slot-scope="scope">
-                      <el-tag disable-transitions>{{
-                        mediaCateFormat(scope.row)
-                      }}</el-tag>
-                    </template>
-                  </el-table-column>
-                  <el-table-column
-                    prop="shotTimeStart"
-                    label="拍摄时间"
-                    width="150"
-                    align="center"
-                  >
-                    <template slot-scope="scope">
-                      {{ parseTime(scope.row.shotTimeStart) }}
-                    </template>
-                  </el-table-column>
-                  <el-table-column
-                    prop="importTime"
-                    label="导入时间"
-                    width="150"
-                    align="center"
-                  >
-                    <template slot-scope="scope">
-                      {{ parseTime(scope.row.importTime) }}
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="操作" width="150" align="center">
-                    <template slot-scope="scope">
-                      <el-button
-                        size="mini"
-                        type="text"
-                        icon="el-icon-view"
-                        @click="handleViewMedia(scope.row)"
-                        >浏览</el-button
-                      >
-                      <el-button
-                        size="mini"
-                        type="text"
-                        icon="el-icon-delete"
-                        style="color: #f56c6c"
-                        @click="handleRemoveEvidenceMedia(scope.row)"
-                        >移除</el-button
-                      >
-                    </template>
-                  </el-table-column>
-                </el-table>
-                <div v-if="evidenceMediaList.length === 0" class="empty-data">
-                  <el-empty description="暂无证据媒体" :image-size="80" />
-                </div>
-              </el-card>
+              <el-form-item label="设备编号" prop="deviceCode">
+                <el-input
+                  v-model="uploadForm.deviceCode"
+                  placeholder="请输入设备编号"
+                  clearable
+                />
+              </el-form-item>
             </el-col>
-
-            <!-- 右侧：源证据媒体列表 -->
             <el-col :span="12">
-              <el-card shadow="never">
-                <div slot="header" class="clearfix">
-                  <span
-                    style="
-                      font-weight: bold;
-                      color: #e6a23c;
-                      margin-right: 500px;
-                    "
-                    >证据源媒体</span
-                  >
-                  <el-button
-                    v-permisaction="['admin:sysUser:refresh']"
-                    type="warning"
-                    icon="el-icon-refresh"
-                    size="mini"
-                    @click="handleRefreshEvidenceMediaSourceList"
-                    >刷新</el-button
-                  >
-                </div>
-                <el-table
-                  v-loading="sourceEvidenceMediaListLoading"
-                  :data="sourceEvidenceMediaList"
-                  border
-                  max-height="400"
-                >
-                  <el-table-column
-                    prop="mediaName"
-                    label="媒体名称"
-                    width="150"
-                  />
-                  <el-table-column
-                    prop="mediaCate"
-                    label="媒体种类"
-                    width="90"
-                    align="center"
-                  >
-                    <template slot-scope="scope">
-                      <el-tag disable-transitions>{{
-                        mediaCateFormat(scope.row)
-                      }}</el-tag>
-                    </template>
-                  </el-table-column>
-                  <el-table-column
-                    prop="shotTimeStart"
-                    label="拍摄时间"
-                    width="150"
-                    align="center"
-                  >
-                    <template slot-scope="scope">
-                      {{ parseTime(scope.row.shotTimeStart) }}
-                    </template>
-                  </el-table-column>
-                  <el-table-column
-                    prop="importTime"
-                    label="导入时间"
-                    width="150"
-                    align="center"
-                  >
-                    <template slot-scope="scope">
-                      {{ parseTime(scope.row.importTime) }}
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="操作" width="200" align="center">
-                    <template slot-scope="scope">
-                      <el-button
-                        size="mini"
-                        type="text"
-                        icon="el-icon-view"
-                        @click="handleViewMedia(scope.row)"
-                        >浏览</el-button
-                      >
-                      <el-button
-                        size="mini"
-                        type="text"
-                        icon="el-icon-delete"
-                        style="color: #f56c6c"
-                        @click="handleRemoveSourceEvidence(scope.row)"
-                        >移除</el-button
-                      >
-                      <el-button
-                        size="mini"
-                        type="text"
-                        icon="el-icon-download"
-                        @click="handleDownloadMedia(scope.row)"
-                        >下载</el-button
-                      >
-                    </template>
-                  </el-table-column>
-                </el-table>
-                <div
-                  v-if="sourceEvidenceMediaList.length === 0"
-                  class="empty-data"
-                >
-                  <el-empty description="暂无源证据媒体" :image-size="80" />
-                </div>
-              </el-card>
+              <el-form-item label="警察编号" prop="policeCode">
+                <el-input
+                  v-model="uploadForm.policeCode"
+                  placeholder="请输入警察编号"
+                  clearable
+                />
+              </el-form-item>
             </el-col>
           </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="重要级别" prop="importantLevel">
+                <el-select
+                  v-model="uploadForm.importantLevel"
+                  placeholder="请选择"
+                  style="width: 100%"
+                >
+                  <el-option label="1级" :value="1" />
+                  <el-option label="2级" :value="2" />
+                  <el-option label="3级" :value="3" />
+                  <el-option label="4级" :value="4" />
+                  <el-option label="5级" :value="5" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="存储类型" prop="storageType">
+                <el-select
+                  v-model="uploadForm.storageType"
+                  placeholder="请选择"
+                  style="width: 100%"
+                >
+                  <el-option label="本地存储" :value="1" />
+                  <el-option label="OSS存储" :value="2" />
+                  <el-option label="分布式存储" :value="3" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item label="标签" prop="tags">
+            <el-input
+              v-model="uploadForm.tags"
+              placeholder="请输入标签，多个标签用逗号分隔"
+              clearable
+            />
+          </el-form-item>
+          <el-form-item label="备注" prop="comments">
+            <el-input
+              v-model="uploadForm.comments"
+              type="textarea"
+              :rows="2"
+              placeholder="请输入备注信息"
+            />
+          </el-form-item>
+        </el-form>
 
-          <div slot="footer" class="dialog-footer">
-            <el-button @click="editEvidenceOpen = false">关 闭</el-button>
+        <!-- 文件上传区域 -->
+        <div class="upload-area">
+          <el-upload
+            ref="uploadComponent"
+            :auto-upload="false"
+            :on-change="handleFileChange"
+            :file-list="[]"
+            :show-file-list="false"
+            :limit="10"
+            multiple
+            action="#"
+            drag
+            class="upload-dragger"
+          >
+            <div class="upload-dragger-content">
+              <i
+                class="el-icon-folder"
+                style="font-size: 48px; color: #ffc107; margin-bottom: 10px"
+              />
+              <div class="upload-text">点击选择文件或拖拽文件到此处</div>
+              <div class="upload-hint">支持多选，自动上传已禁用</div>
+              <el-button type="primary" size="small" style="margin-top: 15px"
+                >选择文件</el-button
+              >
+            </div>
+          </el-upload>
+          <div class="upload-tip">可多选，大小限制自行判断</div>
+        </div>
+
+        <!-- 文件列表 -->
+        <div v-if="fileList.length > 0" class="file-list">
+          <div v-for="(file, index) in fileList" :key="index" class="file-item">
+            <div class="file-info">
+              <i :class="getFileIcon(file.name)" class="file-icon" />
+              <div class="file-details">
+                <div class="file-name">{{ file.name }}</div>
+                <div class="file-size">{{ formatFileSize(file.size) }}</div>
+                <div class="file-status" :class="getFileStatusClass(file)">
+                  <i :class="getFileStatusIcon(file)" />
+                  {{ getFileStatusText(file) }}
+                </div>
+              </div>
+            </div>
+            <div class="file-actions">
+              <el-button
+                v-if="!file.uploaded"
+                type="primary"
+                size="mini"
+                @click="submitUploadForm(index, true)"
+                >上传</el-button
+              >
+              <el-button type="danger" size="mini" @click="removeFile(index)"
+                >删除</el-button
+              >
+            </div>
           </div>
-        </el-dialog>
+        </div>
 
-        <!-- 媒体详情对话框 -->
-        <el-dialog
-          title="媒体详情"
-          :visible.sync="viewMediaOpen"
-          width="800px"
-          append-to-body
-        >
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="媒体名称">{{
-              viewMediaData.mediaName
+        <!-- 底部按钮 -->
+        <div slot="footer" class="dialog-footer">
+          <el-button
+            v-if="fileList.length > 0"
+            type="success"
+            :loading="upload.isUploading"
+            @click="submitUploadForm(null, false)"
+            >上传全部文件</el-button
+          >
+          <el-button type="danger" @click="clearAllFiles">清空列表</el-button>
+          <el-button type="danger" @click="handleUploadDialogClose"
+            >关闭</el-button
+          >
+        </div>
+      </el-dialog>
+
+      <!-- 编辑证据对话框 -->
+      <el-dialog
+        title="编辑证据"
+        :visible.sync="editEvidenceOpen"
+        width="90%"
+        :close-on-click-modal="false"
+      >
+        <!-- 案件基本信息 -->
+        <el-card shadow="never" style="margin-bottom: 20px">
+          <div slot="header" class="clearfix">
+            <span style="font-weight: bold">案件基本信息</span>
+          </div>
+          <el-descriptions :column="3" border>
+            <el-descriptions-item label="案件编号">{{
+              currentEditCase.caseCode
             }}</el-descriptions-item>
-            <el-descriptions-item label="媒体编号">{{
-              viewMediaData.mediaCode
+            <el-descriptions-item label="案件名称">{{
+              currentEditCase.caseName
             }}</el-descriptions-item>
-            <el-descriptions-item label="媒体类型">{{
-              mediaCateFormat(viewMediaData)
+            <el-descriptions-item label="案件类型">{{
+              caseTypeFormat(currentEditCase)
             }}</el-descriptions-item>
-            <el-descriptions-item label="拍摄时间">{{
-              parseTime(viewMediaData.shotTime)
+            <el-descriptions-item label="案件流程">{{
+              caseFlowFormat(currentEditCase)
             }}</el-descriptions-item>
-            <el-descriptions-item label="拍摄警员">{{
-              viewMediaData.policeName
-            }}</el-descriptions-item>
-            <el-descriptions-item label="所属组织">{{
-              viewMediaData.orgFullName
-            }}</el-descriptions-item>
-            <el-descriptions-item label="存储路径" :span="2">{{
-              viewMediaData.mediaUrl
+            <el-descriptions-item label="创建时间">{{
+              currentEditCase.createdAt
             }}</el-descriptions-item>
           </el-descriptions>
-          <div
-            v-if="viewMediaData.mediaUrl"
-            style="margin-top: 20px; text-align: center"
+        </el-card>
+
+        <!-- 当前案件已关联的媒体列表 -->
+        <el-card shadow="never" style="margin-bottom: 20px">
+          <div slot="header" class="clearfix">
+            <span style="font-weight: bold">当前案件已关联的媒体列表</span>
+          </div>
+          <el-table
+            v-loading="caseMediaListLoading"
+            :data="caseMediaList"
+            border
+            max-height="300"
           >
-            <el-button
-              type="primary"
-              icon="el-icon-view"
-              @click="window.open(viewMediaData.mediaUrl, '_blank')"
+            <el-table-column prop="mediaName" label="媒体名称" width="180" />
+            <el-table-column
+              prop="mediaCate"
+              label="媒体种类"
+              width="180"
+              align="center"
             >
-              打开媒体文件
-            </el-button>
-          </div>
-          <div slot="footer" class="dialog-footer">
-            <el-button @click="viewMediaOpen = false">关 闭</el-button>
-          </div>
-        </el-dialog>
-      </el-card>
+              <template slot-scope="scope">
+                <el-tag disable-transitions>{{
+                  mediaCateFormat(scope.row)
+                }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="mediaSuffix"
+              label="媒体后缀"
+              width="180"
+              align="center"
+            />
+            <el-table-column
+              prop="storageType"
+              label="存储方式"
+              width="180"
+              align="center"
+            >
+              <template slot-scope="scope">
+                {{ storageTypeFormat(scope.row) }}
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="shotTimeStart"
+              label="拍摄时间"
+              width="160"
+              align="center"
+            >
+              <template slot-scope="scope">
+                {{ parseTime(scope.row.shotTimeStart) }}
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="importTime"
+              label="导入时间"
+              width="160"
+              align="center"
+            >
+              <template slot-scope="scope">
+                {{ parseTime(scope.row.importTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="200" align="center">
+              <template slot-scope="scope">
+                <el-button
+                  size="mini"
+                  type="primary"
+                  icon="el-icon-upload"
+                  :disabled="isMediaSourceEvidence(scope.row)"
+                  @click="handleSetAsSourceEvidence(scope.row)"
+                  >设为源证据</el-button
+                >
+                <el-button
+                  size="mini"
+                  type="text"
+                  icon="el-icon-view"
+                  @click="handleViewMedia(scope.row)"
+                  >浏览</el-button
+                >
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+
+        <!-- 证据媒体和源证据媒体并列显示 -->
+        <el-row :gutter="20">
+          <!-- 左侧：证据媒体列表 -->
+          <el-col :span="12">
+            <el-card shadow="never">
+              <div slot="header" class="clearfix">
+                <span
+                  style="font-weight: bold; color: #67c23a; margin-right: 400px"
+                  >证据媒体</span
+                >
+                <el-button
+                  v-permisaction="['admin:sysUser:import']"
+                  type="warning"
+                  icon="el-icon-upload"
+                  size="mini"
+                  @click="handleImportEvidence"
+                  >导入证据</el-button
+                >
+                <el-button
+                  v-permisaction="['admin:sysUser:refresh']"
+                  type="warning"
+                  icon="el-icon-refresh"
+                  size="mini"
+                  @click="handleRefreshEvidenceMediaList"
+                  >刷新</el-button
+                >
+              </div>
+              <el-table
+                v-loading="evidenceMediaListLoading"
+                :data="evidenceMediaList"
+                border
+                max-height="400"
+              >
+                <el-table-column
+                  prop="mediaName"
+                  label="媒体名称"
+                  width="150"
+                />
+                <el-table-column
+                  prop="mediaCate"
+                  label="媒体种类"
+                  width="90"
+                  align="center"
+                >
+                  <template slot-scope="scope">
+                    <el-tag disable-transitions>{{
+                      mediaCateFormat(scope.row)
+                    }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="shotTimeStart"
+                  label="拍摄时间"
+                  width="150"
+                  align="center"
+                >
+                  <template slot-scope="scope">
+                    {{ parseTime(scope.row.shotTimeStart) }}
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="importTime"
+                  label="导入时间"
+                  width="150"
+                  align="center"
+                >
+                  <template slot-scope="scope">
+                    {{ parseTime(scope.row.importTime) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="150" align="center">
+                  <template slot-scope="scope">
+                    <el-button
+                      size="mini"
+                      type="text"
+                      icon="el-icon-view"
+                      @click="handleViewMedia(scope.row)"
+                      >浏览</el-button
+                    >
+                    <el-button
+                      size="mini"
+                      type="text"
+                      icon="el-icon-delete"
+                      style="color: #f56c6c"
+                      @click="handleRemoveEvidenceMedia(scope.row)"
+                      >移除</el-button
+                    >
+                  </template>
+                </el-table-column>
+              </el-table>
+              <div v-if="evidenceMediaList.length === 0" class="empty-data">
+                <el-empty description="暂无证据媒体" :image-size="80" />
+              </div>
+            </el-card>
+          </el-col>
+
+          <!-- 右侧：源证据媒体列表 -->
+          <el-col :span="12">
+            <el-card shadow="never">
+              <div slot="header" class="clearfix">
+                <span
+                  style="font-weight: bold; color: #e6a23c; margin-right: 500px"
+                  >证据源媒体</span
+                >
+                <el-button
+                  v-permisaction="['admin:sysUser:refresh']"
+                  type="warning"
+                  icon="el-icon-refresh"
+                  size="mini"
+                  @click="handleRefreshEvidenceMediaSourceList"
+                  >刷新</el-button
+                >
+              </div>
+              <el-table
+                v-loading="sourceEvidenceMediaListLoading"
+                :data="sourceEvidenceMediaList"
+                border
+                max-height="400"
+              >
+                <el-table-column
+                  prop="mediaName"
+                  label="媒体名称"
+                  width="150"
+                />
+                <el-table-column
+                  prop="mediaCate"
+                  label="媒体种类"
+                  width="90"
+                  align="center"
+                >
+                  <template slot-scope="scope">
+                    <el-tag disable-transitions>{{
+                      mediaCateFormat(scope.row)
+                    }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="shotTimeStart"
+                  label="拍摄时间"
+                  width="150"
+                  align="center"
+                >
+                  <template slot-scope="scope">
+                    {{ parseTime(scope.row.shotTimeStart) }}
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="importTime"
+                  label="导入时间"
+                  width="150"
+                  align="center"
+                >
+                  <template slot-scope="scope">
+                    {{ parseTime(scope.row.importTime) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="200" align="center">
+                  <template slot-scope="scope">
+                    <el-button
+                      size="mini"
+                      type="text"
+                      icon="el-icon-view"
+                      @click="handleViewMedia(scope.row)"
+                      >浏览</el-button
+                    >
+                    <el-button
+                      size="mini"
+                      type="text"
+                      icon="el-icon-delete"
+                      style="color: #f56c6c"
+                      @click="handleRemoveSourceEvidence(scope.row)"
+                      >移除</el-button
+                    >
+                    <el-button
+                      size="mini"
+                      type="text"
+                      icon="el-icon-download"
+                      @click="handleDownloadMedia(scope.row)"
+                      >下载</el-button
+                    >
+                  </template>
+                </el-table-column>
+              </el-table>
+              <div
+                v-if="sourceEvidenceMediaList.length === 0"
+                class="empty-data"
+              >
+                <el-empty description="暂无源证据媒体" :image-size="80" />
+              </div>
+            </el-card>
+          </el-col>
+        </el-row>
+
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="editEvidenceOpen = false">关 闭</el-button>
+        </div>
+      </el-dialog>
+
+      <!-- 媒体详情对话框 -->
+      <el-dialog
+        title="媒体详情"
+        :visible.sync="viewMediaOpen"
+        width="800px"
+        append-to-body
+      >
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="媒体名称">{{
+            viewMediaData.mediaName
+          }}</el-descriptions-item>
+          <el-descriptions-item label="媒体编号">{{
+            viewMediaData.mediaCode
+          }}</el-descriptions-item>
+          <el-descriptions-item label="媒体类型">{{
+            mediaCateFormat(viewMediaData)
+          }}</el-descriptions-item>
+          <el-descriptions-item label="拍摄时间">{{
+            parseTime(viewMediaData.shotTime)
+          }}</el-descriptions-item>
+          <el-descriptions-item label="拍摄警员">{{
+            viewMediaData.policeName
+          }}</el-descriptions-item>
+          <el-descriptions-item label="所属组织">{{
+            viewMediaData.orgFullName
+          }}</el-descriptions-item>
+          <el-descriptions-item label="存储路径" :span="2">{{
+            viewMediaData.mediaUrl
+          }}</el-descriptions-item>
+        </el-descriptions>
+        <div
+          v-if="viewMediaData.mediaUrl"
+          style="margin-top: 20px; text-align: center"
+        >
+          <el-button
+            type="primary"
+            icon="el-icon-view"
+            @click="window.open(viewMediaData.mediaUrl, '_blank')"
+          >
+            打开媒体文件
+          </el-button>
+        </div>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="viewMediaOpen = false">关 闭</el-button>
+        </div>
+      </el-dialog>
     </template>
   </BasicLayout>
 </template>
@@ -760,6 +775,8 @@ import {
   batchCreateCaseMediaRelations,
   deleteCaseMediaRelation,
   getMediaListByCaseId,
+  getRelationListByCaseId,
+  getUnassociatedMediaByCaseId,
 } from "@/api/evidence/case_media_relation_api";
 import {
   batchAddEvidenceSourceMedia,
@@ -776,12 +793,12 @@ import {
   batchAddEvidenceMedia,
   removeEvidenceMedia,
 } from "@/api/evidence/evidence_media_api";
-import MediaSelectorDialog from "@/components/MediaSelectorDialog";
+import MediaSelector from "@/components/MediaSelector";
 
 export default {
   name: "CaseMediaRelation",
   components: {
-    MediaSelectorDialog,
+    MediaSelector,
   },
   data() {
     return {
@@ -801,10 +818,14 @@ export default {
       adminCaseProcessOptions: [],
       // 案件流程选项 - 刑事案件流程
       criminalCaseProcessOptions: [],
-      // 是否显示关联媒体对话框
-      linkMediaOpen: false,
+      // 是否显示第一层抽屉(已关联媒体)
+      showMediaDrawer: false,
+      // 是否显示第二层抽屉(未关联媒体选择器)
+      mediaSelectorDrawerOpen: false,
       // 当前选中的案件记录
       currentCase: null,
+      // 选中的媒体列表
+      selectedMediaList: [],
       // 当前选中的案件记录（用于显示媒体关联列表）
       currentSelectedCase: null,
       // 案件媒体关联列表
@@ -889,6 +910,19 @@ export default {
       this.storageTypeOptions = response.data;
     });
   },
+  computed: {
+    /** 获取未关联媒体列表API(用于媒体选择器) */
+    getUnassociatedMediaListApi() {
+      if (!this.currentCase || !this.currentCase.id) {
+        return (query) => {
+          return Promise.resolve({ data: { list: [], count: 0 } });
+        };
+      }
+      return (query) => {
+        return getUnassociatedMediaByCaseId(this.currentCase.id, query);
+      };
+    },
+  },
   methods: {
     /* ========== 基本功能相关方法 ========== */
 
@@ -913,27 +947,6 @@ export default {
     resetQuery() {
       this.resetForm("queryForm");
       this.handleQuery();
-    },
-
-    /** 表格选择事件 */
-    handleSelect(selection, row) {
-      // 单选逻辑：清除其他选择，只保留当前行
-      this.$refs.caseTable.clearSelection();
-      this.$refs.caseTable.toggleRowSelection(row, true);
-      this.currentSelectedCase = row;
-      this.loadMediaRelations(row.id);
-    },
-
-    /** 表格选择变化事件 */
-    handleSelectionChange(selection) {
-      if (selection.length > 0) {
-        const selectedCase = selection[selection.length - 1];
-        this.currentSelectedCase = selectedCase;
-        this.loadMediaRelations(selectedCase.id);
-      } else {
-        this.currentSelectedCase = null;
-        this.mediaRelationsList = [];
-      }
     },
 
     /** 搜索按钮操作 */
@@ -995,20 +1008,6 @@ export default {
         this.caseList = response.data.list;
         this.total = response.data.count;
         this.loading = false;
-
-        // 默认选中第一条案件
-        this.$nextTick(() => {
-          if (this.caseList.length > 0) {
-            const firstCase = this.caseList[0];
-            this.$refs.caseTable.clearSelection();
-            this.$refs.caseTable.toggleRowSelection(firstCase, true);
-            this.currentSelectedCase = firstCase;
-            this.loadMediaRelations(firstCase.id);
-          } else {
-            this.currentSelectedCase = null;
-            this.mediaRelationsList = [];
-          }
-        });
       });
     },
 
@@ -1244,55 +1243,105 @@ export default {
 
     /* ========== 关联媒体相关方法 ========== */
 
-    /** 关联媒体按钮操作 */
+    /** 关联媒体按钮操作 - 打开第一层抽屉 */
     handleLinkMedia(row) {
       this.currentCase = row;
-      // 自动选中该行
-      this.$refs.caseTable.clearSelection();
-      this.$refs.caseTable.toggleRowSelection(row, true);
-      // 不需要手动调用 refresh(),对话框打开时会自动刷新
-      this.linkMediaOpen = true;
+      this.showMediaDrawer = true;
+      this.loadMediaRelations(row.id);
     },
 
-    /** 取消关联媒体 */
-    cancelLinkMedia() {
-      this.linkMediaOpen = false;
+    /** 关闭第一层抽屉 */
+    handleCloseMediaDrawer(done) {
+      this.showMediaDrawer = false;
       this.currentCase = null;
+      this.mediaRelationsList = [];
+      if (done) {
+        done();
+      }
+    },
+
+    /** 打开第二层抽屉 - 关联新媒体 */
+    handleOpenMediaSelector() {
+      this.selectedMediaList = [];
+      this.mediaSelectorDrawerOpen = true;
+      this.$nextTick(() => {
+        if (this.$refs.mediaSelector) {
+          this.$refs.mediaSelector.refresh();
+        }
+      });
+    },
+
+    /** 关闭第二层抽屉 */
+    handleCloseSelectorDrawer(done) {
+      this.mediaSelectorDrawerOpen = false;
+      this.selectedMediaList = [];
+      if (done) {
+        done();
+      }
+    },
+
+    /** 媒体选择变化 */
+    handleMediaSelectionChange(selection) {
+      this.selectedMediaList = selection;
     },
 
     /** 确认关联媒体 */
-    confirmLinkMedia(selectedMedia) {
+    async confirmLinkMedia() {
       // 检查是否选中了媒体
-      if (!selectedMedia || selectedMedia.length === 0) {
+      if (!this.selectedMediaList || this.selectedMediaList.length === 0) {
         this.msgError("请选择要关联的媒体");
         return;
       }
 
-      // 调用关联媒体的API
-      const data = {
-        caseId: this.currentCase.id,
-        mediaIds: selectedMedia.map((item) => item.mediaId),
-      };
+      // 鼠标切换为等待状态
+      const previousCursor = document.body.style.cursor;
+      document.body.style.cursor = "wait";
 
-      batchCreateCaseMediaRelations(data)
-        .then((response) => {
-          this.linkMediaOpen = false;
-          const notifyMessage = response && response.msg;
-          this.$notify({
-            title: "通知",
-            message: notifyMessage,
-            type: response.code == 200 ? "success" : "error",
-            duration: 3000,
-            customClass: "center-notification",
-          });
-          // 延迟2秒后刷新媒体关联列表
-          setTimeout(() => {
-            this.loadMediaRelations(this.currentCase.id);
-          }, 2000);
-        })
-        .catch((error) => {
-          this.msgError("关联媒体失败：" + (error.message || "未知错误"));
-        });
+      const loadingInstance = this.$loading({
+        lock: true,
+        text: "正在关联媒体...",
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
+      });
+
+      try {
+        // 调用关联媒体的API
+        const data = {
+          caseId: this.currentCase.id,
+          mediaIds: this.selectedMediaList.map((item) => item.mediaId),
+        };
+
+        const response = await batchCreateCaseMediaRelations(data);
+
+        if (response.code === 200) {
+          // 保存当前案件ID,避免getList()改变选中状态后丢失
+          const currentCaseId = this.currentCase.id;
+
+          // 关闭第二层抽屉
+          this.mediaSelectorDrawerOpen = false;
+          // 延迟2秒后刷新媒体关联列表和案件列表
+          await this.delay(2000);
+          // 先刷新当前案件的媒体关联列表(参考警情页面的实现)
+          this.loadMediaRelations(currentCaseId);
+          // 再刷新案件列表以更新关联状态
+          this.getList();
+
+          this.msgSuccess(response.msg || "关联成功");
+        } else {
+          this.msgError(response.msg || "关联失败");
+        }
+      } catch (error) {
+        this.msgError("关联失败：" + (error.message || "未知错误"));
+      } finally {
+        // 恢复鼠标状态
+        document.body.style.cursor = previousCursor;
+        loadingInstance.close();
+      }
+    },
+
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
     },
 
     /** 加载案件媒体关联列表 */
@@ -1302,44 +1351,75 @@ export default {
         pageIndex: 1,
         pageSize: 100,
       };
-      getMediaListByCaseId(caseId, query)
+      getRelationListByCaseId(caseId, query)
         .then((response) => {
-          this.mediaRelationsList = response.data.list || [];
+          // 必须检查response.code是否为200
+          if (response.code === 200) {
+            this.mediaRelationsList = response.data.list || [];
+          } else {
+            this.msgError(response.msg || "加载媒体关联列表失败");
+            this.mediaRelationsList = [];
+          }
           this.mediaRelationsLoading = false;
         })
         .catch((error) => {
           console.error("加载媒体关联列表失败:", error);
+          this.msgError(
+            "加载媒体关联列表失败：" + (error.message || "未知错误")
+          );
           this.mediaRelationsList = [];
           this.mediaRelationsLoading = false;
         });
     },
 
     /** 取消关联媒体 */
-    handleUnlinkMedia(row) {
-      this.$confirm("确认取消关联该媒体吗？", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      }).then(() => {
-        deleteCaseMediaRelation(row.id)
-          .then((response) => {
-            const notifyMessage = response && response.msg;
-            this.$notify({
-              title: "通知",
-              message: notifyMessage,
-              type: response.code == 200 ? "success" : "error",
-              duration: 3000,
-              customClass: "center-notification",
-            });
-            // 延迟2秒后刷新媒体关联列表
-            setTimeout(() => {
-              this.loadMediaRelations(this.currentSelectedCase.id);
-            }, 2000);
-          })
-          .catch((error) => {
-            this.msgError("取消关联失败：" + (error.message || "未知错误"));
-          });
-      });
+    async handleUnlinkMedia(row) {
+      try {
+        await this.$confirm("确认取消关联该媒体吗？", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        });
+
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在取消关联...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+
+        try {
+          const response = await deleteCaseMediaRelation(row.id);
+
+          if (response.code === 200) {
+            // 保存当前案件ID,避免getList()改变选中状态后丢失
+            const currentCaseId = this.currentCase.id;
+
+            // 延迟2秒后刷新媒体关联列表和案件列表
+            await this.delay(2000);
+            // 先刷新当前案件的媒体关联列表(参考警情页面的实现)
+            this.loadMediaRelations(currentCaseId);
+            // 再刷新案件列表以更新关联状态
+            this.getList();
+
+            this.msgSuccess(response.msg || "取消关联成功");
+          } else {
+            this.msgError(response.msg || "取消关联失败");
+          }
+        } finally {
+          // 恢复鼠标状态
+          document.body.style.cursor = previousCursor;
+          loadingInstance.close();
+        }
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("取消关联失败：" + (error.message || "未知错误"));
+        }
+      }
     },
 
     // ========== 编辑证据相关方法 ==========
@@ -1968,6 +2048,54 @@ export default {
   display: flex;
   justify-content: center;
   gap: 10px;
+}
+
+/* 抽屉样式 */
+.drawer-content {
+  padding: 20px;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.drawer-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  border-top: 1px solid #e8e8e8;
+  background: #fff;
+  text-align: right;
+  z-index: 1;
+}
+
+/* 第一层抽屉样式 */
+.media-drawer {
+  z-index: 1000 !important;
+}
+
+/* 第二层抽屉样式 - 更高的z-index */
+.media-selector-drawer {
+  z-index: 2000 !important;
+}
+
+/* 抽屉遮罩层样式 */
+::v-deep .el-drawer__wrapper {
+  transition: all 0.3s ease;
+}
+
+/* 第二层抽屉的遮罩层 */
+::v-deep .media-selector-drawer .el-drawer__wrapper {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 抽屉滑入滑出动画 */
+::v-deep .el-drawer {
+  transition: transform 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
+}
+
+::v-deep .el-drawer.rtl {
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
 }
 </style>
 

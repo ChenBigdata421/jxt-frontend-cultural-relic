@@ -10,9 +10,9 @@ import request from '@/utils/request'
  * @param {number} query.pageIndex - 页码
  * @returns {Promise}
  */
-export function getMediaListByCaseId(caseId, query) {
+export function getRelationListByCaseId(caseId, query) {
   return request({
-    url: `/api/v1/case-media-relations/case/${caseId}/media`,
+    url: `/api/v1/case-media-relations/case/${caseId}/relations`,
     method: 'get',
     params: query
   })
@@ -50,6 +50,16 @@ export function getUnassociatedMediaList(caseId, query) {
     method: 'get',
     params: query
   })
+}
+
+/**
+ * 查询未关联到指定案件的媒体列表(别名)
+ * @param {string} caseId - 案件ID (UUID格式)
+ * @param {Object} query - 查询参数
+ * @returns {Promise}
+ */
+export function getUnassociatedMediaByCaseId(caseId, query) {
+  return getUnassociatedMediaList(caseId, query);
 }
 
 // ========== 命令端API（Command） ==========

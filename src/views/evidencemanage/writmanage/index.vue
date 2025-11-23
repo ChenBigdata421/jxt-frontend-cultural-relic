@@ -457,87 +457,103 @@
       </el-dialog>
 
       <!-- 已关联媒体展示区域 -->
-      <el-card
-        v-if="showMediaSection"
-        class="box-card"
-        style="margin-top: 20px"
+      <!-- 第一层抽屉：已关联媒体列表 -->
+      <el-drawer
+        :title="`文书【${currentWrit.writName}】的关联媒体`"
+        :visible.sync="showMediaDrawer"
+        direction="rtl"
+        size="60%"
+        :before-close="handleCloseMediaDrawer"
+        :append-to-body="true"
+        :destroy-on-close="false"
+        custom-class="media-drawer"
       >
-        <div slot="header" class="clearfix">
-          <span>文书【{{ currentWrit.writName }}】的关联媒体</span>
-          <el-button
-            style="float: right; padding: 3px 0"
-            type="text"
-            @click="showMediaSection = false"
-            >收起</el-button
-          >
+        <!-- 关联媒体操作按钮 -->
+        <div class="drawer-content">
+          <el-row :gutter="10" class="mb8">
+            <el-col :span="1.5">
+              <el-button
+                type="primary"
+                icon="el-icon-plus"
+                size="mini"
+                @click="handleLinkMedia"
+                >关联新媒体</el-button
+              >
+            </el-col>
+          </el-row>
+
+          <!-- 关联媒体列表 -->
+          <el-table v-loading="mediaLoading" :data="relationList" border>
+            <el-table-column label="媒体名称" align="center" prop="mediaName" />
+            <el-table-column label="媒体类型" align="center" prop="mediaCate">
+              <template slot-scope="scope">
+                {{ selectDictLabel(mediaCateOptions, scope.row.mediaCate) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="关联人" align="center" prop="policeName" />
+            <el-table-column
+              label="关联时间"
+              align="center"
+              prop="relationTime"
+              width="180"
+            >
+              <template slot-scope="scope">
+                <span>{{ parseTime(scope.row.relationTime) }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" align="center" width="150">
+              <template slot-scope="scope">
+                <el-button
+                  size="mini"
+                  type="text"
+                  icon="el-icon-delete"
+                  style="color: #f56c6c"
+                  @click="handleUnlinkMedia(scope.row)"
+                  >取消关联</el-button
+                >
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <!-- 分页 -->
+          <pagination
+            v-show="mediaTotal > 0"
+            :total="mediaTotal"
+            :page.sync="mediaQueryParams.pageIndex"
+            :limit.sync="mediaQueryParams.pageSize"
+            @pagination="getMediaList"
+          />
+        </div>
+      </el-drawer>
+
+      <!-- 第二层抽屉：未关联媒体选择器 -->
+      <el-drawer
+        title="关联新媒体"
+        :visible.sync="mediaSelectorDrawerOpen"
+        direction="rtl"
+        size="70%"
+        :before-close="handleCloseSelectorDrawer"
+        :append-to-body="true"
+        :destroy-on-close="false"
+        custom-class="media-selector-drawer"
+      >
+        <div class="drawer-content">
+          <!-- 媒体选择器 -->
+          <MediaSelector
+            ref="mediaSelector"
+            :selection-mode="true"
+            :multiple="true"
+            :custom-list-api="getUnassociatedMediaListApi"
+            @selection-change="handleMediaSelectionChange"
+          />
         </div>
 
-        <!-- 关联媒体操作按钮 -->
-        <el-row :gutter="10" class="mb8">
-          <el-col :span="1.5">
-            <el-button
-              type="primary"
-              icon="el-icon-plus"
-              size="mini"
-              @click="handleLinkMedia"
-              >关联新媒体</el-button
-            >
-          </el-col>
-        </el-row>
-
-        <!-- 关联媒体列表 -->
-        <el-table v-loading="mediaLoading" :data="mediaList">
-          <el-table-column label="媒体名称" align="center" prop="mediaName" />
-          <el-table-column label="媒体类型" align="center" prop="mediaCate">
-            <template slot-scope="scope">
-              {{ selectDictLabel(mediaCateOptions, scope.row.mediaCate) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="关联人" align="center" prop="policeName" />
-          <el-table-column
-            label="关联时间"
-            align="center"
-            prop="relationTime"
-            width="180"
-          >
-            <template slot-scope="scope">
-              <span>{{ parseTime(scope.row.relationTime) }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" align="center" width="150">
-            <template slot-scope="scope">
-              <el-button
-                size="mini"
-                type="text"
-                icon="el-icon-delete"
-                @click="handleUnlinkMedia(scope.row)"
-                >取消关联</el-button
-              >
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <!-- 分页 -->
-        <pagination
-          v-show="mediaTotal > 0"
-          :total="mediaTotal"
-          :page.sync="mediaQueryParams.pageIndex"
-          :limit.sync="mediaQueryParams.pageSize"
-          @pagination="getMediaList"
-        />
-      </el-card>
-
-      <!-- 媒体选择器对话框 -->
-      <MediaSelectorDialog
-        ref="mediaSelector"
-        title="关联新媒体"
-        :visible.sync="mediaSelectorOpen"
-        :multiple="true"
-        :current-writ="currentWrit"
-        @confirm="confirmLinkMedia"
-        @cancel="cancelLinkMedia"
-        @close="cancelLinkMedia"
-      />
+        <!-- 底部操作按钮 -->
+        <div class="drawer-footer">
+          <el-button @click="handleCloseSelectorDrawer">取 消</el-button>
+          <el-button type="primary" @click="confirmLinkMedia">确 定</el-button>
+        </div>
+      </el-drawer>
     </template>
   </BasicLayout>
 </template>
@@ -547,7 +563,7 @@ import BasicLayout from "@/layout/BasicLayout";
 import Pagination from "@/components/Pagination";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
-import MediaSelectorDialog from "@/components/MediaSelectorDialog";
+import MediaSelector from "@/components/MediaSelector";
 import {
   listWrits,
   getWrit,
@@ -561,6 +577,7 @@ import {
   getUnassociatedMediaByWritId,
   batchCreateWritMediaRelation,
   deleteWritMediaRelation,
+  getRelationListByWritId,
 } from "@/api/evidence/writ_media_relation_api";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
@@ -571,7 +588,7 @@ export default {
     BasicLayout,
     Pagination,
     Treeselect,
-    MediaSelectorDialog,
+    MediaSelector,
   },
   data() {
     return {
@@ -597,17 +614,19 @@ export default {
       scoreOpen: false,
       // 是否显示浏览对话框
       viewOpen: false,
-      // 是否显示媒体关联区域
-      showMediaSection: false,
-      // 是否显示媒体选择器
-      mediaSelectorOpen: false,
+      // 是否显示第一层抽屉(已关联媒体)
+      showMediaDrawer: false,
+      // 是否显示第二层抽屉(未关联媒体选择器)
+      mediaSelectorDrawerOpen: false,
       // 当前文书
       currentWrit: {},
       // 浏览数据
       viewData: {},
       // 媒体列表
-      mediaList: [],
+      relationList: [],
       mediaTotal: 0,
+      // 选中的媒体列表
+      selectedMediaList: [],
       // 开书时间范围
       writTimeRange: [],
       // 组织树选项
@@ -681,6 +700,19 @@ export default {
         ],
       },
     };
+  },
+  computed: {
+    /** 获取未关联媒体列表API(用于媒体选择器) */
+    getUnassociatedMediaListApi() {
+      if (!this.currentWrit || !this.currentWrit.id) {
+        return (query) => {
+          return Promise.resolve({ data: { list: [], count: 0 } });
+        };
+      }
+      return (query) => {
+        return getUnassociatedMediaByWritId(this.currentWrit.id, query);
+      };
+    },
   },
   watch: {
     "form.orgId": function (newVal) {
@@ -943,44 +975,76 @@ export default {
         }
       });
     },
-    /** 显示已关联媒体 */
+    /** 显示已关联媒体 - 打开第一层抽屉 */
     handleShowMedia(row) {
       this.currentWrit = row;
-      this.showMediaSection = true;
+      this.showMediaDrawer = true;
       this.getMediaList();
+    },
+    /** 关闭第一层抽屉 */
+    handleCloseMediaDrawer(done) {
+      this.showMediaDrawer = false;
+      this.currentWrit = {};
+      this.relationList = [];
+      this.mediaTotal = 0;
+      if (done) {
+        done();
+      }
     },
     /** 查询关联媒体列表 */
     getMediaList() {
       this.mediaLoading = true;
-      getMediaListByWritId(this.currentWrit.id, this.mediaQueryParams)
+      getRelationListByWritId(this.currentWrit.id, this.mediaQueryParams)
         .then((response) => {
-          this.mediaList = response.data.list || [];
-          this.mediaTotal = response.data.count || 0;
+          // 必须检查response.code是否为200
+          if (response.code === 200) {
+            this.relationList = response.data.list || [];
+            this.mediaTotal = response.data.count || 0;
+          } else {
+            console.error("加载媒体关联列表失败:", response.msg);
+            this.msgError(response.msg || "加载媒体关联列表失败");
+            this.relationList = [];
+            this.mediaTotal = 0;
+          }
           this.mediaLoading = false;
         })
         .catch((error) => {
+          console.error("加载媒体关联列表失败:", error);
           this.msgError(
             "加载媒体关联列表失败：" + (error.message || "未知错误")
           );
-          this.mediaList = [];
+          this.relationList = [];
           this.mediaTotal = 0;
           this.mediaLoading = false;
         });
     },
-    /** 关联新媒体 */
+    /** 关联新媒体 - 打开第二层抽屉 */
     handleLinkMedia() {
-      this.mediaSelectorOpen = true;
+      this.selectedMediaList = [];
+      this.mediaSelectorDrawerOpen = true;
+      // 等待抽屉打开后刷新媒体选择器
+      this.$nextTick(() => {
+        if (this.$refs.mediaSelector) {
+          this.$refs.mediaSelector.refresh();
+        }
+      });
     },
-    /** 获取未关联媒体列表(用于媒体选择器) */
-    getUnassociatedMediaList(query) {
-      if (!this.currentWrit || !this.currentWrit.id) {
-        return Promise.resolve({ data: { list: [], count: 0 } });
+    /** 关闭第二层抽屉 */
+    handleCloseSelectorDrawer(done) {
+      this.mediaSelectorDrawerOpen = false;
+      this.selectedMediaList = [];
+      if (done) {
+        done();
       }
-      return getUnassociatedMediaByWritId(this.currentWrit.id, query);
+    },
+    /** 媒体选择变化 */
+    handleMediaSelectionChange(selection) {
+      this.selectedMediaList = selection;
     },
     /** 确认关联媒体 */
-    async confirmLinkMedia(selectedMedia) {
-      if (!selectedMedia || selectedMedia.length === 0) {
+    async confirmLinkMedia() {
+      // 使用selectedMediaList而不是参数
+      if (!this.selectedMediaList || this.selectedMediaList.length === 0) {
         this.msgError("请选择要关联的媒体");
         return;
       }
@@ -999,15 +1063,16 @@ export default {
       try {
         const data = {
           writId: this.currentWrit.id,
-          mediaIds: selectedMedia.map((item) => item.mediaId),
+          mediaIds: this.selectedMediaList.map((item) => item.mediaId),
         };
 
         const response = await batchCreateWritMediaRelation(data);
 
         if (response.code === 200) {
-          this.mediaSelectorOpen = false;
+          // 关闭第二层抽屉
+          this.mediaSelectorDrawerOpen = false;
 
-          // 延迟2秒后刷新媒体列表
+          // 延迟2秒后刷新第一层抽屉的媒体列表
           await this.delay(2000);
           this.getMediaList();
           this.getList(); // 刷新文书列表以更新关联状态
@@ -1023,10 +1088,6 @@ export default {
         document.body.style.cursor = previousCursor;
         loadingInstance.close();
       }
-    },
-    /** 取消关联媒体 */
-    cancelLinkMedia() {
-      this.mediaSelectorOpen = false;
     },
     /** 取消关联媒体 */
     async handleUnlinkMedia(row) {
@@ -1156,6 +1217,54 @@ export default {
 
 .column-item {
   padding: 5px 0;
+}
+
+/* 抽屉样式 */
+.drawer-content {
+  padding: 20px;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.drawer-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  border-top: 1px solid #e8e8e8;
+  background: #fff;
+  text-align: right;
+  z-index: 1;
+}
+
+/* 第一层抽屉样式 */
+.media-drawer {
+  z-index: 1000 !important;
+}
+
+/* 第二层抽屉样式 - 更高的z-index */
+.media-selector-drawer {
+  z-index: 2000 !important;
+}
+
+/* 抽屉遮罩层样式 */
+::v-deep .el-drawer__wrapper {
+  transition: all 0.3s ease;
+}
+
+/* 第二层抽屉的遮罩层 */
+::v-deep .media-selector-drawer .el-drawer__wrapper {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 抽屉滑入滑出动画 */
+::v-deep .el-drawer {
+  transition: transform 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
+}
+
+::v-deep .el-drawer.rtl {
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
 }
 </style>
 
