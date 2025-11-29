@@ -198,13 +198,27 @@ export function delArchiveMediaRelation(archiveId, mediaId) {
  * 查询档案的媒体关联列表
  * @param {string} archiveId - 档案ID (UUID格式)
  * @param {Object} query - 查询参数
+ * @param {number} query.page - 页码
+ * @param {number} query.pageSize - 每页条数
  * @returns {Promise}
  */
 export function getArchiveMediaRelations(archiveId, query) {
   return request({
-    url: `/api/v1/archive-media-relations/archive/${archiveId}`,
+    url: `/api/v1/archive-media-relations/archives/${archiveId}/media-relations`,
     method: 'get',
     params: query
+  })
+}
+
+/**
+ * 删除档案媒体关联(通过关联ID)
+ * @param {string} relationId - 关联ID (UUID格式)
+ * @returns {Promise}
+ */
+export function delArchiveMediaRelationById(relationId) {
+  return request({
+    url: `/api/v1/archive-media-relations/${relationId}`,
+    method: 'delete'
   })
 }
 

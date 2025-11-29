@@ -7,29 +7,44 @@
           这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
         <el-form :inline="true">
           <el-form-item label="媒体类型">
-            <el-select v-model="queryParams.media_cate" placeholder="媒体类型" clearable style="width: 170px;">
+            <el-select
+              v-model="queryParams.media_cate"
+              placeholder="媒体类型"
+              clearable
+              style="width: 170px"
+            >
               <el-option
                 v-for="dict in media_cate_options"
                 :key="dict.value"
                 :label="dict.label"
                 :value="dict.value"
-                style="width: 150px;"
+                style="width: 150px"
               />
             </el-select>
           </el-form-item>
           <el-form-item label="存储类型">
-            <el-select v-model="queryParams.storage_type" placeholder="存储类型" clearable style="width: 170px;">
+            <el-select
+              v-model="queryParams.storage_type"
+              placeholder="存储类型"
+              clearable
+              style="width: 170px"
+            >
               <el-option
                 v-for="dict in storage_type_options"
                 :key="dict.value"
                 :label="dict.label"
                 :value="dict.value"
-                style="width: 150px;"
+                style="width: 150px"
               />
             </el-select>
           </el-form-item>
           <el-form-item label="是否执法视频">
-            <el-select v-model="queryParams.bool_enfor" placeholder="是否执法视频" clearable style="width: 170px;">
+            <el-select
+              v-model="queryParams.bool_enfor"
+              placeholder="是否执法视频"
+              clearable
+              style="width: 170px"
+            >
               <el-option
                 v-for="dict in bool_enfor_options"
                 :key="dict.value"
@@ -45,7 +60,8 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-            >搜索</el-button>
+              >搜索</el-button
+            >
           </el-form-item>
         </el-form>
         <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
@@ -66,41 +82,34 @@
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column prop="media_name" label="媒体名称" />
-          <el-table-column prop="shot_time_start" label="拍摄开始时间" width="100" />
+          <el-table-column
+            prop="shot_time_start"
+            label="拍摄开始时间"
+            width="100"
+          />
           <el-table-column prop="enfor_no" label="执法业务编号" width="100" />
           <el-table-column prop="enfor_type" label="执法类型" width="100" />
           <el-table-column prop="police_id" label="警员Id" width="100" />
-          <el-table-column prop="storage_type" label="存储方式" width="100">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-            <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
-              <el-tag
-                :type="scope.row.storage_type === 1 ? 'success' : 'danger'"
-                disable-transitions
-              >{{ storage_type_format(scope.row) }}</el-tag>
+          <el-table-column prop="storage_type" label="存储方式" width="120">
+            <template slot-scope="{ row }">
+              {{ selectDictLabel(storage_type_options, row.storage_type) }}
             </template>
           </el-table-column>
-          <el-table-column prop="media_cate" label="媒体类型" width="100">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-            <template slot-scope="scope">
-              <el-tag
-                disable-transitions
-              >{{ media_cate_format(scope.row) }}</el-tag>
+          <el-table-column prop="media_cate" label="媒体类型" width="120">
+            <template slot-scope="{ row }">
+              {{ selectDictLabel(media_cate_options, row.media_cate) }}
             </template>
           </el-table-column>
-          <el-table-column prop="bool_enfor" label="是否是执法视频" width="120">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-            <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
-              <el-tag
-                :type="scope.row.bool_enfor === 1 ? 'success' : 'danger'"
-                disable-transitions
-              >{{ bool_enfor_format(scope.row) }}</el-tag>
+          <el-table-column prop="bool_enfor" label="是否是执法视频" width="140">
+            <template slot-scope="{ row }">
+              {{ selectDictLabel(bool_enfor_options, row.bool_enfor) }}
             </template>
           </el-table-column>
-          <el-table-column prop="organization_id" label="单位组织Id" width="100" />
+          <el-table-column
+            prop="organization_id"
+            label="单位组织Id"
+            width="100"
+          />
           <el-table-column prop="site_no" label="采集站编号" width="100" />
           <el-table-column prop="record_id" label="执法仪ID" width="100" />
           <el-table-column prop="media_duration" label="视频时长" width="100" />
@@ -112,7 +121,7 @@
 </template>
 
 <script>
-import { get_js_media_list } from '@/api/admin/js_media'
+import { get_js_media_list } from "@/api/admin/js_media";
 
 export default {
   data() {
@@ -131,47 +140,37 @@ export default {
       queryParams: {
         media_cate: undefined,
         bool_enfor: undefined,
-        storage_type: undefined
-      }
-
-    }
+        storage_type: undefined,
+      },
+    };
   },
   created() {
-    this.getList()
-    this.getDicts('media_type').then(response => {
-      this.media_cate_options = response.data
-    })
-    this.getDicts('storage_type').then(response => {
-      this.storage_type_options = response.data
-    })
-    this.getDicts('bool_enfor').then(response => {
-      this.bool_enfor_options = response.data
-    })
+    this.getList();
+    this.getDicts("media_type").then((response) => {
+      this.media_cate_options = response.data;
+    });
+    this.getDicts("storage_type").then((response) => {
+      this.storage_type_options = response.data;
+    });
+    this.getDicts("bool_enfor").then((response) => {
+      this.bool_enfor_options = response.data;
+    });
   },
   methods: {
     /** 查询组织列表 */
     getList() {
-      this.loading = true
-      get_js_media_list(this.queryParams).then(response => {
+      this.loading = true;
+      get_js_media_list(this.queryParams).then((response) => {
         // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
-        this.js_media_list = response.data
-        this.loading = false
-      })
+        this.js_media_list = response.data;
+        this.loading = false;
+      });
     },
+
     /** 搜索按钮操作 */
     handleQuery() {
-      this.getList()
+      this.getList();
     },
-    // 字典翻译
-    media_cate_format(row) {
-      return this.selectDictLabel(this.media_cate_options, parseInt(row.media_cate))
-    },
-    bool_enfor_format(row) {
-      return this.selectDictLabel(this.bool_enfor_options, parseInt(row.bool_enfor))
-    },
-    storage_type_format(row) {
-      return this.selectDictLabel(this.storage_type_options, parseInt(row.storage_type))
-    }
-  }
-}
+  },
+};
 </script>

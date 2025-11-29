@@ -178,26 +178,21 @@ export default {
         // 监听播放器事件
         videoElement.addEventListener('loadstart', () => {
           this.playerState = 'loading'
-          console.log('视频开始加载')
         })
 
         videoElement.addEventListener('canplay', () => {
-          console.log('视频可以播放')
         })
 
         videoElement.addEventListener('playing', () => {
           this.playerState = 'playing'
-          console.log('视频正在播放')
         })
 
         videoElement.addEventListener('pause', () => {
           this.playerState = 'paused'
-          console.log('视频已暂停')
         })
 
         videoElement.addEventListener('ended', () => {
           this.playerState = 'stopped'
-          console.log('视频播放结束')
         })
 
         videoElement.addEventListener('error', (e) => {

@@ -157,13 +157,11 @@
             <el-table-column
               prop="mediaCate"
               label="媒体种类"
-              width="100"
+              width="120"
               align="center"
             >
-              <template slot-scope="scope">
-                <el-tag disable-transitions>{{
-                  mediaCateFormat(scope.row)
-                }}</el-tag>
+              <template slot-scope="{ row }">
+                {{ selectDictLabel(mediaCateOptions, row.mediaCate) }}
               </template>
             </el-table-column>
             <el-table-column
@@ -454,13 +452,11 @@
             <el-table-column
               prop="mediaCate"
               label="媒体种类"
-              width="180"
+              width="120"
               align="center"
             >
-              <template slot-scope="scope">
-                <el-tag disable-transitions>{{
-                  mediaCateFormat(scope.row)
-                }}</el-tag>
+              <template slot-scope="{ row }">
+                {{ selectDictLabel(mediaCateOptions, row.mediaCate) }}
               </template>
             </el-table-column>
             <el-table-column
@@ -472,11 +468,11 @@
             <el-table-column
               prop="storageType"
               label="存储方式"
-              width="180"
+              width="120"
               align="center"
             >
-              <template slot-scope="scope">
-                {{ storageTypeFormat(scope.row) }}
+              <template slot-scope="{ row }">
+                {{ selectDictLabel(storageTypeOptions, row.storageType) }}
               </template>
             </el-table-column>
             <el-table-column
@@ -564,13 +560,8 @@
                   label="媒体种类"
                   width="90"
                   align="center"
-                >
-                  <template slot-scope="scope">
-                    <el-tag disable-transitions>{{
-                      mediaCateFormat(scope.row)
-                    }}</el-tag>
-                  </template>
-                </el-table-column>
+                  :formatter="mediaCateFormat"
+                />
                 <el-table-column
                   prop="shotTimeStart"
                   label="拍摄时间"
@@ -650,13 +641,8 @@
                   label="媒体种类"
                   width="90"
                   align="center"
-                >
-                  <template slot-scope="scope">
-                    <el-tag disable-transitions>{{
-                      mediaCateFormat(scope.row)
-                    }}</el-tag>
-                  </template>
-                </el-table-column>
+                  :formatter="mediaCateFormat"
+                />
                 <el-table-column
                   prop="shotTimeStart"
                   label="拍摄时间"
@@ -733,9 +719,9 @@
           <el-descriptions-item label="媒体编号">{{
             viewMediaData.mediaCode
           }}</el-descriptions-item>
-          <el-descriptions-item label="媒体类型">{{
-            mediaCateFormat(viewMediaData)
-          }}</el-descriptions-item>
+          <el-descriptions-item label="媒体类型">
+            {{ selectDictLabel(mediaCateOptions, viewMediaData.mediaCate) }}
+          </el-descriptions-item>
           <el-descriptions-item label="拍摄时间">{{
             parseTime(viewMediaData.shotTime)
           }}</el-descriptions-item>
@@ -1110,24 +1096,6 @@ export default {
     // 案件流程字典翻译 - 根据案件类型选择对应的流程字典
     caseFlowFormat(row) {
       return this.getCaseFlowLabel(row.caseFlow, row.caseType);
-    },
-    // 字典状态字典翻译
-    mediaCateFormat(row) {
-      if (row != undefined) {
-        return this.selectDictLabel(
-          this.mediaCateOptions,
-          parseInt(row.mediaCate)
-        );
-      }
-    },
-    // 字典状态字典翻译
-    storageTypeFormat(row) {
-      if (row != undefined) {
-        return this.selectDictLabel(
-          this.storageTypeOptions,
-          parseInt(row.storageType)
-        );
-      }
     },
 
     /** 获取案件流程标签 - 根据案件类型确定字典类型 */

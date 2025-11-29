@@ -128,6 +128,7 @@
 
     <!-- 档案列表 -->
     <el-table
+      ref="archiveTable"
       v-loading="loading"
       :data="archiveList"
       border
@@ -135,12 +136,13 @@
       @selection-change="handleSelectionChange"
       @sort-change="handleSortChange"
     >
+      <!-- 选择列 (单选和多选都使用checkbox) -->
       <el-table-column type="selection" width="55" align="center" />
       <!-- 操作列 (仅在非选择模式下显示) -->
       <el-table-column
         v-if="!selectionMode"
         label="操作"
-        width="180"
+        width="250"
         align="center"
         fixed="left"
       >
@@ -163,6 +165,8 @@
             @click="handleOperation(scope.row, 'view')"
             >详情</el-button
           >
+          <!-- 自定义操作按钮插槽 -->
+          <slot name="operation" :row="scope.row"></slot>
         </template>
       </el-table-column>
       <el-table-column
@@ -429,18 +433,36 @@ export default {
     /** 查询档案列表 */
     getList() {
       this.loading = true;
+      console.log(
+        "[ArchiveSelector] 开始查询档案列表，参数：",
+        this.queryParams
+      );
       // 如果提供了自定义API函数,使用自定义API,否则使用默认的listArchives
       const apiFunc = this.customListApi || listArchives;
       apiFunc(this.queryParams)
         .then((response) => {
+          console.log("[ArchiveSelector] API响应：", response);
           if (response.code === 200) {
             this.archiveList = response.data.list || [];
             // 修复：后端返回的是 count 字段，不是 total
             this.total = response.data.count || 0;
+            console.log(
+              "[ArchiveSelector] 查询成功，数据量：",
+              this.archiveList.length,
+              "总数：",
+              this.total
+            );
+          } else {
+            console.warn(
+              "[ArchiveSelector] API返回非200状态码：",
+              response.code,
+              response.msg
+            );
           }
           this.loading = false;
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error("[ArchiveSelector] API调用失败：", error);
           this.loading = false;
         });
     },
@@ -534,9 +556,21 @@ export default {
       }
     },
 
+    /** 单个选择框点击事件 - 实现单选逻辑 */
+    handleSelect(selection, row) {
+      // 如果是单选模式,清空其他选择,只保留当前选中的行
+      if (!this.multiple) {
+        this.$refs.archiveTable.clearSelection();
+        this.$refs.archiveTable.toggleRowSelection(row, true);
+      }
+      // 触发select事件
+      this.$emit("select", row);
+    },
+
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
       // 向父组件发送选中数据变化事件
+      this.selectedArchives = selection;
       this.$emit("selection-change", selection);
     },
 
@@ -640,6 +674,20 @@ export default {
         JSON.stringify(this.visibleColumns)
       );
       this.$message.success("已重置为默认显示");
+    },
+
+    /** 清空选中状态 */
+    clearSelection() {
+      this.selectedArchives = [];
+      if (this.$refs.archiveTable) {
+        this.$refs.archiveTable.clearSelection();
+      }
+    },
+
+    /** 刷新列表 */
+    refresh() {
+      this.clearSelection();
+      this.getList();
     },
   },
 };
