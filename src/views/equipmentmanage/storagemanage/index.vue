@@ -6,18 +6,18 @@
           内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
           这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="存储编号" prop="No">
+          <el-form-item label="存储编号" prop="storageSiteNo">
             <el-input
-              v-model="queryParams.No"
+              v-model="queryParams.storageSiteNo"
               placeholder="请输入存储编号"
               clearable
               style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="存储名称" prop="Name">
+          <el-form-item label="存储名称" prop="storageSiteName">
             <el-input
-              v-model="queryParams.Name"
+              v-model="queryParams.storageSiteName"
               placeholder="请输入存储名称"
               clearable
               style="width: 170px"
@@ -48,9 +48,9 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="状态" prop="State">
+          <el-form-item label="状态" prop="status">
             <el-select
-              v-model="queryParams.State"
+              v-model="queryParams.status"
               placeholder="状态"
               clearable
               style="width: 170px"
@@ -64,9 +64,9 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="品牌名称" prop="BrandName">
+          <el-form-item label="品牌名称" prop="brandName">
             <el-input
-              v-model="queryParams.BrandName"
+              v-model="queryParams.brandName"
               placeholder="请输入品牌名称"
               clearable
               style="width: 170px"
@@ -217,21 +217,21 @@
             </template>
           </el-table-column>
           <el-table-column
-            v-if="isColumnVisible('Name')"
-            prop="Name"
+            v-if="isColumnVisible('storageSiteName')"
+            prop="storageSiteName"
             label="名称"
             min-width="140"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('No')"
-            prop="No"
+            v-if="isColumnVisible('storageSiteNo')"
+            prop="storageSiteNo"
             label="编号"
             width="120"
           />
           <el-table-column
-            v-if="isColumnVisible('BrandName')"
-            prop="BrandName"
+            v-if="isColumnVisible('brandName')"
+            prop="brandName"
             label="品牌名称"
             min-width="140"
             :show-overflow-tooltip="true"
@@ -250,14 +250,14 @@
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('Ip')"
-            prop="Ip"
+            v-if="isColumnVisible('storageSiteIp')"
+            prop="storageSiteIp"
             label="IP地址"
             width="140"
           />
           <el-table-column
-            v-if="isColumnVisible('State')"
-            prop="State"
+            v-if="isColumnVisible('status')"
+            prop="status"
             label="状态"
             width="110"
           >
@@ -269,70 +269,63 @@
             </template>
           </el-table-column>
           <el-table-column
-            v-if="isColumnVisible('System')"
-            prop="System"
+            v-if="isColumnVisible('system')"
+            prop="system"
             label="操作系统"
             min-width="140"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('Version')"
-            prop="Version"
+            v-if="isColumnVisible('version')"
+            prop="version"
             label="版本"
             width="120"
           />
           <el-table-column
-            v-if="isColumnVisible('Http')"
-            prop="Http"
+            v-if="isColumnVisible('storageSiteUrl')"
+            prop="storageSiteUrl"
             label="播放地址"
             min-width="160"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('Address')"
-            prop="Address"
+            v-if="isColumnVisible('address')"
+            prop="address"
             label="详细地址"
             min-width="180"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('Cpu')"
-            prop="Cpu"
+            v-if="isColumnVisible('cpu')"
+            prop="cpu"
             label="CPU"
             width="120"
           />
           <el-table-column
-            v-if="isColumnVisible('Memory')"
-            prop="Memory"
+            v-if="isColumnVisible('memory')"
+            prop="memory"
             label="内存(GB)"
             width="120"
           />
           <el-table-column
-            v-if="isColumnVisible('BuyTime')"
-            prop="BuyTime"
+            v-if="isColumnVisible('purchaseDate')"
+            prop="purchaseDate"
             label="购置时间"
             width="180"
           >
             <template slot-scope="{ row }">
-              {{ parseTime(row.BuyTime) }}
+              {{ parseTime(row.purchaseDate) }}
             </template>
           </el-table-column>
           <el-table-column
-            v-if="isColumnVisible('OnlineTimeTotal')"
-            prop="OnlineTimeTotal"
-            label="在线总时长"
-            width="140"
+            v-if="isColumnVisible('disk')"
+            prop="disk"
+            label="磁盘(GB)"
+            width="120"
           />
           <el-table-column
-            v-if="isColumnVisible('OrgName')"
-            prop="OrgName"
-            label="归属单位"
-            min-width="160"
-            :show-overflow-tooltip="true"
-          />
-          <el-table-column
-            v-if="isColumnVisible('Remark')"
-            prop="Remark"
+            v-if="isColumnVisible('remark')"
+            prop="remark"
             label="备注"
             min-width="160"
             :show-overflow-tooltip="true"
@@ -394,13 +387,13 @@
             <!-- 基础信息 -->
             <el-row :gutter="15">
               <el-col :span="12">
-                <el-form-item label="名称" prop="Name" label-width="100px">
-                  <el-input v-model="form.Name" placeholder="请输入名称" />
+                <el-form-item label="名称" prop="storageSiteName" label-width="100px">
+                  <el-input v-model="form.storageSiteName" placeholder="请输入名称" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="编号" prop="No" label-width="100px">
-                  <el-input v-model="form.No" placeholder="请输入编号" />
+                <el-form-item label="编号" prop="storageSiteNo" label-width="100px">
+                  <el-input v-model="form.storageSiteNo" placeholder="请输入编号" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -410,18 +403,18 @@
               <el-col :span="12">
                 <el-form-item
                   label="品牌名称"
-                  prop="BrandName"
+                  prop="brandName"
                   label-width="100px"
                 >
                   <el-input
-                    v-model="form.BrandName"
+                    v-model="form.brandName"
                     placeholder="请输入品牌名称"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="设备状态" label-width="100px">
-                  <el-radio-group v-model="form.State" class="radio-group">
+                  <el-radio-group v-model="form.status" class="radio-group">
                     <el-radio
                       v-for="dict in stateOptions"
                       :key="dict.value"
@@ -436,25 +429,30 @@
             <!-- 网络配置 -->
             <el-row :gutter="15">
               <el-col :span="12">
-                <el-form-item label="IP地址" prop="Ip" label-width="100px">
-                  <el-input v-model="form.Ip" placeholder="请输入IP地址" />
+                <el-form-item label="IP地址" prop="storageSiteIp" label-width="100px">
+                  <el-input v-model="form.storageSiteIp" placeholder="请输入IP地址" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item
                   label="物理地址"
-                  prop="Address"
+                  prop="address"
                   label-width="100px"
                 >
                   <el-input
-                    v-model="form.Address"
+                    v-model="form.address"
                     placeholder="请输入物理地址"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="播放地址" prop="Http" label-width="100px">
-                  <el-input v-model="form.Http" placeholder="请输入播放地址" />
+                <el-form-item label="播放地址" prop="storageSiteUrl" label-width="100px">
+                  <el-input v-model="form.storageSiteUrl" placeholder="请输入播放地址" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="密钥" prop="authKey" label-width="100px">
+                  <el-input v-model="form.authKey" placeholder="请输入密钥" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -463,13 +461,24 @@
             <el-row :gutter="15">
               <el-col :span="12">
                 <el-form-item label="CPU型号" label-width="100px">
-                  <el-input v-model="form.Cpu" placeholder="请输入CPU型号" />
+                  <el-input v-model="form.cpu" placeholder="请输入CPU型号" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="内存容量" label-width="100px">
                   <el-input-number
-                    v-model="form.Memory"
+                    v-model="form.memory"
+                    placeholder="单位：GB"
+                    :min="0"
+                    controls-position="right"
+                    class="full-width"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="存储容量" label-width="100px">
+                  <el-input-number
+                    v-model="form.disk"
                     placeholder="单位：GB"
                     :min="0"
                     controls-position="right"
@@ -484,14 +493,14 @@
               <el-col :span="12">
                 <el-form-item label="操作系统" label-width="100px">
                   <el-input
-                    v-model="form.System"
+                    v-model="form.system"
                     placeholder="请输入系统名称"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="系统版本" label-width="100px">
-                  <el-input v-model="form.Version" placeholder="请输入版本号" />
+                  <el-input v-model="form.version" placeholder="请输入版本号" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -501,7 +510,7 @@
               <el-col :span="12">
                 <el-form-item label="购置时间" label-width="100px">
                   <el-date-picker
-                    v-model="form.BuyTime"
+                    v-model="form.purchaseDate"
                     type="datetime"
                     placeholder="选择购置时间"
                     value-format="yyyy-MM-ddTHH:mm:ssZ"
@@ -512,7 +521,7 @@
               <el-col :span="12">
                 <el-form-item label="备注说明" label-width="100px">
                   <el-input
-                    v-model="form.Remark"
+                    v-model="form.remark"
                     placeholder="请输入备注信息"
                   />
                 </el-form-item>
@@ -612,27 +621,26 @@ export default {
       stateOptions: [],
       // 列配置
       columnOptions: [
-        { prop: "Name", label: "名称", fixed: true, defaultVisible: true },
-        { prop: "No", label: "编号", defaultVisible: true },
-        { prop: "BrandName", label: "品牌名称", defaultVisible: true },
+        { prop: "storageSiteName", label: "名称", fixed: true, defaultVisible: true },
+        { prop: "storageSiteNo", label: "编号", defaultVisible: true },
+        { prop: "brandName", label: "品牌名称", defaultVisible: true },
         { prop: "managerName", label: "管理员", defaultVisible: true },
         {
           prop: "managerOrgFullName",
           label: "管理员所在组织",
           defaultVisible: true,
         },
-        { prop: "Ip", label: "IP地址", defaultVisible: true },
-        { prop: "State", label: "状态", defaultVisible: true },
-        { prop: "System", label: "操作系统", defaultVisible: true },
-        { prop: "Version", label: "版本", defaultVisible: false },
-        { prop: "Http", label: "播放地址", defaultVisible: false },
-        { prop: "Address", label: "详细地址", defaultVisible: false },
-        { prop: "Cpu", label: "CPU", defaultVisible: false },
-        { prop: "Memory", label: "内存(GB)", defaultVisible: false },
-        { prop: "BuyTime", label: "购置时间", defaultVisible: false },
-        { prop: "OnlineTimeTotal", label: "在线总时长", defaultVisible: false },
-        { prop: "OrgName", label: "归属单位", defaultVisible: false },
-        { prop: "Remark", label: "备注", defaultVisible: false },
+        { prop: "storageSiteIp", label: "IP地址", defaultVisible: true },
+        { prop: "status", label: "状态", defaultVisible: true },
+        { prop: "system", label: "操作系统", defaultVisible: true },
+        { prop: "version", label: "版本", defaultVisible: false },
+        { prop: "storageSiteUrl", label: "播放地址", defaultVisible: false },
+        { prop: "address", label: "详细地址", defaultVisible: false },
+        { prop: "cpu", label: "CPU", defaultVisible: false },
+        { prop: "memory", label: "内存(GB)", defaultVisible: false },
+        { prop: "purchaseDate", label: "购置时间", defaultVisible: false },
+        { prop: "disk", label: "磁盘(GB)", defaultVisible: false },
+        { prop: "remark", label: "备注", defaultVisible: false },
       ],
       // 可见列
       visibleColumns: [],
@@ -652,37 +660,38 @@ export default {
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
-        No: undefined,
-        Name: undefined,
+        storageSiteNo: undefined,
+        storageSiteName: undefined,
         managerOrgId: undefined,
         managerId: undefined,
-        State: undefined,
-        BrandName: undefined,
+        status: undefined,
+        brandName: undefined,
       },
       AttributeValueList: [],
       AttributeValueConfigList: [],
       // 表单参数
       form: {
-        State: "1",
+        status: "1",
       },
       ColumnNameConvert: new Map([
-        ["Id", "主键ID"],
-        ["No", "编号"],
-        ["Name", "名称"],
-        ["Ip", "IP地址"],
-        ["Http", "播放地址"],
-        ["Address", "详细地址"],
-        ["AdminPoliceName", "管理员"],
-        ["Cpu", "CPU"],
-        ["Memory", "内存"],
-        ["BuyTime", "购置时间"],
-        ["System", "操作系统"],
-        ["Version", "版本号"],
-        ["Remark", "备注"],
-        ["BrandName", "品牌名称"],
-        ["OnlineTimeTotal", "在线总时长"],
-        ["OrgName", "归属单位"],
-        ["State", "状态"],
+        ["id", "主键ID"],
+        ["storageSiteNo", "编号"],
+        ["storageSiteName", "名称"],
+        ["storageSiteIp", "IP地址"],
+        ["storageSiteUrl", "播放地址"],
+        ["address", "详细地址"],
+        ["authKey", "密钥"],
+        ["managerName", "管理员"],
+        ["cpu", "CPU"],
+        ["memory", "内存"],
+        ["disk", "存储"],
+        ["purchaseDate", "购置时间"],
+        ["system", "操作系统"],
+        ["version", "版本号"],
+        ["remark", "备注"],
+        ["brandName", "品牌名称"],
+        ["managerOrgFullName", "归属单位"],
+        ["status", "状态"],
       ]),
       ColumnNameConfigConvert: new Map([
         ["Id", "主键ID"],
@@ -778,7 +787,7 @@ export default {
 
     // 字典状态字典翻译
     stateFormat(row) {
-      return this.selectDictLabel(this.stateOptions, parseInt(row.State));
+      return this.selectDictLabel(this.stateOptions, parseInt(row.status));
     },
 
     /** 查询组织下拉树结构 */
@@ -808,22 +817,21 @@ export default {
       this.form = {
         managerOrgId: undefined,
         managerId: undefined,
-        No: undefined,
-        Name: undefined,
-        Ip: undefined,
-        Http: undefined,
-        Address: undefined,
-        AdminPoliceName: undefined,
-        Cpu: undefined,
-        Memory: undefined,
-        BuyTime: undefined,
-        System: undefined,
-        Version: undefined,
-        Remark: undefined,
-        BrandName: undefined,
-        OnlineTimeTotal: undefined,
-        OrgName: undefined,
-        State: "1",
+        storageSiteNo: undefined,
+        storageSiteName: undefined,
+        storageSiteIp: undefined,
+        storageSiteUrl: undefined,
+        address: undefined,
+        authKey: undefined,
+        cpu: undefined,
+        memory: undefined,
+        disk: undefined,
+        purchaseDate: undefined,
+        system: undefined,
+        version: undefined,
+        remark: undefined,
+        brandName: undefined,
+        status: "1",
       };
       this.resetForm("form");
     },
@@ -843,7 +851,7 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.StorageIds = selection.map((item) => item.Id);
+      this.StorageIds = selection.map((item) => item.id);
       this.UpdateDisabled = selection.length !== 1;
       this.DeleteDisabled = !selection.length;
     },
@@ -871,10 +879,10 @@ export default {
     handleUpdate(row) {
       this.reset();
       this.firstLoad = true;
-      const StorageId = row.Id || this.StorageIds;
+      const StorageId = row.id || this.StorageIds;
       getEquipmentStorage(StorageId).then((response) => {
         this.form = response.data;
-        this.form.State = String(this.form.State);
+        this.form.status = String(this.form.status);
         this.title = "修改存储";
         this.isEdit = true;
         this.open = true;
@@ -891,7 +899,7 @@ export default {
         this.AttributeValueList.push(attributeValue);
       });
       this.AttributeValueConfigList = [];
-      getEquipmentStorageConfig(row.Id).then((response) => {
+      getEquipmentStorageConfig(row.id).then((response) => {
         Object.keys(response.data).forEach((key) => {
           const attributeValue = {
             AttributeName: this.ColumnNameConfigConvert.get(key),
@@ -907,9 +915,9 @@ export default {
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.State = parseInt(this.form.State);
-          if (this.form.Id !== undefined) {
-            updateEquipmentStorage(this.form, this.form.Id).then((response) => {
+          this.form.status = parseInt(this.form.status);
+          if (this.form.id !== undefined) {
+            updateEquipmentStorage(this.form, this.form.id).then((response) => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg);
                 this.open = false;
@@ -934,7 +942,7 @@ export default {
     },
 
     handleDelete(row) {
-      const StorageId = (row.Id && [row.Id]) || this.StorageIds;
+      const StorageId = (row.id && [row.id]) || this.StorageIds;
       this.$confirm(
         '是否确认删除存储编号为"' + StorageId + '"的数据项?',
         "警告",
@@ -970,36 +978,38 @@ export default {
             "IP地址",
             "播放地址",
             "详细地址",
+            "密钥",
             "管理员",
             "CPU",
             "内存",
+            "存储",
             "购置时间",
             "操作系统",
             "版本号",
             "备注",
             "品牌名称",
-            "在线总时长",
             "归属单位",
             "状态",
           ];
           const filterVal = [
-            "Id",
-            "No",
-            "Name",
-            "Ip",
-            "Http",
-            "Address",
-            "AdminPoliceName",
-            "Cpu",
-            "Memory",
-            "BuyTime",
-            "System",
-            "Version",
-            "Remark",
-            "BrandName",
-            "OnlineTimeTotal",
-            "OrgName",
-            "State",
+            "id",
+            "storageSiteNo",
+            "storageSiteName",
+            "storageSiteIp",
+            "storageSiteUrl",
+            "address",
+            "authKey",
+            "managerName",
+            "cpu",
+            "memory",
+            "disk",
+            "purchaseDate",
+            "system",
+            "version",
+            "remark",
+            "brandName",
+            "managerOrgFullName",
+            "status",
           ];
           const list = this.StorageList;
           const data = formatJson(filterVal, list);

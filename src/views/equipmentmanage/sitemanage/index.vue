@@ -6,18 +6,18 @@
           内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
           这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="采集站编号" prop="No">
+          <el-form-item label="采集站编号" prop="collectSiteNo">
             <el-input
-              v-model="queryParams.No"
+              v-model="queryParams.collectSiteNo"
               placeholder="请输入采集站编号"
               clearable
               style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="采集站名称" prop="Name">
+          <el-form-item label="采集站名称" prop="collectSiteName">
             <el-input
-              v-model="queryParams.Name"
+              v-model="queryParams.collectSiteName"
               placeholder="请输入采集站名称"
               clearable
               style="width: 170px"
@@ -47,9 +47,9 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="状态" prop="State">
+          <el-form-item label="状态" prop="status">
             <el-select
-              v-model="queryParams.State"
+              v-model="queryParams.status"
               placeholder="状态"
               clearable
               style="width: 170px"
@@ -63,9 +63,9 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="品牌名称" prop="BrandName">
+          <el-form-item label="品牌名称" prop="brandName">
             <el-input
-              v-model="queryParams.BrandName"
+              v-model="queryParams.brandName"
               placeholder="请输入品牌名称"
               clearable
               style="width: 170px"
@@ -215,41 +215,41 @@
             </template>
           </el-table-column>
           <el-table-column
-            v-if="isColumnVisible('Name')"
-            prop="Name"
+            v-if="isColumnVisible('collectSiteName')"
+            prop="collectSiteName"
             label="名称"
             min-width="140"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('No')"
-            prop="No"
+            v-if="isColumnVisible('collectSiteNo')"
+            prop="collectSiteNo"
             label="编号"
             width="120"
           />
           <el-table-column
-            v-if="isColumnVisible('BrandName')"
-            prop="BrandName"
+            v-if="isColumnVisible('brandName')"
+            prop="brandName"
             label="品牌名称"
             min-width="140"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('Ip')"
-            prop="Ip"
+            v-if="isColumnVisible('collectSiteIp')"
+            prop="collectSiteIp"
             label="IP地址"
             width="140"
           />
           <el-table-column
-            v-if="isColumnVisible('Address')"
-            prop="Address"
+            v-if="isColumnVisible('address')"
+            prop="address"
             label="地址"
             min-width="160"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('Http')"
-            prop="Http"
+            v-if="isColumnVisible('collectSiteUrl')"
+            prop="collectSiteUrl"
             label="播放地址"
             min-width="160"
             :show-overflow-tooltip="true"
@@ -268,8 +268,8 @@
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('State')"
-            prop="State"
+            v-if="isColumnVisible('status')"
+            prop="status"
             label="状态"
             width="110"
           >
@@ -281,61 +281,55 @@
             </template>
           </el-table-column>
           <el-table-column
-            v-if="isColumnVisible('OnlineTimeTotal')"
-            prop="OnlineTimeTotal"
-            label="在线总时长"
-            width="140"
-          />
-          <el-table-column
-            v-if="isColumnVisible('Cpu')"
-            prop="Cpu"
+            v-if="isColumnVisible('cpu')"
+            prop="cpu"
             label="CPU"
             width="140"
           />
           <el-table-column
-            v-if="isColumnVisible('Memory')"
-            prop="Memory"
+            v-if="isColumnVisible('memory')"
+            prop="memory"
             label="内存(G)"
             width="140"
           />
           <el-table-column
-            v-if="isColumnVisible('Disk')"
-            prop="Disk"
+            v-if="isColumnVisible('disk')"
+            prop="disk"
             label="存储(G)"
             width="140"
           />
           <el-table-column
-            v-if="isColumnVisible('UsbNum')"
-            prop="UsbNum"
+            v-if="isColumnVisible('usbNum')"
+            prop="usbNum"
             label="USB数量"
             width="120"
           />
           <el-table-column
-            v-if="isColumnVisible('System')"
-            prop="System"
+            v-if="isColumnVisible('system')"
+            prop="system"
             label="操作系统"
             min-width="160"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('Version')"
-            prop="Version"
+            v-if="isColumnVisible('version')"
+            prop="version"
             label="版本"
             width="120"
           />
           <el-table-column
-            v-if="isColumnVisible('BuyTime')"
-            prop="BuyTime"
+            v-if="isColumnVisible('purchaseDate')"
+            prop="purchaseDate"
             label="购买时间"
             width="180"
           >
             <template slot-scope="{ row }">
-              {{ parseTime(row.BuyTime) }}
+              {{ parseTime(row.purchaseDate) }}
             </template>
           </el-table-column>
           <el-table-column
-            v-if="isColumnVisible('Remark')"
-            prop="Remark"
+            v-if="isColumnVisible('remark')"
+            prop="remark"
             label="备注"
             min-width="160"
             :show-overflow-tooltip="true"
@@ -391,19 +385,19 @@
             <!-- 基础信息 -->
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="名称" prop="Name">
-                  <el-input v-model="form.Name" placeholder="请输入名称" />
+                <el-form-item label="名称" prop="collectSiteName">
+                  <el-input v-model="form.collectSiteName" placeholder="请输入名称" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="编号" prop="No">
-                  <el-input v-model="form.No" placeholder="请输入编号" />
+                <el-form-item label="编号" prop="collectSiteNo">
+                  <el-input v-model="form.collectSiteNo" placeholder="请输入编号" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="品牌名称" prop="BrandName">
+                <el-form-item label="品牌名称" prop="brandName">
                   <el-input
-                    v-model="form.BrandName"
+                    v-model="form.brandName"
                     placeholder="请输入品牌名称"
                   />
                 </el-form-item>
@@ -413,26 +407,26 @@
             <!-- 网络信息 -->
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="IP" prop="Ip">
-                  <el-input v-model="form.Ip" placeholder="请输入IP" />
+                <el-form-item label="IP" prop="collectSiteIp">
+                  <el-input v-model="form.collectSiteIp" placeholder="请输入IP" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="地址" prop="Address">
+                <el-form-item label="地址" prop="address">
                   <el-input
-                    v-model="form.Address"
-                    placeholder="请输入品牌地址"
+                    v-model="form.address"
+                    placeholder="请输入物理地址"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="播放地址" prop="Http">
-                  <el-input v-model="form.Http" placeholder="请输入播放地址" />
+                <el-form-item label="播放地址" prop="collectSiteUrl">
+                  <el-input v-model="form.collectSiteUrl" placeholder="请输入播放地址" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="密钥" prop="SecretKey">
-                  <el-input v-model="form.SecretKey" placeholder="请输入密钥" />
+                <el-form-item label="密钥" prop="authKey">
+                  <el-input v-model="form.authKey" placeholder="请输入密钥" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -441,13 +435,13 @@
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="CPU">
-                  <el-input v-model="form.Cpu" placeholder="请输入CPU" />
+                  <el-input v-model="form.cpu" placeholder="请输入CPU" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="内存(G)">
                   <el-input-number
-                    v-model="form.Memory"
+                    v-model="form.memory"
                     placeholder="请输入内存大小"
                   />
                 </el-form-item>
@@ -455,20 +449,20 @@
               <el-col :span="12">
                 <el-form-item label="存储(G)">
                   <el-input-number
-                    v-model="form.Disk"
+                    v-model="form.disk"
                     placeholder="请输入磁盘大小"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="USB数量">
-                  <el-input-number v-model="form.UsbNum" />
+                  <el-input-number v-model="form.usbNum" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="购置时间">
                   <el-date-picker
-                    v-model="form.BuyTime"
+                    v-model="form.purchaseDate"
                     type="datetime"
                     placeholder="请输入购置时间"
                     format="yyyy-MM-ddTHH:mm:ssZ"
@@ -483,7 +477,7 @@
               <el-col :span="12">
                 <el-form-item label="操作系统">
                   <el-input
-                    v-model="form.System"
+                    v-model="form.system"
                     placeholder="操作系统"
                     maxlength="20"
                   />
@@ -492,7 +486,7 @@
               <el-col :span="12">
                 <el-form-item label="版本">
                   <el-input
-                    v-model="form.Version"
+                    v-model="form.version"
                     placeholder="版本"
                     maxlength="20"
                   />
@@ -504,7 +498,7 @@
             <el-row>
               <el-col :span="24">
                 <el-form-item label="状态">
-                  <el-radio-group v-model="form.State">
+                  <el-radio-group v-model="form.status">
                     <el-radio
                       v-for="dict in stateOptions"
                       :key="dict.value"
@@ -516,7 +510,7 @@
               </el-col>
               <el-col :span="24">
                 <el-form-item label="备注">
-                  <el-input v-model="form.Remark" />
+                  <el-input v-model="form.remark" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -615,28 +609,27 @@ export default {
       stateOptions: [],
       // 列配置
       columnOptions: [
-        { prop: "Name", label: "名称", defaultVisible: true },
-        { prop: "No", label: "编号", defaultVisible: true },
-        { prop: "BrandName", label: "品牌名称", defaultVisible: true },
-        { prop: "Ip", label: "IP地址", defaultVisible: true },
-        { prop: "Address", label: "地址", defaultVisible: true },
-        { prop: "Http", label: "播放地址", defaultVisible: false },
+        { prop: "collectSiteName", label: "名称", defaultVisible: true },
+        { prop: "collectSiteNo", label: "编号", defaultVisible: true },
+        { prop: "brandName", label: "品牌名称", defaultVisible: true },
+        { prop: "collectSiteIp", label: "IP地址", defaultVisible: true },
+        { prop: "address", label: "地址", defaultVisible: true },
+        { prop: "collectSiteUrl", label: "播放地址", defaultVisible: false },
         { prop: "managerName", label: "管理人员", defaultVisible: true },
         {
           prop: "managerOrgFullName",
           label: "管理组织",
           defaultVisible: true,
         },
-        { prop: "State", label: "状态", defaultVisible: true },
-        { prop: "OnlineTimeTotal", label: "在线总时长", defaultVisible: false },
-        { prop: "Cpu", label: "CPU", defaultVisible: false },
-        { prop: "Memory", label: "内存(G)", defaultVisible: false },
-        { prop: "Disk", label: "存储(G)", defaultVisible: false },
-        { prop: "UsbNum", label: "USB数量", defaultVisible: false },
-        { prop: "System", label: "操作系统", defaultVisible: false },
-        { prop: "Version", label: "版本", defaultVisible: false },
-        { prop: "BuyTime", label: "购买时间", defaultVisible: false },
-        { prop: "Remark", label: "备注", defaultVisible: false },
+        { prop: "status", label: "状态", defaultVisible: true },
+        { prop: "cpu", label: "CPU", defaultVisible: false },
+        { prop: "memory", label: "内存(G)", defaultVisible: false },
+        { prop: "disk", label: "存储(G)", defaultVisible: false },
+        { prop: "usbNum", label: "USB数量", defaultVisible: false },
+        { prop: "system", label: "操作系统", defaultVisible: false },
+        { prop: "version", label: "版本", defaultVisible: false },
+        { prop: "purchaseDate", label: "购买时间", defaultVisible: false },
+        { prop: "remark", label: "备注", defaultVisible: false },
       ],
       // 可见列
       visibleColumns: [],
@@ -658,38 +651,37 @@ export default {
         pageSize: 10,
         managerOrgId: undefined,
         managerId: undefined,
-        No: undefined,
-        Name: undefined,
-        State: undefined,
-        BrandName: undefined,
+        collectSiteNo: undefined,
+        collectSiteName: undefined,
+        status: undefined,
+        brandName: undefined,
       },
       AttributeValueList: [],
       AttributeValueConfigList: [],
       // 表单参数
       form: {
-        State: "1",
+        status: "1",
       },
       ColumnNameConvert: new Map([
-        ["Id", "ID:"],
-        ["Name", "名称:"],
-        ["No", "编号:"],
-        ["BrandName", "品牌名称:"],
-        ["Ip", "IP:"],
-        ["Address", "地址:"],
-        ["Http", "播放地址:"],
-        ["SecretKey", "密钥:"],
-        ["AdminPoliceName", "管理员:"],
-        ["OrgName", "归属单位:"],
-        ["State", "状态:"],
-        ["OnlineTimeTotal", "在线总时长:"],
-        ["Cpu", "CPU:"],
-        ["Memory", "内存(G):"],
-        ["Disk", "磁盘(G):"],
-        ["BuyTime", "购置时间:"],
-        ["UsbNum", "USB数量:"],
-        ["System", "操作系统:"],
-        ["Version", "版本:"],
-        ["Remark", "备注:"],
+        ["id", "ID:"],
+        ["collectSiteName", "名称:"],
+        ["collectSiteNo", "编号:"],
+        ["brandName", "品牌名称:"],
+        ["collectSiteIp", "IP:"],
+        ["address", "地址:"],
+        ["collectSiteUrl", "播放地址:"],
+        ["authKey", "密钥:"],
+        ["managerName", "管理员:"],
+        ["managerOrgFullName", "归属单位:"],
+        ["status", "状态:"],
+        ["cpu", "CPU:"],
+        ["memory", "内存(G):"],
+        ["disk", "磁盘(G):"],
+        ["purchaseDate", "购置时间:"],
+        ["usbNum", "USB数量:"],
+        ["system", "操作系统:"],
+        ["version", "版本:"],
+        ["remark", "备注:"],
       ]),
       ColumnNameConfigConvert: new Map([
         ["Id", "主键ID"],
@@ -783,7 +775,7 @@ export default {
 
     // 字典状态字典翻译
     stateFormat(row) {
-      return this.selectDictLabel(this.stateOptions, parseInt(row.State));
+      return this.selectDictLabel(this.stateOptions, parseInt(row.status));
     },
 
     /** 查询组织下拉树结构 */
@@ -814,25 +806,22 @@ export default {
       this.form = {
         managerOrgId: undefined,
         managerId: undefined,
-        Name: undefined,
-        No: undefined,
-        BrandName: undefined,
-        Ip: undefined,
-        Address: undefined,
-        Http: undefined,
-        SecretKey: undefined,
-        AdminPoliceName: undefined,
-        OrgName: undefined,
-        State: "1",
-        OnlineTimeTotal: undefined,
-        Cpu: undefined,
-        Memory: undefined,
-        Disk: undefined,
-        BuyTime: undefined,
-        UsbNum: undefined,
-        System: undefined,
-        Version: undefined,
-        Remark: undefined,
+        collectSiteName: undefined,
+        collectSiteNo: undefined,
+        brandName: undefined,
+        collectSiteIp: undefined,
+        address: undefined,
+        collectSiteUrl: undefined,
+        authKey: undefined,
+        status: "1",
+        cpu: undefined,
+        memory: undefined,
+        disk: undefined,
+        purchaseDate: undefined,
+        usbNum: undefined,
+        system: undefined,
+        version: undefined,
+        remark: undefined,
       };
       this.resetForm("form");
     },
@@ -852,7 +841,7 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.SiteIds = selection.map((item) => item.Id);
+      this.SiteIds = selection.map((item) => item.id);
       this.UpdateDisabled = selection.length !== 1;
       this.DeleteDisabled = !selection.length;
     },
@@ -880,10 +869,10 @@ export default {
     handleUpdate(row) {
       this.reset();
       this.firstLoad = true;
-      const SiteId = row.Id || this.SiteIds;
+      const SiteId = row.id || this.SiteIds;
       getEquipmentSite(SiteId).then((response) => {
         this.form = response.data;
-        this.form.State = String(this.form.State);
+        this.form.status = String(this.form.status);
         this.title = "修改采集站";
         this.isEdit = true;
         this.open = true;
@@ -900,7 +889,7 @@ export default {
         this.AttributeValueList.push(attributeValue);
       });
       this.AttributeValueConfigList = [];
-      getEquipmentSiteConfig(row.Id).then((response) => {
+      getEquipmentSiteConfig(row.id).then((response) => {
         Object.keys(response.data).forEach((key) => {
           const attributeValue = {
             AttributeName: this.ColumnNameConfigConvert.get(key),
@@ -916,9 +905,9 @@ export default {
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.State = parseInt(this.form.State);
-          if (this.form.Id !== undefined) {
-            updateEquipmentSite(this.form, this.form.Id).then((response) => {
+          this.form.status = parseInt(this.form.status);
+          if (this.form.id !== undefined) {
+            updateEquipmentSite(this.form, this.form.id).then((response) => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg);
                 this.open = false;
@@ -943,7 +932,7 @@ export default {
     },
 
     handleDelete(row) {
-      const SiteId = (row.Id && [row.Id]) || this.SiteIds;
+      const SiteId = (row.id && [row.id]) || this.SiteIds;
       this.$confirm(
         '是否确认删除采集站编号为"' + SiteId + '"的数据项?',
         "警告",
@@ -983,7 +972,6 @@ export default {
             "管理员",
             "归属单位",
             "状态",
-            "在线总时长",
             "CPU",
             "内存",
             "存储",
@@ -994,25 +982,24 @@ export default {
             "备注",
           ];
           const filterVal = [
-            "Name",
-            "No",
-            "BrandName",
-            "Ip",
-            "Address",
-            "Http",
-            "SecretKey",
-            "AdminPoliceName",
-            "OrgName",
-            "State",
-            "OnlineTimeTotal",
-            "Cpu",
-            "Memory",
-            "Disk",
-            "UsbNum",
-            "System",
-            "BuyTime",
-            "Version",
-            "Remark",
+            "collectSiteName",
+            "collectSiteNo",
+            "brandName",
+            "collectSiteIp",
+            "address",
+            "collectSiteUrl",
+            "authKey",
+            "managerName",
+            "managerOrgFullName",
+            "status",
+            "cpu",
+            "memory",
+            "disk",
+            "usbNum",
+            "system",
+            "purchaseDate",
+            "version",
+            "remark",
           ];
           const list = this.SiteList;
           const data = formatJson(filterVal, list);

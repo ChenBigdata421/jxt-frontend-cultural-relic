@@ -3,9 +3,9 @@
     <template #wrapper>
       <el-card class="box-card">
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="名称" prop="Name">
+          <el-form-item label="名称" prop="name">
             <el-input
-              v-model="queryParams.Name"
+              v-model="queryParams.name"
               placeholder="请输入品牌名称"
               clearable
               size="small"
@@ -13,9 +13,9 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="硬件设备" prop="OrgName">
+          <el-form-item label="硬件设备" prop="hardware">
             <el-input
-              v-model="queryParams.Hardware"
+              v-model="queryParams.hardware"
               placeholder="请输入硬件设备"
               clearable
               size="small"
@@ -23,9 +23,9 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="状态" prop="State">
+          <el-form-item label="状态" prop="state">
             <el-select
-              v-model="queryParams.State"
+              v-model="queryParams.state"
               placeholder="角色状态"
               clearable
               size="small"
@@ -143,16 +143,16 @@
               >
             </template>
           </el-table-column>
-          <el-table-column label="ID" prop="Id" width="100" />
+          <el-table-column label="ID" prop="id" width="100" />
           <el-table-column
             label="名称"
-            prop="Name"
+            prop="brandName"
             min-width="140"
             :show-overflow-tooltip="true"
           />
           <el-table-column
             label="硬件设备"
-            prop="Hardware"
+            prop="hardware"
             min-width="140"
             :show-overflow-tooltip="true"
           />
@@ -210,14 +210,14 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
           :close-on-click-modal="false"
         >
           <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-            <el-form-item label="名称" prop="Name">
-              <el-input v-model="form.Name" placeholder="请输入名称" />
+            <el-form-item label="名称" prop="brandName">
+              <el-input v-model="form.brandName" placeholder="请输入名称" />
             </el-form-item>
-            <el-form-item label="硬件设备" prop="Hardware">
-              <el-input v-model="form.Hardware" placeholder="请输入硬件设备" />
+            <el-form-item label="硬件设备" prop="hardware">
+              <el-input v-model="form.hardware" placeholder="请输入硬件设备" />
             </el-form-item>
             <el-form-item label="状态">
-              <el-radio-group v-model="form.State">
+              <el-radio-group v-model="form.state">
                 <el-radio
                   v-for="dict in statusOptions"
                   :key="dict.value"
@@ -275,9 +275,9 @@ export default {
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
-        Name: undefined,
-        Hardware: undefined,
-        State: undefined,
+        name: undefined,
+        hardware: undefined,
+        state: undefined,
       },
       // 表单参数
       form: {},
@@ -309,16 +309,15 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        No: undefined,
-        Name: undefined,
-        Hardware: undefined,
-        State: "1",
+        brandName: undefined,
+        hardware: undefined,
+        state: "1",
       };
       this.resetForm("form");
     },
     // 字典翻译
     StateFormat(row) {
-      return this.selectDictLabel(this.statusOptions, parseInt(row.State));
+      return this.selectDictLabel(this.statusOptions, parseInt(row.state));
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -332,7 +331,7 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.BrandIds = selection.map((item) => item.Id);
+      this.BrandIds = selection.map((item) => item.id);
       this.UpdateDisabled = selection.length !== 1;
       this.DeleteDisabled = !selection.length;
     },
@@ -359,10 +358,10 @@ export default {
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const BrandIds = row.Id || this.BrandIds;
+      const BrandIds = row.id || this.BrandIds;
       getEquipmentBrand(BrandIds).then((response) => {
         this.form = response.data;
-        this.form.State = String(this.form.State);
+        this.form.state = String(this.form.state);
         this.title = "修改品牌";
         this.isEdit = true;
         this.open = true;
@@ -372,9 +371,9 @@ export default {
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.State = parseInt(this.form.State);
-          if (this.form.Id !== undefined) {
-            updateEquipmentBrand(this.form, this.form.Id).then((response) => {
+          this.form.state = parseInt(this.form.state);
+          if (this.form.id !== undefined) {
+            updateEquipmentBrand(this.form, this.form.id).then((response) => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg);
                 this.open = false;
@@ -401,7 +400,7 @@ export default {
      * row.Id && [row.Id]，用于根据条件设置roleIds变量的值。如果row.Id存在且不为null或undefined，则roleIds为[row.Id]，否则roleIds为this.ids的值。
      */
     handleDelete(row) {
-      const BrandIds = (row.Id && [row.Id]) || this.BrandIds;
+      const BrandIds = (row.id && [row.id]) || this.BrandIds;
       this.$confirm(
         '是否确认删除品牌编号为"' + BrandIds + '"的数据项?',
         "警告",
@@ -438,12 +437,12 @@ export default {
             "更新时间",
           ];
           const filterVal = [
-            "Id",
-            "Name",
-            "Hardware",
-            "State",
-            "CreatedAt",
-            "UpdatedAt",
+            "id",
+            "brandName",
+            "hardware",
+            "state",
+            "createdAt",
+            "updatedAt",
           ];
           const list = this.equipmentBrandList;
           const data = formatJson(filterVal, list);

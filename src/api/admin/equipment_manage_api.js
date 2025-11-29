@@ -83,7 +83,7 @@ export function delEquipmentTrial(trialId) {
 // 采集站API
 export function listEquipmentSite(query) {
   return request({
-    url: '/api/v1/equipment/site',
+    url: '/api/v1/equipment/collect-site',
     method: 'get',
     params: query
   })
@@ -91,14 +91,14 @@ export function listEquipmentSite(query) {
 
 export function getEquipmentSite(siteId) {
   return request({
-    url: '/api/v1/equipment/site/' + siteId,
+    url: '/api/v1/equipment/collect-site/' + siteId,
     method: 'get'
   })
 }
 
 export function addEquipmentSite(data) {
   return request({
-    url: '/api/v1/equipment/site',
+    url: '/api/v1/equipment/collect-site',
     method: 'post',
     data: data
   })
@@ -106,7 +106,7 @@ export function addEquipmentSite(data) {
 
 export function updateEquipmentSite(data, siteId) {
   return request({
-    url: '/api/v1/equipment/site/' + siteId,
+    url: '/api/v1/equipment/collect-site/' + siteId,
     method: 'put',
     data: data
   })
@@ -114,7 +114,7 @@ export function updateEquipmentSite(data, siteId) {
 
 export function delEquipmentSite(siteId) {
   return request({
-    url: '/api/v1/equipment/site',
+    url: '/api/v1/equipment/collect-site',
     method: 'delete',
     data: siteId
   })
@@ -122,7 +122,7 @@ export function delEquipmentSite(siteId) {
 
 export function getEquipmentSiteConfig(siteConfigId) {
   return request({
-    url: '/api/v1/equipment/siteconfig/' + siteConfigId,
+    url: '/api/v1/equipment/collect-site-config/' + siteConfigId,
     method: 'get'
   })
 }
@@ -170,7 +170,7 @@ export function delEquipmentBrand(brandId) {
 // 存储API
 export function listEquipmentStorage(query) {
   return request({
-    url: '/api/v1/equipment/storage',
+    url: '/api/v1/equipment/storage-site',
     method: 'get',
     params: query
   })
@@ -178,14 +178,14 @@ export function listEquipmentStorage(query) {
 
 export function getEquipmentStorage(storageId) {
   return request({
-    url: '/api/v1/equipment/storage/' + storageId,
+    url: '/api/v1/equipment/storage-site/' + storageId,
     method: 'get'
   })
 }
 
 export function addEquipmentStorage(data) {
   return request({
-    url: '/api/v1/equipment/storage',
+    url: '/api/v1/equipment/storage-site',
     method: 'post',
     data: data
   })
@@ -193,7 +193,7 @@ export function addEquipmentStorage(data) {
 
 export function updateEquipmentStorage(data, storageId) {
   return request({
-    url: '/api/v1/equipment/storage/' + storageId,
+    url: '/api/v1/equipment/storage-site/' + storageId,
     method: 'put',
     data: data
   })
@@ -201,7 +201,7 @@ export function updateEquipmentStorage(data, storageId) {
 
 export function delEquipmentStorage(storageId) {
   return request({
-    url: '/api/v1/equipment/storage',
+    url: '/api/v1/equipment/storage-site',
     method: 'delete',
     data: storageId
   })
@@ -209,7 +209,7 @@ export function delEquipmentStorage(storageId) {
 
 export function getEquipmentStorageConfig(storageConfigId) {
   return request({
-    url: '/api/v1/equipment/storageconfig/' + storageConfigId,
+    url: '/api/v1/equipment/storage-site-config/' + storageConfigId,
     method: 'get'
   })
 }

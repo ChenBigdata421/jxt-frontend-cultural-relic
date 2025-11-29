@@ -3,18 +3,18 @@
     <template #wrapper>
       <el-card class="box-card">
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="场地编号" prop="No">
+          <el-form-item label="场地编号" prop="trialNo">
             <el-input
-              v-model="queryParams.No"
+              v-model="queryParams.trialNo"
               placeholder="请输入场地编号"
               clearable
               style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="场地名称" prop="Name">
+          <el-form-item label="场地名称" prop="trialName">
             <el-input
-              v-model="queryParams.Name"
+              v-model="queryParams.trialName"
               placeholder="请输入场地名称"
               clearable
               style="width: 170px"
@@ -45,9 +45,9 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="状态" prop="State">
+          <el-form-item label="状态" prop="status">
             <el-select
-              v-model="queryParams.State"
+              v-model="queryParams.status"
               placeholder="状态"
               clearable
               style="width: 170px"
@@ -61,9 +61,9 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="品牌名称" prop="BrandName">
+          <el-form-item label="品牌名称" prop="brandName">
             <el-input
-              v-model="queryParams.BrandName"
+              v-model="queryParams.brandName"
               placeholder="请输入品牌名称"
               clearable
               style="width: 170px"
@@ -205,24 +205,24 @@
             </template>
           </el-table-column>
           <el-table-column
-            v-if="isColumnVisible('No')"
+            v-if="isColumnVisible('trialNo')"
             label="编号"
             sortable="true"
-            prop="No"
+            prop="trialNo"
             width="120"
           />
           <el-table-column
-            v-if="isColumnVisible('Name')"
+            v-if="isColumnVisible('trialName')"
             label="名称"
             sortable="true"
-            prop="Name"
+            prop="trialName"
             min-width="140"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('BrandName')"
+            v-if="isColumnVisible('brandName')"
             label="品牌名称"
-            prop="BrandName"
+            prop="brandName"
             min-width="140"
             :show-overflow-tooltip="true"
           />
@@ -240,43 +240,43 @@
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('Ip')"
+            v-if="isColumnVisible('trialIp')"
             label="IP"
-            prop="Ip"
+            prop="trialIp"
             width="140"
           />
           <el-table-column
-            v-if="isColumnVisible('Address')"
+            v-if="isColumnVisible('address')"
             label="地址"
-            prop="Address"
+            prop="address"
             min-width="160"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('Http')"
+            v-if="isColumnVisible('trialUrl')"
             label="播放地址"
-            prop="Http"
+            prop="trialUrl"
             min-width="160"
             :show-overflow-tooltip="true"
           />
           <el-table-column
-            v-if="isColumnVisible('BuyTime')"
+            v-if="isColumnVisible('purchaseDate')"
             label="购置时间"
-            prop="BuyTime"
+            prop="purchaseDate"
             width="180"
           >
             <template slot-scope="{ row }">
-              {{ parseTime(row.BuyTime) }}
+              {{ parseTime(row.purchaseDate) }}
             </template>
           </el-table-column>
           <el-table-column
-            v-if="isColumnVisible('Version')"
+            v-if="isColumnVisible('version')"
             label="版本号"
-            prop="Version"
+            prop="version"
             width="140"
           />
           <el-table-column
-            v-if="isColumnVisible('State')"
+            v-if="isColumnVisible('status')"
             label="状态"
             width="120"
           >
@@ -288,9 +288,9 @@
             </template>
           </el-table-column>
           <el-table-column
-            v-if="isColumnVisible('Remark')"
+            v-if="isColumnVisible('remark')"
             label="备注"
-            prop="Remark"
+            prop="remark"
             min-width="160"
             :show-overflow-tooltip="true"
           />
@@ -350,13 +350,13 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
             <!-- 基础信息 -->
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="编号" prop="No">
-                  <el-input v-model="form.No" placeholder="请输入编号" />
+                <el-form-item label="编号" prop="trialNo">
+                  <el-input v-model="form.trialNo" placeholder="请输入编号" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="名称" prop="Name">
-                  <el-input v-model="form.Name" placeholder="请输入名称" />
+                <el-form-item label="名称" prop="trialName">
+                  <el-input v-model="form.trialName" placeholder="请输入名称" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -364,13 +364,13 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
             <!-- 网络信息 -->
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="IP" prop="Ip">
-                  <el-input v-model="form.Ip" placeholder="请输入IP" />
+                <el-form-item label="IP" prop="trialIp">
+                  <el-input v-model="form.trialIp" placeholder="请输入IP" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="地址" prop="Address">
-                  <el-input v-model="form.Address" placeholder="请输入地址" />
+                <el-form-item label="地址" prop="address">
+                  <el-input v-model="form.address" placeholder="请输入地址" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -378,13 +378,13 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
             <!-- 扩展信息 -->
             <el-row :gutter="20">
               <el-col :span="24">
-                <el-form-item label="播放地址" prop="Http">
-                  <el-input v-model="form.Http" placeholder="请输入播放地址" />
+                <el-form-item label="播放地址" prop="trialUrl">
+                  <el-input v-model="form.trialUrl" placeholder="请输入播放地址" />
                 </el-form-item>
               </el-col>
               <el-col :span="24">
-                <el-form-item label="密钥" prop="SecretKey">
-                  <el-input v-model="form.SecretKey" placeholder="请输入密钥" />
+                <el-form-item label="密钥" prop="authKey">
+                  <el-input v-model="form.authKey" placeholder="请输入密钥" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -392,14 +392,14 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
             <!-- 系统信息 -->
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="版本号" prop="Version">
-                  <el-input v-model="form.Version" placeholder="请输入版本号" />
+                <el-form-item label="版本号" prop="version">
+                  <el-input v-model="form.version" placeholder="请输入版本号" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="品牌名称" prop="BrandName">
+                <el-form-item label="品牌名称" prop="brandName">
                   <el-input
-                    v-model="form.BrandName"
+                    v-model="form.brandName"
                     placeholder="请输入品牌名称"
                   />
                 </el-form-item>
@@ -410,7 +410,7 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
             <el-row>
               <el-col :span="24">
                 <el-form-item label="状态">
-                  <el-radio-group v-model="form.State">
+                  <el-radio-group v-model="form.status">
                     <el-radio
                       v-for="dict in statusOptions"
                       :key="dict.value"
@@ -423,7 +423,7 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
               <el-col :span="24">
                 <el-form-item label="备注">
                   <el-input
-                    v-model="form.Remark"
+                    v-model="form.remark"
                     type="textarea"
                     placeholder="请输入内容"
                   />
@@ -498,22 +498,22 @@ export default {
       equipmentTrialList: [],
       // 列配置
       columnOptions: [
-        { prop: "No", label: "编号", defaultVisible: true },
-        { prop: "Name", label: "名称", defaultVisible: true },
-        { prop: "BrandName", label: "品牌名称", defaultVisible: true },
+        { prop: "trialNo", label: "编号", defaultVisible: true },
+        { prop: "trialName", label: "名称", defaultVisible: true },
+        { prop: "brandName", label: "品牌名称", defaultVisible: true },
         { prop: "managerName", label: "管理员", defaultVisible: true },
         {
           prop: "managerOrgFullName",
           label: "管理员所在组织",
           defaultVisible: true,
         },
-        { prop: "Ip", label: "IP", defaultVisible: true },
-        { prop: "Address", label: "地址", defaultVisible: true },
-        { prop: "Http", label: "播放地址", defaultVisible: false },
-        { prop: "BuyTime", label: "购置时间", defaultVisible: false },
-        { prop: "Version", label: "版本号", defaultVisible: false },
-        { prop: "State", label: "状态", defaultVisible: true },
-        { prop: "Remark", label: "备注", defaultVisible: false },
+        { prop: "trialIp", label: "IP", defaultVisible: true },
+        { prop: "address", label: "地址", defaultVisible: true },
+        { prop: "trialUrl", label: "播放地址", defaultVisible: false },
+        { prop: "purchaseDate", label: "购置时间", defaultVisible: false },
+        { prop: "version", label: "版本号", defaultVisible: false },
+        { prop: "status", label: "状态", defaultVisible: true },
+        { prop: "remark", label: "备注", defaultVisible: false },
       ],
       // 可见列
       visibleColumns: [],
@@ -535,27 +535,30 @@ export default {
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
-        Name: undefined,
-        OrgName: undefined,
-        State: undefined,
+        trialName: undefined,
+        trialNo: undefined,
+        status: undefined,
+        brandName: undefined,
+        managerOrgId: undefined,
+        managerId: undefined,
       },
       // 表单参数
       form: {},
       ColumnNameConvert: new Map([
-        ["Id", "ID:"],
-        ["Name", "名称:"],
-        ["No", "编号:"],
-        ["Ip", "IP:"],
-        ["Address", "地址:"],
-        ["Http", "播放地址:"],
-        ["SecretKey", "密钥:"],
-        ["AdminPoliceName", "管理员:"],
-        ["OrgName", "归属单位:"],
-        ["BuyTime", "购置时间:"],
-        ["Version", "版本号:"],
-        ["State", "状态:"],
-        ["Remark", "备注:"],
-        ["BrandName", "品牌名称:"],
+        ["id", "ID:"],
+        ["trialName", "名称:"],
+        ["trialNo", "编号:"],
+        ["trialIp", "IP:"],
+        ["address", "地址:"],
+        ["trialUrl", "播放地址:"],
+        ["authKey", "密钥:"],
+        ["managerName", "管理员:"],
+        ["managerOrgFullName", "归属单位:"],
+        ["purchaseDate", "购置时间:"],
+        ["version", "版本号:"],
+        ["status", "状态:"],
+        ["remark", "备注:"],
+        ["brandName", "品牌名称:"],
       ]),
       defaultProps: {
         children: "children",
@@ -563,11 +566,8 @@ export default {
       },
       // 表单校验
       rules: {
-        No: [{ required: true, message: "编号不能为空", trigger: "blur" }],
-        Name: [{ required: true, message: "名称不能为空", trigger: "blur" }],
-        AdminPoliceName: [
-          { required: true, message: "管理员不能为空", trigger: "blur" },
-        ],
+        trialNo: [{ required: true, message: "编号不能为空", trigger: "blur" }],
+        trialName: [{ required: true, message: "名称不能为空", trigger: "blur" }],
       },
     };
   },
@@ -654,25 +654,23 @@ export default {
       this.form = {
         managerOrgId: undefined,
         managerId: undefined,
-        No: undefined,
-        Name: undefined,
-        Ip: undefined,
-        Address: undefined,
-        Http: undefined,
-        SecretKey: undefined,
-        AdminPoliceName: undefined,
-        OrgName: undefined,
-        BuyTime: undefined,
-        Version: undefined,
-        Remark: undefined,
-        BrandName: undefined,
-        State: "1",
+        trialNo: undefined,
+        trialName: undefined,
+        trialIp: undefined,
+        address: undefined,
+        trialUrl: undefined,
+        authKey: undefined,
+        purchaseDate: undefined,
+        version: undefined,
+        remark: undefined,
+        brandName: undefined,
+        status: "1",
       };
       this.resetForm("form");
     },
     // 字典翻译
     StateFormat(row) {
-      return this.selectDictLabel(this.statusOptions, parseInt(row.State));
+      return this.selectDictLabel(this.statusOptions, parseInt(row.status));
     },
     /** 查询组织下拉树结构 */
     getTreeselect() {
@@ -707,7 +705,7 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.trialIds = selection.map((item) => item.Id);
+      this.trialIds = selection.map((item) => item.id);
       this.single = selection.length !== 1;
       this.multiple = !selection.length;
     },
@@ -735,10 +733,10 @@ export default {
     handleUpdate(row) {
       this.reset();
       this.firstLoad = true;
-      const trialId = row.Id || this.trialIds;
+      const trialId = row.id || this.trialIds;
       getEquipmentTrial(trialId).then((response) => {
         this.form = response.data;
-        this.form.State = String(this.form.State);
+        this.form.status = String(this.form.status);
         this.title = "修改场地";
         this.isEdit = true;
         this.open = true;
@@ -761,9 +759,9 @@ export default {
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.State = parseInt(this.form.State);
-          if (this.form.Id !== undefined) {
-            updateEquipmentTrial(this.form, this.form.Id).then((response) => {
+          this.form.status = parseInt(this.form.status);
+          if (this.form.id !== undefined) {
+            updateEquipmentTrial(this.form, this.form.id).then((response) => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg);
                 this.open = false;
@@ -790,7 +788,7 @@ export default {
      * row.Id && [row.Id]，用于根据条件设置roleIds变量的值。如果row.Id存在且不为null或undefined，则roleIds为[row.Id]，否则roleIds为this.ids的值。
      */
     handleDelete(row) {
-      const trialIds = (row.Id && [row.Id]) || this.trialIds;
+      const trialIds = (row.id && [row.id]) || this.trialIds;
       this.$confirm(
         '是否确认删除场地编号为"' + trialIds + '"的数据项?',
         "警告",
@@ -834,19 +832,19 @@ export default {
             "品牌名称",
           ];
           const filterVal = [
-            "No",
-            "Name",
-            "Ip",
-            "Address",
-            "Http",
-            "SecretKey",
-            "AdminPoliceName",
-            "OrgName",
-            "BuyTime",
-            "Version",
-            "State",
-            "Remark",
-            "BrandName",
+            "trialNo",
+            "trialName",
+            "trialIp",
+            "address",
+            "trialUrl",
+            "authKey",
+            "managerName",
+            "managerOrgFullName",
+            "purchaseDate",
+            "version",
+            "status",
+            "remark",
+            "brandName",
           ];
           const list = this.equipmentTrialList;
           const data = formatJson(filterVal, list);
