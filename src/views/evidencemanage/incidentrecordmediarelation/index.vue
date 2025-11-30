@@ -191,21 +191,27 @@
             width="100"
           />
           <el-table-column prop="status" label="状态" width="100">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-            <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
-              <el-tag disable-transitions>{{ statusFormat(scope.row) }}</el-tag>
+            <template slot-scope="{ row }">
+              <el-tag
+                :type="row.status === 1 ? 'success' : 'info'"
+                size="small"
+                effect="dark"
+              >
+                {{ selectDictLabel(statusOptions, row.status) }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="isRelation" label="是否关联" width="100">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-            <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
-              <el-tag disable-transitions>{{
-                relationStatusFormat(scope.row)
-              }}</el-tag>
+            <template slot-scope="{ row }">
+              <el-tag
+                :type="row.isRelation === 1 ? 'success' : 'info'"
+                size="small"
+                effect="dark"
+              >
+                {{
+                  selectDictLabel(incidentRelationStatusOptions, row.isRelation)
+                }}
+              </el-tag>
             </template>
           </el-table-column>
         </el-table>
@@ -264,8 +270,8 @@
               width="100"
               align="center"
             >
-              <template slot-scope="scope">
-                {{ mediaCateFormat(scope.row) }}
+              <template slot-scope="{ row }">
+                {{ selectDictLabel(mediaCateOptions, row.mediaCate) }}
               </template>
             </el-table-column>
             <el-table-column
@@ -705,21 +711,30 @@ export default {
     },
   },
   created() {
-    this.getList();
     this.getTreeselect();
-    this.getDicts("incidentrecord_status").then((response) => {
-      this.statusOptions = response.data;
-    });
-    this.getDicts("relation_status").then((response) => {
-      this.incidentRelationStatusOptions = response.data;
-    });
-    this.getDicts("evidence_media_type").then((response) => {
-      this.mediaCateOptions = response.data;
-    });
-    this.getDicts("evidence_storage_type").then((response) => {
-      this.storageTypeOptions = response.data;
-    });
     this.getEnforcementTypeTreeselect();
+
+    // 使用Promise.all等待所有字典加载完成后再加载列表
+    Promise.all([
+      this.getDicts("incidentrecord_status"),
+      this.getDicts("relation_status"),
+      this.getDicts("evidence_media_type"),
+      this.getDicts("evidence_storage_type"),
+    ])
+      .then(([statusRes, relationStatusRes, mediaCateRes, storageTypeRes]) => {
+        this.statusOptions = statusRes.data;
+        this.incidentRelationStatusOptions = relationStatusRes.data;
+        this.mediaCateOptions = mediaCateRes.data;
+        this.storageTypeOptions = storageTypeRes.data;
+
+        // 字典加载完成后再加载列表
+        this.getList();
+      })
+      .catch((error) => {
+        console.error("[IncidentRecordMediaRelation] 字典加载失败:", error);
+        // 即使字典加载失败,也要加载列表
+        this.getList();
+      });
   },
   methods: {
     handleOrgSelect(node) {
@@ -752,24 +767,6 @@ export default {
       });
     },
 
-    // 字典状态字典翻译
-    statusFormat(row) {
-      return this.selectDictLabel(this.statusOptions, parseInt(row.status));
-    },
-    // 字典状态字典翻译
-    relationStatusFormat(row) {
-      return this.selectDictLabel(
-        this.incidentRelationStatusOptions,
-        parseInt(row.isRelation)
-      );
-    },
-    // 媒体类型字典翻译
-    mediaCateFormat(row) {
-      return this.selectDictLabel(
-        this.mediaCateOptions,
-        parseInt(row.mediaCate)
-      );
-    },
     /** 查询组织下拉树结构 */
     getTreeselect() {
       orgTreeSelect().then((response) => {
@@ -849,10 +846,16 @@ export default {
         var attributeName = this.ColumnNameConvert.get(key);
         var value = row[key];
         if (key === "status") {
-          value = this.statusFormat(row);
+          const statusOption = this.statusOptions.find(
+            (item) => item.value === String(row.status)
+          );
+          value = statusOption ? statusOption.label : row.status;
         }
         if (key === "isRelation") {
-          value = this.relationStatusFormat(row);
+          const relationOption = this.incidentRelationStatusOptions.find(
+            (item) => item.value === String(row.isRelation)
+          );
+          value = relationOption ? relationOption.label : row.isRelation;
         }
         const attributeValue = {
           AttributeName: attributeName,

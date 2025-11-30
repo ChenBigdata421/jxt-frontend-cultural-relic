@@ -274,8 +274,8 @@
         label="媒体类型"
         width="120"
       >
-        <template slot-scope="scope">
-          <el-tag disable-transitions>{{ mediaCateFormat(scope.row) }}</el-tag>
+        <template slot-scope="{ row }">
+          {{ selectDictLabel(mediaCateOptions, row.mediaCate) }}
         </template>
       </el-table-column>
       <el-table-column
@@ -311,7 +311,7 @@
         width="120"
       >
         <template slot-scope="{ row }">
-          {{ formatVideoClarity(row.videoClarity) }}
+          {{ selectDictLabel(videoClarityOptions, row.videoClarity) }}
         </template>
       </el-table-column>
       <el-table-column
@@ -354,12 +354,18 @@
         label="是否执法媒体"
         width="140"
       >
-        <template slot-scope="scope">
+        <template slot-scope="{ row }">
           <el-tag
-            :type="scope.row.isNonEnforcementMedia === 0 ? 'success' : 'danger'"
-            disable-transitions
+            :type="row.isNonEnforcementMedia === 0 ? 'success' : 'info'"
+            size="small"
+            effect="dark"
           >
-            {{ scope.row.isNonEnforcementMedia === 0 ? "是" : "否" }}
+            {{
+              selectDictLabel(
+                isNonEnforcementMediaOptions,
+                row.isNonEnforcementMedia
+              )
+            }}
           </el-tag>
         </template>
       </el-table-column>
@@ -397,7 +403,13 @@
         width="120"
       >
         <template slot-scope="{ row }">
-          {{ formatYesNo(row.isLocked) }}
+          <el-tag
+            :type="row.isLocked === 1 ? 'success' : 'info'"
+            size="small"
+            effect="dark"
+          >
+            {{ selectDictLabel(isLockedOptions, row.isLocked) }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column
@@ -421,9 +433,16 @@
         prop="isArchive"
         label="是否归档"
         width="120"
+        align="center"
       >
         <template slot-scope="{ row }">
-          {{ formatYesNo(row.isArchive) }}
+          <el-tag
+            :type="row.isArchive === 1 ? 'success' : 'info'"
+            size="small"
+            effect="dark"
+          >
+            {{ selectDictLabel(isArchivedOptions, row.isArchive) }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column
@@ -508,7 +527,7 @@
         width="130"
       >
         <template slot-scope="{ row }">
-          {{ storageTypeFormat(row) }}
+          {{ selectDictLabel(storageTypeOptions, row.storageType) }}
         </template>
       </el-table-column>
       <el-table-column
@@ -519,6 +538,15 @@
       >
         <template slot-scope="{ row }">
           {{ formatSendStatus(row.isSendToStorage) }}
+        </template>
+        <template slot-scope="{ row }">
+          <el-tag
+            :type="row.isSendToStorage === 1 ? 'success' : 'info'"
+            size="small"
+            effect="dark"
+          >
+            {{ selectDictLabel(isSendToStorageOptions, row.isSendToStorage) }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column
@@ -591,7 +619,7 @@
         width="130"
       >
         <template slot-scope="{ row }">
-          {{ formatTerminalType(row.terminalType) }}
+          {{ selectDictLabel(terminalTypeOptions, row.terminalType) }}
         </template>
       </el-table-column>
       <el-table-column
@@ -613,11 +641,16 @@
         prop="isAssociated"
         label="是否关联"
         width="120"
+        align="center"
       >
-        <template slot-scope="scope">
-          <el-tag disable-transitions>{{
-            relationStatusFormat(scope.row)
-          }}</el-tag>
+        <template slot-scope="{ row }">
+          <el-tag
+            :type="row.isAssociated === 1 ? 'success' : 'info'"
+            size="small"
+            effect="dark"
+          >
+            {{ selectDictLabel(relationStatusOptions, row.isAssociated) }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column
@@ -693,6 +726,7 @@ import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import { selectDictLabel } from "@/utils/costum";
 
 export default {
   name: "MediaSelector",
@@ -765,6 +799,18 @@ export default {
       storageTypeOptions: [],
       // 执法类型选项
       enforcementTypeOptions: [],
+      // 是否归档选项
+      isArchivedOptions: [],
+      // 是否上传至存储选项
+      isSendToStorageOptions: [],
+      // 是否锁定选项
+      isLockedOptions: [],
+      // 终端类型选项
+      terminalTypeOptions: [],
+      // 是否执法媒体选项
+      isNonEnforcementMediaOptions: [],
+      // 视频清晰度选项
+      videoClarityOptions: [],
       // 列配置选项
       columnOptions: [
         {
@@ -860,16 +906,53 @@ export default {
     // 合并初始查询参数
     this.queryParams = { ...this.queryParams, ...this.initialQuery };
     this.initVisibleColumns();
-    this.getList();
     this.getOrgTreeSelect();
     this.getUserList();
     this.getEnforcementTypeTree();
-    this.getDicts("evidence_media_type").then((response) => {
-      this.mediaCateOptions = response.data;
-    });
-    this.getDicts("evidence_storage_type").then((response) => {
-      this.storageTypeOptions = response.data;
-    });
+
+    // 使用Promise.all等待所有字典加载完成
+    Promise.all([
+      this.getDicts("evidence_media_type"),
+      this.getDicts("evidence_storage_type"),
+      this.getDicts("is_archived"),
+      this.getDicts("relation_status"),
+      this.getDicts("is_send_to_storage"),
+      this.getDicts("is_locked"),
+      this.getDicts("terminal_type"),
+      this.getDicts("is_non_enforcement_media"),
+      this.getDicts("video_clarity"),
+    ])
+      .then(
+        ([
+          mediaCateRes,
+          storageTypeRes,
+          isArchivedRes,
+          relationStatusRes,
+          isSendToStorageRes,
+          isLockedRes,
+          terminalTypeRes,
+          isNonEnforcementMediaRes,
+          videoClarityRes,
+        ]) => {
+          this.mediaCateOptions = mediaCateRes.data;
+          this.storageTypeOptions = storageTypeRes.data;
+          this.isArchivedOptions = isArchivedRes.data;
+          this.relationStatusOptions = relationStatusRes.data;
+          this.isSendToStorageOptions = isSendToStorageRes.data;
+          this.isLockedOptions = isLockedRes.data;
+          this.terminalTypeOptions = terminalTypeRes.data;
+          this.isNonEnforcementMediaOptions = isNonEnforcementMediaRes.data;
+          this.videoClarityOptions = videoClarityRes.data;
+
+          // 字典加载完成后再加载列表
+          this.getList();
+        }
+      )
+      .catch((error) => {
+        console.error("[MediaSelector] 字典加载失败:", error);
+        // 即使字典加载失败,也要加载列表
+        this.getList();
+      });
   },
   methods: {
     /** 默认可见列 */
@@ -938,6 +1021,22 @@ export default {
               response.data.count ||
               response.data.total ||
               response.data.list.length;
+
+            // 调试日志：查看第一条数据的isArchive字段
+            if (this.mediaList.length > 0) {
+              console.log(
+                "[MediaSelector] 第一条数据的isArchive:",
+                this.mediaList[0].isArchive,
+                "类型:",
+                typeof this.mediaList[0].isArchive
+              );
+              console.log(
+                "[MediaSelector] 第一条数据的mediaCate:",
+                this.mediaList[0].mediaCate,
+                "类型:",
+                typeof this.mediaList[0].mediaCate
+              );
+            }
           } else {
             // 情况3: 其他情况
             this.mediaList = [];
@@ -1072,18 +1171,6 @@ export default {
       return row.orgFullName || row.orgName || "-";
     },
 
-    /** 格式化关联状态 */
-    relationStatusFormat(row) {
-      return row.isAssociated ? "已关联" : "未关联";
-    },
-
-    // 字典状态字典翻译
-    mediaCateFormat(row) {
-      return this.selectDictLabel(
-        this.mediaCateOptions,
-        parseInt(row.mediaCate)
-      );
-    },
     /** 执法类型数据格式化 */
     normalizeEnforcementType(node) {
       if (node.children && !node.children.length) {
@@ -1094,16 +1181,6 @@ export default {
         label: node.enforcementTypeName || node.label || "未知",
         children: node.children,
       };
-    },
-
-    /** 视频清晰度枚举 */
-    formatVideoClarity(value) {
-      const map = {
-        0: "标清",
-        1: "高清",
-        2: "超清",
-      };
-      return map[value] || "-";
     },
 
     /** 视频时长（毫秒）格式化为 HH:MM:SS */
@@ -1148,36 +1225,6 @@ export default {
       return `${current.toFixed(2)} ${units[index]}`;
     },
 
-    /** 存储方式字典翻译 */
-    storageTypeFormat(row) {
-      if (!row || row.storageType === undefined || row.storageType === null) {
-        return "-";
-      }
-      return this.selectDictLabel(
-        this.storageTypeOptions,
-        parseInt(row.storageType, 10)
-      );
-    },
-
-    /** 上传至存储状态 */
-    formatSendStatus(value) {
-      const map = {
-        "-1": "文件不存在",
-        0: "未上传",
-        1: "已上传",
-      };
-      return map[value] || map[String(value)] || "-";
-    },
-
-    /** 终端类型 */
-    formatTerminalType(value) {
-      const map = {
-        1: "执法仪",
-        2: "采集站",
-      };
-      return map[value] || "-";
-    },
-
     // 以下方法仅在非选择模式下使用
     /** 新增按钮操作 */
     handleAdd() {
@@ -1195,14 +1242,44 @@ export default {
     },
 
     isVideoMedia(row) {
-      return this.mediaCateFormat(row) === "视频";
+      // 使用字典查找替代format函数
+      // 添加安全检查,防止mediaCateOptions未初始化或row为空
+      if (!row || row.mediaCate === null || row.mediaCate === undefined) {
+        return false;
+      }
+      if (!this.mediaCateOptions || !Array.isArray(this.mediaCateOptions)) {
+        return false;
+      }
+      // 使用宽松相等(==)支持数字和字符串类型的匹配
+      const option = this.mediaCateOptions.find(
+        (item) => item.value == row.mediaCate
+      );
+      return option ? option.label === "视频" : false;
     },
 
     /** 操作按钮 */
     handleOperation(row, action) {
+      // 添加安全检查,防止row为空
+      if (!row) {
+        return;
+      }
+      // 使用字典查找替代format函数
+      // 添加安全检查,防止mediaCateOptions未初始化
+      const mediaCateOption =
+        this.mediaCateOptions &&
+        Array.isArray(this.mediaCateOptions) &&
+        row.mediaCate !== null &&
+        row.mediaCate !== undefined
+          ? this.mediaCateOptions.find(
+              (item) =>
+                item.value == row.mediaCate ||
+                item.value === String(row.mediaCate)
+            )
+          : null;
+
       var newRow = {
         ...row,
-        mediaCate: this.mediaCateFormat(row),
+        mediaCate: mediaCateOption ? mediaCateOption.label : row.mediaCate,
         orgFullName: this.formatOrgName(row),
       };
       this.$emit("operation", newRow, action);

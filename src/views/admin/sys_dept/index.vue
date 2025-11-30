@@ -16,7 +16,12 @@
             />
           </el-form-item>
           <el-form-item label="状态">
-            <el-select v-model="queryParams.status" placeholder="组织状态" clearable size="small">
+            <el-select
+              v-model="queryParams.status"
+              placeholder="组织状态"
+              clearable
+              size="small"
+            >
               <el-option
                 v-for="dict in statusOptions"
                 :key="dict.value"
@@ -32,7 +37,8 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-            >搜索</el-button>
+              >搜索</el-button
+            >
             <el-button
               v-permisaction="['admin:sysOrg:add']"
               class="filter-item"
@@ -40,7 +46,8 @@
               icon="el-icon-plus"
               size="mini"
               @click="handleAdd"
-            >新增</el-button>
+              >新增</el-button
+            >
           </el-form-item>
         </el-form>
         <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
@@ -57,30 +64,38 @@
           row-key="orgId"
           default-expand-all
           border
-          :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+          :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         >
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column prop="orgName" label="组织名称" />
           <el-table-column prop="sort" label="排序" width="200" />
-          <!--<el-table-column prop="status" label="状态" :formatter="statusFormat" width="100">在<template slot-scope="scope">中已经调用了statusFormat，这里就不需要了-->
           <el-table-column prop="status" label="状态" width="100">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-            <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
+            <template slot-scope="{ row }">
               <el-tag
-                :type="scope.row.status === 1 ? 'danger' : 'success'"
-                disable-transitions
-              >{{ statusFormat(scope.row) }}</el-tag>
+                :type="row.status === 2 ? 'success' : 'info'"
+                size="small"
+                effect="dark"
+              >
+                {{ selectDictLabel(statusOptions, parseInt(row.status)) }}
+              </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="创建时间" align="center" prop="createdAt" width="200">
+          <el-table-column
+            label="创建时间"
+            align="center"
+            prop="createdAt"
+            width="200"
+          >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.createdAt) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+          >
             <template slot-scope="scope">
               <el-button
                 v-permisaction="['admin:sysOrg:edit']"
@@ -88,14 +103,16 @@
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
-              >修改</el-button>
+                >修改</el-button
+              >
               <el-button
                 v-permisaction="['admin:sysOrg:add']"
                 size="mini"
                 type="text"
                 icon="el-icon-plus"
                 @click="handleAdd(scope.row)"
-              >新增</el-button>
+                >新增</el-button
+              >
               <!--v-if="scope.row.p_id != 0",这个属性注释掉，因为p_id根本不存在-->
               <el-button
                 v-permisaction="['admin:sysOrg:remove']"
@@ -103,7 +120,8 @@
                 type="text"
                 icon="el-icon-delete"
                 @click="handleDelete(scope.row)"
-              >删除</el-button>
+                >删除</el-button
+              >
             </template>
           </el-table-column>
         </el-table>
@@ -112,7 +130,12 @@
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
-        <el-dialog :title="title" :visible.sync="open" width="600px" :close-on-click-modal="false">
+        <el-dialog
+          :title="title"
+          :visible.sync="open"
+          width="600px"
+          :close-on-click-modal="false"
+        >
           <el-form ref="form" :model="form" :rules="rules" label-width="80px">
             <el-row>
               <el-col :span="24">
@@ -130,27 +153,46 @@
               <el-col :span="12">
                 <!-- prop="orgName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 orgName 规则进行校验。-->
                 <el-form-item label="组织名称" prop="orgName">
-                  <el-input v-model="form.orgName" placeholder="请输入组织名称" />
+                  <el-input
+                    v-model="form.orgName"
+                    placeholder="请输入组织名称"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="显示排序" prop="sort">
-                  <el-input-number v-model="form.sort" controls-position="right" :min="0" />
+                  <el-input-number
+                    v-model="form.sort"
+                    controls-position="right"
+                    :min="0"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="负责人" prop="leader">
-                  <el-input v-model="form.leader" placeholder="请输入负责人" maxlength="20" />
+                  <el-input
+                    v-model="form.leader"
+                    placeholder="请输入负责人"
+                    maxlength="20"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="联系电话" prop="phone">
-                  <el-input v-model="form.phone" placeholder="请输入联系电话" maxlength="11" />
+                  <el-input
+                    v-model="form.phone"
+                    placeholder="请输入联系电话"
+                    maxlength="11"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="邮箱" prop="email">
-                  <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="50" />
+                  <el-input
+                    v-model="form.email"
+                    placeholder="请输入邮箱"
+                    maxlength="50"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -161,7 +203,8 @@
                       v-for="dict in statusOptions"
                       :key="dict.value"
                       :label="dict.value"
-                    >{{ dict.label }}</el-radio>
+                      >{{ dict.label }}</el-radio
+                    >
                   </el-radio-group>
                 </el-form-item>
               </el-col>
@@ -179,12 +222,18 @@
 </template>
 
 <script>
-import { getOrgList, getOrg, delOrg, addOrg, updateOrg } from '@/api/admin/sys-org'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import {
+  getOrgList,
+  getOrg,
+  delOrg,
+  addOrg,
+  updateOrg,
+} from "@/api/admin/sys-org";
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
-  name: 'SysOrgManage',
+  name: "SysOrgManage",
   components: { Treeselect },
   data() {
     return {
@@ -195,7 +244,7 @@ export default {
       // 组织树选项
       orgOptions: [],
       // 弹出层标题
-      title: '',
+      title: "",
       isEdit: false,
       // 是否显示弹出层
       open: false,
@@ -204,57 +253,56 @@ export default {
       // 查询参数
       queryParams: {
         orgName: undefined,
-        status: undefined
+        status: undefined,
       },
       // 表单参数
-      form: {
-      },
+      form: {},
       // 表单校验,触发时机（trigger: 'blur'）：当输入框失去焦点（blur 事件）时触发验证。
       rules: {
         parentId: [
-          { required: true, message: '上级组织不能为空', trigger: 'blur' }
+          { required: true, message: "上级组织不能为空", trigger: "blur" },
         ],
         orgName: [
-          { required: true, message: '组织名称不能为空', trigger: 'blur' }
+          { required: true, message: "组织名称不能为空", trigger: "blur" },
         ],
         sort: [
-          { required: true, message: '菜单顺序不能为空', trigger: 'blur' }
+          { required: true, message: "菜单顺序不能为空", trigger: "blur" },
         ],
         leader: [
-          { required: true, message: '负责人不能为空', trigger: 'blur' }
+          { required: true, message: "负责人不能为空", trigger: "blur" },
         ],
         email: [
           {
-            type: 'email',
+            type: "email",
             message: "'请输入正确的邮箱地址",
-            trigger: ['blur', 'change']
-          }
+            trigger: ["blur", "change"],
+          },
         ],
         phone: [
           {
             pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/,
-            message: '请输入正确的手机号码',
-            trigger: 'blur'
-          }
-        ]
-      }
-    }
+            message: "请输入正确的手机号码",
+            trigger: "blur",
+          },
+        ],
+      },
+    };
   },
   created() {
-    this.getList()
-    this.getDicts('sys_normal_disable').then(response => {
-      this.statusOptions = response.data
-    })
+    this.getList();
+    this.getDicts("sys_normal_disable").then((response) => {
+      this.statusOptions = response.data;
+    });
   },
   methods: {
     /** 查询组织列表 */
     getList() {
-      this.loading = true
-      getOrgList(this.queryParams).then(response => {
+      this.loading = true;
+      getOrgList(this.queryParams).then((response) => {
         // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
-        this.orgList = response.data
-        this.loading = false
-      })
+        this.orgList = response.data;
+        this.loading = false;
+      });
     },
     /* 在 Vue.js 应用中，当使用如 Treeselect 这样的树形选择组件时，通常需要将原始数据转换成
     组件所需的特定格式。normalizer 方法就是用来进行这种转换的。例如，后端可能返回的数据结构与
@@ -265,18 +313,18 @@ export default {
     /** 转换组织数据结构 */
     normalizer(node) {
       if (node.children && !node.children.length) {
-        delete node.children
+        delete node.children;
       }
       return {
         id: node.orgId,
         label: node.orgName,
-        children: node.children
-      }
+        children: node.children,
+      };
     },
     /** 查询组织下拉树结构 */
     getTreeselect() {
-      getOrgList().then(response => {
-        this.orgOptions = []
+      getOrgList().then((response) => {
+        this.orgOptions = [];
         /* isDisabled: true，这个属性通常用于控制节点的可交互性。设置为 true 表示这个节点在
         用户界面上不能被选择或操作。 在这里，根节点不可被操作，也即整个组织树是不可被操作的.既然<treeselect>组件使用了disabled属性，这里就没有必要再做特殊处理了
         if (e === 'update') {
@@ -288,19 +336,15 @@ export default {
           org.children = response.data
           this.orgOptions.push(org)
         }*/
-        const org = { orgId: 0, orgName: '主类目', children: [] }
-        org.children = response.data
-        this.orgOptions.push(org)
-      })
-    },
-    // 字典状态字典翻译
-    statusFormat(row) {
-      return this.selectDictLabel(this.statusOptions, parseInt(row.status))
+        const org = { orgId: 0, orgName: "主类目", children: [] };
+        org.children = response.data;
+        this.orgOptions.push(org);
+      });
     },
     // 取消按钮
     cancel() {
-      this.open = false
-      this.reset()
+      this.open = false;
+      this.reset();
     },
     // 表单重置
     reset() {
@@ -312,67 +356,72 @@ export default {
         leader: undefined,
         phone: undefined,
         email: undefined,
-        status: '2'
-      }
+        status: "2",
+      };
     },
+    /** 状态格式化 */
+    statusFormat(row) {
+      return this.selectDictLabel(this.statusOptions, row.status);
+    },
+
     /** 搜索按钮操作 */
     handleQuery() {
-      this.getList()
+      this.getList();
     },
     /** 新增按钮操作*/
     handleAdd(row) {
-      this.reset()
-      this.getTreeselect()
+      this.reset();
+      this.getTreeselect();
       if (row !== undefined) {
-        this.form.parentId = row.orgId
+        this.form.parentId = row.orgId;
       }
-      this.open = true
-      this.title = '添加组织'
-      this.isEdit = false
+      this.open = true;
+      this.title = "添加组织";
+      this.isEdit = false;
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset()
-      this.getTreeselect()
+      this.reset();
+      this.getTreeselect();
 
-      getOrg(row.orgId).then(response => {
-        this.form = response.data// 只返回一个组织的信息，则是一个对象类型，如果返回的是多个组织信息，则为数组类型
-        this.form.status = String(this.form.status)
-        this.form.sort = String(this.form.sort)
-        this.open = true
-        this.title = '修改组织'
-        this.isEdit = true
-      })
+      getOrg(row.orgId).then((response) => {
+        this.form = response.data; // 只返回一个组织的信息，则是一个对象类型，如果返回的是多个组织信息，则为数组类型
+        this.form.status = String(this.form.status);
+        this.form.sort = String(this.form.sort);
+        this.open = true;
+        this.title = "修改组织";
+        this.isEdit = true;
+      });
     },
     /** 提交按钮 */
-    submitForm: function() {
-      this.$refs['form'].validate(valid => {
+    submitForm: function () {
+      this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.status = parseInt(this.form.status)
-          this.form.sort = parseInt(this.form.sort)
+          this.form.status = parseInt(this.form.status);
+          this.form.sort = parseInt(this.form.sort);
           if (this.form.orgId !== undefined) {
-            updateOrg(this.form, this.form.orgId).then(response => {
+            updateOrg(this.form, this.form.orgId).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                this.getList()
+                this.msgSuccess(response.msg);
+                this.open = false;
+                this.getList();
               } else {
-                this.msgError(response.msg)
+                this.msgError(response.msg);
               }
-            })
+            });
           } else {
-            addOrg(this.form).then(response => {
+            addOrg(this.form).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                this.getList()
+                this.msgSuccess(response.msg);
+                this.open = false;
+                this.getList();
               } else {
-                this.msgError(response.msg)
+                this.msgError(response.msg);
               }
-            })
+            });
           }
         }
-      })
+      });
     },
     /** 删除按钮操作 */
     /* 这种写法在 JavaScript 中是一种常见的技巧，用于根据条件简洁地设置变量值。
@@ -381,28 +430,30 @@ export default {
     如果 row.orgId 不存在或其为假值（falsy），则(row.orgId && [row.orgd]) 表达式的结果将是 false，
     此时Ids 将被赋值为 this.ids*/
     handleDelete(row) {
-      const Ids = (row.orgId && [row.orgId]) || this.ids
+      const Ids = (row.orgId && [row.orgId]) || this.ids;
       this.$confirm(
         '是否确认删除名称为"' + row.orgName + '"的数据项?',
-        '警告',
+        "警告",
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
         }
       )
-        .then(function() {
-          return delOrg({ 'ids': Ids })
-        }).then((response) => {
+        .then(function () {
+          return delOrg({ ids: Ids });
+        })
+        .then((response) => {
           if (response.code === 200) {
-            this.msgSuccess(response.msg)
-            this.open = false
-            this.getList()
+            this.msgSuccess(response.msg);
+            this.open = false;
+            this.getList();
           } else {
-            this.msgError(response.msg)
+            this.msgError(response.msg);
           }
-        }).catch(function() {})
-    }
-  }
-}
+        })
+        .catch(function () {});
+    },
+  },
+};
 </script>

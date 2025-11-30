@@ -272,11 +272,14 @@
             prop="isRelation"
             width="100"
           >
-            <template slot-scope="scope">
-              <el-tag v-if="scope.row.isRelation === 1" type="success"
-                >已关联</el-tag
+            <template slot-scope="{ row }">
+              <el-tag
+                :type="row.isRelation === 1 ? 'success' : 'info'"
+                size="small"
+                effect="dark"
               >
-              <el-tag v-else type="info">未关联</el-tag>
+                {{ selectDictLabel(caseRelationStatusOptions, row.isRelation) }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column
@@ -640,6 +643,8 @@ export default {
       formCaseFlowOptions: [],
       // 标注对话框的案件流程字典
       annotateCaseFlowOptions: [],
+      // 关联状态字典
+      caseRelationStatusOptions: [],
       // 添加/修改表单的用户选项
       formUserOptions: [],
       // 首次加载标志
@@ -712,18 +717,32 @@ export default {
   },
   created() {
     this.initVisibleColumns();
-    this.getList();
     this.getOrgTree();
     this.getUserList();
-    this.getDicts("case_type").then((response) => {
-      this.caseTypeOptions = response.data;
-    });
-    this.getDicts("admin_case_process").then((response) => {
-      this.adminCaseProcessOptions = response.data;
-    });
-    this.getDicts("criminal_case_process").then((response) => {
-      this.criminalCaseProcessOptions = response.data;
-    });
+    Promise.all([
+      this.getDicts("case_type"),
+      this.getDicts("admin_case_process"),
+      this.getDicts("criminal_case_process"),
+      this.getDicts("relation_status"),
+    ])
+      .then(
+        ([
+          caseTypeRes,
+          adminCaseProcessRes,
+          criminalCaseProcessRes,
+          relationStatusRes,
+        ]) => {
+          this.caseTypeOptions = caseTypeRes.data;
+          this.adminCaseProcessOptions = adminCaseProcessRes.data;
+          this.criminalCaseProcessOptions = criminalCaseProcessRes.data;
+          this.caseRelationStatusOptions = relationStatusRes.data;
+          this.getList();
+        }
+      )
+      .catch((error) => {
+        console.error("[CaseQuery] 字典加载失败:", error);
+        this.getList();
+      });
   },
   methods: {
     /** 查询案件列表 */
