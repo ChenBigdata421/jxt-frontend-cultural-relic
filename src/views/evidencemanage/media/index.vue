@@ -485,6 +485,7 @@ import {
 } from "@/api/evidence/evidence_manage_command_api";
 import {
   getMedia,
+  getMediaPlayURL,
   getEnforcementTypeTree,
 } from "@/api/evidence/evidence_manage_query_api";
 import { orgTreeSelect } from "@/api/admin/sys-org";
@@ -806,10 +807,30 @@ export default {
     /** 播放视频 */
     handlePlayVideo(row) {
       console.log("播放视频", row);
-      // 这里可以根据row中的信息构建视频URL
-      // 暂时设置为空，让用户手动输入
+      // 先打开播放器对话框，显示加载状态
       this.currentVideoUrl = "";
       this.videoPlayerVisible = true;
+
+      // 获取媒体ID
+      const mediaId = row.mediaId || row.id;
+      if (!mediaId) {
+        this.msgWarning("无法获取媒体ID");
+        return;
+      }
+
+      // 调用API获取播放地址
+      getMediaPlayURL(mediaId)
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.currentVideoUrl = response.data.playUrl || response.data;
+            console.log("获取播放地址成功:", this.currentVideoUrl);
+          } else {
+            console.warn("获取播放地址失败:", response.msg);
+          }
+        })
+        .catch((error) => {
+          console.error("获取播放地址异常:", error);
+        });
     },
 
     /** 视频播放器关闭 */

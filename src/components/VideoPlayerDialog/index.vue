@@ -96,7 +96,9 @@ export default {
       isPlaying: false,
       player: null,
       playerState: 'stopped', // stopped, playing, paused, loading
-      errorMessage: ''
+      errorMessage: '',
+      isDestroying: false, // 标志位：是否正在销毁播放器
+      errorHandler: null // 保存错误处理函数引用，以便移除
     }
   },
   computed: {
@@ -123,6 +125,12 @@ export default {
     visible(val) {
       if (val && this.initialUrl) {
         this.videoUrl = this.initialUrl
+      }
+    },
+    // 监听 initialUrl 变化，当父组件异步获取到播放地址后自动填充
+    initialUrl(val) {
+      if (val && this.visible) {
+        this.videoUrl = val
       }
     }
   },
@@ -200,7 +208,12 @@ export default {
           console.log('视频播放结束')
         })
 
-        videoElement.addEventListener('error', (e) => {
+        // 创建错误处理函数并保存引用
+        this.errorHandler = (e) => {
+          // 如果正在销毁播放器，忽略错误事件
+          if (this.isDestroying) {
+            return
+          }
           this.playerState = 'error'
           const error = videoElement.error
           console.error('视频播放错误:', error)
@@ -226,7 +239,8 @@ export default {
           }
 
           this.$message.error(errorMsg)
-        })
+        }
+        videoElement.addEventListener('error', this.errorHandler)
 
         // 尝试播放
         const playPromise = videoElement.play()
@@ -253,14 +267,23 @@ export default {
     destroyPlayer() {
       if (this.player) {
         try {
+          // 设置销毁标志
+          this.isDestroying = true
+          // 先移除错误事件监听器，避免触发错误提示
+          if (this.errorHandler) {
+            this.player.removeEventListener('error', this.errorHandler)
+            this.errorHandler = null
+          }
           // 暂停播放
           this.player.pause()
           // 清空源
           this.player.src = ''
           this.player.load()
           this.player = null
+          this.isDestroying = false
         } catch (error) {
           console.error('销毁播放器失败:', error)
+          this.isDestroying = false
         }
       }
     },

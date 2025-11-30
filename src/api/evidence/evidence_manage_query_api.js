@@ -33,6 +33,14 @@ export function getMedia(mediaId) {
   })
 }
 
+// 根据 mediaId 获取媒体播放地址
+export function getMediaPlayURL(mediaId) {
+  return request({
+    url: '/api/v1/media/' + mediaId + '/playurl',
+    method: 'get'
+  })
+}
+
 // 根据案件ID查询关联的媒体列表
 export function getMediaByCaseId(caseId, query) {
   return request({
