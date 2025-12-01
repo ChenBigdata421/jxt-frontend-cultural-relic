@@ -226,13 +226,14 @@
             align="center"
             prop="writRelation"
           >
-            <template slot-scope="scope">
-              <span>{{
-                selectDictLabel(
-                  relationStatusOptions,
-                  scope.row.writRelation > 0 ? 1 : 0
-                )
-              }}</span>
+            <template slot-scope="{ row }">
+              <el-tag
+                :type="row.writRelation === 1 ? 'success' : 'info'"
+                size="small"
+                effect="dark"
+              >
+                {{ selectDictLabel(relationStatusOptions, row.writRelation) }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column

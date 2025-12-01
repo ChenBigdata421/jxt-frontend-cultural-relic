@@ -430,29 +430,29 @@
       />
       <el-table-column
         v-if="isColumnVisible('isArchive')"
-        prop="isArchive"
+        prop="isArchived"
         label="是否归档"
         width="120"
         align="center"
       >
         <template slot-scope="{ row }">
           <el-tag
-            :type="row.isArchive === 1 ? 'success' : 'info'"
+            :type="row.isArchived === 1 ? 'success' : 'info'"
             size="small"
             effect="dark"
           >
-            {{ selectDictLabel(isArchivedOptions, row.isArchive) }}
+            {{ selectDictLabel(isArchivedOptions, row.isArchived) }}
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column
         v-if="isColumnVisible('archiveDate')"
-        prop="archiveDate"
+        prop="archivedAt"
         label="归档时间"
         width="180"
       >
         <template slot-scope="{ row }">
-          {{ parseTime(row.archiveDate) }}
+          {{ parseTime(row.archivedAt) }}
         </template>
       </el-table-column>
       <el-table-column
@@ -638,29 +638,31 @@
       />
       <el-table-column
         v-if="isColumnVisible('isAssociated')"
-        prop="isAssociated"
+        prop="isIncidentAssociated"
         label="是否关联"
         width="120"
         align="center"
       >
         <template slot-scope="{ row }">
           <el-tag
-            :type="row.isAssociated === 1 ? 'success' : 'info'"
+            :type="row.isIncidentAssociated === 1 ? 'success' : 'info'"
             size="small"
             effect="dark"
           >
-            {{ selectDictLabel(relationStatusOptions, row.isAssociated) }}
+            {{
+              selectDictLabel(relationStatusOptions, row.isIncidentAssociated)
+            }}
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column
         v-if="isColumnVisible('associateTime')"
-        prop="associateTime"
+        prop="incidentAssociatedAt"
         label="关联时间"
         width="180"
       >
         <template slot-scope="{ row }">
-          {{ parseTime(row.associateTime) }}
+          {{ parseTime(row.incidentAssociatedAt) }}
         </template>
       </el-table-column>
       <el-table-column
@@ -1022,19 +1024,19 @@ export default {
               response.data.total ||
               response.data.list.length;
 
-            // 调试日志：查看第一条数据的isArchive字段
+            // 调试日志：查看第一条数据的isArchived和isIncidentAssociated字段
             if (this.mediaList.length > 0) {
               console.log(
-                "[MediaSelector] 第一条数据的isArchive:",
-                this.mediaList[0].isArchive,
+                "[MediaSelector] 第一条数据的isArchived:",
+                this.mediaList[0].isArchived,
                 "类型:",
-                typeof this.mediaList[0].isArchive
+                typeof this.mediaList[0].isArchived
               );
               console.log(
-                "[MediaSelector] 第一条数据的mediaCate:",
-                this.mediaList[0].mediaCate,
+                "[MediaSelector] 第一条数据的isIncidentAssociated:",
+                this.mediaList[0].isIncidentAssociated,
                 "类型:",
-                typeof this.mediaList[0].mediaCate
+                typeof this.mediaList[0].isIncidentAssociated
               );
             }
           } else {

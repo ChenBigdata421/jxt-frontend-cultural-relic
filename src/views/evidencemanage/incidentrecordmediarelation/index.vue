@@ -286,7 +286,11 @@
               label="关联时间"
               width="170"
               align="center"
-            />
+            >
+              <template slot-scope="{ row }">
+                {{ parseTime(row.relationTime || row.createdAt) }}
+              </template>
+            </el-table-column>
             <el-table-column label="操作" width="100" align="center">
               <template slot-scope="scope">
                 <el-button
@@ -1006,15 +1010,21 @@ export default {
 
     /** 检查媒体关联状态(单选时触发) */
     handleMediaSelect(row) {
-      // 检查媒体是否已经关联了警情
-      if (row.incidentRecordCode) {
+      console.log(
+        "[IncidentRecordMediaRelation] handleMediaSelect 触发, row:",
+        JSON.stringify(row, null, 2)
+      );
+      // 检查媒体是否已经关联了警情（后端字段名是 incidentCode）
+      const incidentCode = row.incidentCode || row.incidentRecordCode;
+      console.log("[IncidentRecordMediaRelation] incidentCode:", incidentCode);
+      if (incidentCode) {
         // 如果关联的是当前警情
         if (
           this.currentIncidentRecord &&
-          row.incidentRecordCode === this.currentIncidentRecord.code
+          incidentCode === this.currentIncidentRecord.code
         ) {
           this.$confirm(
-            `媒体"${row.mediaName}"已与当前警情"${row.incidentRecordCode}"关联`,
+            `媒体"${row.mediaName}"已与当前警情"${incidentCode}"关联`,
             "提示",
             {
               confirmButtonText: "确定",
@@ -1025,7 +1035,7 @@ export default {
         } else {
           // 如果关联的是其他警情
           this.$confirm(
-            `本次关联之前，媒体"${row.mediaName}"将自动先与警情"${row.incidentRecordCode}"解除关联`,
+            `本次关联之前，媒体"${row.mediaName}"将自动先与警情"${incidentCode}"解除关联`,
             "提示",
             {
               confirmButtonText: "确定",
@@ -1050,10 +1060,11 @@ export default {
         return;
       }
 
-      // 过滤掉已经与该警情关联的媒体
-      const selectedMediaRelations = this.selectedMediaList.filter(
-        (item) => item.incidentRecordCode !== this.currentIncidentRecord.code
-      );
+      // 过滤掉已经与该警情关联的媒体（后端字段名是 incidentCode）
+      const selectedMediaRelations = this.selectedMediaList.filter((item) => {
+        const incidentCode = item.incidentCode || item.incidentRecordCode;
+        return incidentCode !== this.currentIncidentRecord.code;
+      });
 
       // 计算已关联其他警情的媒体数量
       const alreadyLinkedCount =
@@ -1132,6 +1143,13 @@ export default {
           // 必须检查response.code是否为200
           if (response.code === 200) {
             this.mediaRelationsList = response.data.list || [];
+            // 调试日志：查看返回的数据结构
+            if (this.mediaRelationsList.length > 0) {
+              console.log(
+                "[IncidentRecordMediaRelation] 第一条关联数据:",
+                JSON.stringify(this.mediaRelationsList[0], null, 2)
+              );
+            }
           } else {
             console.error("加载媒体关联列表失败:", response.msg);
             this.msgError(response.msg || "加载媒体关联列表失败");

@@ -12,7 +12,7 @@ import request from '@/utils/request'
  */
 export function getRelationListByWritId(writId, query) {
   return request({
-    url: `/api/v1/writ-media-relations/writ/${writId}/relations`,
+    url: `/api/v1/writ-media-relations/writ/${writId}/media`,
     method: 'get',
     params: query
   })
