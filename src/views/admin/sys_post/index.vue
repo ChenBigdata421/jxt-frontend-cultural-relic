@@ -305,7 +305,10 @@ export default {
   created() {
     this.getList();
     this.getDicts("sys_normal_disable").then((response) => {
-      this.statusOptions = response.data;
+      this.statusOptions = response.data.map((item) => ({
+        ...item,
+        value: parseInt(item.value, 10),
+      }));
     });
   },
   methods: {
@@ -313,7 +316,10 @@ export default {
     getList() {
       this.loading = true;
       listPost(this.queryParams).then((response) => {
-        this.postList = response.data.list;
+        this.postList = response.data.list.map((item) => ({
+          ...item,
+          status: Number(item.status),
+        }));
         this.total = response.data.count;
         this.loading = false;
       });
@@ -330,7 +336,7 @@ export default {
         postCode: undefined,
         postName: undefined,
         sort: 0,
-        status: "1",
+        status: 2,
         remark: undefined,
       };
       this.resetForm("form");
@@ -381,7 +387,7 @@ export default {
       const postId = row.postId || this.ids;
       getPost(postId).then((response) => {
         this.form = response.data;
-        this.form.status = String(this.form.status);
+        this.form.status = Number(this.form.status);
         this.open = true;
         this.title = "修改岗位";
       });
@@ -390,7 +396,6 @@ export default {
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.status = parseInt(this.form.status);
           if (this.form.postId !== undefined) {
             updatePost(this.form, this.form.postId).then((response) => {
               if (response.code === 200) {

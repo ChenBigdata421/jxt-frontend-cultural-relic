@@ -78,7 +78,7 @@ export function selectDictLabel(datas, value) {
   try {
     Object.keys(datas).map((key) => {
       // 确保datas[key]存在且有value属性
-      if (datas[key] && datas[key].value !== undefined && datas[key].value === ('' + value)) {
+      if (datas[key] && datas[key].value !== undefined && datas[key].value == value) {
         actions.push(datas[key].label || '')
         return false
       }
