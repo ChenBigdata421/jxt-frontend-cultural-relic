@@ -239,8 +239,8 @@
                 <template slot-scope="scope">
                   <el-switch
                     v-model="scope.row.status"
-                    active-value="2"
-                    inactive-value="1"
+                    :active-value="2"
+                    :inactive-value="1"
                     @change="handleStatusChange(scope.row)"
                   />
                 </template>
@@ -624,7 +624,7 @@ export default {
       // 将字典数据的value统一转换为整型
       this.statusOptions = response.data.map((item) => ({
         ...item,
-        value: parseInt(item.value),
+        value: parseInt(item.value, 10),
       }));
     });
     this.getDicts("sys_user_sex").then((response) => {
@@ -653,14 +653,16 @@ export default {
           this.userList = response.data.list.map((item) => {
             // 使用字典查找替代format函数
             const statusOption = this.statusOptions.find(
-              (opt) => opt.value === String(item.status)
+              (opt) => opt.value === Number(item.status)
             );
             const sexOption = this.sexOptions.find(
-              (opt) => opt.value === String(item.sex)
+              (opt) => opt.value === Number(item.sex)
             );
 
             return {
               ...item,
+              status: Number(item.status),
+              sex: Number(item.sex),
               roleName: item.role ? item.role.roleName : "",
               postName: item.post ? item.post.postName : "",
               statusName: statusOption ? statusOption.label : "",
@@ -720,7 +722,7 @@ export default {
     },
     // 用户状态修改
     handleStatusChange(row) {
-      const text = row.status === "2" ? "启用" : "停用";
+      const text = row.status === 2 ? "启用" : "停用";
       this.$confirm(
         '确认要"' + text + '""' + row.userName + '"用户吗?',
         "警告",
@@ -737,7 +739,7 @@ export default {
           this.msgSuccess(text + "成功");
         })
         .catch(function () {
-          row.status = row.status === "2" ? "1" : "2";
+          row.status = row.status === 2 ? 1 : 2;
         });
     },
     // 取消按钮
@@ -756,7 +758,7 @@ export default {
         phone: undefined,
         email: undefined,
         sex: undefined,
-        status: "2",
+        status: 2,
         remark: undefined,
         postId: undefined,
         roleId: undefined,

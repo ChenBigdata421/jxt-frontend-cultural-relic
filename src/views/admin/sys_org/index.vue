@@ -69,8 +69,8 @@
             <template slot-scope="scope">
               <el-switch
                 v-model="scope.row.status"
-                active-value="2"
-                inactive-value="1"
+                :active-value="2"
+                :inactive-value="1"
                 @change="handleStatusChange(scope.row)"
               />
             </template>
@@ -240,7 +240,10 @@ export default {
   created() {
     this.getList()
     this.getDicts('sys_normal_disable').then(response => {
-      this.statusOptions = response.data
+      this.statusOptions = response.data.map(item => ({
+        ...item,
+        value: Number(item.value)
+      }))
     })
   },
   methods: {
@@ -288,7 +291,7 @@ export default {
     },
     // 字典状态字典翻译
     statusFormat(row) {
-      return this.selectDictLabel(this.statusOptions, parseInt(row.status))
+      return this.selectDictLabel(this.statusOptions, row.status)
     },
     // 取消按钮
     cancel() {
@@ -305,7 +308,7 @@ export default {
         leader: undefined,
         phone: undefined,
         email: undefined,
-        status: '2'
+        status: 2
       }
     },
     /** 搜索按钮操作 */
@@ -396,7 +399,7 @@ export default {
     },
     // 组织状态修改
     handleStatusChange(row) {
-      const text = row.status === '2' ? '启用' : '停用'
+      const text = row.status === 2 ? '启用' : '停用'
       this.$confirm('确认要"' + text + '""' + row.orgName + '"组织吗?', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -407,7 +410,7 @@ export default {
         console.log('res', res)
         this.msgSuccess(res.msg)
       }).catch(function() {
-        row.status = row.status === '2' ? '1' : '2'
+        row.status = row.status === 2 ? 1 : 2
       })
     }
   }
