@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    title="视频播放"
+    :title="dialogTitle"
     :visible.sync="dialogVisible"
     width="900px"
     :close-on-click-modal="false"
@@ -13,7 +13,7 @@
           <el-form-item label="播放地址:">
             <el-input
               v-model="videoUrl"
-              placeholder="请输入视频文件的HTTP URL"
+              :placeholder="urlPlaceholder"
               style="width: 500px"
               clearable
             >
@@ -30,23 +30,25 @@
       </div>
 
       <!-- 视频播放区域 -->
-      <div class="video-section">
+      <div class="video-section" :style="{ minHeight: isAudio ? '120px' : '500px' }">
         <div v-if="!isPlaying" class="video-placeholder">
-          <i class="el-icon-video-camera placeholder-icon"></i>
-          <p class="placeholder-text">请输入视频URL并点击播放按钮</p>
+          <i :class="placeholderIcon" class="placeholder-icon"></i>
+          <p class="placeholder-text">请输入播放URL并点击播放按钮</p>
         </div>
         <div v-show="isPlaying" class="video-wrapper">
-          <video
-            ref="videoPlayer"
+          <component
+            :is="playerTag"
+            ref="player"
             class="custom-video-player"
             controls
             preload="auto"
             width="100%"
-            height="500"
+            :height="playerHeight"
             controlslist="nodownload"
           >
-            您的浏览器不支持HTML5视频播放。
-          </video>
+            <source :src="videoUrl" :type="mediaMime" />
+            您的浏览器不支持HTML5媒体播放。
+          </component>
         </div>
       </div>
 
@@ -84,6 +86,11 @@ export default {
       type: Boolean,
       default: false
     },
+    // 媒体类型：1=照片 2=音频 3=视频
+    mediaCate: {
+      type: [Number, String],
+      default: 3
+    },
     // 初始视频URL
     initialUrl: {
       type: String,
@@ -109,6 +116,27 @@ export default {
       set(val) {
         this.$emit('update:visible', val)
       }
+    },
+    isAudio() {
+      return parseInt(this.mediaCate) === 2
+    },
+    playerTag() {
+      return this.isAudio ? 'audio' : 'video'
+    },
+    dialogTitle() {
+      return this.isAudio ? '音频播放' : '视频播放'
+    },
+    urlPlaceholder() {
+      return this.isAudio ? '请输入音频文件的HTTP URL' : '请输入视频文件的HTTP URL'
+    },
+    placeholderIcon() {
+      return this.isAudio ? 'el-icon-headset' : 'el-icon-video-camera'
+    },
+    playerHeight() {
+      return this.isAudio ? 80 : 500
+    },
+    mediaMime() {
+      return this.getMediaMime(this.videoUrl)
     },
     playerStateText() {
       const stateMap = {
@@ -141,7 +169,7 @@ export default {
     /** 播放视频 */
     handlePlay() {
       if (!this.videoUrl) {
-        this.$message.warning('请输入视频URL')
+        this.$message.warning('请输入播放URL')
         return
       }
 
@@ -170,15 +198,18 @@ export default {
     /** 初始化HTML5视频播放器 */
     initPlayer() {
       try {
-        const videoElement = this.$refs.videoPlayer
+        const videoElement = this.$refs.player
 
         if (!videoElement) {
           console.error('视频元素未找到')
           return
         }
 
-        // 设置视频源
+        // 设置视频源并显式 load（部分浏览器对动态 source 更敏感）
         videoElement.src = this.videoUrl
+        if (typeof videoElement.load === 'function') {
+          videoElement.load()
+        }
 
         // 保存播放器引用
         this.player = videoElement
@@ -236,6 +267,13 @@ export default {
           this.$message.error(errorMsg)
         }
         videoElement.addEventListener('error', this.errorHandler)
+
+        // 输出关键信息，便于定位 Edge NotSupportedError
+        try {
+          console.log('[VideoPlayerDialog] playUrl:', this.videoUrl)
+          console.log('[VideoPlayerDialog] mime:', this.getMediaMime(this.videoUrl))
+        } catch (e) {
+        }
 
         // 尝试播放
         const playPromise = videoElement.play()
@@ -315,6 +353,35 @@ export default {
         'ts': 'video/MP2T'
       }
       return typeMap[extension] || 'video/mp4'
+    }
+    ,
+    /** 根据URL推断媒体MIME（用于 <source type> 提升兼容性） */
+    getMediaMime(url) {
+      if (!url) {
+        return this.isAudio ? 'audio/mpeg' : 'video/mp4'
+      }
+      const extension = url.split('.').pop().split('?')[0].toLowerCase()
+
+      if (this.isAudio) {
+        const audioMap = {
+          mp3: 'audio/mpeg',
+          wav: 'audio/wav',
+          m4a: 'audio/mp4',
+          aac: 'audio/aac',
+          ogg: 'audio/ogg'
+        }
+        return audioMap[extension] || 'audio/mpeg'
+      }
+
+      const videoMap = {
+        mp4: 'video/mp4',
+        webm: 'video/webm',
+        ogg: 'video/ogg',
+        flv: 'video/x-flv',
+        m3u8: 'application/x-mpegURL',
+        ts: 'video/MP2T'
+      }
+      return videoMap[extension] || 'video/mp4'
     }
   }
 }

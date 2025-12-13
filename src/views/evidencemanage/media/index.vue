@@ -474,7 +474,15 @@
         <VideoPlayerDialog
           :visible.sync="videoPlayerVisible"
           :initial-url="currentVideoUrl"
+          :media-cate="currentPlayMediaCate"
           @close="handleVideoPlayerClose"
+        />
+
+        <!-- 图片预览对话框 -->
+        <ImageViewerDialog
+          :visible.sync="imageViewerVisible"
+          :initial-url="currentImageUrl"
+          @close="handleImageViewerClose"
         />
 
         <!-- 任务处理对话框 -->
@@ -513,6 +521,7 @@ import {
 import MediaSelector from "@/components/MediaSelector";
 import ArchiveSelectorDialog from "@/components/ArchiveSelectorDialog";
 import VideoPlayerDialog from "@/components/VideoPlayerDialog";
+import ImageViewerDialog from "@/components/ImageViewerDialog";
 import TaskProcessDialog from "@/components/TaskProcessDialog";
 import workflowMixin from "@/mixins/workflowMixin";
 import Treeselect from "@riophae/vue-treeselect";
@@ -524,6 +533,7 @@ export default {
     MediaSelector,
     ArchiveSelectorDialog,
     VideoPlayerDialog,
+    ImageViewerDialog,
     TaskProcessDialog,
     Treeselect,
   },
@@ -568,6 +578,10 @@ export default {
       // 视频播放相关
       videoPlayerVisible: false,
       currentVideoUrl: "",
+      currentPlayMediaCate: 3,
+      // 图片预览相关
+      imageViewerVisible: false,
+      currentImageUrl: "",
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -809,6 +823,33 @@ export default {
       // 查询工作流列表，找到"文档删除申请流程"
       this.startDeleteWorkflow(mediaId);
     },
+    normalizeMediaCate(row) {
+      const raw = row?.mediaCate;
+
+      // 1) 已经是数字或数字字符串（如 1/"1"）
+      const n = parseInt(raw);
+      if (!Number.isNaN(n)) {
+        return n;
+      }
+
+      // 2) 中文标签（从 evidence_media_type 字典可知：1=照片 2=音频 3=视频）
+      if (raw === "照片") return 1;
+      if (raw === "音频") return 2;
+      if (raw === "视频") return 3;
+
+      // 3) 兜底：尝试通过已加载的字典反查（label->value）
+      const hit = (this.mediaCateOptions || []).find(
+        (it) => it?.label === raw
+      );
+      if (hit && hit.value !== undefined && hit.value !== null) {
+        const v = parseInt(hit.value);
+        if (!Number.isNaN(v)) {
+          return v;
+        }
+      }
+
+      return undefined;
+    },
 
     handleOperation(row, action) {
       // 操作按钮逻辑
@@ -826,38 +867,64 @@ export default {
       }
     },
 
-    /** 播放视频 */
+    /** 播放（按 mediaCate 分流：照片/音频/视频） */
     handlePlayVideo(row) {
-      console.log("播放视频", row);
-      // 先打开播放器对话框，显示加载状态
-      this.currentVideoUrl = "";
-      this.videoPlayerVisible = true;
+      console.log("播放", row);
 
-      // 获取媒体ID
       const mediaId = row?.mediaId;
       if (!mediaId) {
         this.msgWarning("无法获取媒体ID");
         return;
       }
 
+      // mediaCate：1=照片 2=音频 3=视频（来源：evidence_media_type 字典）
+      const mediaCate = this.normalizeMediaCate(row);
+      if (!mediaCate) {
+        this.msgWarning("无法识别媒体类型");
+        return;
+      }
+
+      // 先打开对应弹窗，显示加载状态
+      if (mediaCate === 1) {
+        this.currentImageUrl = "";
+        this.imageViewerVisible = true;
+      } else {
+        this.currentVideoUrl = "";
+        this.currentPlayMediaCate = mediaCate;
+        this.videoPlayerVisible = true;
+      }
+
       // 调用API获取播放地址
       getMediaPlayURL(mediaId)
         .then((response) => {
           if (response.code === 200 && response.data) {
-            this.currentVideoUrl = response.data.playUrl || response.data;
-            console.log("获取播放地址成功:", this.currentVideoUrl);
+            const playUrl = response.data.playUrl || response.data;
+            if (mediaCate === 1) {
+              this.currentImageUrl = playUrl;
+            } else {
+              this.currentVideoUrl = playUrl;
+            }
+            console.log("获取播放地址成功:", playUrl);
           } else {
             console.warn("获取播放地址失败:", response.msg);
+            this.msgWarning(response.msg || "获取播放地址失败");
           }
         })
         .catch((error) => {
           console.error("获取播放地址异常:", error);
+          this.msgError("获取播放地址异常");
         });
     },
 
     /** 视频播放器关闭 */
     handleVideoPlayerClose() {
       this.currentVideoUrl = "";
+      this.currentPlayMediaCate = 3;
+    },
+
+    /** 图片预览关闭 */
+    handleImageViewerClose() {
+      this.currentImageUrl = "";
     },
 
     /** 一键归档(单个) */
