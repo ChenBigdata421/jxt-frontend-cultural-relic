@@ -10,16 +10,18 @@
     >
       <el-form-item label="拍摄时间">
         <el-date-picker
-          v-model="queryParams.shotTimeStart"
+          v-model="queryParams.captureTimeStart"
           type="datetime"
           placeholder="请选择时间"
+          value-format="yyyy-MM-ddTHH:mm:ssZ"
         >
         </el-date-picker>
         <span>至</span>
         <el-date-picker
-          v-model="queryParams.shotTimeEnd"
+          v-model="queryParams.captureTimeEnd"
           type="datetime"
           placeholder="请选择时间"
+          value-format="yyyy-MM-ddTHH:mm:ssZ"
         >
         </el-date-picker>
       </el-form-item>
@@ -101,16 +103,18 @@
 
       <el-form-item v-if="showMore" label="导入时间">
         <el-date-picker
-          v-model="queryParams.importTimeStart"
+          v-model="queryParams.uploadTimeStart"
           type="datetime"
           placeholder="请选择时间"
+          value-format="yyyy-MM-ddTHH:mm:ssZ"
         >
         </el-date-picker>
         <span>至</span>
         <el-date-picker
-          v-model="queryParams.importTimeEnd"
+          v-model="queryParams.uploadTimeEnd"
           type="datetime"
           placeholder="请选择时间"
+          value-format="yyyy-MM-ddTHH:mm:ssZ"
         >
         </el-date-picker>
       </el-form-item>
@@ -148,7 +152,7 @@
 
       <el-form-item v-if="showMore" label="执法类型">
         <treeselect
-          v-model="queryParams.enforType"
+          v-model="queryParams.enforceType"
           :options="enforcementTypeOptions"
           :normalizer="normalizeEnforcementType"
           placeholder="请选择执法类型"
@@ -285,43 +289,43 @@
         width="120"
       />
       <el-table-column
-        v-if="isColumnVisible('shotTimeStart')"
-        prop="shotTimeStart"
-        label="拍摄开始时间"
-        width="180"
-      >
-        <template slot-scope="{ row }">
-          {{ parseTime(row.shotTimeStart) }}
-        </template>
-      </el-table-column>
-      <el-table-column
-        v-if="isColumnVisible('shotTime')"
-        prop="shotTime"
+        v-if="isColumnVisible('captureTime')"
+        prop="captureTime"
         label="拍摄时间"
         width="180"
       >
         <template slot-scope="{ row }">
-          {{ parseTime(row.shotTime) }}
+          {{ parseTime(row.captureTime) }}
         </template>
       </el-table-column>
       <el-table-column
-        v-if="isColumnVisible('videoClarity')"
-        prop="videoClarity"
+        v-if="isColumnVisible('captureEndTime')"
+        prop="captureEndTime"
+        label="拍摄结束时间"
+        width="180"
+      >
+        <template slot-scope="{ row }">
+          {{ parseTime(row.captureEndTime) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('clarity')"
+        prop="clarity"
         label="视频清晰度"
         width="120"
       >
         <template slot-scope="{ row }">
-          {{ selectDictLabel(videoClarityOptions, row.videoClarity) }}
+          {{ selectDictLabel(videoClarityOptions, row.clarity) }}
         </template>
       </el-table-column>
       <el-table-column
-        v-if="isColumnVisible('videoDuration')"
-        prop="videoDuration"
+        v-if="isColumnVisible('duration')"
+        prop="duration"
         label="视频时长(毫秒)"
         width="140"
       >
         <template slot-scope="{ row }">
-          {{ formatVideoDuration(row.videoDuration) }}
+          {{ formatVideoDuration(row.duration) }}
         </template>
       </el-table-column>
       <el-table-column
@@ -384,14 +388,8 @@
         :show-overflow-tooltip="true"
       />
       <el-table-column
-        v-if="isColumnVisible('enforceType')"
-        prop="enforceType"
-        label="执法类型"
-        width="120"
-      />
-      <el-table-column
-        v-if="isColumnVisible('eenforeTypeNames')"
-        prop="eenforeTypeNames"
+        v-if="isColumnVisible('enforceTypeName')"
+        prop="enforceTypeName"
         label="执法类型名称"
         min-width="180"
         :show-overflow-tooltip="true"
@@ -500,22 +498,22 @@
         :show-overflow-tooltip="true"
       />
       <el-table-column
-        v-if="isColumnVisible('siteNo')"
-        prop="siteNo"
+        v-if="isColumnVisible('collectSiteNo')"
+        prop="collectSiteNo"
         label="采集站编号"
         min-width="180"
         :show-overflow-tooltip="true"
       />
       <el-table-column
-        v-if="isColumnVisible('siteName')"
-        prop="siteName"
+        v-if="isColumnVisible('collectSiteName')"
+        prop="collectSiteName"
         label="采集站名称"
         min-width="180"
         :show-overflow-tooltip="true"
       />
       <el-table-column
-        v-if="isColumnVisible('siteHttp')"
-        prop="siteHttp"
+        v-if="isColumnVisible('collectSiteUrl')"
+        prop="collectSiteUrl"
         label="采集站地址"
         min-width="200"
         :show-overflow-tooltip="true"
@@ -630,8 +628,8 @@
         :show-overflow-tooltip="true"
       />
       <el-table-column
-        v-if="isColumnVisible('incidentRecordCode')"
-        prop="incidentRecordCode"
+        v-if="isColumnVisible('incidentCode')"
+        prop="incidentCode"
         label="警情号"
         min-width="160"
         :show-overflow-tooltip="true"
@@ -687,13 +685,13 @@
         :show-overflow-tooltip="true"
       />
       <el-table-column
-        v-if="isColumnVisible('importTime')"
-        prop="importTime"
-        label="导入时间"
+        v-if="isColumnVisible('uploadTime')"
+        prop="uploadTime"
+        label="上传时间"
         width="180"
       >
         <template slot-scope="{ row }">
-          {{ parseTime(row.importTime) }}
+          {{ parseTime(row.uploadTime) }}
         </template>
       </el-table-column>
       <el-table-column
@@ -775,18 +773,18 @@ export default {
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
-        shotTimeStart: undefined,
-        shotTimeEnd: undefined,
+        captureTimeStart: undefined,
+        captureTimeEnd: undefined,
         orgId: undefined,
         includeSubUnits: true,
         policeId: undefined,
         mediaCate: undefined,
-        importTimeStart: undefined,
-        importTimeEnd: undefined,
+        uploadTimeStart: undefined,
+        uploadTimeEnd: undefined,
         recorderId: undefined,
         dataSource: undefined,
         storageType: undefined,
-        enforType: undefined,
+        enforceType: undefined,
         mediaName: undefined,
         orderBy: undefined,
         isDesc: true,
@@ -823,11 +821,11 @@ export default {
         },
         { prop: "mediaCate", label: "媒体类型", defaultVisible: true },
         { prop: "mediaSuffix", label: "媒体后缀", defaultVisible: false },
-        { prop: "shotTimeStart", label: "拍摄开始时间", defaultVisible: true },
-        { prop: "shotTime", label: "拍摄时间", defaultVisible: true },
-        { prop: "videoClarity", label: "视频清晰度", defaultVisible: false },
+        { prop: "captureTime", label: "拍摄时间", defaultVisible: true },
+        { prop: "captureEndTime", label: "拍摄结束时间", defaultVisible: false },
+        { prop: "clarity", label: "视频清晰度", defaultVisible: false },
         {
-          prop: "videoDuration",
+          prop: "duration",
           label: "视频时长(毫秒)",
           defaultVisible: false,
         },
@@ -850,9 +848,8 @@ export default {
         },
         { prop: "comments", label: "标注内容", defaultVisible: false },
         { prop: "sequence", label: "视频序列标识", defaultVisible: false },
-        { prop: "enforceType", label: "执法类型", defaultVisible: false },
         {
-          prop: "eenforeTypeNames",
+          prop: "enforceTypeName",
           label: "执法类型名称",
           defaultVisible: false,
         },
@@ -867,9 +864,9 @@ export default {
         { prop: "fileMd5", label: "文件MD5", defaultVisible: false },
         { prop: "fileType", label: "文件类型", defaultVisible: false },
         { prop: "contentType", label: "MIME类型", defaultVisible: false },
-        { prop: "siteNo", label: "采集站编号", defaultVisible: false },
-        { prop: "siteName", label: "采集站名称", defaultVisible: false },
-        { prop: "siteHttp", label: "采集站地址", defaultVisible: false },
+        { prop: "collectSiteNo", label: "采集站编号", defaultVisible: false },
+        { prop: "collectSiteName", label: "采集站名称", defaultVisible: false },
+        { prop: "collectSiteUrl", label: "采集站地址", defaultVisible: false },
         { prop: "storageType", label: "存储方式", defaultVisible: false },
         {
           prop: "isSendToStorage",
@@ -886,7 +883,7 @@ export default {
         { prop: "orgJc", label: "单位简称", defaultVisible: false },
         { prop: "terminalType", label: "终端类型", defaultVisible: false },
         { prop: "recorderNo", label: "执法仪编号", defaultVisible: false },
-        { prop: "incidentRecordCode", label: "警情号", defaultVisible: false },
+        { prop: "incidentCode", label: "警情号", defaultVisible: false },
         {
           prop: "isAssociated",
           label: "是否关联",
@@ -897,7 +894,7 @@ export default {
         { prop: "requestIdentity", label: "请求标识", defaultVisible: false },
         { prop: "authKey", label: "认证码", defaultVisible: false },
         { prop: "traceCode", label: "追溯码", defaultVisible: false },
-        { prop: "importTime", label: "导入时间", defaultVisible: true },
+        { prop: "uploadTime", label: "上传时间", defaultVisible: true },
         { prop: "acquisitionTime", label: "接收时间", defaultVisible: false },
       ],
       // 可见列
@@ -1085,18 +1082,18 @@ export default {
       this.queryParams = {
         pageIndex: 1,
         pageSize: 10,
-        shotTimeStart: undefined,
-        shotTimeEnd: undefined,
+        captureTimeStart: undefined,
+        captureTimeEnd: undefined,
         orgId: undefined,
         includeSubUnits: true,
         policeId: undefined,
         mediaCate: undefined,
-        importTimeStart: undefined,
-        importTimeEnd: undefined,
+        uploadTimeStart: undefined,
+        uploadTimeEnd: undefined,
         recorderId: undefined,
         dataSource: undefined,
         storageType: undefined,
-        enforType: undefined,
+        enforceType: undefined,
         mediaName: undefined,
         orderBy: undefined,
         isDesc: true,

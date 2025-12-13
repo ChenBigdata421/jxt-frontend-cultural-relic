@@ -756,7 +756,7 @@ export default {
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const mediaId = row.id || this.ids[0];
+      const mediaId = row?.mediaId || this.ids[0];
       getMedia(mediaId).then((response) => {
         this.form = response.data;
         this.open = true;
@@ -768,8 +768,8 @@ export default {
     submitForm() {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          if (this.form.id !== undefined) {
-            updateMedia(this.form, this.form.id).then((response) => {
+          if (this.form.mediaId !== undefined && this.form.mediaId !== null) {
+            updateMedia(this.form, this.form.mediaId).then((response) => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg);
                 this.open = false;
@@ -796,7 +796,7 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       // 只支持单个删除
-      const mediaId = row.id || this.ids[0];
+      const mediaId = row?.mediaId || this.ids[0];
 
       if (this.ids.length > 1) {
         this.msgWarning("删除操作需要通过工作流审批，暂不支持批量删除");
@@ -834,7 +834,7 @@ export default {
       this.videoPlayerVisible = true;
 
       // 获取媒体ID
-      const mediaId = row.mediaId || row.id;
+      const mediaId = row?.mediaId;
       if (!mediaId) {
         this.msgWarning("无法获取媒体ID");
         return;
