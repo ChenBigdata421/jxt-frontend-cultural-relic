@@ -7,33 +7,11 @@
     @close="handleClose"
   >
     <div class="video-player-container">
-      <!-- URL输入区域 -->
-      <div class="url-input-section">
-        <el-form :inline="true" size="small">
-          <el-form-item label="播放地址:">
-            <el-input
-              v-model="videoUrl"
-              :placeholder="urlPlaceholder"
-              style="width: 500px"
-              clearable
-            >
-              <el-button
-                slot="append"
-                icon="el-icon-video-play"
-                @click="handlePlay"
-              >
-                播放
-              </el-button>
-            </el-input>
-          </el-form-item>
-        </el-form>
-      </div>
-
       <!-- 视频播放区域 -->
       <div class="video-section" :style="{ minHeight: isAudio ? '120px' : '500px' }">
         <div v-if="!isPlaying" class="video-placeholder">
           <i :class="placeholderIcon" class="placeholder-icon"></i>
-          <p class="placeholder-text">请输入播放URL并点击播放按钮</p>
+          <p class="placeholder-text">点击播放按钮开始播放</p>
         </div>
         <div v-show="isPlaying" class="video-wrapper">
           <component
@@ -68,8 +46,9 @@
     </div>
 
     <div slot="footer" class="dialog-footer">
+      <el-button v-if="!isPlaying" type="primary" icon="el-icon-video-play" @click="handlePlay">播 放</el-button>
+      <el-button v-else type="warning" @click="handleStop">停止播放</el-button>
       <el-button @click="handleClose">关 闭</el-button>
-      <el-button v-if="isPlaying" type="warning" @click="handleStop">停止播放</el-button>
     </div>
   </el-dialog>
 </template>
@@ -105,7 +84,8 @@ export default {
       playerState: 'stopped', // stopped, playing, paused, loading
       errorMessage: '',
       isDestroying: false, // 标志位：是否正在销毁播放器
-      errorHandler: null // 保存错误处理函数引用，以便移除
+      errorHandler: null, // 保存错误处理函数引用，以便移除
+      playerListeners: null // 保存播放器事件监听器引用，便于移除
     }
   },
   computed: {
@@ -125,9 +105,6 @@ export default {
     },
     dialogTitle() {
       return this.isAudio ? '音频播放' : '视频播放'
-    },
-    urlPlaceholder() {
-      return this.isAudio ? '请输入音频文件的HTTP URL' : '请输入视频文件的HTTP URL'
     },
     placeholderIcon() {
       return this.isAudio ? 'el-icon-headset' : 'el-icon-video-camera'
@@ -153,12 +130,26 @@ export default {
     visible(val) {
       if (val && this.initialUrl) {
         this.videoUrl = this.initialUrl
+
+        // 打开弹窗后自动播放
+        this.$nextTick(() => {
+          if (!this.isPlaying) {
+            this.handlePlay()
+          }
+        })
       }
     },
     // 监听 initialUrl 变化，当父组件异步获取到播放地址后自动填充
     initialUrl(val) {
       if (val && this.visible) {
         this.videoUrl = val
+
+        // 播放地址异步到达后自动播放
+        this.$nextTick(() => {
+          if (!this.isPlaying) {
+            this.handlePlay()
+          }
+        })
       }
     }
   },
@@ -168,6 +159,12 @@ export default {
   methods: {
     /** 播放视频 */
     handlePlay() {
+      // 防止连续点击“播放”导致重复 init/重复绑定事件
+      // 若正在播放，先停止再重新播放（相当于重载）
+      if (this.isPlaying) {
+        this.handleStop()
+      }
+
       if (!this.videoUrl) {
         this.$message.warning('请输入播放URL')
         return
@@ -205,6 +202,9 @@ export default {
           return
         }
 
+        // 初始化前先移除旧监听器（避免重复绑定）
+        this.removePlayerListeners()
+
         // 设置视频源并显式 load（部分浏览器对动态 source 更敏感）
         videoElement.src = this.videoUrl
         if (typeof videoElement.load === 'function') {
@@ -214,29 +214,34 @@ export default {
         // 保存播放器引用
         this.player = videoElement
 
-        // 监听播放器事件
-        videoElement.addEventListener('loadstart', () => {
-          this.playerState = 'loading'
-        })
+        // 监听播放器事件（使用可移除的函数引用，避免重复绑定）
+        this.playerListeners = {
+          loadstart: () => {
+            this.playerState = 'loading'
+          },
+          loadeddata: () => {
+            this.playerState = 'playing'
+          },
+          play: () => {
+            this.playerState = 'playing'
+          },
+          pause: () => {
+            this.playerState = 'paused'
+          },
+          ended: () => {
+            this.playerState = 'stopped'
+            this.isPlaying = false
+          }
+        }
+        videoElement.addEventListener('loadstart', this.playerListeners.loadstart)
+        videoElement.addEventListener('loadeddata', this.playerListeners.loadeddata)
+        videoElement.addEventListener('play', this.playerListeners.play)
+        videoElement.addEventListener('pause', this.playerListeners.pause)
+        videoElement.addEventListener('ended', this.playerListeners.ended)
 
-        videoElement.addEventListener('canplay', () => {
-        })
-
-        videoElement.addEventListener('playing', () => {
-          this.playerState = 'playing'
-        })
-
-        videoElement.addEventListener('pause', () => {
-          this.playerState = 'paused'
-        })
-
-        videoElement.addEventListener('ended', () => {
-          this.playerState = 'stopped'
-        })
-
-        // 创建错误处理函数并保存引用
-        this.errorHandler = (e) => {
-          // 如果正在销毁播放器，忽略错误事件
+        // 错误处理函数（保持单例引用，destroy 时可移除）
+        this.errorHandler = () => {
+          // 如果正在销毁播放器，不显示错误信息
           if (this.isDestroying) {
             return
           }
@@ -296,22 +301,46 @@ export default {
       }
     },
 
+    removePlayerListeners() {
+      if (!this.player || !this.playerListeners) {
+        return
+      }
+      try {
+        this.player.removeEventListener('loadstart', this.playerListeners.loadstart)
+        this.player.removeEventListener('loadeddata', this.playerListeners.loadeddata)
+        this.player.removeEventListener('play', this.playerListeners.play)
+        this.player.removeEventListener('pause', this.playerListeners.pause)
+        this.player.removeEventListener('ended', this.playerListeners.ended)
+      } catch (e) {
+      } finally {
+        this.playerListeners = null
+      }
+    },
+
     /** 销毁播放器 */
     destroyPlayer() {
       if (this.player) {
         try {
           // 设置销毁标志
           this.isDestroying = true
-          // 先移除错误事件监听器，避免触发错误提示
+
+          // 先移除事件监听器，避免 stop/清空 src 时触发回调
+          this.removePlayerListeners()
           if (this.errorHandler) {
             this.player.removeEventListener('error', this.errorHandler)
             this.errorHandler = null
           }
+
           // 暂停播放
           this.player.pause()
-          // 清空源
-          this.player.src = ''
-          this.player.load()
+
+          // 清空源（避免浏览器继续尝试加载/播放）
+          // 使用 removeAttribute 更彻底，且在移除 error 监听后不会刷屏
+          this.player.removeAttribute('src')
+          if (typeof this.player.load === 'function') {
+            this.player.load()
+          }
+
           this.player = null
           this.isDestroying = false
         } catch (error) {
@@ -390,13 +419,6 @@ export default {
 <style scoped>
 .video-player-container {
   padding: 10px;
-}
-
-.url-input-section {
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #f5f7fa;
-  border-radius: 4px;
 }
 
 .video-section {
