@@ -485,6 +485,13 @@
           @close="handleImageViewerClose"
         />
 
+        <!-- 文本/日志预览对话框 -->
+        <TextViewerDialog
+          :visible.sync="textViewerVisible"
+          :initial-url="currentTextUrl"
+          @close="handleTextViewerClose"
+        />
+
         <!-- 任务处理对话框 -->
         <TaskProcessDialog
           v-model="taskProcessOpen"
@@ -522,6 +529,7 @@ import MediaSelector from "@/components/MediaSelector";
 import ArchiveSelectorDialog from "@/components/ArchiveSelectorDialog";
 import VideoPlayerDialog from "@/components/VideoPlayerDialog";
 import ImageViewerDialog from "@/components/ImageViewerDialog";
+import TextViewerDialog from "@/components/TextViewerDialog";
 import TaskProcessDialog from "@/components/TaskProcessDialog";
 import workflowMixin from "@/mixins/workflowMixin";
 import Treeselect from "@riophae/vue-treeselect";
@@ -534,6 +542,7 @@ export default {
     ArchiveSelectorDialog,
     VideoPlayerDialog,
     ImageViewerDialog,
+    TextViewerDialog,
     TaskProcessDialog,
     Treeselect,
   },
@@ -582,6 +591,9 @@ export default {
       // 图片预览相关
       imageViewerVisible: false,
       currentImageUrl: "",
+      // 文本/日志预览相关
+      textViewerVisible: false,
+      currentTextUrl: "",
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -836,6 +848,8 @@ export default {
       if (raw === "照片") return 1;
       if (raw === "音频") return 2;
       if (raw === "视频") return 3;
+      if (raw === "日志") return 4;
+      if (raw === "文本") return 4;
 
       // 3) 兜底：尝试通过已加载的字典反查（label->value）
       const hit = (this.mediaCateOptions || []).find(
@@ -888,6 +902,9 @@ export default {
       if (mediaCate === 1) {
         this.currentImageUrl = "";
         this.imageViewerVisible = true;
+      } else if (mediaCate === 4) {
+        this.currentTextUrl = "";
+        this.textViewerVisible = true;
       } else {
         this.currentVideoUrl = "";
         this.currentPlayMediaCate = mediaCate;
@@ -901,6 +918,8 @@ export default {
             const playUrl = response.data.playUrl || response.data;
             if (mediaCate === 1) {
               this.currentImageUrl = playUrl;
+            } else if (mediaCate === 4) {
+              this.currentTextUrl = playUrl;
             } else {
               this.currentVideoUrl = playUrl;
             }
@@ -925,6 +944,11 @@ export default {
     /** 图片预览关闭 */
     handleImageViewerClose() {
       this.currentImageUrl = "";
+    },
+
+    /** 文本/日志预览关闭 */
+    handleTextViewerClose() {
+      this.currentTextUrl = "";
     },
 
     /** 一键归档(单个) */
