@@ -729,9 +729,9 @@ import {
 } from "@/api/evidence/evidence_manage_command_api";
 import {
   getIncidentRecordList,
-  getEnforcementTypeTree,
   getIncidentRecordMediaRelationsByIncidentRecord,
 } from "@/api/evidence/evidence_manage_query_api";
+import { getEnforcementTypeTree } from "@/api/admin/enforcementtype";
 import { formatJson } from "@/utils";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";

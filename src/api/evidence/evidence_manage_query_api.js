@@ -68,36 +68,10 @@ export function getEvidenceMediaByCaseId(caseId, query) {
   })
 }
 
-// 查询执法类型列表
-export function getEnforcementTypeList(query) {
-  return request({
-    url: '/api/v1/enforcement-types',
-    method: 'get',
-    params: query
-  })
-}
-
-// 查询执法类型详细
-export function getEnforcementType(id) {
-  return request({
-    url: '/api/v1/enforcement-types/' + id,
-    method: 'get'
-  })
-}
-
-// 查询执法类型树形结构
-export function getEnforcementTypeTree(query) {
-  return request({
-    url: '/api/v1/enforcement-types/tree',
-    method: 'get',
-    params: query
-  })
-}
-
 // 查询警情媒体关联关系列表
-export function getIncidentRecordMediaRelationsByIncidentRecord(incidentRecordId) {
+export function getIncidentRecordMediaRelationsByIncidentRecordId(incidentRecordId) {
   return request({
-    url: '/api/v1/incidentrecord-media-relations/media-relations/' + incidentRecordId,
+    url: '/api/v1/incidentrecord-media-relations/incidentrecord/' + incidentRecordId,
     method: 'get'
   })
 }
@@ -113,16 +87,16 @@ export function getIncidentRecordUnassociatedMediaByIncidentRecord(incidentRecor
 // 查询警情未关联的媒体列表(带分页)
 export function getUnassociatedMediaByIncidentRecordId(incidentRecordId, query) {
   return request({
-    url: '/api/v1/incidentrecord-media-relations/unassociated-media/' + incidentRecordId,
+    url: `/api/v1/media/incidentrecord/${incidentRecordId}/unassociated-media`,
     method: 'get',
     params: query
   })
 }
 
-// 查询警情媒体关联关系列表
+// 根据 mediaId 查询警情媒体关联列表
 export function getIncidentRecordMediaRelationsByMedia(mediaId) {
   return request({
-    url: '/api/v1/incidentrecord-media-relations/incidentrecord-relations/' + mediaId,
+    url: '/api/v1/incidentrecord-media-relations/media/' + mediaId,
     method: 'get'
   })
 }

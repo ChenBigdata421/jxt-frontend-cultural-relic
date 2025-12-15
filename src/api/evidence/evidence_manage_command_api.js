@@ -75,32 +75,6 @@ export function batchMarkMediaNoEnforcementStatus(data) {
   })
 }
 
-// 新增执法类型
-export function addEnforcementType(data) {
-  return request({
-    url: '/api/v1/enforcement-types',
-    method: 'post',
-    data: data
-  })
-}
-
-// 修改执法类型
-export function updateEnforcementType(data, id) {
-  return request({
-    url: '/api/v1/enforcement-types/' + id,
-    method: 'put',
-    data: data
-  })
-}
-
-// 删除执法类型
-export function delEnforcementType(id) {
-  return request({
-    url: '/api/v1/enforcement-types/' + id,
-    method: 'delete'
-  })
-}
-
 // 新增警情媒体关联关系
 export function addIncidentRecordMediaRelations(data) {
   return request({
@@ -115,6 +89,15 @@ export function delIncidentRecordMediaRelations(id) {
   return request({
     url: '/api/v1/incidentrecord-media-relations/' + id,
     method: 'delete'
+  })
+}
+
+// 批量删除警情媒体关联关系
+export function batchDelIncidentRecordMediaRelations(data) {
+  return request({
+    url: '/api/v1/incidentrecord-media-relations/batch',
+    method: 'delete',
+    data: data
   })
 }
 

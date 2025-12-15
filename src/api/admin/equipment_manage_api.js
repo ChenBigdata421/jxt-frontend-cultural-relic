@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 执法仪API
 export function getEquipmentLawcameraList(query) {
   return request({
-    url: '/api/v1/equipment/lawcamera',
+    url: '/api/v1/equipment/bwc',
     method: 'get',
     params: query
   })
@@ -11,14 +11,14 @@ export function getEquipmentLawcameraList(query) {
 
 export function getEquipmentLawcamera(lawcameraId) {
   return request({
-    url: '/api/v1/equipment/lawcamera/' + lawcameraId,
+    url: '/api/v1/equipment/bwc/' + lawcameraId,
     method: 'get'
   })
 }
 
 export function addEquipmentLawcamera(data) {
   return request({
-    url: '/api/v1/equipment/lawcamera',
+    url: '/api/v1/equipment/bwc',
     method: 'post',
     data: data
   })
@@ -26,7 +26,7 @@ export function addEquipmentLawcamera(data) {
 
 export function updateEquipmentLawcamera(data, id) {
   return request({
-    url: '/api/v1/equipment/lawcamera/' + id,
+    url: '/api/v1/equipment/bwc/' + id,
     method: 'put',
     data: data
   })
@@ -34,7 +34,7 @@ export function updateEquipmentLawcamera(data, id) {
 
 export function delEquipmentLawcamera(data) {
   return request({
-    url: '/api/v1/equipment/lawcamera',
+    url: '/api/v1/equipment/bwc',
     method: 'delete',
     data: data
   })

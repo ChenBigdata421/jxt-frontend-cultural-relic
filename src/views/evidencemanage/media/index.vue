@@ -515,14 +515,13 @@ import {
 import {
   getMedia,
   getMediaPlayURL,
-  getEnforcementTypeTree,
 } from "@/api/evidence/evidence_manage_query_api";
+import { getEnforcementTypeTree } from "@/api/admin/enforcementtype";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
 import { getEquipmentLawcameraList } from "@/api/admin/equipment_manage_api";
 import {
   addArchive,
-  addArchiveMediaRelation,
   batchAddArchiveMediaRelations,
 } from "@/api/evidence/archive_api";
 import MediaSelector from "@/components/MediaSelector";
@@ -852,9 +851,7 @@ export default {
       if (raw === "文本") return 4;
 
       // 3) 兜底：尝试通过已加载的字典反查（label->value）
-      const hit = (this.mediaCateOptions || []).find(
-        (it) => it?.label === raw
-      );
+      const hit = (this.mediaCateOptions || []).find((it) => it?.label === raw);
       if (hit && hit.value !== undefined && hit.value !== null) {
         const v = parseInt(hit.value);
         if (!Number.isNaN(v)) {
@@ -955,7 +952,7 @@ export default {
     handleQuickArchive(row) {
       this.isBatchArchive = false;
       this.currentArchivingMedia = row;
-      this.currentArchivingMediaList = [];
+      this.currentArchivingMediaList = [this.currentArchivingMedia.mediaId];
       this.archiveType = "existing";
       this.archiveForm = {
         archiveCode: "",
@@ -1023,16 +1020,9 @@ export default {
     /** 提交归档 */
     submitArchive() {
       // 验证是否选择了媒体
-      if (this.isBatchArchive) {
-        if (this.currentArchivingMediaList.length === 0) {
-          this.msgError("未选择要归档的媒体");
-          return;
-        }
-      } else {
-        if (!this.currentArchivingMedia) {
-          this.msgError("未选择要归档的媒体");
-          return;
-        }
+      if (this.currentArchivingMediaList.length === 0) {
+        this.msgError("未选择要归档的媒体");
+        return;
       }
 
       if (this.archiveType === "existing") {
@@ -1058,48 +1048,25 @@ export default {
 
     /** 关联媒体到现有档案 */
     linkMediaToArchive() {
-      if (this.isBatchArchive) {
-        // 批量归档
-        const data = {
-          archiveId: this.archiveForm.archiveId,
-          mediaIds: this.currentArchivingMediaList,
-        };
+      // 批量归档
+      const data = {
+        archiveId: this.archiveForm.archiveId,
+        mediaIds: this.currentArchivingMediaList,
+      };
 
-        batchAddArchiveMediaRelations(data)
-          .then((response) => {
-            if (response.code === 200) {
-              this.msgSuccess("批量归档成功");
-              this.archiveDialogVisible = false;
-              this.$refs.mediaSelector.refresh();
-            } else {
-              this.msgError(response.msg || "批量归档失败");
-            }
-          })
-          .catch((error) => {
-            this.msgError("批量归档失败：" + (error.message || "未知错误"));
-          });
-      } else {
-        // 单个归档
-        const data = {
-          archiveId: this.archiveForm.archiveId,
-          mediaId:
-            this.currentArchivingMedia.mediaId || this.currentArchivingMedia.id,
-        };
-
-        addArchiveMediaRelation(data)
-          .then((response) => {
-            if (response.code === 200) {
-              this.msgSuccess("归档成功");
-              this.archiveDialogVisible = false;
-              this.$refs.mediaSelector.refresh();
-            } else {
-              this.msgError(response.msg || "归档失败");
-            }
-          })
-          .catch((error) => {
-            this.msgError("归档失败：" + (error.message || "未知错误"));
-          });
-      }
+      batchAddArchiveMediaRelations(data)
+        .then((response) => {
+          if (response.code === 200) {
+            this.msgSuccess("批量归档成功");
+            this.archiveDialogVisible = false;
+            this.$refs.mediaSelector.refresh();
+          } else {
+            this.msgError(response.msg || "批量归档失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError("批量归档失败：" + (error.message || "未知错误"));
+        });
     },
 
     /** 创建新档案并关联 */

@@ -31,7 +31,8 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-            >搜索</el-button>
+              >搜索</el-button
+            >
             <el-button
               v-permisaction="['admin:enforcementType:add']"
               class="filter-item"
@@ -39,7 +40,8 @@
               icon="el-icon-plus"
               size="mini"
               @click="handleAdd"
-            >新增</el-button>
+              >新增</el-button
+            >
           </el-form-item>
         </el-form>
         <!--enforcementTypeList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
@@ -56,21 +58,43 @@
           row-key="id"
           default-expand-all
           border
-          :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+          :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         >
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
-          <el-table-column prop="enforcementTypeCode" label="执法类型编码" width="200" />
-          <el-table-column prop="enforcementTypeName" label="执法类型名称" width="400" />
-          <el-table-column prop="enforcementTypeDesc" label="执法类型描述" width="500" />
+          <el-table-column
+            prop="enforcementTypeCode"
+            label="执法类型编码"
+            width="200"
+          />
+          <el-table-column
+            prop="enforcementTypeName"
+            label="执法类型名称"
+            width="400"
+          />
+          <el-table-column
+            prop="enforcementTypeDesc"
+            label="执法类型描述"
+            width="500"
+          />
           <el-table-column prop="sort" label="排序" width="100" />
           <el-table-column prop="source" label="来源" width="120" />
-          <el-table-column label="创建时间" align="center" prop="createdAt" width="200">
+          <el-table-column
+            label="创建时间"
+            align="center"
+            prop="createdAt"
+            width="200"
+          >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.createdAt) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200">
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="200"
+          >
             <template slot-scope="scope">
               <el-button
                 v-permisaction="['admin:enforcementType:edit']"
@@ -78,21 +102,24 @@
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
-              >修改</el-button>
+                >修改</el-button
+              >
               <el-button
                 v-permisaction="['admin:enforcementType:add']"
                 size="mini"
                 type="text"
                 icon="el-icon-plus"
                 @click="handleAdd(scope.row)"
-              >新增</el-button>
+                >新增</el-button
+              >
               <el-button
                 v-permisaction="['admin:enforcementType:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
                 @click="handleDelete(scope.row)"
-              >删除</el-button>
+                >删除</el-button
+              >
             </template>
           </el-table-column>
         </el-table>
@@ -101,7 +128,12 @@
         <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
           用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
         <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
-        <el-dialog :title="title" :visible.sync="open" width="600px" :close-on-click-modal="false">
+        <el-dialog
+          :title="title"
+          :visible.sync="open"
+          width="600px"
+          :close-on-click-modal="false"
+        >
           <el-form ref="form" :model="form" :rules="rules" label-width="120px">
             <el-row>
               <el-col :span="24">
@@ -118,12 +150,18 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="执法类型编码" prop="enforcementTypeCode">
-                  <el-input v-model="form.enforcementTypeCode" placeholder="请输入执法类型编码" />
+                  <el-input
+                    v-model="form.enforcementTypeCode"
+                    placeholder="请输入执法类型编码"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="执法类型名称" prop="enforcementTypeName">
-                  <el-input v-model="form.enforcementTypeName" placeholder="请输入执法类型名称" />
+                  <el-input
+                    v-model="form.enforcementTypeName"
+                    placeholder="请输入执法类型名称"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="24">
@@ -138,7 +176,11 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="显示排序" prop="sort">
-                  <el-input-number v-model="form.sort" controls-position="right" :min="0" />
+                  <el-input-number
+                    v-model="form.sort"
+                    controls-position="right"
+                    :min="0"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -160,14 +202,22 @@
 </template>
 
 <script>
-import { delEnforcementType, addEnforcementType, updateEnforcementType } from '@/api/evidence/evidence_manage_command_api'
-import { getEnforcementTypeList, getEnforcementType, getEnforcementTypeTree } from '@/api/evidence/evidence_manage_query_api'
+import {
+  delEnforcementType,
+  addEnforcementType,
+  updateEnforcementType,
+} from "@/api/admin/enforcementtype";
+import {
+  getEnforcementTypeList,
+  getEnforcementType,
+  getEnforcementTypeTree,
+} from "@/api/admin/enforcementtype";
 
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
-  name: 'EnforcementTypeManage',
+  name: "EnforcementTypeManage",
   components: { Treeselect },
   data() {
     return {
@@ -178,61 +228,58 @@ export default {
       // 执法类型树选项
       enforcementTypeLabel: [],
       // 弹出层标题
-      title: '',
+      title: "",
       isEdit: false,
       // 是否显示弹出层
       open: false,
       // 查询参数
       queryParams: {
         enforcementTypeName: undefined,
-        enforcementTypeCode: undefined
+        enforcementTypeCode: undefined,
       },
       // 表单参数
-      form: {
-      },
+      form: {},
       // 表单校验,触发时机（trigger: 'blur'）：当输入框失去焦点（blur 事件）时触发验证。
       rules: {
         parentId: [
-          { required: true, message: '上级执法类型不能为空', trigger: 'blur' }
+          { required: true, message: "上级执法类型不能为空", trigger: "blur" },
         ],
         enforcementTypeCode: [
-          { required: true, message: '执法类型编码不能为空', trigger: 'blur' }
+          { required: true, message: "执法类型编码不能为空", trigger: "blur" },
         ],
         enforcementTypeName: [
-          { required: true, message: '执法类型名称不能为空', trigger: 'blur' }
+          { required: true, message: "执法类型名称不能为空", trigger: "blur" },
         ],
-        sort: [
-          { required: true, message: '排序不能为空', trigger: 'blur' }
-        ]
-      }
-    }
+        sort: [{ required: true, message: "排序不能为空", trigger: "blur" }],
+      },
+    };
   },
   created() {
-    this.getList()
+    this.getList();
   },
   methods: {
     /** 构建树形结构 */
     buildTree(list, parentId = 0) {
-      const tree = []
+      const tree = [];
       for (const item of list) {
         if (item.parentId === parentId) {
-          const children = this.buildTree(list, item.id)
+          const children = this.buildTree(list, item.id);
           if (children.length > 0) {
-            item.children = children
+            item.children = children;
           }
-          tree.push(item)
+          tree.push(item);
         }
       }
-      return tree
+      return tree;
     },
     /** 查询执法类型列表 */
     getList() {
-      this.loading = true
+      this.loading = true;
       // 优先使用树形接口，如果不存在则使用普通列表接口
-      getEnforcementTypeList(this.queryParams).then(response => {
-        this.enforcementTypeList = response.data.list || response.data
-        this.loading = false
-      })
+      getEnforcementTypeList(this.queryParams).then((response) => {
+        this.enforcementTypeList = response.data ? response.data.list : [];
+        this.loading = false;
+      });
     },
     /* 在 Vue.js 应用中，当使用如 Treeselect 这样的树形选择组件时，通常需要将原始数据转换成
     组件所需的特定格式。normalizer 方法就是用来进行这种转换的。例如，后端可能返回的数据结构与
@@ -243,27 +290,31 @@ export default {
     /** 转换执法类型数据结构 */
     normalizer(node) {
       if (node.children && !node.children.length) {
-        delete node.children
+        delete node.children;
       }
       return {
         id: node.id,
-        label: node.enforcementTypeName || node.label || '未知',
-        children: node.children
-      }
+        label: node.enforcementTypeName || node.label || "未知",
+        children: node.children,
+      };
     },
     /** 查询执法类型下拉树结构 */
     getTreeselect() {
-      getEnforcementTypeTree().then(response => {
-        this.enforcementTypeLabel = []
-        const enforcementType = { id: 0, enforcementTypeName: '主类目', children: [] }
-          enforcementType.children = response.data
-          this.enforcementTypeLabel.push(enforcementType)
-      })
+      getEnforcementTypeTree().then((response) => {
+        this.enforcementTypeLabel = [];
+        const enforcementType = {
+          id: 0,
+          enforcementTypeName: "主类目",
+          children: [],
+        };
+        enforcementType.children = response.data;
+        this.enforcementTypeLabel.push(enforcementType);
+      });
     },
     // 取消按钮
     cancel() {
-      this.open = false
-      this.reset()
+      this.open = false;
+      this.reset();
     },
     // 表单重置
     reset() {
@@ -274,86 +325,88 @@ export default {
         enforcementTypeName: undefined,
         enforcementTypeDesc: undefined,
         sort: 10,
-        source: undefined
-      }
+        source: undefined,
+      };
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.getList()
+      this.getList();
     },
     /** 新增按钮操作*/
     handleAdd(row) {
-      this.reset()
-      this.getTreeselect()
+      this.reset();
+      this.getTreeselect();
       if (row !== undefined) {
-        this.form.parentId = row.id
+        this.form.parentId = row.id;
       }
-      this.open = true
-      this.title = '添加执法类型'
-      this.isEdit = false
+      this.open = true;
+      this.title = "添加执法类型";
+      this.isEdit = false;
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset()
-      this.getTreeselect()
-      this.form.parentId = row.id
-      getEnforcementType(row.id).then(response => {
-        this.form = response.data
-        this.open = true
-        this.title = '修改执法类型'
-        this.isEdit = true
-      })
+      this.reset();
+      this.getTreeselect();
+      this.form.parentId = row.id;
+      getEnforcementType(row.id).then((response) => {
+        this.form = response.data;
+        this.open = true;
+        this.title = "修改执法类型";
+        this.isEdit = true;
+      });
     },
     /** 提交按钮 */
-    submitForm: function() {
-      this.$refs['form'].validate(valid => {
+    submitForm: function () {
+      this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id !== undefined) {
-            updateEnforcementType(this.form, this.form.id).then(response => {
+            updateEnforcementType(this.form, this.form.id).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                this.getList()
+                this.msgSuccess(response.msg);
+                this.open = false;
+                this.getList();
               } else {
-                this.msgError(response.msg)
+                this.msgError(response.msg);
               }
-            })
+            });
           } else {
-            addEnforcementType(this.form).then(response => {
+            addEnforcementType(this.form).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open = false
-                this.getList()
+                this.msgSuccess(response.msg);
+                this.open = false;
+                this.getList();
               } else {
-                this.msgError(response.msg)
+                this.msgError(response.msg);
               }
-            })
+            });
           }
         }
-      })
+      });
     },
     /** 删除按钮操作 */
     handleDelete(row) {
       this.$confirm(
         '是否确认删除名称为"' + row.enforcementTypeName + '"的数据项?',
-        '警告',
+        "警告",
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
         }
       )
         .then(() => {
-          return delEnforcementType(row.id)
-        }).then((response) => {
+          return delEnforcementType(row.id);
+        })
+        .then((response) => {
           if (response.code === 200) {
-            this.msgSuccess(response.msg)
-            this.getList()
+            this.msgSuccess(response.msg);
+            this.getList();
           } else {
-            this.msgError(response.msg)
+            this.msgError(response.msg);
           }
-        }).catch(function() {})
-    }
-  }
-}
+        })
+        .catch(function () {});
+    },
+  },
+};
 </script>

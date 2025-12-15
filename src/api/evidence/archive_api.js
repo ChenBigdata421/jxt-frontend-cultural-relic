@@ -149,21 +149,6 @@ export function batchUpdateArchiveStatus(data) {
 
 // ==================== 档案媒体关联操作 ====================
 
-/**
- * 创建档案媒体关联
- * @param {Object} data - 关联数据
- * @param {string} data.archiveId - 档案ID (UUID格式)
- * @param {string} data.archiveCode - 档案编码
- * @param {string} data.mediaId - 媒体ID (UUID格式)
- * @returns {Promise}
- */
-export function addArchiveMediaRelation(data) {
-  return request({
-    url: '/api/v1/archive-media-relations',
-    method: 'post',
-    data: data
-  })
-}
 
 /**
  * 批量创建档案媒体关联
@@ -181,30 +166,18 @@ export function batchAddArchiveMediaRelations(data) {
   })
 }
 
-/**
- * 删除档案媒体关联
- * @param {string} archiveId - 档案ID (UUID格式)
- * @param {string} mediaId - 媒体ID (UUID格式)
- * @returns {Promise}
- */
-export function delArchiveMediaRelation(archiveId, mediaId) {
-  return request({
-    url: `/api/v1/archive-media-relations/${archiveId}/${mediaId}`,
-    method: 'delete'
-  })
-}
 
 /**
- * 查询档案的媒体关联列表
+ * 查询档案的关联列表
  * @param {string} archiveId - 档案ID (UUID格式)
  * @param {Object} query - 查询参数
  * @param {number} query.page - 页码
  * @param {number} query.pageSize - 每页条数
  * @returns {Promise}
  */
-export function getArchiveMediaRelations(archiveId, query) {
+export function getArchiveMediaRelationsByArchiveId(archiveId, query) {
   return request({
-    url: `/api/v1/archive-media-relations/archives/${archiveId}/media-relations`,
+    url: `/api/v1/archive-media-relations/archive/${archiveId}`,
     method: 'get',
     params: query
   })
@@ -219,6 +192,20 @@ export function delArchiveMediaRelationById(relationId) {
   return request({
     url: `/api/v1/archive-media-relations/${relationId}`,
     method: 'delete'
+  })
+}
+
+/**
+ * 批量删除档案媒体关联
+ * @param {Object} data - 批量删除数据
+ * @param {Array<string>} data.ids - 关联ID数组 (UUID格式)
+ * @returns {Promise}
+ */
+export function batchDelArchiveMediaRelations(data) {
+  return request({
+    url: '/api/v1/archive-media-relations/batch',
+    method: 'delete',
+    data: data
   })
 }
 

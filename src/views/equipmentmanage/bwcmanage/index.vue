@@ -48,7 +48,7 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="状态" prop="state">
+          <el-form-item label="状态" prop="status">
             <el-select
               v-model="queryParams.state"
               placeholder="状态"
@@ -223,13 +223,13 @@
           </el-table-column>
           <el-table-column
             v-if="isColumnVisible('no')"
-            prop="no"
+            prop="bwcNo"
             label="编号"
             width="120"
           />
           <el-table-column
             v-if="isColumnVisible('name')"
-            prop="name"
+            prop="bwcName"
             label="名称"
             width="140"
             :show-overflow-tooltip="true"
@@ -266,7 +266,7 @@
           </el-table-column>
           <el-table-column
             v-if="isColumnVisible('state')"
-            prop="state"
+            prop="status"
             label="状态"
             width="120"
           >
@@ -420,7 +420,7 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="状态">
-                  <el-radio-group v-model="form.state">
+                  <el-radio-group v-model="form.status">
                     <el-radio
                       v-for="dict in stateOptions"
                       :key="parseInt(dict.value)"
@@ -659,7 +659,7 @@ export default {
   created() {
     this.getList();
     this.getTreeselect();
-    this.getDicts("lawcamera_state").then((response) => {
+    this.getDicts("bwc_status").then((response) => {
       this.stateOptions = response.data;
     });
     this.getDicts("enableuse_state").then((response) => {
@@ -716,7 +716,7 @@ export default {
 
     // 字典状态字典翻译
     stateFormat(row) {
-      return this.selectDictLabel(this.stateOptions, parseInt(row.state));
+      return this.selectDictLabel(this.stateOptions, parseInt(row.status));
     },
     // 字典状态字典翻译
     enableUseFormat(row) {

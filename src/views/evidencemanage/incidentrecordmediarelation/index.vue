@@ -249,14 +249,27 @@
                 >关联新媒体</el-button
               >
             </el-col>
+            <el-col :span="1.5">
+              <el-button
+                type="danger"
+                icon="el-icon-delete"
+                size="mini"
+                :disabled="selectedMediaRelations.length === 0"
+                @click="handleBatchUnlinkMedia"
+                >批量取消关联</el-button
+              >
+            </el-col>
           </el-row>
 
           <!-- 关联媒体列表 -->
           <el-table
-            v-loading="mediaRelationsLoading"
-            :data="mediaRelationsList"
+            ref="mediaRelationsTable"
+            v-loading="relationsLoading"
+            :data="relationsList"
             border
+            @selection-change="handleMediaRelationsSelectionChange"
           >
+            <el-table-column type="selection" width="55" align="center" />
             <el-table-column
               prop="incidentRecordCode"
               label="警情编号"
@@ -305,9 +318,20 @@
             </el-table-column>
           </el-table>
 
-          <div v-if="mediaRelationsList.length === 0" class="empty-data">
+          <div
+            v-if="!(relationsList && relationsList.length)"
+            class="empty-data"
+          >
             <el-empty description="暂无关联媒体" :image-size="100" />
           </div>
+          <!-- 分页 -->
+          <pagination
+            v-show="relationTotal > 0"
+            :total="relationTotal"
+            :page.sync="relationQueryParams.pageIndex"
+            :limit.sync="relationQueryParams.pageSize"
+            @pagination="loadIncidentRecordMediaRelations"
+          />
         </div>
       </el-drawer>
 
@@ -578,13 +602,14 @@ import {
   batchDelIncidentRecord,
   addIncidentRecordMediaRelations,
   delIncidentRecordMediaRelations,
+  batchDelIncidentRecordMediaRelations,
 } from "@/api/evidence/evidence_manage_command_api";
 import {
   getIncidentRecordList,
-  getEnforcementTypeTree,
-  getIncidentRecordMediaRelationsByIncidentRecord,
+  getIncidentRecordMediaRelationsByIncidentRecordId,
   getUnassociatedMediaByIncidentRecordId,
 } from "@/api/evidence/evidence_manage_query_api";
+import { getEnforcementTypeTree } from "@/api/admin/enforcementtype";
 import { formatJson } from "@/utils";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
@@ -630,17 +655,20 @@ export default {
       mediaSelectorDrawerOpen: false,
       // 当前选中的警情记录
       currentIncidentRecord: null,
+      relationTotal: 0,
       // 组织树选项
       orgOptions: undefined,
       userOptions: undefined,
       // 选中的媒体列表
       selectedMediaList: [],
+      // 选中的已关联媒体列表（用于批量取消关联）
+      selectedMediaRelations: [],
       // 当前选中的警情记录（用于显示媒体关联列表）
       currentSelectedIncident: null,
       // 警情媒体关联列表
-      mediaRelationsList: [],
+      relationsList: [],
       // 媒体关联列表加载状态
-      mediaRelationsLoading: false,
+      relationsLoading: false,
       // 媒体类型选项
       mediaCateOptions: [],
       // 存储类型选项
@@ -656,6 +684,11 @@ export default {
         processPoliceIds: undefined,
         status: undefined,
         isRelation: undefined,
+      },
+      // 关联查询参数
+      relationQueryParams: {
+        pageIndex: 1,
+        pageSize: 10,
       },
       AttributeValueList: [],
       ColumnNameConvert: new Map([
@@ -760,12 +793,14 @@ export default {
         this.$nextTick(() => {
           if (this.incidentRecordList.length > 0) {
             const firstIncident = this.incidentRecordList[0];
-            this.$refs.incidentTable.clearSelection();
-            this.$refs.incidentTable.toggleRowSelection(firstIncident, true);
+            if (this.$refs.incidentTable) {
+              this.$refs.incidentTable.clearSelection();
+              this.$refs.incidentTable.toggleRowSelection(firstIncident, true);
+            }
             this.currentSelectedIncident = firstIncident;
           } else {
             this.currentSelectedIncident = null;
-            this.mediaRelationsList = [];
+            this.relationsList = [];
           }
         });
       });
@@ -817,9 +852,13 @@ export default {
     // 单个选择框点击事件,selection表示所有被选中的行，row表示当前点击的行
     handleSelect(selection, row) {
       this.currentSelectedIncident = row;
-      this.loadMediaRelations(row.id);
-      this.$refs.incidentTable.clearSelection();
-      this.$refs.incidentTable.toggleRowSelection(row, true);
+      this.loadIncidentRecordMediaRelations(row.id);
+      this.$nextTick(() => {
+        if (this.$refs.incidentTable) {
+          this.$refs.incidentTable.clearSelection();
+          this.$refs.incidentTable.toggleRowSelection(row, true);
+        }
+      });
     },
     /** 新增按钮操作*/
     handleAdd() {
@@ -974,14 +1013,14 @@ export default {
     handleLinkMedia(row) {
       this.currentIncidentRecord = row;
       this.showMediaDrawer = true;
-      this.loadMediaRelations(row.id);
+      this.loadIncidentRecordMediaRelations(row.id);
     },
 
     /** 关闭第一层抽屉 */
     handleCloseMediaDrawer(done) {
       this.showMediaDrawer = false;
       this.currentIncidentRecord = null;
-      this.mediaRelationsList = [];
+      this.relationsList = [];
       if (done) {
         done();
       }
@@ -994,6 +1033,7 @@ export default {
       // 等待抽屉打开后刷新媒体选择器
       this.$nextTick(() => {
         if (this.$refs.mediaSelector) {
+          this.$refs.mediaSelector.clearSelection();
           this.$refs.mediaSelector.refresh();
         }
       });
@@ -1111,7 +1151,7 @@ export default {
 
           // 延迟2秒后刷新第一层抽屉的媒体列表
           await this.delay(2000);
-          this.loadMediaRelations(this.currentIncidentRecord.id);
+          this.loadIncidentRecordMediaRelations(this.currentIncidentRecord.id);
           this.getList(); // 刷新警情列表以更新关联状态
 
           // 显示成功消息,包含实际关联的媒体数量
@@ -1136,34 +1176,34 @@ export default {
     },
 
     /** 加载警情媒体关联列表 */
-    loadMediaRelations(incidentRecordId) {
-      this.mediaRelationsLoading = true;
-      getIncidentRecordMediaRelationsByIncidentRecord(incidentRecordId)
+    loadIncidentRecordMediaRelations() {
+      this.relationsLoading = true;
+      getIncidentRecordMediaRelationsByIncidentRecordId(
+        this.currentIncidentRecord.id,
+        this.relationQueryParams
+      )
         .then((response) => {
           // 必须检查response.code是否为200
           if (response.code === 200) {
-            this.mediaRelationsList = response.data.list || [];
-            // 调试日志：查看返回的数据结构
-            if (this.mediaRelationsList.length > 0) {
-              console.log(
-                "[IncidentRecordMediaRelation] 第一条关联数据:",
-                JSON.stringify(this.mediaRelationsList[0], null, 2)
-              );
-            }
+            this.relationsList = response.data.list || [];
+            this.relationTotal = response.data.count || 0;
           } else {
             console.error("加载媒体关联列表失败:", response.msg);
             this.msgError(response.msg || "加载媒体关联列表失败");
-            this.mediaRelationsList = [];
+            this.relationsList = [];
+            this.relationTotal = 0;
           }
-          this.mediaRelationsLoading = false;
         })
         .catch((error) => {
           console.error("加载媒体关联列表失败:", error);
           this.msgError(
             "加载媒体关联列表失败：" + (error.message || "未知错误")
           );
-          this.mediaRelationsList = [];
-          this.mediaRelationsLoading = false;
+          this.relationsList = [];
+          this.relationTotal = 0;
+        })
+        .finally(() => {
+          this.relationsLoading = false;
         });
     },
 
@@ -1193,7 +1233,9 @@ export default {
           if (response.code === 200) {
             // 延迟2秒后刷新媒体关联列表
             await this.delay(2000);
-            this.loadMediaRelations(this.currentIncidentRecord.id);
+            this.loadIncidentRecordMediaRelations(
+              this.currentIncidentRecord.id
+            );
             this.getList(); // 刷新警情列表以更新关联状态
 
             this.msgSuccess(response.msg || "取消关联成功");
@@ -1208,6 +1250,85 @@ export default {
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("取消关联失败：" + (error.message || "未知错误"));
+        }
+      }
+    },
+
+    /** 已关联媒体选择变化 */
+    handleMediaRelationsSelectionChange(selection) {
+      this.selectedMediaRelations = selection;
+    },
+
+    /** 批量取消关联媒体 */
+    async handleBatchUnlinkMedia() {
+      if (this.selectedMediaRelations.length === 0) {
+        this.msgError("请选择要取消关联的媒体");
+        return;
+      }
+
+      try {
+        await this.$confirm(
+          `确认取消关联选中的 ${this.selectedMediaRelations.length} 个媒体吗？`,
+          "提示",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning",
+          }
+        );
+
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在批量取消关联...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+
+        try {
+          // 提取选中的关联ID列表
+          const relationIds = this.selectedMediaRelations.map(
+            (item) => item.id
+          );
+
+          const response = await batchDelIncidentRecordMediaRelations({
+            relationIds: relationIds,
+          });
+
+          if (response.code === 200) {
+            // 清空选中列表
+            this.selectedMediaRelations = [];
+            if (this.$refs.mediaRelationsTable) {
+              this.$refs.mediaRelationsTable.clearSelection();
+            }
+
+            // 延迟2秒后刷新媒体关联列表
+            await this.delay(2000);
+            this.loadIncidentRecordMediaRelations(
+              this.currentIncidentRecord.id
+            );
+            this.getList(); // 刷新警情列表以更新关联状态
+
+            this.msgSuccess(
+              response.msg ||
+                `成功取消关联 ${
+                  response.data?.deletedCount || relationIds.length
+                } 个媒体`
+            );
+          } else {
+            this.msgError(response.msg || "批量取消关联失败");
+          }
+        } finally {
+          // 恢复鼠标状态
+          document.body.style.cursor = previousCursor;
+          loadingInstance.close();
+        }
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("批量取消关联失败：" + (error.message || "未知错误"));
         }
       }
     },

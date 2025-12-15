@@ -139,14 +139,27 @@
                 >关联新媒体</el-button
               >
             </el-col>
+            <el-col :span="1.5">
+              <el-button
+                type="danger"
+                icon="el-icon-delete"
+                size="mini"
+                :disabled="selectedMediaRelations.length === 0"
+                @click="handleBatchUnlinkMedia"
+                >批量取消关联</el-button
+              >
+            </el-col>
           </el-row>
 
           <!-- 关联媒体列表 -->
           <el-table
-            v-loading="mediaRelationsLoading"
-            :data="mediaRelationsList"
+            ref="mediaRelationsTable"
+            v-loading="relationsLoading"
+            :data="relationsList"
             border
+            @selection-change="handleMediaRelationsSelectionChange"
           >
+            <el-table-column type="selection" width="55" align="center" />
             <el-table-column
               prop="caseCode"
               label="案件编号"
@@ -214,9 +227,16 @@
             </el-table-column>
           </el-table>
 
-          <div v-if="mediaRelationsList.length === 0" class="empty-data">
+          <div v-if="relationsList.length === 0" class="empty-data">
             <el-empty description="暂无关联媒体" :image-size="100" />
           </div>
+          <pagination
+            v-show="relationTotal > 0"
+            :total="relationTotal"
+            :page.sync="relationQueryParams.pageIndex"
+            :limit.sync="relationQueryParams.pageSize"
+            @pagination="loadCaseMediaRelations"
+          />
         </div>
       </el-drawer>
 
@@ -760,8 +780,8 @@ import { listCases } from "@/api/evidence/case_api";
 import {
   batchCreateCaseMediaRelations,
   deleteCaseMediaRelation,
-  getMediaListByCaseId,
-  getRelationListByCaseId,
+  batchDeleteCaseMediaRelations,
+  getCaseMediaRelationsByCaseId,
   getUnassociatedMediaByCaseId,
 } from "@/api/evidence/case_media_relation_api";
 import {
@@ -810,14 +830,17 @@ export default {
       mediaSelectorDrawerOpen: false,
       // 当前选中的案件记录
       currentCase: null,
+      relationTotal: 0,
       // 选中的媒体列表
       selectedMediaList: [],
       // 当前选中的案件记录（用于显示媒体关联列表）
       currentSelectedCase: null,
       // 案件媒体关联列表
-      mediaRelationsList: [],
+      relationsList: [],
       // 媒体关联列表加载状态
-      mediaRelationsLoading: false,
+      relationsLoading: false,
+      // 选中的已关联媒体列表（用于批量取消关联）
+      selectedMediaRelations: [],
       // 查询参数
       queryParams: {
         pageIndex: 1,
@@ -826,6 +849,11 @@ export default {
         caseName: undefined,
         caseType: undefined,
         caseFlow: undefined,
+      },
+      // 关联查询参数
+      relationQueryParams: {
+        pageIndex: 1,
+        pageSize: 10,
       },
       // ========== 编辑证据相关 ==========
       // 是否显示编辑证据对话框
@@ -1002,7 +1030,7 @@ export default {
       this.caseMediaListLoading = true;
       getMediaByCaseId(caseId, { pageIndex: 1, pageSize: 1000 })
         .then((response) => {
-          this.caseMediaList = response.data.list || [];
+          this.caseMediaList = response.data ? response.data.list : [];
           this.caseMediaListLoading = false;
         })
         .catch((error) => {
@@ -1038,7 +1066,7 @@ export default {
           pageSize: 1000,
         });
 
-        this.evidenceMediaList = response.data.list || [];
+        this.evidenceMediaList = response.data ? response.data.list : [];
       } catch (error) {
         this.msgError("加载证据媒体列表失败：" + (error.message || "未知错误"));
       } finally {
@@ -1215,14 +1243,16 @@ export default {
     handleLinkMedia(row) {
       this.currentCase = row;
       this.showMediaDrawer = true;
-      this.loadMediaRelations(row.id);
+      this.loadCaseMediaRelations();
     },
 
     /** 关闭第一层抽屉 */
     handleCloseMediaDrawer(done) {
       this.showMediaDrawer = false;
       this.currentCase = null;
-      this.mediaRelationsList = [];
+      this.relationsList = [];
+      this.relationTotal = 0;
+      this.selectedMediaRelations = [];
       if (done) {
         done();
       }
@@ -1234,6 +1264,7 @@ export default {
       this.mediaSelectorDrawerOpen = true;
       this.$nextTick(() => {
         if (this.$refs.mediaSelector) {
+          this.$refs.mediaSelector.clearSelection();
           this.$refs.mediaSelector.refresh();
         }
       });
@@ -1290,7 +1321,7 @@ export default {
           // 延迟2秒后刷新媒体关联列表和案件列表
           await this.delay(2000);
           // 先刷新当前案件的媒体关联列表(参考警情页面的实现)
-          this.loadMediaRelations(currentCaseId);
+          this.loadCaseMediaRelations();
           // 再刷新案件列表以更新关联状态
           this.getList();
 
@@ -1313,31 +1344,45 @@ export default {
     },
 
     /** 加载案件媒体关联列表 */
-    loadMediaRelations(caseId) {
-      this.mediaRelationsLoading = true;
-      const query = {
-        pageIndex: 1,
-        pageSize: 100,
-      };
-      getRelationListByCaseId(caseId, query)
+    loadCaseMediaRelations() {
+      if (!this.currentCase || !this.currentCase.id) {
+        this.relationsList = [];
+        this.relationTotal = 0;
+        this.relationsLoading = false;
+        return;
+      }
+      this.relationsLoading = true;
+      getCaseMediaRelationsByCaseId(
+        this.currentCase.id,
+        this.relationQueryParams
+      )
         .then((response) => {
           // 必须检查response.code是否为200
           if (response.code === 200) {
-            this.mediaRelationsList = response.data.list || [];
+            this.relationsList = response.data.list || [];
+            this.relationTotal = response.data.count || 0;
           } else {
             this.msgError(response.msg || "加载媒体关联列表失败");
-            this.mediaRelationsList = [];
+            this.relationsList = [];
+            this.relationTotal = 0;
           }
-          this.mediaRelationsLoading = false;
         })
         .catch((error) => {
           console.error("加载媒体关联列表失败:", error);
           this.msgError(
             "加载媒体关联列表失败：" + (error.message || "未知错误")
           );
-          this.mediaRelationsList = [];
-          this.mediaRelationsLoading = false;
+          this.relationsList = [];
+          this.relationTotal = 0;
+        })
+        .finally(() => {
+          this.relationsLoading = false;
         });
+    },
+
+    /** 已关联媒体选择变化 */
+    handleMediaRelationsSelectionChange(selection) {
+      this.selectedMediaRelations = selection;
     },
 
     /** 取消关联媒体 */
@@ -1370,7 +1415,7 @@ export default {
             // 延迟2秒后刷新媒体关联列表和案件列表
             await this.delay(2000);
             // 先刷新当前案件的媒体关联列表(参考警情页面的实现)
-            this.loadMediaRelations(currentCaseId);
+            this.loadCaseMediaRelations();
             // 再刷新案件列表以更新关联状态
             this.getList();
 
@@ -1386,6 +1431,77 @@ export default {
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("取消关联失败：" + (error.message || "未知错误"));
+        }
+      }
+    },
+
+    /** 批量取消关联媒体 */
+    async handleBatchUnlinkMedia() {
+      if (this.selectedMediaRelations.length === 0) {
+        this.msgError("请选择要取消关联的媒体");
+        return;
+      }
+
+      try {
+        await this.$confirm(
+          `确认取消关联选中的 ${this.selectedMediaRelations.length} 个媒体吗？`,
+          "提示",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning",
+          }
+        );
+
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在批量取消关联...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+
+        try {
+          // 提取选中的关联ID列表
+          const ids = this.selectedMediaRelations.map((item) => item.id);
+
+          const response = await batchDeleteCaseMediaRelations({ ids: ids });
+
+          if (response.code === 200) {
+            // 保存当前案件ID,避免getList()改变选中状态后丢失
+            const currentCaseId = this.currentCase.id;
+
+            // 清空选中列表
+            this.selectedMediaRelations = [];
+            if (this.$refs.mediaRelationsTable) {
+              this.$refs.mediaRelationsTable.clearSelection();
+            }
+
+            // 延迟2秒后刷新媒体关联列表和案件列表
+            await this.delay(2000);
+            this.loadCaseMediaRelations();
+            this.getList();
+
+            this.msgSuccess(
+              response.msg ||
+                `成功取消关联 ${
+                  response.data?.deletedCount || ids.length
+                } 个媒体`
+            );
+          } else {
+            this.msgError(response.msg || "批量取消关联失败");
+          }
+        } finally {
+          // 恢复鼠标状态
+          document.body.style.cursor = previousCursor;
+          loadingInstance.close();
+        }
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("批量取消关联失败：" + (error.message || "未知错误"));
         }
       }
     },

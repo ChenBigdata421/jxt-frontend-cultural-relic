@@ -249,7 +249,7 @@ import {
   getLawCameraLogList,
   lawcameraRequisition,
   lawcameraReturn,
-} from "@/api/admin/lawcamera_requisition_manage_api";
+} from "@/api/admin/bwc_requisition_manage_api";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";

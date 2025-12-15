@@ -209,14 +209,21 @@
 
     <!-- 媒体列表 -->
     <el-table
+      ref="mediaTable"
       v-loading="loading"
       :data="mediaList"
+      :row-key="getRowKey"
       border
       @select="handleSelect"
       @selection-change="handleSelectionChange"
       @sort-change="handleSortChange"
     >
-      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column
+        type="selection"
+        width="55"
+        align="center"
+        :reserve-selection="true"
+      />
       <!-- 操作列 (仅在非选择模式下显示) -->
       <el-table-column
         v-if="!selectionMode"
@@ -718,10 +725,8 @@
 </template>
 
 <script>
-import {
-  listMedia,
-  getEnforcementTypeTree,
-} from "@/api/evidence/evidence_manage_query_api";
+import { listMedia } from "@/api/evidence/evidence_manage_query_api";
+import { getEnforcementTypeTree } from "@/api/admin/enforcementtype";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
 import Treeselect from "@riophae/vue-treeselect";
@@ -822,7 +827,11 @@ export default {
         { prop: "mediaCate", label: "媒体类型", defaultVisible: true },
         { prop: "mediaSuffix", label: "媒体后缀", defaultVisible: false },
         { prop: "captureTime", label: "拍摄时间", defaultVisible: true },
-        { prop: "captureEndTime", label: "拍摄结束时间", defaultVisible: false },
+        {
+          prop: "captureEndTime",
+          label: "拍摄结束时间",
+          defaultVisible: false,
+        },
         { prop: "clarity", label: "视频清晰度", defaultVisible: false },
         {
           prop: "duration",
@@ -899,6 +908,9 @@ export default {
       ],
       // 可见列
       visibleColumns: [],
+
+      selectedMediaMap: {},
+      isRestoringSelection: false,
     };
   },
   created() {
@@ -954,6 +966,30 @@ export default {
       });
   },
   methods: {
+    getRowKey(row) {
+      return row && row.mediaId;
+    },
+
+    restoreSelection() {
+      if (this.isRestoringSelection) return;
+      if (!this.$refs.mediaTable) return;
+      if (!this.mediaList || !this.mediaList.length) return;
+
+      this.isRestoringSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.mediaList.forEach((row) => {
+            const id = row && row.mediaId;
+            if (!id) return;
+            if (this.selectedMediaMap[id]) {
+              this.$refs.mediaTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringSelection = false;
+        }
+      });
+    },
     /** 默认可见列 */
     getDefaultVisibleColumns() {
       return this.columnOptions
@@ -1035,6 +1071,17 @@ export default {
                 "类型:",
                 typeof this.mediaList[0].isIncidentAssociated
               );
+              console.log(
+                "[MediaSelector] 第一条数据的archiveCode:",
+                this.mediaList[0].archiveCode,
+                "类型:",
+                typeof this.mediaList[0].archiveCode
+              );
+              // 打印完整的第一条数据以便调试
+              console.log(
+                "[MediaSelector] 第一条完整数据:",
+                JSON.stringify(this.mediaList[0], null, 2)
+              );
             }
           } else {
             // 情况3: 其他情况
@@ -1043,9 +1090,13 @@ export default {
           }
 
           this.loading = false;
+
+          // 分页/查询后回显跨分页选择
+          this.restoreSelection();
         })
         .catch(() => {
           this.loading = false;
+          this.restoreSelection();
         });
     },
 
@@ -1117,8 +1168,27 @@ export default {
     },
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
-      // 向父组件发送选中数据变化事件
-      this.$emit("selection-change", selection);
+      if (this.isRestoringSelection) {
+        return;
+      }
+
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.mediaId).filter(Boolean)
+      );
+
+      (this.mediaList || []).forEach((row) => {
+        const id = row && row.mediaId;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedMediaMap[id] = row;
+        } else {
+          delete this.selectedMediaMap[id];
+        }
+      });
+
+      // 向父组件发送“全量已选”的数据变化事件
+      this.$emit("selection-change", Object.values(this.selectedMediaMap));
     },
 
     /** 排序回调函数 */
@@ -1292,6 +1362,17 @@ export default {
     /** 刷新列表 */
     refresh() {
       this.getList();
+    },
+
+    /** 清空跨分页选中（供父组件调用） */
+    clearSelection() {
+      this.selectedMediaMap = {};
+      this.$emit("selection-change", []);
+      this.$nextTick(() => {
+        if (this.$refs.mediaTable) {
+          this.$refs.mediaTable.clearSelection();
+        }
+      });
     },
   },
 };

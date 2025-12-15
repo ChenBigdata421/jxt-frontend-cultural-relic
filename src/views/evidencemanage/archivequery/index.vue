@@ -236,8 +236,29 @@
         custom-class="media-drawer"
       >
         <div class="drawer-content">
+          <!-- 操作按钮 -->
+          <el-row :gutter="10" class="mb8">
+            <el-col :span="1.5">
+              <el-button
+                type="danger"
+                icon="el-icon-delete"
+                size="mini"
+                :disabled="selectedMediaRelations.length === 0"
+                @click="handleBatchUnarchiveMedia"
+                >批量解除归档</el-button
+              >
+            </el-col>
+          </el-row>
+
           <!-- 已归档媒体列表 -->
-          <el-table v-loading="mediaLoading" :data="mediaRelationList" border>
+          <el-table
+            ref="mediaRelationsTable"
+            v-loading="relationLoading"
+            :data="mediaRelationList"
+            border
+            @selection-change="handleMediaRelationsSelectionChange"
+          >
+            <el-table-column type="selection" width="55" align="center" />
             <el-table-column label="媒体名称" align="center" prop="mediaName" />
             <el-table-column label="媒体类型" align="center" prop="mediaCate">
               <template slot-scope="scope">
@@ -267,14 +288,20 @@
               </template>
             </el-table-column>
           </el-table>
+          <div
+            v-if="!(mediaRelationList && mediaRelationList.length)"
+            class="empty-data"
+          >
+            <el-empty description="暂无关联媒体" :image-size="100" />
+          </div>
 
           <!-- 分页 -->
           <pagination
             v-show="mediaTotal > 0"
             :total="mediaTotal"
-            :page.sync="mediaQueryParams.page"
-            :limit.sync="mediaQueryParams.pageSize"
-            @pagination="getMediaList"
+            :page.sync="relationQueryParams.page"
+            :limit.sync="relationQueryParams.pageSize"
+            @pagination="loadArchiveMediaRelations"
           />
         </div>
       </el-drawer>
@@ -289,8 +316,9 @@ import {
   updateArchive,
   delArchive,
   batchDelArchives,
-  getArchiveMediaRelations,
+  getArchiveMediaRelationsByArchiveId,
   delArchiveMediaRelationById,
+  batchDelArchiveMediaRelations,
 } from "@/api/evidence/archive_api";
 import BasicLayout from "@/layout/BasicLayout";
 import ArchiveSelector from "@/components/ArchiveSelector";
@@ -349,10 +377,15 @@ export default {
       showMediaDrawer: false,
       // 当前档案
       currentArchive: {},
+      // 关联查询参数
+      relationQueryParams: {
+        pageIndex: 1,
+        pageSize: 10,
+      },
       // 媒体关联列表
       mediaRelationList: [],
       // 媒体列表加载状态
-      mediaLoading: false,
+      relationLoading: false,
       // 媒体总数
       mediaTotal: 0,
       // 媒体查询参数
@@ -360,6 +393,8 @@ export default {
         page: 1,
         pageSize: 10,
       },
+      // 选中的已归档媒体列表（用于批量解除归档）
+      selectedMediaRelations: [],
     };
   },
   created() {
@@ -537,50 +572,27 @@ export default {
       this.currentArchive = row;
       this.showMediaDrawer = true;
       this.mediaQueryParams.page = 1;
-      this.getMediaList();
+      this.loadArchiveMediaRelations();
     },
     /** 获取已归档媒体列表 */
-    getMediaList() {
-      if (!this.currentArchive || !this.currentArchive.archiveId) {
-        console.error("[getMediaList] currentArchive或archiveId为空");
-        return;
-      }
-
-      console.log(
-        "[getMediaList] 开始加载已归档媒体列表, archiveId:",
-        this.currentArchive.archiveId
-      );
-      console.log("[getMediaList] 查询参数:", this.mediaQueryParams);
-
-      this.mediaLoading = true;
-      getArchiveMediaRelations(
+    loadArchiveMediaRelations() {
+      this.relationLoading = true;
+      getArchiveMediaRelationsByArchiveId(
         this.currentArchive.archiveId,
-        this.mediaQueryParams
+        this.relationQueryParams
       )
         .then((response) => {
-          console.log("[getMediaList] API响应:", response);
-
           if (response.code === 200) {
             this.mediaRelationList = response.data.list || [];
             this.mediaTotal = response.data.count || 0;
-            console.log(
-              "[getMediaList] 加载成功, 媒体数量:",
-              this.mediaRelationList.length
-            );
           } else {
-            console.error(
-              "[getMediaList] 加载失败, code:",
-              response.code,
-              "msg:",
-              response.msg
-            );
             this.msgError(response.msg || "获取已归档媒体列表失败");
             this.mediaRelationList = [];
             this.mediaTotal = 0;
           }
         })
         .catch((error) => {
-          console.error("[getMediaList] API调用异常:", error);
+          console.error("[loadArchiveMediaRelations] API调用异常:", error);
           this.msgError(
             "获取已归档媒体列表失败：" + (error.message || "未知错误")
           );
@@ -588,7 +600,7 @@ export default {
           this.mediaTotal = 0;
         })
         .finally(() => {
-          this.mediaLoading = false;
+          this.relationLoading = false;
         });
     },
     /** 延迟函数 */
@@ -626,7 +638,7 @@ export default {
           if (response.code === 200) {
             // 延迟2秒后刷新媒体列表
             await this.delay(2000);
-            this.getMediaList();
+            this.loadArchiveMediaRelations();
 
             this.msgSuccess(response.msg || "解除归档成功");
           } else {
@@ -651,8 +663,79 @@ export default {
       this.mediaRelationList = [];
       this.mediaTotal = 0;
       this.mediaQueryParams.page = 1;
+      this.selectedMediaRelations = [];
       if (done) {
         done();
+      }
+    },
+
+    /** 已归档媒体选择变化 */
+    handleMediaRelationsSelectionChange(selection) {
+      this.selectedMediaRelations = selection;
+    },
+
+    /** 批量解除归档 */
+    async handleBatchUnarchiveMedia() {
+      if (this.selectedMediaRelations.length === 0) {
+        this.msgError("请选择要解除归档的媒体");
+        return;
+      }
+
+      try {
+        await this.$confirm(
+          `确认解除选中的 ${this.selectedMediaRelations.length} 个媒体的归档关系吗？`,
+          "警告",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning",
+          }
+        );
+
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在批量解除归档...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+
+        try {
+          // 提取选中的关联ID列表
+          const ids = this.selectedMediaRelations.map((item) => item.id);
+
+          const response = await batchDelArchiveMediaRelations({ ids: ids });
+
+          if (response.code === 200) {
+            // 清空选中列表
+            this.selectedMediaRelations = [];
+            if (this.$refs.mediaRelationsTable) {
+              this.$refs.mediaRelationsTable.clearSelection();
+            }
+
+            // 延迟2秒后刷新媒体列表
+            await this.delay(2000);
+            this.loadArchiveMediaRelations();
+
+            this.msgSuccess(
+              response.msg || `成功解除 ${ids.length} 个媒体的归档关系`
+            );
+          } else {
+            this.msgError(response.msg || "批量解除归档失败");
+          }
+        } finally {
+          // 恢复鼠标状态
+          document.body.style.cursor = previousCursor;
+          loadingInstance.close();
+        }
+      } catch (error) {
+        // 用户取消操作或发生错误
+        if (error !== "cancel") {
+          this.msgError("批量解除归档失败：" + (error.message || "未知错误"));
+        }
       }
     },
     /** 字典标签格式化 */

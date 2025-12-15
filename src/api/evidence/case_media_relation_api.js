@@ -10,9 +10,9 @@ import request from '@/utils/request'
  * @param {number} query.pageIndex - 页码
  * @returns {Promise}
  */
-export function getRelationListByCaseId(caseId, query) {
+export function getCaseMediaRelationsByCaseId(caseId, query) {
   return request({
-    url: `/api/v1/case-media-relations/case/${caseId}/relations`,
+    url: `/api/v1/case-media-relations/case/${caseId}`,
     method: 'get',
     params: query
   })
@@ -46,7 +46,7 @@ export function getCaseListByMediaId(mediaId, query) {
  */
 export function getUnassociatedMediaList(caseId, query) {
   return request({
-    url: `/api/v1/case-media-relations/case/${caseId}/unassociated-media`,
+    url: `/api/v1/media/case/${caseId}/unassociated-media`,
     method: 'get',
     params: query
   })
@@ -89,6 +89,20 @@ export function deleteCaseMediaRelation(id) {
   return request({
     url: `/api/v1/case-media-relations/${id}`,
     method: 'delete'
+  })
+}
+
+/**
+ * 批量删除案件媒体关联
+ * @param {Object} data - 批量删除数据
+ * @param {Array<string>} data.ids - 关联ID数组 (UUID格式)
+ * @returns {Promise}
+ */
+export function batchDeleteCaseMediaRelations(data) {
+  return request({
+    url: '/api/v1/case-media-relations/batch',
+    method: 'delete',
+    data: data
   })
 }
 

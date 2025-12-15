@@ -10,9 +10,9 @@ import request from '@/utils/request'
  * @param {number} query.pageIndex - 页码
  * @returns {Promise}
  */
-export function getRelationListByWritId(writId, query) {
+export function getWritMediaRelationListByWritId(writId, query) {
   return request({
-    url: `/api/v1/writ-media-relations/writ/${writId}/media`,
+    url: `/api/v1/writ-media-relations/writ/${writId}`,
     method: 'get',
     params: query
   })
@@ -31,7 +31,7 @@ export function getRelationListByWritId(writId, query) {
  */
 export function getUnassociatedMediaByWritId(writId, query) {
   return request({
-    url: `/api/v1/writ-media-relations/writ/${writId}/unassociated-media`,
+    url: `/api/v1/media/writ/${writId}/unassociated-media`,
     method: 'get',
     params: query
   })
@@ -80,6 +80,20 @@ export function deleteWritMediaRelation(id) {
   return request({
     url: '/api/v1/writ-media-relations/' + id,
     method: 'delete'
+  })
+}
+
+/**
+ * 批量删除文书媒体关联
+ * @param {Object} data - 批量删除数据
+ * @param {Array<string>} data.ids - 关联ID数组 (UUID格式)
+ * @returns {Promise}
+ */
+export function batchDeleteWritMediaRelation(data) {
+  return request({
+    url: '/api/v1/writ-media-relations/batch',
+    method: 'delete',
+    data: data
   })
 }
 

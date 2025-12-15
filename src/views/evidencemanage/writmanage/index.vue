@@ -221,18 +221,18 @@
             prop="writScore"
           />
           <el-table-column
-            v-if="isColumnVisible('writRelation')"
+            v-if="isColumnVisible('isRelation')"
             label="关联状态"
             align="center"
-            prop="writRelation"
+            prop="isRelation"
           >
             <template slot-scope="{ row }">
               <el-tag
-                :type="row.writRelation === 1 ? 'success' : 'info'"
+                :type="row.isRelation === 1 ? 'success' : 'info'"
                 size="small"
                 effect="dark"
               >
-                {{ selectDictLabel(relationStatusOptions, row.writRelation) }}
+                {{ selectDictLabel(relationStatusOptions, row.isRelation) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -436,7 +436,7 @@
           <el-descriptions-item label="是否关联">{{
             selectDictLabel(
               relationStatusOptions,
-              viewData.writRelation > 0 ? 1 : 0
+              viewData.isRelation > 0 ? 1 : 0
             )
           }}</el-descriptions-item>
           <el-descriptions-item label="评分说明" :span="2">{{
@@ -481,10 +481,27 @@
                 >关联新媒体</el-button
               >
             </el-col>
+            <el-col :span="1.5">
+              <el-button
+                type="danger"
+                icon="el-icon-delete"
+                size="mini"
+                :disabled="selectedMediaRelations.length === 0"
+                @click="handleBatchUnlinkMedia"
+                >批量取消关联</el-button
+              >
+            </el-col>
           </el-row>
 
           <!-- 关联媒体列表 -->
-          <el-table v-loading="mediaLoading" :data="relationList" border>
+          <el-table
+            ref="mediaRelationsTable"
+            v-loading="relationLoading"
+            :data="relationsList"
+            border
+            @selection-change="handleMediaRelationsSelectionChange"
+          >
+            <el-table-column type="selection" width="55" align="center" />
             <el-table-column label="媒体名称" align="center" prop="mediaName" />
             <el-table-column label="媒体类型" align="center" prop="mediaCate">
               <template slot-scope="scope">
@@ -515,14 +532,16 @@
               </template>
             </el-table-column>
           </el-table>
-
+          <div v-if="relationsList.length === 0" class="empty-data">
+            <el-empty description="暂无关联媒体" :image-size="100" />
+          </div>
           <!-- 分页 -->
           <pagination
-            v-show="mediaTotal > 0"
-            :total="mediaTotal"
-            :page.sync="mediaQueryParams.pageIndex"
-            :limit.sync="mediaQueryParams.pageSize"
-            @pagination="getMediaList"
+            v-show="relationTotal > 0"
+            :total="relationTotal"
+            :page.sync="relationQueryParams.pageIndex"
+            :limit.sync="relationQueryParams.pageSize"
+            @pagination="loadWritMediaRelations"
           />
         </div>
       </el-drawer>
@@ -578,7 +597,8 @@ import {
   getUnassociatedMediaByWritId,
   batchCreateWritMediaRelation,
   deleteWritMediaRelation,
-  getRelationListByWritId,
+  batchDeleteWritMediaRelation,
+  getWritMediaRelationListByWritId,
 } from "@/api/evidence/writ_media_relation_api";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
@@ -595,7 +615,7 @@ export default {
     return {
       // 遮罩层
       loading: true,
-      mediaLoading: false,
+      relationLoading: false,
       firstLoad: null,
       // 选中数组
       ids: [],
@@ -624,10 +644,12 @@ export default {
       // 浏览数据
       viewData: {},
       // 媒体列表
-      relationList: [],
-      mediaTotal: 0,
+      relationsList: [],
+      relationTotal: 0,
       // 选中的媒体列表
       selectedMediaList: [],
+      // 选中的已关联媒体列表（用于批量取消关联）
+      selectedMediaRelations: [],
       // 开书时间范围
       writTimeRange: [],
       // 组织树选项
@@ -649,7 +671,7 @@ export default {
         { prop: "orgPaths", label: "组织部门", fixed: false },
         { prop: "writPoliceNames", label: "警员", fixed: false },
         { prop: "writScore", label: "评分", fixed: false },
-        { prop: "writRelation", label: "关联状态", fixed: false },
+        { prop: "isRelation", label: "关联状态", fixed: false },
         { prop: "writAddress", label: "文书地址", fixed: false },
         { prop: "writSource", label: "文书来源", fixed: false },
         { prop: "scoreDesc", label: "评分说明", fixed: false },
@@ -671,7 +693,7 @@ export default {
         writTimeEnd: undefined,
       },
       // 媒体查询参数
-      mediaQueryParams: {
+      relationQueryParams: {
         pageIndex: 1,
         pageSize: 10,
       },
@@ -844,16 +866,16 @@ export default {
       const id = row.id;
       getWrit(id)
         .then((response) => {
-          this.form = response.data;
-          // 将writPoliceIds转换为policeIds供表单使用
-          if (
-            this.form.writPoliceIds &&
-            Array.isArray(this.form.writPoliceIds)
-          ) {
-            this.form.policeIds = this.form.writPoliceIds;
-          } else {
-            this.form.policeIds = [];
-          }
+          // 使用展开运算符创建新对象，确保响应式
+          const data = response.data;
+          this.form = {
+            ...data,
+            // 将writPoliceIds转换为policeIds供表单使用
+            policeIds:
+              data.writPoliceIds && Array.isArray(data.writPoliceIds)
+                ? [...data.writPoliceIds]
+                : [],
+          };
           this.open = true;
           this.title = "修改文书";
           if (this.form.orgId) {
@@ -980,43 +1002,48 @@ export default {
     handleShowMedia(row) {
       this.currentWrit = row;
       this.showMediaDrawer = true;
-      this.getMediaList();
+      this.loadWritMediaRelations();
     },
     /** 关闭第一层抽屉 */
     handleCloseMediaDrawer(done) {
       this.showMediaDrawer = false;
       this.currentWrit = {};
-      this.relationList = [];
-      this.mediaTotal = 0;
+      this.relationsList = [];
+      this.relationTotal = 0;
+      this.selectedMediaRelations = [];
       if (done) {
         done();
       }
     },
     /** 查询关联媒体列表 */
-    getMediaList() {
-      this.mediaLoading = true;
-      getRelationListByWritId(this.currentWrit.id, this.mediaQueryParams)
+    loadWritMediaRelations() {
+      this.relationLoading = true;
+      getWritMediaRelationListByWritId(
+        this.currentWrit.id,
+        this.relationQueryParams
+      )
         .then((response) => {
           // 必须检查response.code是否为200
           if (response.code === 200) {
-            this.relationList = response.data.list || [];
-            this.mediaTotal = response.data.count || 0;
+            this.relationsList = response.data.list || [];
+            this.relationTotal = response.data.count || 0;
           } else {
             console.error("加载媒体关联列表失败:", response.msg);
             this.msgError(response.msg || "加载媒体关联列表失败");
-            this.relationList = [];
-            this.mediaTotal = 0;
+            this.relationsList = [];
+            this.relationTotal = 0;
           }
-          this.mediaLoading = false;
         })
         .catch((error) => {
           console.error("加载媒体关联列表失败:", error);
           this.msgError(
             "加载媒体关联列表失败：" + (error.message || "未知错误")
           );
-          this.relationList = [];
-          this.mediaTotal = 0;
-          this.mediaLoading = false;
+          this.relationsList = [];
+          this.relationTotal = 0;
+        })
+        .finally(() => {
+          this.relationLoading = false;
         });
     },
     /** 关联新媒体 - 打开第二层抽屉 */
@@ -1026,6 +1053,7 @@ export default {
       // 等待抽屉打开后刷新媒体选择器
       this.$nextTick(() => {
         if (this.$refs.mediaSelector) {
+          this.$refs.mediaSelector.clearSelection();
           this.$refs.mediaSelector.refresh();
         }
       });
@@ -1075,7 +1103,7 @@ export default {
 
           // 延迟2秒后刷新第一层抽屉的媒体列表
           await this.delay(2000);
-          this.getMediaList();
+          this.loadWritMediaRelations();
           this.getList(); // 刷新文书列表以更新关联状态
 
           this.msgSuccess(response.msg || "关联成功");
@@ -1090,6 +1118,11 @@ export default {
         loadingInstance.close();
       }
     },
+    /** 已关联媒体选择变化 */
+    handleMediaRelationsSelectionChange(selection) {
+      this.selectedMediaRelations = selection;
+    },
+
     /** 取消关联媒体 */
     async handleUnlinkMedia(row) {
       try {
@@ -1116,7 +1149,7 @@ export default {
           if (response.code === 200) {
             // 延迟2秒后刷新媒体列表
             await this.delay(2000);
-            this.getMediaList();
+            this.loadWritMediaRelations();
             this.getList(); // 刷新文书列表以更新关联状态
 
             this.msgSuccess(response.msg || "取消关联成功");
@@ -1132,6 +1165,74 @@ export default {
         // 用户取消操作或发生错误
         if (error !== "cancel") {
           this.msgError("取消关联失败：" + (error.message || "未知错误"));
+        }
+      }
+    },
+
+    /** 批量取消关联媒体 */
+    async handleBatchUnlinkMedia() {
+      if (this.selectedMediaRelations.length === 0) {
+        this.msgError("请选择要取消关联的媒体");
+        return;
+      }
+
+      try {
+        await this.$confirm(
+          `确认取消关联选中的 ${this.selectedMediaRelations.length} 个媒体吗？`,
+          "提示",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning",
+          }
+        );
+
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在批量取消关联...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+
+        try {
+          // 提取选中的关联ID列表
+          const ids = this.selectedMediaRelations.map((item) => item.id);
+
+          const response = await batchDeleteWritMediaRelation({ ids: ids });
+
+          if (response.code === 200) {
+            // 清空选中列表
+            this.selectedMediaRelations = [];
+            if (this.$refs.mediaRelationsTable) {
+              this.$refs.mediaRelationsTable.clearSelection();
+            }
+
+            // 延迟2秒后刷新媒体列表
+            await this.delay(2000);
+            this.loadWritMediaRelations();
+            this.getList(); // 刷新文书列表以更新关联状态
+
+            this.msgSuccess(
+              response.msg ||
+                `成功取消关联 ${
+                  response.data?.deletedCount || ids.length
+                } 个媒体`
+            );
+          } else {
+            this.msgError(response.msg || "批量取消关联失败");
+          }
+        } finally {
+          // 恢复鼠标状态
+          document.body.style.cursor = previousCursor;
+          loadingInstance.close();
+        }
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("批量取消关联失败：" + (error.message || "未知错误"));
         }
       }
     },
