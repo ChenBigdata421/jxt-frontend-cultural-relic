@@ -160,59 +160,24 @@
             @selection-change="handleMediaRelationsSelectionChange"
           >
             <el-table-column type="selection" width="55" align="center" />
-            <el-table-column
-              prop="caseCode"
-              label="案件编号"
-              width="120"
-              align="center"
-            />
-            <el-table-column prop="mediaName" label="媒体名称" width="180" />
-            <el-table-column
-              prop="mediaCate"
-              label="媒体种类"
-              width="120"
-              align="center"
-            >
+            <el-table-column prop="caseCode" label="案件编号" align="center" />
+            <el-table-column prop="mediaName" label="媒体名称" />
+            <el-table-column prop="mediaCate" label="媒体种类" align="center">
               <template slot-scope="{ row }">
                 {{ selectDictLabel(mediaCateOptions, row.mediaCate) }}
               </template>
             </el-table-column>
+            <el-table-column prop="policeName" label="关联人" align="center" />
             <el-table-column
-              prop="shotTimeStart"
-              label="拍摄时间"
-              width="160"
-              align="center"
-            >
-              <template slot-scope="scope">
-                {{ parseTime(scope.row.shotTimeStart) }}
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="importTime"
-              label="导入时间"
-              width="160"
-              align="center"
-            >
-              <template slot-scope="scope">
-                {{ parseTime(scope.row.importTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="relationTime"
-              label="关联时间"
-              width="160"
-              align="center"
-            >
-              <template slot-scope="scope">
-                {{ formatDateTime(scope.row.relationTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="operatorName"
-              label="关联人"
-              width="100"
+              prop="orgFullName"
+              label="关联人组织"
               align="center"
             />
+            <el-table-column prop="createdAt" label="关联时间" align="center">
+              <template slot-scope="scope">
+                {{ formatDateTime(scope.row.createdAt) }}
+              </template>
+            </el-table-column>
             <el-table-column label="操作" width="100" align="center">
               <template slot-scope="scope">
                 <el-button

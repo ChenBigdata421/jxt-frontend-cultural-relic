@@ -492,6 +492,53 @@
           @close="handleTextViewerClose"
         />
 
+        <!-- 媒体详情对话框 -->
+        <el-dialog
+          title="媒体详情"
+          :visible.sync="viewMediaOpen"
+          width="800px"
+          append-to-body
+        >
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="媒体名称">{{
+              viewMediaData.mediaName
+            }}</el-descriptions-item>
+            <el-descriptions-item label="媒体编号">{{
+              viewMediaData.mediaCode
+            }}</el-descriptions-item>
+            <el-descriptions-item label="媒体类型">
+              {{ selectDictLabel(mediaCateOptions, viewMediaData.mediaCate) }}
+            </el-descriptions-item>
+            <el-descriptions-item label="拍摄时间">{{
+              parseTime(viewMediaData.shotTime)
+            }}</el-descriptions-item>
+            <el-descriptions-item label="拍摄警员">{{
+              viewMediaData.policeName
+            }}</el-descriptions-item>
+            <el-descriptions-item label="所属组织">{{
+              viewMediaData.orgFullName
+            }}</el-descriptions-item>
+            <el-descriptions-item label="存储路径" :span="2">{{
+              viewMediaData.mediaUrl
+            }}</el-descriptions-item>
+          </el-descriptions>
+          <div
+            v-if="viewMediaData.mediaUrl"
+            style="margin-top: 20px; text-align: center"
+          >
+            <el-button
+              type="primary"
+              icon="el-icon-view"
+              @click="window.open(viewMediaData.mediaUrl, '_blank')"
+            >
+              打开媒体文件
+            </el-button>
+          </div>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="viewMediaOpen = false">关 闭</el-button>
+          </div>
+        </el-dialog>
+
         <!-- 任务处理对话框 -->
         <TaskProcessDialog
           v-model="taskProcessOpen"
@@ -593,6 +640,10 @@ export default {
       // 文本/日志预览相关
       textViewerVisible: false,
       currentTextUrl: "",
+      // 媒体详情对话框
+      viewMediaOpen: false,
+      // 媒体详情数据
+      viewMediaData: {},
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -868,6 +919,9 @@ export default {
       if (action === "edit") {
         // 一键归档
         this.handleQuickArchive(row);
+      } else if (action === "view") {
+        // 浏览（查看媒体详情）
+        this.handleViewMedia(row);
       } else if (action === "play") {
         // 播放视频
         this.handlePlayVideo(row);
@@ -876,6 +930,28 @@ export default {
         // 删除
         this.handleDelete(row);
       }
+    },
+
+    /** 浏览媒体详情 */
+    handleViewMedia(row) {
+      const mediaId = row?.mediaId;
+      if (!mediaId) {
+        this.msgWarning("无法获取媒体ID");
+        return;
+      }
+
+      getMedia(mediaId)
+        .then((response) => {
+          if (response.code === 200) {
+            this.viewMediaData = response.data || {};
+            this.viewMediaOpen = true;
+          } else {
+            this.msgError(response.msg || "获取媒体详情失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError("获取媒体详情失败：" + (error.message || "未知错误"));
+        });
     },
 
     /** 播放（按 mediaCate 分流：照片/音频/视频） */

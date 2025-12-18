@@ -678,6 +678,9 @@ export default {
         caseOrgId: [
           { required: true, message: "办案单位不能为空", trigger: "change" },
         ],
+        caseTime: [
+          { required: true, message: "案发时间不能为空", trigger: "change" },
+        ],
       },
       // 标注表单校验
       annotateRules: {
@@ -990,6 +993,8 @@ export default {
               }
             });
           }
+        } else {
+          this.$message.warning("请完善必填项后再提交");
         }
       });
     },

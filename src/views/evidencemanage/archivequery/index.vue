@@ -259,18 +259,24 @@
             @selection-change="handleMediaRelationsSelectionChange"
           >
             <el-table-column type="selection" width="55" align="center" />
+            <el-table-column
+              label="档案编号"
+              align="center"
+              prop="archiveCode"
+            />
             <el-table-column label="媒体名称" align="center" prop="mediaName" />
             <el-table-column label="媒体类型" align="center" prop="mediaCate">
               <template slot-scope="scope">
                 {{ selectDictLabel(mediaCateOptions, scope.row.mediaCate) }}
               </template>
             </el-table-column>
+            <el-table-column label="归档人" align="center" prop="policeName" />
             <el-table-column
-              label="归档时间"
+              label="归档人组织"
               align="center"
-              prop="createdAt"
-              width="180"
-            >
+              prop="orgFullName"
+            />
+            <el-table-column label="归档时间" align="center" prop="createdAt">
               <template slot-scope="scope">
                 <span>{{ parseTime(scope.row.createdAt) }}</span>
               </template>
@@ -299,7 +305,7 @@
           <pagination
             v-show="mediaTotal > 0"
             :total="mediaTotal"
-            :page.sync="relationQueryParams.page"
+            :page.sync="relationQueryParams.pageIndex"
             :limit.sync="relationQueryParams.pageSize"
             @pagination="loadArchiveMediaRelations"
           />
@@ -320,9 +326,11 @@ import {
   delArchiveMediaRelationById,
   batchDelArchiveMediaRelations,
 } from "@/api/evidence/archive_api";
+import { listArchives } from "@/api/evidence/archive_api";
 import BasicLayout from "@/layout/BasicLayout";
 import ArchiveSelector from "@/components/ArchiveSelector";
 import Pagination from "@/components/Pagination";
+import { formatJson } from "@/utils";
 
 export default {
   name: "Archive",
@@ -544,13 +552,118 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.$confirm("是否确认导出所有档案数据项？", "警告", {
+      const archiveSelector = this.$refs.archiveSelector;
+      if (!archiveSelector) {
+        this.msgError("档案列表组件未就绪，无法导出");
+        return;
+      }
+
+      const selectedArchives =
+        typeof archiveSelector.getSelectedArchives === "function"
+          ? archiveSelector.getSelectedArchives()
+          : [];
+      const hasSelection =
+        Array.isArray(selectedArchives) && selectedArchives.length;
+
+      const confirmText = hasSelection
+        ? `是否确认导出已勾选的 ${selectedArchives.length} 条档案数据？`
+        : "是否确认导出所有档案数据项？";
+
+      this.$confirm(confirmText, "警告", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
       })
-        .then(() => {
-          this.msgSuccess("导出功能开发中...");
+        .then(async () => {
+          const loadingInstance = this.$loading({
+            lock: true,
+            text: "正在导出...",
+            spinner: "el-icon-loading",
+            background: "rgba(0, 0, 0, 0.3)",
+          });
+
+          try {
+            // 仅导出用户当前列设置中“可见”的列
+            const columnOptions = Array.isArray(archiveSelector.columnOptions)
+              ? archiveSelector.columnOptions
+              : [];
+            const visibleColumns = Array.isArray(archiveSelector.visibleColumns)
+              ? archiveSelector.visibleColumns
+              : [];
+            const exportColumns = columnOptions.filter((c) =>
+              visibleColumns.includes(c.prop)
+            );
+
+            if (!exportColumns.length) {
+              this.msgError("当前未选择任何可导出的列");
+              return;
+            }
+
+            const tHeader = exportColumns.map((c) => c.label);
+            const filterVal = exportColumns.map((c) => c.prop);
+
+            // 获取要导出的数据：有勾选则导出勾选，否则导出全部（按当前查询条件拉取）
+            let list = [];
+            if (hasSelection) {
+              list = selectedArchives;
+            } else {
+              const baseQueryParams = archiveSelector.queryParams || {};
+              const pageSize = 1000;
+              let pageIndex = 1;
+              let total = Infinity;
+
+              while (list.length < total) {
+                const query = {
+                  ...baseQueryParams,
+                  pageIndex,
+                  pageSize,
+                };
+                const resp = await listArchives(query);
+                if (!resp || resp.code !== 200) {
+                  throw new Error((resp && resp.msg) || "查询档案列表失败");
+                }
+
+                const pageList = (resp.data && resp.data.list) || [];
+                total = (resp.data && resp.data.count) || 0;
+                list = list.concat(pageList);
+
+                if (!pageList.length) {
+                  break;
+                }
+                pageIndex += 1;
+              }
+            }
+
+            // 对导出字段做必要的格式化（与页面展示保持一致）
+            const normalizeList = (Array.isArray(list) ? list : []).map(
+              (row) => {
+                const out = { ...row };
+                out.archiveType = this.archiveTypeFormatter(row);
+                out.status = this.statusFormatter(row);
+                out.createdAt = this.dateFormatter(row, null, row.createdAt);
+                out.updatedAt = this.dateFormatter(row, null, row.updatedAt);
+                out.expirationTime = this.dateFormatter(
+                  row,
+                  null,
+                  row.expirationTime
+                );
+                return out;
+              }
+            );
+
+            const data = formatJson(filterVal, normalizeList);
+
+            const excel = await import("@/vendor/Export2Excel");
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: "档案列表",
+              autoWidth: true,
+              bookType: "xlsx",
+            });
+          } finally {
+            loadingInstance.close();
+          }
         })
         .catch(() => {});
     },

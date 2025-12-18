@@ -273,33 +273,17 @@
             <el-table-column
               prop="incidentRecordCode"
               label="警情编号"
-              width="120"
               align="center"
             />
-            <el-table-column prop="mediaName" label="媒体名称" width="200" />
-            <el-table-column
-              prop="mediaCate"
-              label="媒体类别"
-              width="100"
-              align="center"
-            >
+            <el-table-column prop="mediaName" label="媒体名称" />
+            <el-table-column prop="mediaCate" label="媒体类别" align="center">
               <template slot-scope="{ row }">
                 {{ selectDictLabel(mediaCateOptions, row.mediaCate) }}
               </template>
             </el-table-column>
-            <el-table-column
-              prop="policeName"
-              label="关联人"
-              width="120"
-              align="center"
-            />
-            <el-table-column prop="orgFullName" label="组织" width="200" />
-            <el-table-column
-              prop="relationTime"
-              label="关联时间"
-              width="170"
-              align="center"
-            >
+            <el-table-column prop="policeName" label="关联人" align="center" />
+            <el-table-column prop="orgFullName" label="关联人组织" />
+            <el-table-column prop="createdAt" label="关联时间" align="center">
               <template slot-scope="{ row }">
                 {{ parseTime(row.relationTime || row.createdAt) }}
               </template>

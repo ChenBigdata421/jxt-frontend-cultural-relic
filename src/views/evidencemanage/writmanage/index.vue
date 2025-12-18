@@ -502,6 +502,7 @@
             @selection-change="handleMediaRelationsSelectionChange"
           >
             <el-table-column type="selection" width="55" align="center" />
+            <el-table-column label="文书编号" align="center" prop="writCode" />
             <el-table-column label="媒体名称" align="center" prop="mediaName" />
             <el-table-column label="媒体类型" align="center" prop="mediaCate">
               <template slot-scope="scope">
@@ -510,13 +511,13 @@
             </el-table-column>
             <el-table-column label="关联人" align="center" prop="policeName" />
             <el-table-column
-              label="关联时间"
+              label="关联人组织"
               align="center"
-              prop="relationTime"
-              width="180"
-            >
+              prop="orgFullName"
+            />
+            <el-table-column label="关联时间" align="center" prop="createdAt">
               <template slot-scope="scope">
-                <span>{{ parseTime(scope.row.relationTime) }}</span>
+                <span>{{ parseTime(scope.row.createdAt) }}</span>
               </template>
             </el-table-column>
             <el-table-column label="操作" align="center" width="150">
