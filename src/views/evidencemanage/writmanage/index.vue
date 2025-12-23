@@ -637,6 +637,7 @@ import {
 } from "@/api/evidence/writ_media_relation_api";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
+import { formatJson } from "@/utils";
 
 export default {
   name: "WritManage",
@@ -1185,6 +1186,140 @@ export default {
     /** 延迟函数 */
     delay(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
+    },
+
+    /** 导出按钮操作 */
+    handleExport() {
+      const hasSelection =
+        Array.isArray(this.selectedWrits) && this.selectedWrits.length > 0;
+
+      const confirmText = hasSelection
+        ? `是否确认导出已勾选的 ${this.selectedWrits.length} 条文书数据？`
+        : "是否确认导出所有文书数据项？";
+
+      this.$confirm(confirmText, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "info",
+      })
+        .then(async () => {
+          const loadingInstance = this.$loading({
+            lock: true,
+            text: "正在导出...",
+            spinner: "el-icon-loading",
+            background: "rgba(0, 0, 0, 0.3)",
+          });
+
+          try {
+            const columnOptions = Array.isArray(this.columnOptions)
+              ? this.columnOptions
+              : [];
+            const visibleColumns = Array.isArray(this.visibleColumns)
+              ? this.visibleColumns
+              : [];
+            const exportColumns = columnOptions.filter((c) =>
+              visibleColumns.includes(c.prop)
+            );
+
+            if (!exportColumns.length) {
+              this.msgError("当前未选择任何可导出的列");
+              return;
+            }
+
+            const tHeader = exportColumns.map((c) => c.label);
+            const filterVal = exportColumns.map((c) => c.prop);
+
+            let list = [];
+            if (hasSelection) {
+              list = this.selectedWrits;
+            } else {
+              const baseQueryParams = { ...(this.queryParams || {}) };
+              if (this.writTimeRange && this.writTimeRange.length === 2) {
+                baseQueryParams.writTimeStart = this.writTimeRange[0];
+                baseQueryParams.writTimeEnd = this.writTimeRange[1];
+              } else {
+                baseQueryParams.writTimeStart = undefined;
+                baseQueryParams.writTimeEnd = undefined;
+              }
+
+              const pageSize = 1000;
+              let pageIndex = 1;
+              let total = Infinity;
+
+              while (list.length < total) {
+                const query = {
+                  ...baseQueryParams,
+                  pageIndex,
+                  pageSize,
+                };
+                const resp = await listWrits(query);
+                if (!resp || resp.code !== 200) {
+                  throw new Error((resp && resp.msg) || "查询文书列表失败");
+                }
+
+                const pageList = (resp.data && resp.data.list) || [];
+                total = (resp.data && resp.data.count) || 0;
+                list = list.concat(pageList);
+
+                if (!pageList.length) {
+                  break;
+                }
+                pageIndex += 1;
+              }
+            }
+
+            const formatDateTime = (value) => {
+              if (!value) return "-";
+              try {
+                return this.parseTime ? this.parseTime(value) : value;
+              } catch (error) {
+                return value;
+              }
+            };
+
+            const formatWritType = (value) => {
+              return (
+                this.selectDictLabel(this.writTypeOptions || [], value) || value
+              );
+            };
+
+            const formatRelation = (value) => {
+              return (
+                this.selectDictLabel(this.relationStatusOptions || [], value) ||
+                value
+              );
+            };
+
+            const normalizeList = (Array.isArray(list) ? list : []).map(
+              (row) => {
+                const output = { ...row };
+                output.writType = formatWritType(row.writType);
+                output.isRelation = formatRelation(row.isRelation);
+                output.writTime = formatDateTime(row.writTime);
+                output.createdAt = formatDateTime(row.createdAt);
+                output.updatedAt = formatDateTime(row.updatedAt);
+                return output;
+              }
+            );
+
+            const data = formatJson(filterVal, normalizeList);
+
+            const excel = await import("@/vendor/Export2Excel");
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: "文书列表",
+              autoWidth: true,
+              bookType: "xlsx",
+            });
+          } catch (error) {
+            console.error("[WritManage] 导出失败:", error);
+            this.msgError(error.message || "导出失败");
+          } finally {
+            loadingInstance.close();
+          }
+        })
+        .catch(() => {});
     },
 
     /** ------------第一层抽屉 -----------------*/

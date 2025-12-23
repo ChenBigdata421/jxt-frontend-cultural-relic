@@ -1197,53 +1197,132 @@ export default {
 
     /** 导出按钮操作 */
     handleExport() {
-      this.$confirm("是否确认导出所有警情数据项?", "警告", {
+      const hasSelection =
+        Array.isArray(this.selectedIncidentRecords) &&
+        this.selectedIncidentRecords.length > 0;
+
+      const confirmText = hasSelection
+        ? `是否确认导出已勾选的 ${this.selectedIncidentRecords.length} 条警情数据？`
+        : "是否确认导出所有警情数据项？";
+
+      this.$confirm(confirmText, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        type: "warning",
-      }).then(() => {
-        this.downloadLoading = true;
-        import("@/vendor/Export2Excel").then((excel) => {
-          const tHeader = [
-            "工程ID",
-            "编号",
-            "名称",
-            "CPU",
-            "内存",
-            "存储",
-            "网卡",
-            "USB数量",
-            "操作系统",
-            "购置时间",
-            "版本",
-            "备注",
-          ];
-          const filterVal = [
-            "FactoryId",
-            "No",
-            "Name",
-            "Cpu",
-            "Memory",
-            "Disk",
-            "NetworkCard",
-            "UsbNum",
-            "System",
-            "BuyTime",
-            "Version",
-            "Remark",
-          ];
-          const list = this.incidentRecordList;
-          const data = formatJson(filterVal, list);
-          excel.export_json_to_excel({
-            header: tHeader,
-            data,
-            filename: "警情列表",
-            autoWidth: true, // Optional
-            bookType: "xlsx", // Optional
+        type: "info",
+      })
+        .then(async () => {
+          const loadingInstance = this.$loading({
+            lock: true,
+            text: "正在导出...",
+            spinner: "el-icon-loading",
+            background: "rgba(0, 0, 0, 0.3)",
           });
-          this.downloadLoading = false;
-        });
-      });
+
+          try {
+            const columnOptions = Array.isArray(this.columnOptions)
+              ? this.columnOptions
+              : [];
+            const visibleColumns = Array.isArray(this.visibleColumns)
+              ? this.visibleColumns
+              : [];
+            const exportColumns = columnOptions.filter((c) =>
+              visibleColumns.includes(c.prop)
+            );
+
+            if (!exportColumns.length) {
+              this.msgError("当前未选择任何可导出的列");
+              return;
+            }
+
+            const tHeader = exportColumns.map((c) => c.label);
+            const filterVal = exportColumns.map((c) => c.prop);
+
+            let list = [];
+            if (hasSelection) {
+              list = this.selectedIncidentRecords;
+            } else {
+              const baseQueryParams = { ...(this.queryParams || {}) };
+              const pageSize = 1000;
+              let pageIndex = 1;
+              let total = Infinity;
+
+              while (list.length < total) {
+                const query = {
+                  ...baseQueryParams,
+                  pageIndex,
+                  pageSize,
+                };
+                const resp = await getIncidentRecordList(query);
+                if (!resp || resp.code !== 200) {
+                  throw new Error((resp && resp.msg) || "查询警情列表失败");
+                }
+
+                const pageList = (resp.data && resp.data.list) || [];
+                total = (resp.data && resp.data.count) || 0;
+                list = list.concat(pageList);
+
+                if (!pageList.length) {
+                  break;
+                }
+                pageIndex += 1;
+              }
+            }
+
+            const formatDateTime = (value) => {
+              if (!value) return "-";
+              try {
+                return this.parseTime ? this.parseTime(value) : value;
+              } catch (error) {
+                return value;
+              }
+            };
+
+            const formatStatus = (value) => {
+              const option = (this.statusOptions || []).find(
+                (item) => String(item.value) === String(value)
+              );
+              return option ? option.label : value;
+            };
+
+            const formatRelation = (value) => {
+              const option = (this.incidentRelationStatusOptions || []).find(
+                (item) => String(item.value) === String(value)
+              );
+              return option ? option.label : value;
+            };
+
+            const normalizeList = (Array.isArray(list) ? list : []).map(
+              (row) => {
+                const output = { ...row };
+                output.status = formatStatus(row.status);
+                output.isRelation = formatRelation(row.isRelation);
+                output.createTime = formatDateTime(row.createTime);
+                output.reportTime = formatDateTime(row.reportTime);
+                output.receiveTime = formatDateTime(row.receiveTime);
+                output.processTime = formatDateTime(row.processTime);
+                output.endTime = formatDateTime(row.endTime);
+                return output;
+              }
+            );
+
+            const data = formatJson(filterVal, normalizeList);
+
+            const excel = await import("@/vendor/Export2Excel");
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: "警情列表",
+              autoWidth: true,
+              bookType: "xlsx",
+            });
+          } catch (error) {
+            console.error("[IncidentRecordQuery] 导出失败:", error);
+            this.msgError(error.message || "导出失败");
+          } finally {
+            loadingInstance.close();
+          }
+        })
+        .catch(() => {});
     },
 
     /** 获取执法类型树形数据 */

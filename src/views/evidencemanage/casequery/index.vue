@@ -629,6 +629,7 @@ import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import BasicLayout from "@/layout/BasicLayout";
 import Pagination from "@/components/Pagination";
+import { formatJson } from "@/utils";
 
 export default {
   name: "CaseManage",
@@ -1205,6 +1206,151 @@ export default {
     /** 延迟函数 */
     delay(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
+    },
+
+    /** 导出按钮操作 */
+    handleExport() {
+      const hasSelection =
+        Array.isArray(this.selectedCaseRecords) &&
+        this.selectedCaseRecords.length > 0;
+
+      const confirmText = hasSelection
+        ? `是否确认导出已勾选的 ${this.selectedCaseRecords.length} 条案件数据？`
+        : "是否确认导出所有案件数据项？";
+
+      this.$confirm(confirmText, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "info",
+      })
+        .then(async () => {
+          const loadingInstance = this.$loading({
+            lock: true,
+            text: "正在导出...",
+            spinner: "el-icon-loading",
+            background: "rgba(0, 0, 0, 0.3)",
+          });
+
+          try {
+            const columnOptions = Array.isArray(this.columnOptions)
+              ? this.columnOptions
+              : [];
+            const visibleColumns = Array.isArray(this.visibleColumns)
+              ? this.visibleColumns
+              : [];
+            const exportColumns = columnOptions.filter((c) =>
+              visibleColumns.includes(c.prop)
+            );
+
+            if (!exportColumns.length) {
+              this.msgError("当前未选择任何可导出的列");
+              return;
+            }
+
+            const tHeader = exportColumns.map((c) => c.label);
+            const filterVal = exportColumns.map((c) => c.prop);
+
+            let list = [];
+            if (hasSelection) {
+              list = this.selectedCaseRecords;
+            } else {
+              const baseQueryParams = { ...(this.queryParams || {}) };
+              if (this.caseTimeRange && this.caseTimeRange.length === 2) {
+                baseQueryParams.caseTimeStart = this.caseTimeRange[0];
+                baseQueryParams.caseTimeEnd = this.caseTimeRange[1];
+              } else {
+                baseQueryParams.caseTimeStart = undefined;
+                baseQueryParams.caseTimeEnd = undefined;
+              }
+
+              const pageSize = 1000;
+              let pageIndex = 1;
+              let total = Infinity;
+
+              while (list.length < total) {
+                const query = {
+                  ...baseQueryParams,
+                  pageIndex,
+                  pageSize,
+                };
+                const resp = await listCases(query);
+                if (!resp || resp.code !== 200) {
+                  throw new Error((resp && resp.msg) || "查询案件列表失败");
+                }
+
+                const pageList = (resp.data && resp.data.list) || [];
+                total = (resp.data && resp.data.count) || 0;
+                list = list.concat(pageList);
+
+                if (!pageList.length) {
+                  break;
+                }
+                pageIndex += 1;
+              }
+            }
+
+            const formatDateTime = (value) => {
+              if (!value) return "-";
+              try {
+                return this.parseTime ? this.parseTime(value) : value;
+              } catch (error) {
+                return value;
+              }
+            };
+
+            const formatCaseType = (value) => {
+              return (
+                this.selectDictLabel(this.caseTypeOptions || [], value) || value
+              );
+            };
+
+            const formatCaseFlow = (value, caseType) => {
+              const label = this.getCaseFlowLabel
+                ? this.getCaseFlowLabel(value, caseType)
+                : value;
+              return label || value;
+            };
+
+            const formatRelation = (value) => {
+              return (
+                this.selectDictLabel(
+                  this.caseRelationStatusOptions || [],
+                  value
+                ) || value
+              );
+            };
+
+            const normalizeList = (Array.isArray(list) ? list : []).map(
+              (row) => {
+                const output = { ...row };
+                output.caseType = formatCaseType(row.caseType);
+                output.caseFlow = formatCaseFlow(row.caseFlow, row.caseType);
+                output.isRelation = formatRelation(row.isRelation);
+                output.caseTime = formatDateTime(row.caseTime);
+                output.procTime = formatDateTime(row.procTime);
+                output.createdAt = formatDateTime(row.createdAt);
+                return output;
+              }
+            );
+
+            const data = formatJson(filterVal, normalizeList);
+
+            const excel = await import("@/vendor/Export2Excel");
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: "案件列表",
+              autoWidth: true,
+              bookType: "xlsx",
+            });
+          } catch (error) {
+            console.error("[CaseQuery] 导出失败:", error);
+            this.msgError(error.message || "导出失败");
+          } finally {
+            loadingInstance.close();
+          }
+        })
+        .catch(() => {});
     },
   },
 };
