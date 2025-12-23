@@ -360,8 +360,7 @@ export default {
     return {
       // 遮罩层
       loading: true,
-      // 选中数组
-      selectedArchives: [],
+
       // 非单个禁用
       single: true,
       // 非多个禁用
@@ -419,6 +418,8 @@ export default {
       ],
       // 可见列（默认全部显示）
       visibleColumns: [],
+      selectedArchiveMap: {},
+      isRestoringSelection: false,
     };
   },
   created() {
@@ -441,28 +442,18 @@ export default {
       const apiFunc = this.customListApi || listArchives;
       apiFunc(this.queryParams)
         .then((response) => {
-          console.log("[ArchiveSelector] API响应：", response);
           if (response.code === 200) {
             this.archiveList = response.data.list || [];
-            // 修复：后端返回的是 count 字段，不是 total
             this.total = response.data.count || 0;
-            console.log(
-              "[ArchiveSelector] 查询成功，数据量：",
-              this.archiveList.length,
-              "总数：",
-              this.total
-            );
+            // 分页/查询后回显跨分页选择
+            this.restoreSelection();
           } else {
-            console.warn(
-              "[ArchiveSelector] API返回非200状态码：",
-              response.code,
-              response.msg
-            );
+            this.msgError(response.msg || "查询档案失败");
           }
           this.loading = false;
         })
         .catch((error) => {
-          console.error("[ArchiveSelector] API调用失败：", error);
+          this.msgError("查询档案失败：" + (error.message || "未知错误"));
           this.loading = false;
         });
     },
@@ -570,8 +561,50 @@ export default {
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
       // 向父组件发送选中数据变化事件
-      this.selectedArchives = selection;
-      this.$emit("selection-change", selection);
+      if (this.isRestoringSelection) {
+        return;
+      }
+      //Boolean 是 JavaScript 内置函数，它会过滤掉数组中的假值（false、0、""、null、undefined、NaN）
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.archiveId).filter(Boolean)
+      );
+
+      (this.archiveList || []).forEach((row) => {
+        const id = row && row.archiveId;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedArchiveMap[id] = row;
+        } else {
+          delete this.selectedArchiveMap[id];
+        }
+      });
+      // 向父组件发送“全量已选”的数据变化事件
+      this.$emit(
+        "selection-change",
+        Object.values(this.selectedArchiveMap).filter(Boolean)
+      );
+    },
+
+    restoreSelection() {
+      if (this.isRestoringSelection) return;
+      if (!this.$refs.archiveTable) return;
+      if (!this.archiveList || !this.archiveList.length) return;
+
+      this.isRestoringSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.archiveList.forEach((row) => {
+            const id = row && row.archiveId;
+            if (!id) return;
+            if (this.selectedArchiveMap[id]) {
+              this.$refs.archiveTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringSelection = false;
+        }
+      });
     },
 
     /** 排序回调函数 */
@@ -613,28 +646,14 @@ export default {
       this.$emit("add");
     },
 
-    /** 修改按钮操作 */
-    handleUpdate() {
-      this.$emit("update", this.selectedArchives[0]);
-    },
-
-    /** 删除按钮操作 */
-    handleDelete() {
-      this.$emit("delete", this.selectedArchives);
-    },
-
     /** 操作按钮 */
     handleOperation(row, action) {
       this.$emit("operation", row, action);
     },
 
-    /** 获取选中的档案数据 */
-    getSelectedArchives() {
-      return this.selectedArchives;
-    },
-
     /** 刷新列表 */
     refresh() {
+      this.selectedArchiveMap = {};
       this.getList();
     },
 
@@ -674,20 +693,6 @@ export default {
         JSON.stringify(this.visibleColumns)
       );
       this.$message.success("已重置为默认显示");
-    },
-
-    /** 清空选中状态 */
-    clearSelection() {
-      this.selectedArchives = [];
-      if (this.$refs.archiveTable) {
-        this.$refs.archiveTable.clearSelection();
-      }
-    },
-
-    /** 刷新列表 */
-    refresh() {
-      this.clearSelection();
-      this.getList();
     },
   },
 };

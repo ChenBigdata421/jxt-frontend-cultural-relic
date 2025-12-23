@@ -124,7 +124,7 @@
                   type="success"
                   icon="el-icon-edit"
                   size="mini"
-                  :disabled="single"
+                  :disabled="selectedIncidentRecords.length !== 1"
                   @click="handleUpdate"
                   >修改</el-button
                 >
@@ -191,7 +191,7 @@
           hasChildren 字段指定了一个布尔字段名，用于表示该行是否有子节点。这里是 'hasChildren'。
           这意味着每个表格数据对象都可能有一个 hasChildren 字段，如果为 true，则表示该行有子节点。-->
         <el-table
-          ref="incidentTable"
+          ref="incidentRecordTable"
           v-loading="loading"
           :data="incidentRecordList"
           :key="'incident-table-' + incidentRecordList.length"
@@ -748,10 +748,6 @@ export default {
       // 遮罩层
       loading: true,
       firstLoad: null,
-      // 选中数组
-      IncidentRecordIds: [],
-      // 非单个禁用
-      single: true,
       // 非多个禁用
       multiple: true,
       // 总条数
@@ -766,6 +762,12 @@ export default {
       // 弹出层标题
       title: "",
       isEdit: false,
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedIncidentRecordMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringSelection: false,
+      //所有选中的警情记录
+      selectedIncidentRecords: [],
       // 是否显示增加警情对话框
       open: false,
       ViewOpen: false,
@@ -905,6 +907,8 @@ export default {
         this.incidentRecordList = response.data.list;
         this.total = response.data.count;
         this.loading = false;
+        // 分页/查询后回显跨分页选择
+        this.restoreSelection();
       });
     },
 
@@ -927,6 +931,27 @@ export default {
             this.userOptions = [];
             reject(error);
           });
+      });
+    },
+
+    restoreSelection() {
+      if (this.isRestoringSelection) return;
+      if (!this.$refs.incidentRecordTable) return;
+      if (!this.incidentRecordList || !this.incidentRecordList.length) return;
+
+      this.isRestoringSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.incidentRecordList.forEach((row) => {
+            const id = row && row.id;
+            if (!id) return;
+            if (this.selectedIncidentRecordMap[id]) {
+              this.$refs.incidentRecordTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringSelection = false;
+        }
       });
     },
 
@@ -953,9 +978,26 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.IncidentRecordIds = selection.map((item) => item.id);
-      this.single = selection.length !== 1;
-      this.multiple = !selection.length;
+      if (this.isRestoringSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      );
+
+      (this.incidentRecordList || []).forEach((row) => {
+        const id = row && row.id;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedIncidentRecordMap[id] = row;
+        } else {
+          delete this.selectedIncidentRecordMap[id];
+        }
+      });
+      this.selectedIncidentRecords = Object.values(
+        this.selectedIncidentRecordMap
+      ).filter(Boolean);
     },
     /** 新增按钮操作*/
     handleAdd() {
@@ -983,11 +1025,16 @@ export default {
     handleUpdate(row) {
       this.firstLoad = true;
       // 使用对象展开运算符创建新对象
-      this.form = { ...row };
+      if (row && row.id !== undefined) {
+        this.form = { ...row };
+      } else {
+        this.form = this.selectedIncidentRecords[0]
+          ? { ...this.selectedIncidentRecords[0] }
+          : {};
+      }
       this.title = "修改警情";
       this.isEdit = true;
       this.open = true;
-      this.getFormUser();
     },
     /** 浏览按钮操作 */
     handleView(row) {
@@ -1025,65 +1072,127 @@ export default {
           this.form.state = parseInt(this.form.state);
           this.form.enableUse = parseInt(this.form.enableUse);
           if (this.form.id !== undefined) {
-            updateIncidentRecord(this.form, this.form.id).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                setTimeout(() => {
-                  this.getList();
-                }, 1000);
-              } else {
-                this.msgError(response.msg);
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在修改警情...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            updateIncidentRecord(this.form, this.form.id)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(2000);
+                  this.selectedIncidentRecordMap = {};
+                  this.selectedIncidentRecords = [];
+                  this.getList();
+                  this.msgSuccess(response.msg);
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg);
+                }
+              })
+              .catch((error) => {
+                this.msgError("修改警情失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           } else {
-            addIncidentRecord(this.form).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                setTimeout(() => {
-                  this.getList();
-                }, 1000);
-              } else {
-                this.msgError(response.msg);
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在创建警情...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            addIncidentRecord(this.form)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(2000);
+                  this.getList();
+                  this.msgSuccess(response.msg);
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg);
+                }
+              })
+              .catch((error) => {
+                this.msgError("新增警情失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           }
         }
       });
     },
 
-    handleDelete(row) {
-      // const IncidentRecordId = (row.id && [row.id]) || this.IncidentRecordIds
-      var IncidentRecordId;
-      if (this.IncidentRecordIds.length > 1) {
-        IncidentRecordId = this.IncidentRecordIds;
-      } else {
-        IncidentRecordId = row.id || this.IncidentRecordIds[0];
-      }
-      this.$confirm(
-        '是否确认删除警情编号为"' + IncidentRecordId + '"的数据项?',
-        "警告",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
+    async handleDelete(row) {
+      try {
+        var incidentRecordIds;
+        var incidentRecordCodes;
+        if (row && row.id !== undefined) {
+          incidentRecordIds = row.id;
+          incidentRecordCodes = row.code;
+        } else {
+          incidentRecordIds = this.selectedIncidentRecords.map(
+            (item) => item.id
+          );
+          incidentRecordCodes = this.selectedIncidentRecords.map(
+            (item) => item.code
+          );
         }
-      )
-        .then(function () {
-          if (Array.isArray(IncidentRecordId)) {
-            return batchDelIncidentRecord({ ids: IncidentRecordId });
-          } else {
-            return delIncidentRecordById(IncidentRecordId);
+        await this.$confirm(
+          '是否确认删除警情编号为"' + incidentRecordCodes + '"的数据项?',
+          "信息",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "info",
           }
-        })
-        .then((response) => {
-          setTimeout(() => {
-            this.getList();
-          }, 1000);
-          this.msgSuccess(response.msg);
-        })
-        .catch(function () {});
+        );
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在删除警情...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+        var response = null;
+        if (Array.isArray(incidentRecordIds)) {
+          response = await batchDelIncidentRecord({ ids: incidentRecordIds });
+        } else {
+          response = await delIncidentRecordById(incidentRecordIds);
+        }
+        if (response.code === 200) {
+          await this.delay(2000);
+          this.selectedIncidentRecordMap = {};
+          this.selectedIncidentRecords = [];
+          this.getList();
+          this.msgSuccess(response.msg || "删除警情成功");
+        } else {
+          this.msgError(response.msg || "删除警情失败");
+        }
+        // 恢复鼠标状态
+        document.body.style.cursor = previousCursor;
+        loadingInstance.close();
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("删除警情失败：" + (error.message || "未知错误"));
+        }
+      }
     },
 
     /** 导出按钮操作 */
@@ -1185,6 +1294,11 @@ export default {
       );
     },
 
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    },
+
     resetColumns() {
       this.visibleColumns = this.columnOptions.map((item) => item.prop);
       localStorage.setItem(
@@ -1196,7 +1310,7 @@ export default {
   },
 };
 </script>
- <style>
+<style>
 .form-container {
   padding: 10px 20px;
 }

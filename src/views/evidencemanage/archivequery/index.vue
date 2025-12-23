@@ -40,7 +40,7 @@
                 type="success"
                 icon="el-icon-edit"
                 size="mini"
-                :disabled="single"
+                :disabled="selectedArchiveRecords.length !== 1"
                 @click="handleUpdate"
                 >修改</el-button
               >
@@ -51,7 +51,7 @@
                 type="danger"
                 icon="el-icon-delete"
                 size="mini"
-                :disabled="multiple"
+                :disabled="selectedArchiveRecords.length === 0"
                 @click="handleDelete"
                 >删除</el-button
               >
@@ -254,7 +254,7 @@
           <el-table
             ref="mediaRelationsTable"
             v-loading="relationLoading"
-            :data="mediaRelationList"
+            :data="mediaRelationsList"
             border
             @selection-change="handleMediaRelationsSelectionChange"
           >
@@ -295,7 +295,7 @@
             </el-table-column>
           </el-table>
           <div
-            v-if="!(mediaRelationList && mediaRelationList.length)"
+            v-if="!(mediaRelationsList && mediaRelationsList.length)"
             class="empty-data"
           >
             <el-empty description="暂无关联媒体" :image-size="100" />
@@ -341,12 +341,8 @@ export default {
   },
   data() {
     return {
-      // 选中数组
-      ids: [],
-      // 非单个禁用
-      single: true,
-      // 非多个禁用
-      multiple: true,
+      // 选中的档案
+      selectedArchiveRecords: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -391,7 +387,7 @@ export default {
         pageSize: 10,
       },
       // 媒体关联列表
-      mediaRelationList: [],
+      mediaRelationsList: [],
       // 媒体列表加载状态
       relationLoading: false,
       // 媒体总数
@@ -403,6 +399,10 @@ export default {
       },
       // 选中的已归档媒体列表（用于批量解除归档）
       selectedMediaRelations: [],
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedMediaRelationMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringMediaRelationSelection: false,
     };
   },
   created() {
@@ -450,9 +450,7 @@ export default {
     },
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
-      this.ids = selection.map((item) => item.archiveId);
-      this.single = selection.length !== 1;
-      this.multiple = !selection.length;
+      this.selectedArchiveRecords = selection;
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -463,14 +461,16 @@ export default {
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const archiveId = row ? row.archiveId : this.ids[0];
-      getArchive(archiveId).then((response) => {
-        if (response.code === 200) {
-          this.form = response.data;
-          this.open = true;
-          this.title = "修改档案";
-        }
-      });
+      // 使用对象展开运算符创建新对象
+      if (row && row.archiveId !== undefined) {
+        this.form = { ...row };
+      } else {
+        this.form = this.selectedArchiveRecords[0]
+          ? { ...this.selectedArchiveRecords[0] }
+          : {};
+      }
+      this.title = "修改档案";
+      this.open = true;
     },
     /** 查看详情 */
     handleView(row) {
@@ -503,52 +503,123 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.archiveId) {
-            updateArchive(this.form, this.form.archiveId).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess("修改成功");
-                this.open = false;
-                this.$refs.archiveSelector.refresh();
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在修改档案...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            updateArchive(this.form, this.form.archiveId)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(2000);
+                  this.$refs.archiveSelector.refresh();
+                  this.selectedArchiveRecords = [];
+                  this.msgSuccess("修改档案成功");
+                  this.open = false;
+                }
+              })
+              .catch((error) => {
+                this.msgError("修改档案失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           } else {
-            addArchive(this.form).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess("新增成功");
-                this.open = false;
-                this.$refs.archiveSelector.refresh();
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在创建档案...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            addArchive(this.form)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(2000);
+                  this.$refs.archiveSelector.refresh();
+                  this.msgSuccess("创建档案成功");
+                  this.open = false;
+                }
+              })
+              .catch((error) => {
+                this.msgError("创建档案失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           }
         }
       });
     },
     /** 删除按钮操作 */
-    handleDelete(row) {
-      const archiveIds = row && row.archiveId ? [row.archiveId] : this.ids;
-      const confirmMessage =
-        row && row.archiveTitle
-          ? `是否确认删除档案"${row.archiveTitle}"？`
-          : `是否确认删除选中的${archiveIds.length}条档案数据？`;
+    async handleDelete(row) {
+      try {
+        var archiveIds;
+        var archiveCodes;
+        if (row && row.archiveId !== undefined) {
+          archiveIds = row.archiveId;
+          archiveCodes = row.archiveCode;
+        } else {
+          archiveIds = this.selectedArchiveRecords.map(
+            (item) => item.archiveId
+          );
+          archiveCodes = this.selectedArchiveRecords.map(
+            (item) => item.archiveCode
+          );
+        }
 
-      this.$confirm(confirmMessage, "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
-        .then(() => {
-          if (archiveIds.length === 1) {
-            return delArchive(archiveIds[0]);
-          } else {
-            return batchDelArchives({ ids: archiveIds });
+        await this.$confirm(
+          "确认是否删除编号为" + archiveCodes + "的档案",
+          "信息",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "info",
           }
-        })
-        .then((response) => {
-          if (response.code === 200) {
-            this.$refs.archiveSelector.refresh();
-            this.msgSuccess("删除成功");
-          }
-        })
-        .catch(() => {});
+        );
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在删除档案...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+        var response = null;
+        if (Array.isArray(archiveIds)) {
+          response = await batchDelArchives({ ids: archiveIds });
+        } else {
+          response = await delArchive(archiveIds);
+        }
+        if (response.code === 200) {
+          await this.delay(2000);
+          this.$refs.archiveSelector.refresh();
+          this.selectedArchiveRecords = [];
+          this.msgSuccess(response.msg || "删除档案成功");
+        } else {
+          this.msgError(response.msg || "删除档案失败");
+        }
+
+        // 恢复鼠标状态
+        document.body.style.cursor = previousCursor;
+        loadingInstance.close();
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("删除档案失败：" + (error.message || "未知错误"));
+        }
+      }
     },
     /** 导出按钮操作 */
     handleExport() {
@@ -696,11 +767,13 @@ export default {
       )
         .then((response) => {
           if (response.code === 200) {
-            this.mediaRelationList = response.data.list || [];
+            this.mediaRelationsList = response.data.list || [];
             this.mediaTotal = response.data.count || 0;
+            // 分页/查询后回显跨分页选择
+            this.restoreMediaRelationSelection();
           } else {
             this.msgError(response.msg || "获取已归档媒体列表失败");
-            this.mediaRelationList = [];
+            this.mediaRelationsList = [];
             this.mediaTotal = 0;
           }
         })
@@ -709,7 +782,7 @@ export default {
           this.msgError(
             "获取已归档媒体列表失败：" + (error.message || "未知错误")
           );
-          this.mediaRelationList = [];
+          this.mediaRelationsList = [];
           this.mediaTotal = 0;
         })
         .finally(() => {
@@ -773,7 +846,7 @@ export default {
     handleCloseMediaDrawer(done) {
       this.showMediaDrawer = false;
       this.currentArchive = {};
-      this.mediaRelationList = [];
+      this.mediaRelationsList = [];
       this.mediaTotal = 0;
       this.mediaQueryParams.page = 1;
       this.selectedMediaRelations = [];
@@ -784,7 +857,48 @@ export default {
 
     /** 已归档媒体选择变化 */
     handleMediaRelationsSelectionChange(selection) {
-      this.selectedMediaRelations = selection;
+      if (this.isRestoringMediaRelationSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      );
+
+      (this.mediaRelationsList || []).forEach((row) => {
+        const id = row && row.id;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedMediaRelationMap[id] = row;
+        } else {
+          delete this.selectedMediaRelationMap[id];
+        }
+      });
+      this.selectedMediaRelations = Object.values(
+        this.selectedMediaRelationMap
+      ).filter(Boolean);
+    },
+
+    /**恢复已关联媒体的选中状态 */
+    restoreMediaRelationSelection() {
+      if (this.isRestoringMediaRelationSelection) return;
+      if (!this.$refs.mediaRelationsTable) return;
+      if (!this.mediaRelationsList || !this.mediaRelationsList.length) return;
+
+      this.isRestoringMediaRelationSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.mediaRelationsList.forEach((row) => {
+            const id = row && row.id;
+            if (!id) return;
+            if (this.selectedMediaRelationMap[id]) {
+              this.$refs.mediaRelationsTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringMediaRelationSelection = false;
+        }
+      });
     },
 
     /** 批量解除归档 */
@@ -823,14 +937,10 @@ export default {
           const response = await batchDelArchiveMediaRelations({ ids: ids });
 
           if (response.code === 200) {
-            // 清空选中列表
-            this.selectedMediaRelations = [];
-            if (this.$refs.mediaRelationsTable) {
-              this.$refs.mediaRelationsTable.clearSelection();
-            }
-
             // 延迟2秒后刷新媒体列表
             await this.delay(2000);
+            this.selectedMediaRelationMap = {};
+            this.selectedMediaRelations = [];
             this.loadArchiveMediaRelations();
 
             this.msgSuccess(
@@ -856,6 +966,11 @@ export default {
       const item = options.find((opt) => opt.value === value);
       return item ? item.label : value;
     },
+
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    },
   },
 };
 </script>
@@ -875,5 +990,3 @@ export default {
   border-bottom: 1px solid #e8e8e8;
 }
 </style>
-
-

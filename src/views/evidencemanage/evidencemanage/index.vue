@@ -155,7 +155,7 @@
           <el-table
             ref="mediaRelationsTable"
             v-loading="relationsLoading"
-            :data="relationsList"
+            :data="mediaRelationsList"
             border
             @selection-change="handleMediaRelationsSelectionChange"
           >
@@ -192,7 +192,7 @@
             </el-table-column>
           </el-table>
 
-          <div v-if="relationsList.length === 0" class="empty-data">
+          <div v-if="mediaRelationsList.length === 0" class="empty-data">
             <el-empty description="暂无关联媒体" :image-size="100" />
           </div>
           <pagination
@@ -801,11 +801,15 @@ export default {
       // 当前选中的案件记录（用于显示媒体关联列表）
       currentSelectedCase: null,
       // 案件媒体关联列表
-      relationsList: [],
+      mediaRelationsList: [],
       // 媒体关联列表加载状态
       relationsLoading: false,
       // 选中的已关联媒体列表（用于批量取消关联）
       selectedMediaRelations: [],
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedMediaRelationMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringMediaRelationSelection: false,
       // 查询参数
       queryParams: {
         pageIndex: 1,
@@ -1215,7 +1219,7 @@ export default {
     handleCloseMediaDrawer(done) {
       this.showMediaDrawer = false;
       this.currentCase = null;
-      this.relationsList = [];
+      this.mediaRelationsList = [];
       this.relationTotal = 0;
       this.selectedMediaRelations = [];
       if (done) {
@@ -1311,7 +1315,7 @@ export default {
     /** 加载案件媒体关联列表 */
     loadCaseMediaRelations() {
       if (!this.currentCase || !this.currentCase.id) {
-        this.relationsList = [];
+        this.mediaRelationsList = [];
         this.relationTotal = 0;
         this.relationsLoading = false;
         return;
@@ -1324,11 +1328,13 @@ export default {
         .then((response) => {
           // 必须检查response.code是否为200
           if (response.code === 200) {
-            this.relationsList = response.data.list || [];
+            this.mediaRelationsList = response.data.list || [];
             this.relationTotal = response.data.count || 0;
+            // 分页/查询后回显跨分页选择
+            this.restoreMediaRelationSelection();
           } else {
             this.msgError(response.msg || "加载媒体关联列表失败");
-            this.relationsList = [];
+            this.mediaRelationsList = [];
             this.relationTotal = 0;
           }
         })
@@ -1337,7 +1343,7 @@ export default {
           this.msgError(
             "加载媒体关联列表失败：" + (error.message || "未知错误")
           );
-          this.relationsList = [];
+          this.mediaRelationsList = [];
           this.relationTotal = 0;
         })
         .finally(() => {
@@ -1347,7 +1353,48 @@ export default {
 
     /** 已关联媒体选择变化 */
     handleMediaRelationsSelectionChange(selection) {
-      this.selectedMediaRelations = selection;
+      if (this.isRestoringMediaRelationSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      );
+
+      (this.mediaRelationsList || []).forEach((row) => {
+        const id = row && row.id;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedMediaRelationMap[id] = row;
+        } else {
+          delete this.selectedMediaRelationMap[id];
+        }
+      });
+      this.selectedMediaRelations = Object.values(
+        this.selectedMediaRelationMap
+      ).filter(Boolean);
+    },
+
+    /**恢复已关联媒体的选中状态 */
+    restoreMediaRelationSelection() {
+      if (this.isRestoringMediaRelationSelection) return;
+      if (!this.$refs.mediaRelationsTable) return;
+      if (!this.mediaRelationsList || !this.mediaRelationsList.length) return;
+
+      this.isRestoringMediaRelationSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.mediaRelationsList.forEach((row) => {
+            const id = row && row.id;
+            if (!id) return;
+            if (this.selectedMediaRelationMap[id]) {
+              this.$refs.mediaRelationsTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringMediaRelationSelection = false;
+        }
+      });
     },
 
     /** 取消关联媒体 */
@@ -1439,14 +1486,10 @@ export default {
             // 保存当前案件ID,避免getList()改变选中状态后丢失
             const currentCaseId = this.currentCase.id;
 
-            // 清空选中列表
-            this.selectedMediaRelations = [];
-            if (this.$refs.mediaRelationsTable) {
-              this.$refs.mediaRelationsTable.clearSelection();
-            }
-
             // 延迟2秒后刷新媒体关联列表和案件列表
             await this.delay(2000);
+            this.selectedMediaRelationMap = {};
+            this.selectedMediaRelations = [];
             this.loadCaseMediaRelations();
             this.getList();
 

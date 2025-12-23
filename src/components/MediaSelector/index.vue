@@ -1056,33 +1056,6 @@ export default {
               response.data.count ||
               response.data.total ||
               response.data.list.length;
-
-            // 调试日志：查看第一条数据的isArchived和isIncidentAssociated字段
-            if (this.mediaList.length > 0) {
-              console.log(
-                "[MediaSelector] 第一条数据的isArchived:",
-                this.mediaList[0].isArchived,
-                "类型:",
-                typeof this.mediaList[0].isArchived
-              );
-              console.log(
-                "[MediaSelector] 第一条数据的isIncidentAssociated:",
-                this.mediaList[0].isIncidentAssociated,
-                "类型:",
-                typeof this.mediaList[0].isIncidentAssociated
-              );
-              console.log(
-                "[MediaSelector] 第一条数据的archiveCode:",
-                this.mediaList[0].archiveCode,
-                "类型:",
-                typeof this.mediaList[0].archiveCode
-              );
-              // 打印完整的第一条数据以便调试
-              console.log(
-                "[MediaSelector] 第一条完整数据:",
-                JSON.stringify(this.mediaList[0], null, 2)
-              );
-            }
           } else {
             // 情况3: 其他情况
             this.mediaList = [];
@@ -1094,9 +1067,9 @@ export default {
           // 分页/查询后回显跨分页选择
           this.restoreSelection();
         })
-        .catch(() => {
+        .catch((error) => {
+          this.msgError("查询媒体失败：" + (error.message || "未知错误"));
           this.loading = false;
-          this.restoreSelection();
         });
     },
 
@@ -1171,7 +1144,7 @@ export default {
       if (this.isRestoringSelection) {
         return;
       }
-
+      //Boolean 是 JavaScript 内置函数，它会过滤掉数组中的假值（false、0、""、null、undefined、NaN）
       // 以当前页为准增删选中项（实现跨分页记忆）
       const selectedIdSet = new Set(
         (selection || []).map((item) => item && item.mediaId).filter(Boolean)
@@ -1188,7 +1161,10 @@ export default {
       });
 
       // 向父组件发送“全量已选”的数据变化事件
-      this.$emit("selection-change", Object.values(this.selectedMediaMap));
+      this.$emit(
+        "selection-change",
+        Object.values(this.selectedMediaMap).filter(Boolean)
+      );
     },
 
     /** 排序回调函数 */

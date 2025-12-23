@@ -89,10 +89,18 @@ export function updateWrit(id, data) {
  * @param {string} id - 文书ID
  * @returns {Promise}
  */
-export function delWrit(id) {
+export function delWritById(id) {
   return request({
     url: '/api/v1/writs/' + id,
     method: 'delete'
+  })
+}
+
+export function batchDelWrit(data) {
+  return request({
+    url: '/api/v1/writs/batch',
+    method: 'delete',
+    data: data
   })
 }
 

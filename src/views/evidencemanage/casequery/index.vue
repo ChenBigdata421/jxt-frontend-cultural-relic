@@ -103,13 +103,34 @@
               </el-col>
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['case:remove']"
+                  v-permisaction="['case:lawcamera:edit']"
+                  type="success"
+                  icon="el-icon-edit"
+                  size="mini"
+                  :disabled="selectedCaseRecords.length !== 1"
+                  @click="handleUpdate"
+                  >修改</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['case:lawcamera:remove']"
                   type="danger"
                   icon="el-icon-delete"
                   size="mini"
-                  :disabled="multiple"
+                  :disabled="selectedCaseRecords.length === 0"
                   @click="handleDelete"
                   >删除</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['case:lawcamera:export']"
+                  type="warning"
+                  icon="el-icon-download"
+                  size="mini"
+                  @click="handleExport"
+                  >导出</el-button
                 >
               </el-col>
             </el-row>
@@ -147,15 +168,17 @@
 
         <!-- 案件列表 -->
         <el-table
+          ref="caseTable"
           v-loading="loading"
           :data="caseList"
+          border
           @selection-change="handleSelectionChange"
         >
           <el-table-column type="selection" width="55" align="center" />
           <el-table-column
             label="操作"
             align="center"
-            width="200"
+            width="250"
             class-name="small-padding fixed-width"
             fixed="left"
           >
@@ -256,6 +279,14 @@
             align="center"
             prop="caseOrgName"
             width="150"
+          />
+          <el-table-column
+            v-if="isColumnVisible('procOrgPaths')"
+            label="处警单位"
+            align="center"
+            prop="procOrgPaths"
+            width="150"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('processPoliceNames')"
@@ -612,10 +643,6 @@ export default {
       loading: true,
       // 选中数组
       ids: [],
-      // 非单个禁用
-      single: true,
-      // 非多个禁用
-      multiple: true,
       // 总条数
       total: 0,
       // 案件表格数据
@@ -649,6 +676,12 @@ export default {
       formUserOptions: [],
       // 首次加载标志
       firstLoad: true,
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedCaseMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringSelection: false,
+      // 所有选中的案件记录
+      selectedCaseRecords: [],
       // 查询参数
       queryParams: {
         pageIndex: 1,
@@ -697,6 +730,7 @@ export default {
         { prop: "caseTime", label: "案发时间", fixed: false },
         { prop: "caseAddress", label: "案发地址", fixed: false },
         { prop: "caseOrgName", label: "办案单位", fixed: false },
+        { prop: "procOrgPaths", label: "处警单位", fixed: false },
         { prop: "processPoliceNames", label: "处警人员", fixed: false },
         { prop: "isRelation", label: "是否关联", fixed: false },
         { prop: "createdAt", label: "创建时间", fixed: false },
@@ -764,6 +798,8 @@ export default {
         this.caseList = response.data.list || [];
         this.total = response.data.count || 0;
         this.loading = false;
+        // 分页/查询后回显跨分页选择
+        this.restoreSelection();
       });
     },
     /** 获取组织树 */
@@ -868,9 +904,47 @@ export default {
     },
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
-      this.ids = selection.map((item) => item.id);
-      this.single = selection.length !== 1;
-      this.multiple = !selection.length;
+      if (this.isRestoringSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      );
+
+      (this.caseList || []).forEach((row) => {
+        const id = row && row.id;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedCaseMap[id] = row;
+        } else {
+          delete this.selectedCaseMap[id];
+        }
+      });
+      this.selectedCaseRecords = Object.values(this.selectedCaseMap).filter(
+        Boolean
+      );
+    },
+
+    restoreSelection() {
+      if (this.isRestoringSelection) return;
+      if (!this.$refs.caseTable) return;
+      if (!this.caseList || !this.caseList.length) return;
+
+      this.isRestoringSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.caseList.forEach((row) => {
+            const id = row && row.id;
+            if (!id) return;
+            if (this.selectedCaseMap[id]) {
+              this.$refs.caseTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringSelection = false;
+        }
+      });
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -885,20 +959,24 @@ export default {
     handleUpdate(row) {
       this.reset();
       this.firstLoad = true;
-      const id = row.id || this.ids[0];
-      getCase(id).then((response) => {
-        this.form = response.data;
-        this.open = true;
-        this.title = "修改案件";
-        // 加载对应的流程字典
-        if (this.form.caseType) {
-          this.loadCaseFlowDict(this.form.caseType, "form");
-        }
-        // 加载对应的用户列表
-        if (this.form.procOrgId) {
-          this.getFormUser();
-        }
-      });
+      // 使用对象展开运算符创建新对象
+      if (row && row.id !== undefined) {
+        this.form = { ...row };
+      } else {
+        this.form = this.selectedCaseRecords[0]
+          ? { ...this.selectedCaseRecords[0] }
+          : {};
+      }
+      this.open = true;
+      this.title = "修改案件";
+      // 加载对应的流程字典
+      if (this.form.caseType) {
+        this.loadCaseFlowDict(this.form.caseType, "form");
+      }
+      // 加载对应的用户列表
+      if (this.form.procOrgId) {
+        this.getFormUser();
+      }
     },
     /** 浏览按钮操作 */
     handleView(row) {
@@ -977,21 +1055,66 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id != null) {
-            updateCase(this.form, this.form.id).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess("修改成功");
-                this.open = false;
-                this.getList();
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在修改案件...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            updateCase(this.form, this.form.id)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  // 延迟2秒后刷新媒体列表
+                  await this.delay(2000);
+                  this.selectedCaseMap = {};
+                  this.selectedCaseRecords = [];
+                  this.getList();
+                  this.open = false;
+                  this.msgSuccess("修改案件成功");
+                } else {
+                  this.msgError(response.msg || "修改案件失败");
+                }
+              })
+              .catch((error) => {
+                this.msgError("修改案件失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           } else {
-            addCase(this.form).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess("新增成功");
-                this.open = false;
-                this.getList();
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在创建案件...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            addCase(this.form)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(2000);
+                  this.getList();
+                  this.msgSuccess("创建案件成功");
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg || "创建案件失败");
+                }
+              })
+              .catch((error) => {
+                this.msgError("创建案件失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           }
         } else {
           this.$message.warning("请完善必填项后再提交");
@@ -999,24 +1122,60 @@ export default {
       });
     },
     /** 删除按钮操作 */
-    handleDelete(row) {
-      const ids = row.id ? [row.id] : this.ids;
-      this.$confirm("是否确认删除选中的案件?", "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
-        .then(() => {
-          if (ids.length === 1) {
-            return delCase(ids[0]);
-          } else {
-            return batchDelCases({ ids: ids });
-          }
-        })
-        .then(() => {
-          this.getList();
-          this.msgSuccess("删除成功");
+    async handleDelete(row) {
+      try {
+        var caseIds;
+        var caseCodes;
+        if (row && row.id !== undefined) {
+          caseIds = row.id;
+          caseCodes = row.code;
+        } else {
+          const values = Object.values(this.selectedCaseMap).filter(Boolean);
+          caseIds = values.map((item) => item.id);
+          caseCodes = values.map((item) => item.caseCode);
+        }
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在删除文书...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
         });
+        await this.$confirm(
+          "是否确认删除编号为" + caseCodes + "的案件?",
+          "信息",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "info",
+          }
+        );
+        var response = null;
+        if (Array.isArray(caseIds)) {
+          response = await batchDelCases({ ids: caseIds });
+        } else {
+          response = await delCase(caseIds);
+        }
+        if (response.code === 200) {
+          await this.delay(2000);
+          this.selectedCaseMap = {};
+          this.selectedCaseRecords = [];
+          this.getList();
+          this.msgSuccess(response.msg || "删除案件成功");
+        } else {
+          this.msgError(response.msg || "删除案件失败");
+        }
+        // 恢复鼠标状态
+        document.body.style.cursor = previousCursor;
+        loadingInstance.close();
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("删除案件失败：" + (error.message || "未知错误"));
+        }
+      }
     },
     /** 取消按钮 */
     cancel() {
@@ -1042,6 +1201,10 @@ export default {
         procResult: undefined,
       };
       this.resetForm("form");
+    },
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
     },
   },
 };
@@ -1084,4 +1247,3 @@ export default {
   width: 100%;
 }
 </style>
-

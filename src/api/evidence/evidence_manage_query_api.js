@@ -69,10 +69,12 @@ export function getEvidenceMediaByCaseId(caseId, query) {
 }
 
 // 查询警情媒体关联关系列表
-export function getIncidentRecordMediaRelationsByIncidentRecordId(incidentRecordId) {
+export function getIncidentRecordMediaRelationsByIncidentRecordId(incidentRecordId, query) {
   return request({
     url: '/api/v1/incidentrecord-media-relations/incidentrecord/' + incidentRecordId,
-    method: 'get'
+    method: 'get',
+    params: query
+
   })
 }
 

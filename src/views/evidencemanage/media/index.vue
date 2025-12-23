@@ -7,7 +7,6 @@
           ref="mediaSelector"
           :selection-mode="false"
           @add="handleAdd"
-          @update="handleUpdate"
           @delete="handleDelete"
           @operation="handleOperation"
           @selection-change="handleSelectionChange"
@@ -22,16 +21,6 @@
                 :disabled="multiple"
                 @click="handleBatchArchive"
                 >一键归档</el-button
-              >
-            </el-col>
-            <el-col :span="1.5">
-              <el-button
-                type="success"
-                icon="el-icon-edit"
-                size="mini"
-                :disabled="single"
-                @click="handleUpdate"
-                >修改</el-button
               >
             </el-col>
             <el-col :span="1.5">
@@ -136,7 +125,7 @@
               确认将选中的媒体标注为非执法视频吗？
             </p>
             <p style="color: #909399; font-size: 14px">
-              已选中 {{ ids.length }} 条媒体
+              已选中 {{ mediaIds.length }} 条媒体
             </p>
           </div>
           <div slot="footer" class="dialog-footer">
@@ -596,7 +585,7 @@ export default {
   data() {
     return {
       // 选中数组
-      ids: [],
+      mediaIds: [],
       // 非单个禁用
       single: true,
       // 非多个禁用
@@ -693,16 +682,10 @@ export default {
     ])
       .then(([mediaCateRes, storageTypeRes]) => {
         // 将字典数据的value统一转换为整型
-        this.mediaCateOptions = mediaCateRes.data.map((item) => ({
-          ...item,
-          value: parseInt(item.value),
-        }));
-        this.storageTypeOptions = storageTypeRes.data.map((item) => ({
-          ...item,
-          value: parseInt(item.value),
-        }));
+        this.mediaCateOptions = mediaCateRes.data;
+        this.storageTypeOptions = storageTypeRes.data;
 
-        console.log("[Media] 字典加载完成,value已转换为整型");
+        console.log("[Media] 字典加载完成");
       })
       .catch((error) => {
         console.error("[Media] 字典加载失败:", error);
@@ -735,7 +718,8 @@ export default {
 
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map((item) => item.mediaId);
+      this.mediaIds = selection.map((item) => item.mediaId);
+      this.mediaSelection = selection;
       this.single = selection.length !== 1;
       this.multiple = !selection.length;
     },
@@ -753,7 +737,7 @@ export default {
       this.noMarkDialogVisible = true;
     },
     confirmNoMark() {
-      const mediaIds = this.ids;
+      const mediaIds = this.mediaIds;
       batchMarkMediaNoEnforcementStatus({
         ids: mediaIds,
         isNonEnforcementMedia: 1,
@@ -829,17 +813,6 @@ export default {
       this.title = "添加媒体";
     },
 
-    /** 修改按钮操作 */
-    handleUpdate(row) {
-      this.reset();
-      const mediaId = row?.mediaId || this.ids[0];
-      getMedia(mediaId).then((response) => {
-        this.form = response.data;
-        this.open = true;
-        this.title = "修改媒体";
-      });
-    },
-
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate((valid) => {
@@ -869,18 +842,26 @@ export default {
       });
     },
 
-    /** 删除按钮操作 */
+    /** 删除按钮操作 ,目前暂时只支持单个删除 */
     handleDelete(row) {
       // 只支持单个删除
-      const mediaId = row?.mediaId || this.ids[0];
+      var mediaId;
+      var currentDeleteMedia;
+      if (row && row.mediaId !== undefined) {
+        mediaId = row.mediaId;
+        currentDeleteMedia = row;
+      } else {
+        mediaId = this.mediaIds[0];
+        currentDeleteMedia = this.mediaSelection[0];
+      }
 
-      if (this.ids.length > 1) {
-        this.msgWarning("删除操作需要通过工作流审批，暂不支持批量删除");
+      if (this.mediaIds.length > 1) {
+        this.msgError("删除操作需要通过工作流审批，暂不支持批量删除");
         return;
       }
 
       // 保存当前要删除的媒体信息
-      this.currentDeleteMedia = row;
+      this.currentDeleteMedia = currentDeleteMedia;
 
       // 查询工作流列表，找到"文档删除申请流程"
       this.startDeleteWorkflow(mediaId);
@@ -915,7 +896,6 @@ export default {
 
     handleOperation(row, action) {
       // 操作按钮逻辑
-      console.log("操作", row, action);
       if (action === "edit") {
         // 一键归档
         this.handleQuickArchive(row);
@@ -1041,14 +1021,14 @@ export default {
 
     /** 批量归档 */
     handleBatchArchive() {
-      if (this.ids.length === 0) {
+      if (this.mediaIds.length === 0) {
         this.msgError("请至少选择一个媒体");
         return;
       }
 
       this.isBatchArchive = true;
       this.currentArchivingMedia = null;
-      this.currentArchivingMediaList = this.ids;
+      this.currentArchivingMediaList = this.mediaIds;
       this.archiveType = "existing";
       this.archiveForm = {
         archiveCode: "",

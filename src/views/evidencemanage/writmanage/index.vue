@@ -84,6 +84,38 @@
                   >新增</el-button
                 >
               </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['writ:lawcamera:edit']"
+                  type="success"
+                  icon="el-icon-edit"
+                  size="mini"
+                  :disabled="selectedWrits.length !== 1"
+                  @click="handleUpdate"
+                  >修改</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['writ:lawcamera:remove']"
+                  type="danger"
+                  icon="el-icon-delete"
+                  size="mini"
+                  :disabled="multiple"
+                  @click="handleDelete"
+                  >删除</el-button
+                >
+              </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  v-permisaction="['writ:lawcamera:export']"
+                  type="warning"
+                  icon="el-icon-download"
+                  size="mini"
+                  @click="handleExport"
+                  >导出</el-button
+                >
+              </el-col>
             </el-row>
           </el-col>
           <el-col :span="6" class="column-settings-trigger">
@@ -119,6 +151,7 @@
 
         <!-- 文书列表 -->
         <el-table
+          ref="writTable"
           v-loading="loading"
           :data="writList"
           @selection-change="handleSelectionChange"
@@ -326,9 +359,9 @@
               placeholder="请选择组织部门"
             />
           </el-form-item>
-          <el-form-item label="警员" prop="policeIds">
+          <el-form-item label="警员" prop="writPoliceIds">
             <el-select
-              v-model="form.policeIds"
+              v-model="form.writPoliceIds"
               multiple
               placeholder="请选择警员"
               collapse-tags
@@ -497,7 +530,7 @@
           <el-table
             ref="mediaRelationsTable"
             v-loading="relationLoading"
-            :data="relationsList"
+            :data="mediaRelationsList"
             border
             @selection-change="handleMediaRelationsSelectionChange"
           >
@@ -533,7 +566,7 @@
               </template>
             </el-table-column>
           </el-table>
-          <div v-if="relationsList.length === 0" class="empty-data">
+          <div v-if="mediaRelationsList.length === 0" class="empty-data">
             <el-empty description="暂无关联媒体" :image-size="100" />
           </div>
           <!-- 分页 -->
@@ -590,7 +623,8 @@ import {
   getWrit,
   addWrit,
   updateWrit,
-  delWrit,
+  delWritById,
+  batchDelWrit,
   scoreWrit,
 } from "@/api/evidence/writ_api";
 import {
@@ -620,10 +654,6 @@ export default {
       firstLoad: null,
       // 选中数组
       ids: [],
-      // 非单个禁用
-      single: true,
-      // 非多个禁用
-      multiple: true,
       // 总条数
       total: 0,
       // 文书表格数据
@@ -645,7 +675,7 @@ export default {
       // 浏览数据
       viewData: {},
       // 媒体列表
-      relationsList: [],
+      mediaRelationsList: [],
       relationTotal: 0,
       // 选中的媒体列表
       selectedMediaList: [],
@@ -657,6 +687,16 @@ export default {
       orgOptions: [],
       // 用户选项
       userOptions: [],
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedWritMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringSelection: false,
+      //所有选中的文书记录
+      selectedWrits: [],
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedMediaRelationMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringMediaRelationSelection: false,
       // 文书类型字典
       writTypeOptions: [],
       // 媒体类型字典
@@ -713,7 +753,7 @@ export default {
         orgId: [
           { required: true, message: "组织部门不能为空", trigger: "change" },
         ],
-        policeIds: [
+        writPoliceIds: [
           { required: true, message: "至少选择一名警员", trigger: "change" },
         ],
       },
@@ -744,7 +784,7 @@ export default {
       if (newVal) {
         if (this.firstLoad !== true) {
           // 首次打开对话框,不需要清空警员选择
-          this.form.policeIds = [];
+          this.form.writPoliceIds = [];
         }
         this.firstLoad = false;
         this.getFormUser();
@@ -766,6 +806,7 @@ export default {
     });
   },
   methods: {
+    /** -----------主界面 --------------*/
     /** 查询文书列表 */
     getList() {
       this.loading = true;
@@ -783,6 +824,8 @@ export default {
           this.writList = response.data.list || [];
           this.total = response.data.count || 0;
           this.loading = false;
+          // 分页/查询后回显跨分页选择
+          this.restoreSelection();
         })
         .catch((error) => {
           this.msgError("查询文书列表失败：" + (error.message || "未知错误"));
@@ -832,7 +875,7 @@ export default {
     handleOrgChange(value) {
       if (value) {
         this.getUserList(value);
-        this.form.policeIds = [];
+        this.form.writPoliceIds = [];
       }
     },
     /** 搜索按钮操作 */
@@ -846,11 +889,48 @@ export default {
       this.resetForm("queryForm");
       this.handleQuery();
     },
+    /** 恢复选中状态 */
+    restoreSelection() {
+      if (this.isRestoringSelection) return;
+      if (!this.$refs.writTable) return;
+      if (!this.writList || !this.writList.length) return;
+
+      this.isRestoringSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.writList.forEach((row) => {
+            const id = row && row.id;
+            if (!id) return;
+            if (this.selectedWritMap[id]) {
+              this.$refs.writTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringSelection = false;
+        }
+      });
+    },
+
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
-      this.ids = selection.map((item) => item.id);
-      this.single = selection.length !== 1;
-      this.multiple = !selection.length;
+      if (this.isRestoringSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      );
+
+      (this.writList || []).forEach((row) => {
+        const id = row && row.id;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedWritMap[id] = row;
+        } else {
+          delete this.selectedWritMap[id];
+        }
+      });
+      this.selectedWrits = Object.values(this.selectedWritMap).filter(Boolean);
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -864,28 +944,18 @@ export default {
     handleUpdate(row) {
       this.reset();
       this.firstLoad = true;
-      const id = row.id;
-      getWrit(id)
-        .then((response) => {
-          // 使用展开运算符创建新对象，确保响应式
-          const data = response.data;
-          this.form = {
-            ...data,
-            // 将writPoliceIds转换为policeIds供表单使用
-            policeIds:
-              data.writPoliceIds && Array.isArray(data.writPoliceIds)
-                ? [...data.writPoliceIds]
-                : [],
-          };
-          this.open = true;
-          this.title = "修改文书";
-          if (this.form.orgId) {
-            this.getFormUser();
-          }
-        })
-        .catch((error) => {
-          this.msgError("获取文书信息失败：" + (error.message || "未知错误"));
-        });
+      // 使用对象展开运算符创建新对象
+      if (row && row.id !== undefined) {
+        this.form = { ...row };
+      } else {
+        this.form = this.selectedWrits[0] ? { ...this.selectedWrits[0] } : {};
+      }
+      // 加载对应的用户列表
+      if (this.form.orgId) {
+        this.getFormUser();
+      }
+      this.title = "修改文书";
+      this.open = true;
     },
     /** 浏览按钮操作 */
     handleView(row) {
@@ -904,65 +974,128 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id != null) {
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在修改文书...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
+            });
             updateWrit(this.form.id, this.form)
-              .then((response) => {
+              .then(async (response) => {
                 if (response.code === 200) {
-                  this.msgSuccess(response.msg || "修改成功");
-                  this.open = false;
+                  // 延迟2秒后刷新媒体列表
+                  await this.delay(2000);
+                  this.selectedWritMap = {};
+                  this.selectedWrits = [];
                   this.getList();
+                  this.msgSuccess(response.msg || "修改文书成功");
+                  this.open = false;
                 } else {
-                  this.msgError(response.msg || "修改失败");
+                  this.msgError(response.msg || "修改文书失败");
                 }
               })
               .catch((error) => {
-                this.msgError("修改失败：" + (error.message || "未知错误"));
+                this.msgError("修改文书失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
               });
           } else {
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在创建文书...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
+            });
             addWrit(this.form)
-              .then((response) => {
+              .then(async (response) => {
                 if (response.code === 200) {
-                  this.msgSuccess(response.msg || "新增成功");
-                  this.open = false;
+                  // 延迟2秒后刷新媒体列表
+                  await this.delay(2000);
                   this.getList();
+                  this.msgSuccess(response.msg || "新增文书成功");
+                  this.open = false;
                 } else {
-                  this.msgError(response.msg || "新增失败");
+                  this.msgError(response.msg || "新增文书失败");
                 }
               })
               .catch((error) => {
-                this.msgError("新增失败：" + (error.message || "未知错误"));
+                this.msgError("新增文书失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
               });
           }
         }
       });
     },
     /** 删除按钮操作 */
-    handleDelete(row) {
-      this.$confirm(
-        '是否确认删除文书编号为"' + row.writCode + '"的数据项?',
-        "警告",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
+    async handleDelete(row) {
+      try {
+        var writIds;
+        var writCodes;
+        if (row && row.id !== undefined) {
+          writIds = row.id;
+          writCodes = row.writCode;
+        } else {
+          writIds = this.selectedWrits.map((item) => item.id);
+          writCodes = this.selectedWrits.map((item) => item.writCode);
         }
-      )
-        .then(() => {
-          return delWrit(row.id);
-        })
-        .then((response) => {
-          if (response.code === 200) {
-            this.getList();
-            this.msgSuccess(response.msg || "删除成功");
-          } else {
-            this.msgError(response.msg || "删除失败");
+
+        await this.$confirm(
+          '是否确认删除文书编号为"' + writCodes + '"的数据项?',
+          "信息",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "info",
           }
-        })
-        .catch((error) => {
-          // 用户取消操作或发生错误
-          if (error !== "cancel") {
-            this.msgError("删除失败：" + (error.message || "未知错误"));
-          }
+        );
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在删除文书...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
         });
+        var response = null;
+        if (Array.isArray(writIds)) {
+          response = await batchDelWrit({ ids: writIds });
+        } else {
+          response = await delWritById(writIds);
+        }
+        if (response.code === 200) {
+          // 延迟2秒后刷新媒体列表
+          await this.delay(2000);
+          this.selectedWritMap = {};
+          this.selectedWrits = [];
+          this.getList();
+          this.msgSuccess(response.msg || "删除成功");
+        } else {
+          this.msgError(response.msg || "删除失败");
+        }
+
+        // 恢复鼠标状态
+        document.body.style.cursor = previousCursor;
+        loadingInstance.close();
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("删除失败：" + (error.message || "未知错误"));
+        }
+      }
     },
     /** 评分按钮操作 */
     handleScore(row) {
@@ -999,6 +1132,62 @@ export default {
         }
       });
     },
+    /** 表单重置 */
+    reset() {
+      this.form = {
+        id: null,
+        writName: null,
+        writType: null,
+        orgId: null,
+        writPoliceIds: [],
+        writDesc: null,
+      };
+      this.resetForm("form");
+    },
+    /** 取消按钮 */
+    cancel() {
+      this.open = false;
+      this.reset();
+    },
+    /** 初始化可见列 */
+    initVisibleColumns() {
+      const saved = localStorage.getItem("writ_manage_visible_columns");
+      if (saved) {
+        try {
+          this.visibleColumns = JSON.parse(saved);
+        } catch (error) {
+          this.visibleColumns = this.columnOptions.map((item) => item.prop);
+        }
+      } else {
+        this.visibleColumns = this.columnOptions.map((item) => item.prop);
+      }
+    },
+    /** 判断列是否显示 */
+    isColumnVisible(prop) {
+      return this.visibleColumns.includes(prop);
+    },
+    /** 列显示变更 */
+    handleColumnChange(value) {
+      localStorage.setItem(
+        "writ_manage_visible_columns",
+        JSON.stringify(value)
+      );
+    },
+    /** 重置列配置 */
+    resetColumns() {
+      this.visibleColumns = this.columnOptions.map((item) => item.prop);
+      localStorage.setItem(
+        "writ_manage_visible_columns",
+        JSON.stringify(this.visibleColumns)
+      );
+      this.$message.success("已重置为默认显示");
+    },
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    },
+
+    /** ------------第一层抽屉 -----------------*/
     /** 显示已关联媒体 - 打开第一层抽屉 */
     handleShowMedia(row) {
       this.currentWrit = row;
@@ -1009,8 +1198,9 @@ export default {
     handleCloseMediaDrawer(done) {
       this.showMediaDrawer = false;
       this.currentWrit = {};
-      this.relationsList = [];
+      this.mediaRelationsList = [];
       this.relationTotal = 0;
+      this.selectedMediaRelationMap = {};
       this.selectedMediaRelations = [];
       if (done) {
         done();
@@ -1026,12 +1216,13 @@ export default {
         .then((response) => {
           // 必须检查response.code是否为200
           if (response.code === 200) {
-            this.relationsList = response.data.list || [];
+            this.mediaRelationsList = response.data.list || [];
             this.relationTotal = response.data.count || 0;
+            // 分页/查询后回显跨分页选择
+            this.restoreMediaRelationSelection();
           } else {
-            console.error("加载媒体关联列表失败:", response.msg);
             this.msgError(response.msg || "加载媒体关联列表失败");
-            this.relationsList = [];
+            this.mediaRelationsList = [];
             this.relationTotal = 0;
           }
         })
@@ -1040,13 +1231,167 @@ export default {
           this.msgError(
             "加载媒体关联列表失败：" + (error.message || "未知错误")
           );
-          this.relationsList = [];
+          this.mediaRelationsList = [];
           this.relationTotal = 0;
         })
         .finally(() => {
           this.relationLoading = false;
         });
     },
+    /**恢复已关联媒体的选中状态 */
+    restoreMediaRelationSelection() {
+      if (this.isRestoringMediaRelationSelection) return;
+      if (!this.$refs.mediaRelationsTable) return;
+      if (!this.mediaRelationsList || !this.mediaRelationsList.length) return;
+
+      this.isRestoringMediaRelationSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.mediaRelationsList.forEach((row) => {
+            const id = row && row.id;
+            if (!id) return;
+            if (this.selectedMediaRelationMap[id]) {
+              this.$refs.mediaRelationsTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringMediaRelationSelection = false;
+        }
+      });
+    },
+    /** 已关联媒体选择变化 */
+    handleMediaRelationsSelectionChange(selection) {
+      if (this.isRestoringMediaRelationSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      );
+
+      (this.mediaRelationsList || []).forEach((row) => {
+        const id = row && row.id;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedMediaRelationMap[id] = row;
+        } else {
+          delete this.selectedMediaRelationMap[id];
+        }
+      });
+      this.selectedMediaRelations = Object.values(
+        this.selectedMediaRelationMap
+      ).filter(Boolean);
+    },
+    /** 取消关联媒体 */
+    async handleUnlinkMedia(row) {
+      try {
+        await this.$confirm("是否确认取消关联该媒体?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "info",
+        });
+
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在取消关联...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+
+        try {
+          const response = await deleteWritMediaRelation(row.id);
+
+          if (response.code === 200) {
+            // 延迟2秒后刷新媒体列表
+            await this.delay(2000);
+            this.loadWritMediaRelations();
+            this.getList(); // 刷新文书列表以更新关联状态
+
+            this.msgSuccess(response.msg || "取消关联成功");
+          } else {
+            this.msgError(response.msg || "取消关联失败");
+          }
+        } finally {
+          // 恢复鼠标状态
+          document.body.style.cursor = previousCursor;
+          loadingInstance.close();
+        }
+      } catch (error) {
+        // 用户取消操作或发生错误
+        if (error !== "cancel") {
+          this.msgError("取消关联失败：" + (error.message || "未知错误"));
+        }
+      }
+    },
+    /** 批量取消关联媒体 */
+    async handleBatchUnlinkMedia() {
+      if (this.selectedMediaRelations.length === 0) {
+        this.msgError("请选择要取消关联的媒体");
+        return;
+      }
+
+      try {
+        await this.$confirm(
+          `确认取消关联选中的 ${this.selectedMediaRelations.length} 个媒体吗？`,
+          "提示",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "info",
+          }
+        );
+
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在批量取消关联...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+
+        try {
+          // 提取选中的关联ID列表
+          const ids = this.selectedMediaRelations.map((item) => item.id);
+
+          const response = await batchDeleteWritMediaRelation({ ids: ids });
+
+          if (response.code === 200) {
+            // 延迟2秒后刷新媒体列表
+            await this.delay(2000);
+            this.selectedMediaRelationMap = {};
+            this.selectedMediaRelations = [];
+            this.loadWritMediaRelations();
+            this.getList(); // 刷新文书列表以更新关联状态
+
+            this.msgSuccess(
+              response.msg ||
+                `成功取消关联 ${
+                  response.data?.deletedCount || ids.length
+                } 个媒体`
+            );
+          } else {
+            this.msgError(response.msg || "批量取消关联失败");
+          }
+        } finally {
+          // 恢复鼠标状态
+          document.body.style.cursor = previousCursor;
+          loadingInstance.close();
+        }
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("批量取消关联失败：" + (error.message || "未知错误"));
+        }
+      }
+    },
+
+    /** ------------第二层抽屉 -----------------*/
     /** 关联新媒体 - 打开第二层抽屉 */
     handleLinkMedia() {
       this.selectedMediaList = [];
@@ -1118,178 +1463,6 @@ export default {
         document.body.style.cursor = previousCursor;
         loadingInstance.close();
       }
-    },
-    /** 已关联媒体选择变化 */
-    handleMediaRelationsSelectionChange(selection) {
-      this.selectedMediaRelations = selection;
-    },
-
-    /** 取消关联媒体 */
-    async handleUnlinkMedia(row) {
-      try {
-        await this.$confirm("是否确认取消关联该媒体?", "警告", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
-        });
-
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在取消关联...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
-
-        try {
-          const response = await deleteWritMediaRelation(row.id);
-
-          if (response.code === 200) {
-            // 延迟2秒后刷新媒体列表
-            await this.delay(2000);
-            this.loadWritMediaRelations();
-            this.getList(); // 刷新文书列表以更新关联状态
-
-            this.msgSuccess(response.msg || "取消关联成功");
-          } else {
-            this.msgError(response.msg || "取消关联失败");
-          }
-        } finally {
-          // 恢复鼠标状态
-          document.body.style.cursor = previousCursor;
-          loadingInstance.close();
-        }
-      } catch (error) {
-        // 用户取消操作或发生错误
-        if (error !== "cancel") {
-          this.msgError("取消关联失败：" + (error.message || "未知错误"));
-        }
-      }
-    },
-
-    /** 批量取消关联媒体 */
-    async handleBatchUnlinkMedia() {
-      if (this.selectedMediaRelations.length === 0) {
-        this.msgError("请选择要取消关联的媒体");
-        return;
-      }
-
-      try {
-        await this.$confirm(
-          `确认取消关联选中的 ${this.selectedMediaRelations.length} 个媒体吗？`,
-          "提示",
-          {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "warning",
-          }
-        );
-
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在批量取消关联...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
-
-        try {
-          // 提取选中的关联ID列表
-          const ids = this.selectedMediaRelations.map((item) => item.id);
-
-          const response = await batchDeleteWritMediaRelation({ ids: ids });
-
-          if (response.code === 200) {
-            // 清空选中列表
-            this.selectedMediaRelations = [];
-            if (this.$refs.mediaRelationsTable) {
-              this.$refs.mediaRelationsTable.clearSelection();
-            }
-
-            // 延迟2秒后刷新媒体列表
-            await this.delay(2000);
-            this.loadWritMediaRelations();
-            this.getList(); // 刷新文书列表以更新关联状态
-
-            this.msgSuccess(
-              response.msg ||
-                `成功取消关联 ${
-                  response.data?.deletedCount || ids.length
-                } 个媒体`
-            );
-          } else {
-            this.msgError(response.msg || "批量取消关联失败");
-          }
-        } finally {
-          // 恢复鼠标状态
-          document.body.style.cursor = previousCursor;
-          loadingInstance.close();
-        }
-      } catch (error) {
-        if (error !== "cancel") {
-          this.msgError("批量取消关联失败：" + (error.message || "未知错误"));
-        }
-      }
-    },
-    /** 表单重置 */
-    reset() {
-      this.form = {
-        id: null,
-        writName: null,
-        writType: null,
-        orgId: null,
-        policeIds: [],
-        writDesc: null,
-      };
-      this.resetForm("form");
-    },
-    /** 取消按钮 */
-    cancel() {
-      this.open = false;
-      this.reset();
-    },
-    /** 初始化可见列 */
-    initVisibleColumns() {
-      const saved = localStorage.getItem("writ_manage_visible_columns");
-      if (saved) {
-        try {
-          this.visibleColumns = JSON.parse(saved);
-        } catch (error) {
-          this.visibleColumns = this.columnOptions.map((item) => item.prop);
-        }
-      } else {
-        this.visibleColumns = this.columnOptions.map((item) => item.prop);
-      }
-    },
-    /** 判断列是否显示 */
-    isColumnVisible(prop) {
-      return this.visibleColumns.includes(prop);
-    },
-    /** 列显示变更 */
-    handleColumnChange(value) {
-      localStorage.setItem(
-        "writ_manage_visible_columns",
-        JSON.stringify(value)
-      );
-    },
-    /** 重置列配置 */
-    resetColumns() {
-      this.visibleColumns = this.columnOptions.map((item) => item.prop);
-      localStorage.setItem(
-        "writ_manage_visible_columns",
-        JSON.stringify(this.visibleColumns)
-      );
-      this.$message.success("已重置为默认显示");
-    },
-    /** 延迟函数 */
-    delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
     },
   },
 };
@@ -1370,4 +1543,3 @@ export default {
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
 }
 </style>
-
