@@ -772,7 +772,13 @@ export default {
     /** 查询警情列表 */
     getList() {
       this.loading = true;
-      getIncidentRecordList(this.queryParams).then((response) => {
+      const query = { ...this.queryParams };
+      Object.keys(query).forEach((key) => {
+        if (query[key] === "" || query[key] === null) {
+          delete query[key];
+        }
+      });
+      getIncidentRecordList(query).then((response) => {
         // 注意：response.data是数组类型，数组的元素是对象
         this.incidentRecordList = response.data.list;
         this.total = response.data.count;

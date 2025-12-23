@@ -629,10 +629,10 @@ export default {
         return;
       }
 
-      const hasSelection = selectedArchiveRecords.length;
+      const hasSelection = this.selectedArchiveRecords.length;
 
       const confirmText = hasSelection
-        ? `是否确认导出已勾选的 ${selectedArchiveRecords.length} 条档案数据？`
+        ? `是否确认导出已勾选的 ${this.selectedArchiveRecords.length} 条档案数据？`
         : "是否确认导出所有档案数据项？";
 
       this.$confirm(confirmText, "提示", {
@@ -671,7 +671,7 @@ export default {
             // 获取要导出的数据：有勾选则导出勾选，否则导出全部（按当前查询条件拉取）
             let list = [];
             if (hasSelection) {
-              list = selectedArchiveRecords;
+              list = this.selectedArchiveRecords;
             } else {
               const baseQueryParams = archiveSelector.queryParams || {};
               const pageSize = 1000;

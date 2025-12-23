@@ -819,8 +819,13 @@ export default {
         this.queryParams.writTimeStart = undefined;
         this.queryParams.writTimeEnd = undefined;
       }
-
-      listWrits(this.queryParams)
+      const query = { ...this.queryParams };
+      Object.keys(query).forEach((key) => {
+        if (query[key] === "" || query[key] === null) {
+          delete query[key];
+        }
+      });
+      listWrits(query)
         .then((response) => {
           this.writList = response.data.list || [];
           this.total = response.data.count || 0;

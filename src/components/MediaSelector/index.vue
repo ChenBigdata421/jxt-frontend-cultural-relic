@@ -1040,8 +1040,13 @@ export default {
       this.loading = true;
       // 如果提供了自定义API函数,使用自定义API,否则使用默认的listMedia
       const apiFunc = this.customListApi || listMedia;
-
-      apiFunc(this.queryParams)
+      const query = { ...this.queryParams };
+      Object.keys(query).forEach((key) => {
+        if (query[key] === "" || query[key] === null) {
+          delete query[key];
+        }
+      });
+      apiFunc(query)
         .then((response) => {
           // 兼容不同的数据结构
           if (Array.isArray(response.data)) {

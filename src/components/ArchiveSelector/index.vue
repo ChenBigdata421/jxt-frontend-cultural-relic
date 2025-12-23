@@ -327,7 +327,7 @@
 
 <script>
 import { listArchives } from "@/api/evidence/archive_api";
-import { getOrgList } from "@/api/admin/sys-organization";
+import { orgTreeSelect } from "@/api/admin/sys-org";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
@@ -434,13 +434,15 @@ export default {
     /** 查询档案列表 */
     getList() {
       this.loading = true;
-      console.log(
-        "[ArchiveSelector] 开始查询档案列表，参数：",
-        this.queryParams
-      );
+      const query = { ...this.queryParams };
+      Object.keys(query).forEach((key) => {
+        if (query[key] === "" || query[key] === null) {
+          delete query[key];
+        }
+      });
       // 如果提供了自定义API函数,使用自定义API,否则使用默认的listArchives
       const apiFunc = this.customListApi || listArchives;
-      apiFunc(this.queryParams)
+      apiFunc(query)
         .then((response) => {
           if (response.code === 200) {
             this.archiveList = response.data.list || [];
@@ -458,58 +460,20 @@ export default {
         });
     },
 
-    /** 查询组织树结构 */
+    /** 获取组织树 */
     getOrgTree() {
-      getOrgList().then((response) => {
-        if (response.code === 200) {
-          this.orgOptions = this.handleTree(response.data, "orgId", "parentId");
-        }
-      });
-    },
-
-    /** 转换组织数据为树形结构 */
-    handleTree(data, id, parentId, children) {
-      const config = {
-        id: id || "id",
-        parentId: parentId || "parentId",
-        childrenList: children || "children",
-      };
-
-      const childrenListMap = {};
-      const nodeIds = {};
-      const tree = [];
-
-      for (const d of data) {
-        const parentId = d[config.parentId];
-        if (childrenListMap[parentId] == null) {
-          childrenListMap[parentId] = [];
-        }
-        nodeIds[d[config.id]] = d;
-        childrenListMap[parentId].push(d);
-      }
-
-      for (const d of data) {
-        const parentId = d[config.parentId];
-        if (nodeIds[parentId] == null) {
-          tree.push(d);
-        }
-      }
-
-      for (const t of tree) {
-        adaptToChildrenList(t);
-      }
-
-      function adaptToChildrenList(o) {
-        if (childrenListMap[o[config.id]] !== null) {
-          o[config.childrenList] = childrenListMap[o[config.id]];
-        }
-        if (o[config.childrenList]) {
-          for (const c of o[config.childrenList]) {
-            adaptToChildrenList(c);
+      orgTreeSelect()
+        .then((response) => {
+          if (response.code === 200) {
+            this.orgOptions = response.data;
+          } else {
+            this.msgError(response.msg || "获取组织树失败");
           }
-        }
-      }
-      return tree;
+        })
+        .catch((error) => {
+          this.msgError("获取组织树失败：" + (error.message || "未知错误"));
+          this.orgOptions = [];
+        });
     },
 
     /** 搜索按钮操作 */

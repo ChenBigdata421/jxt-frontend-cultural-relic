@@ -987,7 +987,13 @@ export default {
     /** 查询案件列表 */
     getList() {
       this.loading = true;
-      listCases(this.queryParams).then((response) => {
+      const query = { ...this.queryParams };
+      Object.keys(query).forEach((key) => {
+        if (query[key] === "" || query[key] === null) {
+          delete query[key];
+        }
+      });
+      listCases(query).then((response) => {
         this.caseList = response.data.list;
         this.total = response.data.count;
         this.loading = false;

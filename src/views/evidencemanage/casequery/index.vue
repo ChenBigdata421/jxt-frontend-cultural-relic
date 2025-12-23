@@ -794,8 +794,14 @@ export default {
         this.queryParams.caseTimeStart = undefined;
         this.queryParams.caseTimeEnd = undefined;
       }
+      const query = { ...this.queryParams };
+      Object.keys(query).forEach((key) => {
+        if (query[key] === "" || query[key] === null) {
+          delete query[key];
+        }
+      });
 
-      listCases(this.queryParams).then((response) => {
+      listCases(query).then((response) => {
         this.caseList = response.data.list || [];
         this.total = response.data.count || 0;
         this.loading = false;
