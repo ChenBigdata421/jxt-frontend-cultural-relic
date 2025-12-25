@@ -450,12 +450,17 @@ export default {
             // 分页/查询后回显跨分页选择
             this.restoreSelection();
           } else {
+            this.archiveList = [];
+            this.total = 0;
             this.msgError(response.msg || "查询档案失败");
           }
-          this.loading = false;
         })
         .catch((error) => {
+          this.archiveList = [];
+          this.total = 0;
           this.msgError("查询档案失败：" + (error.message || "未知错误"));
+        })
+        .finally(() => {
           this.loading = false;
         });
     },

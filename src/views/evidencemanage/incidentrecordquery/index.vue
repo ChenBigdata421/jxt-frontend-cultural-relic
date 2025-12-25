@@ -674,8 +674,8 @@
                       <el-radio-group v-model="form.status">
                         <el-radio
                           v-for="dict in statusOptions"
-                          :key="parseInt(dict.value)"
-                          :label="parseInt(dict.value)"
+                          :key="dict.value"
+                          :label="dict.value"
                           >{{ dict.label }}</el-radio
                         >
                       </el-radio-group>
@@ -908,14 +908,28 @@ export default {
           delete query[key];
         }
       });
-      getIncidentRecordList(query).then((response) => {
-        // 注意：response.data是数组类型，数组的元素是对象
-        this.incidentRecordList = response.data.list;
-        this.total = response.data.count;
-        this.loading = false;
-        // 分页/查询后回显跨分页选择
-        this.restoreSelection();
-      });
+      getIncidentRecordList(query)
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            // 注意：response.data是数组类型，数组的元素是对象
+            this.incidentRecordList = response.data.list;
+            this.total = response.data.count;
+            // 分页/查询后回显跨分页选择
+            this.restoreSelection();
+          } else {
+            this.incidentRecordList = [];
+            this.total = 0;
+            this.msgError(response.msg || "获取警情列表失败");
+          }
+        })
+        .catch((error) => {
+          this.incidentRecordList = [];
+          this.total = 0;
+          this.msgError("查询警情列表失败：" + (error.message || "未知错误"));
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
 
     /** 查询组织下拉树结构 */
@@ -1075,8 +1089,6 @@ export default {
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.state = parseInt(this.form.state);
-          this.form.enableUse = parseInt(this.form.enableUse);
           if (this.form.id !== undefined) {
             // 鼠标切换为等待状态
             const previousCursor = document.body.style.cursor;

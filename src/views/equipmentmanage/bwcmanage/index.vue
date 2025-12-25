@@ -6,18 +6,18 @@
           内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
           这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="执法仪编号" prop="no">
+          <el-form-item label="执法仪编号" prop="bwcNo">
             <el-input
-              v-model="queryParams.no"
+              v-model="queryParams.bwcNo"
               placeholder="请输入执法仪编号"
               clearable
               style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="执法仪名称" prop="name">
+          <el-form-item label="执法仪名称" prop="bwcName">
             <el-input
-              v-model="queryParams.name"
+              v-model="queryParams.bwcName"
               placeholder="请输入执法仪名称"
               clearable
               style="width: 170px"
@@ -32,7 +32,7 @@
               style="width: 170px"
             />
           </el-form-item>
-          <el-form-item label="管理人员">
+          <el-form-item label="管理人员" prop="managerId">
             <el-select
               v-model="queryParams.managerId"
               placeholder="请选择管理人员"
@@ -48,9 +48,24 @@
               />
             </el-select>
           </el-form-item>
+          <el-form-item prop="brandId" label="品牌">
+            <el-select
+              v-model="queryParams.brandId"
+              placeholder="请选择品牌"
+              style="width: 170px"
+              clearable
+            >
+              <el-option
+                v-for="item in brandOptions"
+                :key="item.id"
+                :label="item.brandName"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
           <el-form-item label="状态" prop="status">
             <el-select
-              v-model="queryParams.state"
+              v-model="queryParams.status"
               placeholder="状态"
               clearable
               style="width: 170px"
@@ -64,7 +79,7 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="是否可用">
+          <el-form-item prop="enableUse" label="是否可用">
             <el-select
               v-model="queryParams.enableUse"
               placeholder="是否可用"
@@ -111,7 +126,7 @@
                   type="success"
                   icon="el-icon-edit"
                   size="mini"
-                  :disabled="single"
+                  :disabled="selectedBwcRecords.length !== 1"
                   @click="handleUpdate"
                   >修改</el-button
                 >
@@ -122,7 +137,7 @@
                   type="danger"
                   icon="el-icon-delete"
                   size="mini"
-                  :disabled="multiple"
+                  :disabled="selectedBwcRecords.length === 0"
                   @click="handleDelete"
                   >删除</el-button
                 >
@@ -178,8 +193,9 @@
           hasChildren 字段指定了一个布尔字段名，用于表示该行是否有子节点。这里是 'hasChildren'。
           这意味着每个表格数据对象都可能有一个 hasChildren 字段，如果为 true，则表示该行有子节点。-->
         <el-table
+          ref="bwcTable"
           v-loading="loading"
-          :data="lawCameraList"
+          :data="bwcList"
           border
           @selection-change="handleSelectionChange"
           @sort-change="handleSortChang"
@@ -235,6 +251,12 @@
             :show-overflow-tooltip="true"
           />
           <el-table-column
+            v-if="isColumnVisible('brandName')"
+            prop="brandName"
+            label="品牌"
+            width="140"
+          />
+          <el-table-column
             v-if="isColumnVisible('managerName')"
             prop="managerName"
             label="管理员"
@@ -274,7 +296,11 @@
             <template slot-scope="scope">
               <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
                 否则为 'success'（通常显示为绿色）。-->
-              <el-tag disable-transitions>{{ stateFormat(scope.row) }}</el-tag>
+              <el-tag
+                :type="scope.row.status === 1 ? 'success' : 'danger'"
+                disable-transitions
+                >{{ stateFormat(scope.row) }}</el-tag
+              >
             </template>
           </el-table-column>
           <el-table-column
@@ -323,12 +349,12 @@
           />
           <el-table-column
             v-if="isColumnVisible('buyTime')"
-            prop="buyTime"
+            prop="purchaseDate"
             label="购买时间"
             width="180"
           >
             <template slot-scope="{ row }">
-              {{ parseTime(row.buyTime) }}
+              {{ parseTime(row.purchaseDate) }}
             </template>
           </el-table-column>
           <el-table-column
@@ -389,17 +415,29 @@
             <!-- 基础信息 -->
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="名称" prop="Name">
-                  <el-input v-model="form.name" placeholder="请输入名称" />
+                <el-form-item label="名称" prop="bwcName">
+                  <el-input v-model="form.bwcName" placeholder="请输入名称" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="编号" prop="No">
+                <el-form-item label="编号" prop="bwcNo">
                   <el-input
-                    v-model="form.no"
+                    v-model="form.bwcNo"
                     placeholder="请输入编号"
                     :disabled="title === '修改执法仪'"
                   />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="品牌">
+                  <el-select v-model="form.brandId" placeholder="请选择">
+                    <el-option
+                      v-for="item in brandOptions"
+                      :key="item.id"
+                      :label="item.brandName"
+                      :value="item.id"
+                    />
+                  </el-select>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -411,8 +449,8 @@
                   <el-radio-group v-model="form.enableUse">
                     <el-radio
                       v-for="dict in enableUseOptions"
-                      :key="parseInt(dict.value)"
-                      :label="parseInt(dict.value)"
+                      :key="dict.value"
+                      :label="dict.value"
                       >{{ dict.label }}</el-radio
                     >
                   </el-radio-group>
@@ -423,8 +461,8 @@
                   <el-radio-group v-model="form.status">
                     <el-radio
                       v-for="dict in stateOptions"
-                      :key="parseInt(dict.value)"
-                      :label="parseInt(dict.value)"
+                      :key="dict.value"
+                      :label="dict.value"
                       >{{ dict.label }}</el-radio
                     >
                   </el-radio-group>
@@ -494,6 +532,17 @@
 
             <!-- 备注 -->
             <el-row>
+              <el-col :span="12">
+                <el-form-item label="购置时间">
+                  <el-date-picker
+                    v-model="form.purchaseDate"
+                    type="datetime"
+                    placeholder="请输入购置时间"
+                    format="yyyy-MM-ddTHH:mm:ssZ"
+                    value-format="yyyy-MM-ddTHH:mm:ssZ"
+                  />
+                </el-form-item>
+              </el-col>
               <el-col :span="24">
                 <el-form-item label="备注">
                   <el-input v-model="form.remark" />
@@ -508,27 +557,72 @@
           </div>
         </el-dialog>
 
-        <!--显示详情-->
+        <!-- 浏览执法仪对话框 -->
         <el-dialog
-          :title="title"
-          :visible.sync="ViewOpen"
-          width="593px"
-          :close-on-click-modal="false"
+          title="浏览执法仪"
+          :visible.sync="viewOpen"
+          width="800px"
+          append-to-body
         >
-          <el-table v-loading="loading" :data="AttributeValueList" border>
-            <el-table-column
-              prop="AttributeName"
-              label="属性"
-              width="100"
-              align="center"
-            />
-            <el-table-column
-              prop="Value"
-              label="值"
-              width="450"
-              align="center"
-            />
-          </el-table>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="执法仪编号">{{
+              viewData.bwcNo || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="执法仪名称">{{
+              viewData.bwcName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="品牌">{{
+              viewData.brandName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="管理组织">{{
+              viewData.managerOrgFullName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="管理人员">{{
+              viewData.managerName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="是否可用">{{
+              selectDictLabel(enableUseOptions, viewData.enableUse) || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="状态">{{
+              selectDictLabel(stateOptions, viewData.status) || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="CPU">{{
+              viewData.cpu || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="内存(G)">{{
+              viewData.memory || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="存储(G)">{{
+              viewData.disk || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="网卡">{{
+              viewData.networkCard || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="USB数量">{{
+              viewData.usbNum || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="操作系统">{{
+              viewData.system || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="版本">{{
+              viewData.version || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="购买时间">{{
+              viewData.purchaseDate ? parseTime(viewData.purchaseDate) : "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="备注" :span="2">{{
+              viewData.remark || "无"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="创建时间">{{
+              viewData.createdAt ? parseTime(viewData.createdAt) : "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="更新时间">{{
+              viewData.updatedAt ? parseTime(viewData.updatedAt) : "-"
+            }}</el-descriptions-item>
+          </el-descriptions>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="viewOpen = false">关 闭</el-button>
+          </div>
         </el-dialog>
       </el-card>
     </template>
@@ -536,11 +630,11 @@
 </template>
 <script>
 import {
-  getEquipmentLawcameraList,
-  getEquipmentLawcamera,
-  delEquipmentLawcamera,
-  addEquipmentLawcamera,
-  updateEquipmentLawcamera,
+  getEquipmentBwcList,
+  delEquipmentBwc,
+  addEquipmentBwc,
+  updateEquipmentBwc,
+  listEquipmentBrand,
 } from "@/api/admin/equipment_manage_api";
 import { formatJson } from "@/utils";
 import { orgTreeSelect } from "@/api/admin/sys-org";
@@ -557,30 +651,33 @@ export default {
       firstLoad: null,
       // 选中数组
       LawCameraIds: [],
-      // 非单个禁用
-      single: true,
-      // 非多个禁用
-      multiple: true,
       // 总条数
       total: 0,
       // 执法仪数据
-      lawCameraList: [],
+      bwcList: [],
       // 状态数据字典
       stateOptions: [],
       // 是否可用数据字典
       enableUseOptions: [],
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedBwcMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringSelection: false,
+      //所有选中的警情记录
+      selectedBwcRecords: [],
       // 列配置
       columnOptions: [
-        { prop: "no", label: "编号", defaultVisible: true },
-        { prop: "name", label: "名称", defaultVisible: true },
+        { prop: "no", field: "bwcNo", label: "编号", defaultVisible: true },
+        { prop: "name", field: "bwcName", label: "名称", defaultVisible: true },
         { prop: "managerName", label: "管理员", defaultVisible: true },
         {
           prop: "managerOrgFullName",
           label: "管理员所在组织",
           defaultVisible: true,
         },
+        { prop: "brandName", label: "品牌", defaultVisible: true },
         { prop: "enableUse", label: "是否可用", defaultVisible: true },
-        { prop: "state", label: "状态", defaultVisible: true },
+        { prop: "state", field: "status", label: "状态", defaultVisible: true },
         { prop: "cpu", label: "CPU", defaultVisible: false },
         { prop: "memory", label: "内存(G)", defaultVisible: false },
         { prop: "disk", label: "存储(G)", defaultVisible: false },
@@ -588,7 +685,12 @@ export default {
         { prop: "usbNum", label: "USB数量", defaultVisible: false },
         { prop: "system", label: "操作系统", defaultVisible: false },
         { prop: "version", label: "版本", defaultVisible: false },
-        { prop: "buyTime", label: "购买时间", defaultVisible: false },
+        {
+          prop: "buyTime",
+          field: "purchaseDate",
+          label: "购买时间",
+          defaultVisible: false,
+        },
         { prop: "remark", label: "备注", defaultVisible: false },
       ],
       // 可见列
@@ -598,36 +700,25 @@ export default {
       isEdit: false,
       // 是否显示增加执法仪对话框
       open: false,
-      ViewOpen: false,
+      viewOpen: false,
+      // 浏览数据
+      viewData: {},
       // 组织树选项
       orgOptions: undefined,
       userOptions: undefined,
+      brandOptions: undefined,
       // 查询参数
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
-        Name: undefined,
+        bwcNo: undefined,
+        bwcName: undefined,
         managerOrgId: undefined,
         managerId: undefined,
+        brandId: undefined,
+        status: undefined,
+        enableUse: undefined,
       },
-      AttributeValueList: [],
-      ColumnNameConvert: new Map([
-        ["no", "编号"],
-        ["name", "名称"],
-        ["managerName", "管理员"],
-        ["managerOrgFullName", "管理员所在组织"],
-        ["enableUse", "是否可用"],
-        ["state", "状态"],
-        ["cpu", "CPU"],
-        ["memory", "内存(G)"],
-        ["disk", "存储(G)"],
-        ["networkCard", "网卡"],
-        ["usbNum", "USB数量"],
-        ["system", "操作系统"],
-        ["version", "版本"],
-        ["buyTime", "购买时间"],
-        ["remark", "备注"],
-      ]),
       // 表单参数
       form: {},
       // 表单校验,触发时机（trigger: 'blur'）：当输入框失去焦点（blur 事件）时触发验证。
@@ -659,6 +750,7 @@ export default {
   created() {
     this.getList();
     this.getTreeselect();
+    this.getFormBrand();
     this.getDicts("bwc_status").then((response) => {
       this.stateOptions = response.data;
     });
@@ -706,24 +798,52 @@ export default {
     /** 查询执法仪列表 */
     getList() {
       this.loading = true;
-      getEquipmentLawcameraList(this.queryParams).then((response) => {
-        // 注意：response.data是数组类型，数组的元素是对象
-        this.lawCameraList = response.data.list;
-        this.total = response.data.count;
-        this.loading = false;
+      const query = this.normalizeQueryParams(this.queryParams);
+      getEquipmentBwcList(query)
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.bwcList = response.data.list;
+            this.total = response.data.count;
+            // 分页/查询后回显跨分页选择
+            this.restoreSelection();
+          } else {
+            this.bwcList = [];
+            this.total = 0;
+            this.msgError(response.msg || "获取执法仪列表失败");
+          }
+        })
+        .catch((error) => {
+          this.bwcList = [];
+          this.total = 0;
+          this.msgError("查询执法仪列表失败：" + (error.message || "未知错误"));
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
+    //当用户在页面中清除查询条件后，有些查询条件可能被置为空串或者空，这样在随后的restful 请求中仍会被携带
+    normalizeQueryParams(params = {}) {
+      const query = { ...params };
+      Object.keys(query).forEach((key) => {
+        const value = query[key];
+        if (value === "" || value === null) {
+          delete query[key];
+        }
+      });
+      return query;
+    },
+    getFormBrand() {
+      listEquipmentBrand().then((response) => {
+        this.brandOptions = response.data.list;
       });
     },
-
     // 字典状态字典翻译
     stateFormat(row) {
-      return this.selectDictLabel(this.stateOptions, parseInt(row.status));
+      return this.selectDictLabel(this.stateOptions, row.status);
     },
     // 字典状态字典翻译
     enableUseFormat(row) {
-      return this.selectDictLabel(
-        this.enableUseOptions,
-        parseInt(row.enableUse)
-      );
+      return this.selectDictLabel(this.enableUseOptions, row.enableUse);
     },
     /** 查询组织下拉树结构 */
     getTreeselect() {
@@ -752,10 +872,8 @@ export default {
       this.form = {
         managerOrgId: undefined,
         managerId: undefined,
-        requisitionorOrgId: undefined,
-        requisitionorId: undefined,
-        name: undefined,
-        no: undefined,
+        bwcName: undefined,
+        bwcNo: undefined,
         enableUse: undefined,
         state: undefined,
         cpu: undefined,
@@ -765,7 +883,7 @@ export default {
         usbNum: undefined,
         system: undefined,
         version: undefined,
-        buyTime: undefined,
+        purchaseDate: undefined,
         remark: undefined,
       };
       this.resetForm("form");
@@ -786,9 +904,26 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.LawCameraIds = selection.map((item) => item.id);
-      this.single = selection.length !== 1;
-      this.multiple = !selection.length;
+      if (this.isRestoringSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      );
+
+      (this.bwcList || []).forEach((row) => {
+        const id = row && row.id;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedBwcMap[id] = row;
+        } else {
+          delete this.selectedBwcMap[id];
+        }
+      });
+      this.selectedBwcRecords = Object.values(this.selectedBwcMap).filter(
+        Boolean
+      );
     },
     /** 新增按钮操作*/
     handleAdd(row) {
@@ -796,6 +931,27 @@ export default {
       this.open = true;
       this.title = "添加执法仪";
       this.isEdit = false;
+    },
+
+    restoreSelection() {
+      if (this.isRestoringSelection) return;
+      if (!this.$refs.bwcTable) return;
+      if (!this.bwcList || !this.bwcList.length) return;
+
+      this.isRestoringSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.bwcList.forEach((row) => {
+            const id = row && row.id;
+            if (!id) return;
+            if (this.selectedBwcMap[id]) {
+              this.$refs.bwcTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringSelection = false;
+        }
+      });
     },
 
     handleSortChang(column, prop, order) {
@@ -815,140 +971,275 @@ export default {
     handleUpdate(row) {
       this.reset();
       this.firstLoad = true;
-      const LawCameraId = row.id || this.LawCameraIds;
-      getEquipmentLawcamera(LawCameraId).then((response) => {
-        this.form = response.data;
-        this.title = "修改执法仪";
-        this.isEdit = true;
-        this.open = true;
-      });
+      // 使用对象展开运算符创建新对象
+      if (row && row.id !== undefined) {
+        this.form = { ...row };
+      } else {
+        this.form = this.selectedBwcRecords[0]
+          ? { ...this.selectedBwcRecords[0] }
+          : {};
+      }
+      this.title = "修改执法仪";
+      this.isEdit = true;
+      this.open = true;
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      this.AttributeValueList = [];
-      Object.keys(row).forEach((key) => {
-        var attributeName = this.ColumnNameConvert.get(key);
-        var value = row[key];
-        if (key === "state") {
-          value = this.stateFormat(row);
-        }
-        if (key === "enableUse") {
-          value = this.enableUseFormat(row);
-        }
-        const attributeValue = {
-          AttributeName: attributeName,
-          Value: value,
-        };
-        if (attributeValue.AttributeName !== undefined) {
-          this.AttributeValueList.push(attributeValue);
-        }
-      });
-      this.ViewOpen = true;
-      this.title = "执法仪信息";
+      this.viewData = row;
+      this.viewOpen = true;
     },
     /** 提交按钮 */
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.state = parseInt(this.form.state);
-          this.form.enableUse = parseInt(this.form.enableUse);
           if (this.form.id !== undefined) {
-            updateEquipmentLawcamera(this.form, this.form.id).then(
-              (response) => {
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在修改执法仪...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
+            });
+            updateEquipmentBwc(this.form, this.form.id)
+              .then(async (response) => {
                 if (response.code === 200) {
+                  await this.delay(1000);
+                  this.selectedBwcMap = {};
+                  this.selectedBwcRecords = [];
+                  this.getList();
                   this.msgSuccess(response.msg);
                   this.open = false;
-                  this.getList();
                 } else {
                   this.msgError(response.msg);
                 }
-              }
-            );
+              })
+              .catch((error) => {
+                this.msgError(
+                  "修改执法仪失败：" + (error.message || "未知错误")
+                );
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           } else {
-            addEquipmentLawcamera(this.form).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
-              } else {
-                this.msgError(response.msg);
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在创建执法仪...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            addEquipmentBwc(this.form)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(1000);
+                  this.getList();
+                  this.msgSuccess(response.msg);
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg);
+                }
+              })
+              .catch((error) => {
+                this.msgError(
+                  "新增执法仪失败：" + (error.message || "未知错误")
+                );
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           }
         }
       });
     },
 
-    handleDelete(row) {
-      const LawCameraId = (row.id && [row.id]) || this.LawCameraIds;
-      this.$confirm(
-        '是否确认删除执法仪编号为"' + LawCameraId + '"的数据项?',
-        "警告",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
+    async handleDelete(row) {
+      try {
+        var bwcIds = [];
+        var bwcNos = [];
+        if (row && row.id !== undefined) {
+          bwcIds = append(bwcIds, row.id);
+          bwcNos = append(bwcCodes, row.bwcNo);
+        } else {
+          bwcIds = this.selectedBwcRecords.map((item) => item.id);
+          bwcNos = this.selectedBwcRecords.map((item) => item.bwcNo);
         }
-      )
-        .then(function () {
-          return delEquipmentLawcamera({ ids: LawCameraId });
-        })
-        .then((response) => {
+        await this.$confirm(
+          '是否确认删除执法仪编号为"' + bwcNos + '"的数据项?',
+          "信息",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "info",
+          }
+        );
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在删除执法仪...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+        const response = await delEquipmentBwc({ ids: bwcIds });
+        if (response.code === 200) {
+          await this.delay(1000);
+          this.selectedBwcMap = {};
+          this.selectedBwcRecords = [];
           this.getList();
-          this.msgSuccess(response.msg);
-        })
-        .catch(function () {});
+          this.msgSuccess(response.msg || "删除执法仪成功");
+        } else {
+          this.msgError(response.msg || "删除执法仪失败");
+        }
+        // 恢复鼠标状态
+        document.body.style.cursor = previousCursor;
+        loadingInstance.close();
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("删除执法仪失败：" + (error.message || "未知错误"));
+        }
+      }
     },
 
     /** 导出按钮操作 */
     handleExport() {
-      this.$confirm("是否确认导出所有执法仪数据项?", "警告", {
+      const hasSelection = this.selectedBwcRecords.length > 0;
+
+      const confirmText = hasSelection
+        ? `是否确认导出已勾选的 ${this.selectedBwcRecords.length} 条执法仪数据？`
+        : "是否确认导出所有执法仪数据项？";
+
+      this.$confirm(confirmText, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        type: "warning",
-      }).then(() => {
-        this.downloadLoading = true;
-        import("@/vendor/Export2Excel").then((excel) => {
-          const tHeader = [
-            "工程ID",
-            "编号",
-            "名称",
-            "CPU",
-            "内存",
-            "存储",
-            "网卡",
-            "USB数量",
-            "操作系统",
-            "购置时间",
-            "版本",
-            "备注",
-          ];
-          const filterVal = [
-            "FactoryId",
-            "No",
-            "Name",
-            "Cpu",
-            "Memory",
-            "Disk",
-            "NetworkCard",
-            "UsbNum",
-            "System",
-            "BuyTime",
-            "Version",
-            "Remark",
-          ];
-          const list = this.lawCameraList;
-          const data = formatJson(filterVal, list);
-          excel.export_json_to_excel({
-            header: tHeader,
-            data,
-            filename: "执法仪列表",
-            autoWidth: true, // Optional
-            bookType: "xlsx", // Optional
+        type: "info",
+      })
+        .then(async () => {
+          const loadingInstance = this.$loading({
+            lock: true,
+            text: "正在导出...",
+            spinner: "el-icon-loading",
+            background: "rgba(0, 0, 0, 0.3)",
           });
-          this.downloadLoading = false;
-        });
-      });
+
+          try {
+            const columnOptions = Array.isArray(this.columnOptions)
+              ? this.columnOptions
+              : [];
+            const visibleColumns = Array.isArray(this.visibleColumns)
+              ? this.visibleColumns
+              : [];
+            const exportColumns = columnOptions.filter((c) =>
+              visibleColumns.includes(c.prop)
+            );
+
+            if (!exportColumns.length) {
+              this.msgError("当前未选择任何可导出的列");
+              return;
+            }
+
+            const tHeader = exportColumns.map((c) => c.label);
+            const filterVal = exportColumns.map((c) => c.field || c.prop);
+
+            let list = [];
+            if (hasSelection) {
+              list = this.selectedBwcRecords;
+            } else {
+              const baseQueryParams = this.normalizeQueryParams(
+                this.queryParams || {}
+              );
+              const pageSize = 1000;
+              let pageIndex = 1;
+              let total = Infinity;
+
+              while (list.length < total) {
+                const query = {
+                  ...baseQueryParams,
+                  pageIndex,
+                  pageSize,
+                };
+                const resp = await getEquipmentBwcList(query);
+                if (!resp || resp.code !== 200) {
+                  throw new Error((resp && resp.msg) || "查询执法仪列表失败");
+                }
+
+                const pageList = (resp.data && resp.data.list) || [];
+                total = (resp.data && resp.data.count) || 0;
+                list = list.concat(pageList);
+
+                if (!pageList.length) {
+                  break;
+                }
+                pageIndex += 1;
+              }
+            }
+
+            const formatDateTime = (value) => {
+              if (!value) return "-";
+              try {
+                return this.parseTime ? this.parseTime(value) : value;
+              } catch (error) {
+                return value;
+              }
+            };
+
+            const formatStatus = (value) => {
+              const option = (this.stateOptions || []).find(
+                (item) => String(item.value) === String(value)
+              );
+              return option ? option.label : value;
+            };
+
+            const formatEnableUseOptions = (value) => {
+              const option = (this.enableUseOptions || []).find(
+                (item) => String(item.value) === String(value)
+              );
+              return option ? option.label : value;
+            };
+
+            const normalizeList = (Array.isArray(list) ? list : []).map(
+              (row) => {
+                const output = { ...row };
+                output.status = formatStatus(row.status);
+                output.enableUse = formatEnableUseOptions(row.enableUse);
+                output.purchaseDate = formatDateTime(row.purchaseDate);
+                return output;
+              }
+            );
+
+            const data = formatJson(filterVal, normalizeList);
+
+            const excel = await import("@/vendor/Export2Excel");
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: "执法仪列表",
+              autoWidth: true,
+              bookType: "xlsx",
+            });
+          } catch (error) {
+            console.error("[BwcQuery] 导出失败:", error);
+            this.msgError(error.message || "导出失败");
+          } finally {
+            loadingInstance.close();
+          }
+        })
+        .catch(() => {});
+    },
+
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
     },
   },
 };

@@ -32,7 +32,7 @@
               style="width: 170px"
             />
           </el-form-item>
-          <el-form-item label="管理人员">
+          <el-form-item label="管理人员" prop="managerId">
             <el-select
               v-model="queryParams.managerId"
               placeholder="请选择管理人员"
@@ -45,6 +45,37 @@
                 :key="item.userId"
                 :label="item.userName"
                 :value="item.userId"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item prop="brandId" label="品牌">
+            <el-select
+              v-model="queryParams.brandId"
+              placeholder="请选择品牌"
+              style="width: 170px"
+              clearable
+            >
+              <el-option
+                v-for="item in brandOptions"
+                :key="item.id"
+                :label="item.brandName"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="启用状态" prop="openStatus">
+            <el-select
+              v-model="queryParams.openStatus"
+              placeholder="启用状态"
+              clearable
+              style="width: 170px"
+            >
+              <el-option
+                v-for="dict in openStatusOptions"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+                style="width: 150px"
               />
             </el-select>
           </el-form-item>
@@ -63,15 +94,6 @@
                 style="width: 150px"
               />
             </el-select>
-          </el-form-item>
-          <el-form-item label="品牌名称" prop="brandName">
-            <el-input
-              v-model="queryParams.brandName"
-              placeholder="请输入品牌名称"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
           </el-form-item>
           <el-form-item>
             <el-button
@@ -106,7 +128,7 @@
                   type="success"
                   icon="el-icon-edit"
                   size="mini"
-                  :disabled="UpdateDisabled"
+                  :disabled="selectedStorageRecords.length !== 1"
                   @click="handleUpdate"
                   >修改</el-button
                 >
@@ -117,7 +139,7 @@
                   type="danger"
                   icon="el-icon-delete"
                   size="mini"
-                  :disabled="DeleteDisabled"
+                  :disabled="selectedStorageRecords.length === 0"
                   @click="handleDelete"
                   >删除</el-button
                 >
@@ -173,6 +195,7 @@
           hasChildren 字段指定了一个布尔字段名，用于表示该行是否有子节点。这里是 'hasChildren'。
           这意味着每个表格数据对象都可能有一个 hasChildren 字段，如果为 true，则表示该行有子节点。-->
         <el-table
+          ref="storageTable"
           v-loading="loading"
           :data="StorageList"
           border
@@ -232,9 +255,8 @@
           <el-table-column
             v-if="isColumnVisible('brandName')"
             prop="brandName"
-            label="品牌名称"
-            min-width="140"
-            :show-overflow-tooltip="true"
+            label="品牌"
+            width="120"
           />
           <el-table-column
             v-if="isColumnVisible('managerName')"
@@ -265,7 +287,25 @@
             <template slot-scope="scope">
               <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
                 否则为 'success'（通常显示为绿色）。-->
-              <el-tag disable-transitions>{{ stateFormat(scope.row) }}</el-tag>
+              <el-tag
+                :type="scope.row.status === 1 ? 'success' : 'danger'"
+                disable-transitions
+                >{{ stateFormat(scope.row) }}</el-tag
+              >
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('openStatus')"
+            prop="openStatus"
+            label="启用状态"
+            width="110"
+          >
+            <template slot-scope="scope">
+              <el-tag
+                :type="scope.row.openStatus === 1 ? 'success' : 'danger'"
+                disable-transitions
+                >{{ openStatusFormat(scope.row) }}</el-tag
+              >
             </template>
           </el-table-column>
           <el-table-column
@@ -385,33 +425,47 @@
             </el-row>
 
             <!-- 基础信息 -->
-            <el-row :gutter="15">
+            <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="名称" prop="storageSiteName" label-width="100px">
-                  <el-input v-model="form.storageSiteName" placeholder="请输入名称" />
+                <el-form-item
+                  label="名称"
+                  prop="storageSiteName"
+                  label-width="100px"
+                >
+                  <el-input
+                    v-model="form.storageSiteName"
+                    placeholder="请输入名称"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="编号" prop="storageSiteNo" label-width="100px">
-                  <el-input v-model="form.storageSiteNo" placeholder="请输入编号" />
+                <el-form-item
+                  label="编号"
+                  prop="storageSiteNo"
+                  label-width="100px"
+                >
+                  <el-input
+                    v-model="form.storageSiteNo"
+                    placeholder="请输入编号"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="品牌" label-width="100px">
+                  <el-select v-model="form.brandId" placeholder="请选择">
+                    <el-option
+                      v-for="item in brandOptions"
+                      :key="item.id"
+                      :label="item.brandName"
+                      :value="item.id"
+                    />
+                  </el-select>
                 </el-form-item>
               </el-col>
             </el-row>
 
             <!-- 设备信息 -->
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item
-                  label="品牌名称"
-                  prop="brandName"
-                  label-width="100px"
-                >
-                  <el-input
-                    v-model="form.brandName"
-                    placeholder="请输入品牌名称"
-                  />
-                </el-form-item>
-              </el-col>
+            <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="设备状态" label-width="100px">
                   <el-radio-group v-model="form.status" class="radio-group">
@@ -424,13 +478,32 @@
                   </el-radio-group>
                 </el-form-item>
               </el-col>
+              <el-col :span="12">
+                <el-form-item label="启用状态" label-width="100px">
+                  <el-radio-group v-model="form.openStatus">
+                    <el-radio
+                      v-for="dict in openStatusOptions"
+                      :key="dict.value"
+                      :label="dict.value"
+                      >{{ dict.label }}</el-radio
+                    >
+                  </el-radio-group>
+                </el-form-item>
+              </el-col>
             </el-row>
 
             <!-- 网络配置 -->
-            <el-row :gutter="15">
+            <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="IP地址" prop="storageSiteIp" label-width="100px">
-                  <el-input v-model="form.storageSiteIp" placeholder="请输入IP地址" />
+                <el-form-item
+                  label="IP地址"
+                  prop="storageSiteIp"
+                  label-width="100px"
+                >
+                  <el-input
+                    v-model="form.storageSiteIp"
+                    placeholder="请输入IP地址"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -446,8 +519,15 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="播放地址" prop="storageSiteUrl" label-width="100px">
-                  <el-input v-model="form.storageSiteUrl" placeholder="请输入播放地址" />
+                <el-form-item
+                  label="播放地址"
+                  prop="storageSiteUrl"
+                  label-width="100px"
+                >
+                  <el-input
+                    v-model="form.storageSiteUrl"
+                    placeholder="请输入播放地址"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -534,51 +614,72 @@
             <el-button @click="cancel">取 消</el-button>
           </div>
         </el-dialog>
-        <!--显示详情-->
+        <!-- 浏览存储对话框 -->
         <el-dialog
-          :title="title"
-          :visible.sync="ViewOpen"
-          width="593px"
-          :close-on-click-modal="false"
+          title="浏览存储"
+          :visible.sync="viewOpen"
+          width="800px"
+          append-to-body
         >
-          <el-tabs v-model="ActiveLab">
-            <el-tab-pane label="存储信息" name="first">
-              <el-table v-loading="loading" :data="AttributeValueList" border>
-                <el-table-column
-                  prop="AttributeName"
-                  label="属性"
-                  width="100"
-                  align="center"
-                />
-                <el-table-column
-                  prop="Value"
-                  label="值"
-                  width="450"
-                  align="center"
-                />
-              </el-table>
-            </el-tab-pane>
-            <el-tab-pane label="存储配置" name="second">
-              <el-table
-                v-loading="loading"
-                :data="AttributeValueConfigList"
-                border
-              >
-                <el-table-column
-                  prop="AttributeName"
-                  label="属性"
-                  width="200"
-                  align="center"
-                />
-                <el-table-column
-                  prop="Value"
-                  label="值"
-                  width="350"
-                  align="center"
-                />
-              </el-table>
-            </el-tab-pane>
-          </el-tabs>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="存储编号">{{
+              viewData.storageSiteNo || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="存储名称">{{
+              viewData.storageSiteName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="品牌">{{
+              viewData.brandName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="管理组织">{{
+              viewData.managerOrgFullName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="管理人员">{{
+              viewData.managerName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="启用状态">{{
+              selectDictLabel(openStatusOptions, viewData.openStatus) || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="状态">{{
+              selectDictLabel(stateOptions, viewData.status) || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="IP 地址">{{
+              viewData.storageSiteIp || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="播放地址">{{
+              viewData.storageSiteUrl || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="密钥">{{
+              viewData.authKey || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="物理地址" :span="2">{{
+              viewData.address || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="CPU">{{
+              viewData.cpu || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="内存(GB)">{{
+              viewData.memory || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="存储(GB)">{{
+              viewData.disk || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="操作系统">{{
+              viewData.system || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="版本">{{
+              viewData.version || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="购置时间">{{
+              viewData.purchaseDate ? parseTime(viewData.purchaseDate) : "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="备注" :span="2">{{
+              viewData.remark || "无"
+            }}</el-descriptions-item>
+          </el-descriptions>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="viewOpen = false">关 闭</el-button>
+          </div>
         </el-dialog>
       </el-card>
     </template>
@@ -593,6 +694,7 @@ import {
   getEquipmentStorageConfig,
   addEquipmentStorage,
   updateEquipmentStorage,
+  listEquipmentBrand,
 } from "@/api/admin/equipment_manage_api";
 import { formatJson } from "@/utils";
 import { orgTreeSelect } from "@/api/admin/sys-org";
@@ -609,6 +711,11 @@ export default {
       firstLoad: null,
       // 选中数组
       StorageIds: [],
+      selectedStorageRecords: [],
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedStorageMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringSelection: false,
       // 可否修改
       UpdateDisabled: true,
       // 可否删除
@@ -619,11 +726,20 @@ export default {
       StorageList: [],
       // 状态数据字典
       stateOptions: [],
+      // 启用状态数据字典
+      openStatusOptions: [],
+      // 品牌选项
+      brandOptions: [],
       // 列配置
       columnOptions: [
-        { prop: "storageSiteName", label: "名称", fixed: true, defaultVisible: true },
+        {
+          prop: "storageSiteName",
+          label: "名称",
+          fixed: true,
+          defaultVisible: true,
+        },
         { prop: "storageSiteNo", label: "编号", defaultVisible: true },
-        { prop: "brandName", label: "品牌名称", defaultVisible: true },
+        { prop: "brandName", label: "品牌", defaultVisible: true },
         { prop: "managerName", label: "管理员", defaultVisible: true },
         {
           prop: "managerOrgFullName",
@@ -631,6 +747,7 @@ export default {
           defaultVisible: true,
         },
         { prop: "storageSiteIp", label: "IP地址", defaultVisible: true },
+        { prop: "openStatus", label: "启用状态", defaultVisible: true },
         { prop: "status", label: "状态", defaultVisible: true },
         { prop: "system", label: "操作系统", defaultVisible: true },
         { prop: "version", label: "版本", defaultVisible: false },
@@ -650,7 +767,9 @@ export default {
       // 是否显示增加存储对话框
       open: false,
       // 是否显示查看存储详情对话框
-      ViewOpen: false,
+      viewOpen: false,
+      // 浏览数据
+      viewData: {},
       // 组织树选项
       orgOptions: undefined,
       userOptions: undefined,
@@ -665,34 +784,16 @@ export default {
         managerOrgId: undefined,
         managerId: undefined,
         status: undefined,
-        brandName: undefined,
+        brandId: undefined,
+        openStatus: undefined,
       },
       AttributeValueList: [],
       AttributeValueConfigList: [],
       // 表单参数
       form: {
         status: "1",
+        openStatus: "1",
       },
-      ColumnNameConvert: new Map([
-        ["id", "主键ID"],
-        ["storageSiteNo", "编号"],
-        ["storageSiteName", "名称"],
-        ["storageSiteIp", "IP地址"],
-        ["storageSiteUrl", "播放地址"],
-        ["address", "详细地址"],
-        ["authKey", "密钥"],
-        ["managerName", "管理员"],
-        ["cpu", "CPU"],
-        ["memory", "内存"],
-        ["disk", "存储"],
-        ["purchaseDate", "购置时间"],
-        ["system", "操作系统"],
-        ["version", "版本号"],
-        ["remark", "备注"],
-        ["brandName", "品牌名称"],
-        ["managerOrgFullName", "归属单位"],
-        ["status", "状态"],
-      ]),
       ColumnNameConfigConvert: new Map([
         ["Id", "主键ID"],
         ["StorageName", "存储服务器名称"],
@@ -733,8 +834,12 @@ export default {
   created() {
     this.getList();
     this.getTreeselect();
+    this.getFormBrand();
     this.getDicts("site_status").then((response) => {
       this.stateOptions = response.data;
+    });
+    this.getDicts("open_status").then((response) => {
+      this.openStatusOptions = response.data;
     });
     this.initVisibleColumns();
   },
@@ -777,17 +882,44 @@ export default {
     /** 查询存储列表 */
     getList() {
       this.loading = true;
-      listEquipmentStorage(this.queryParams).then((response) => {
-        // 注意：response.data是数组类型，数组的元素是对象
-        this.StorageList = response.data.list;
-        this.total = response.data.count;
-        this.loading = false;
-      });
+      const query = this.normalizeQueryParams(this.queryParams);
+      listEquipmentStorage(query)
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.StorageList = response.data.list;
+            this.total = response.data.count;
+            // 分页/查询后回显跨分页选择
+            this.restoreSelection();
+          } else {
+            this.StorageList = [];
+            this.total = 0;
+            this.msgError(response.msg || "获取存储列表失败");
+          }
+        })
+        .catch((error) => {
+          this.StorageList = [];
+          this.total = 0;
+          this.msgError("查询存储列表失败：" + (error.message || "未知错误"));
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
 
     // 字典状态字典翻译
     stateFormat(row) {
-      return this.selectDictLabel(this.stateOptions, parseInt(row.status));
+      return this.selectDictLabel(this.stateOptions, row.status);
+    },
+
+    // 字典启用状态字典翻译
+    openStatusFormat(row) {
+      return this.selectDictLabel(this.openStatusOptions, row.openStatus);
+    },
+
+    getFormBrand() {
+      listEquipmentBrand().then((response) => {
+        this.brandOptions = response.data.list;
+      });
     },
 
     /** 查询组织下拉树结构 */
@@ -830,8 +962,9 @@ export default {
         system: undefined,
         version: undefined,
         remark: undefined,
-        brandName: undefined,
-        status: "1",
+        brandId: undefined,
+        status: undefined,
+        openStatus: undefined,
       };
       this.resetForm("form");
     },
@@ -851,9 +984,47 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.StorageIds = selection.map((item) => item.id);
-      this.UpdateDisabled = selection.length !== 1;
-      this.DeleteDisabled = !selection.length;
+      if (this.isRestoringSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      );
+
+      (this.StorageList || []).forEach((row) => {
+        const id = row && row.id;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedStorageMap[id] = row;
+        } else {
+          delete this.selectedStorageMap[id];
+        }
+      });
+      this.selectedStorageRecords = Object.values(
+        this.selectedStorageMap
+      ).filter(Boolean);
+    },
+
+    restoreSelection() {
+      if (this.isRestoringSelection) return;
+      if (!this.$refs.storageTable) return;
+      if (!this.StorageList || !this.StorageList.length) return;
+
+      this.isRestoringSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.StorageList.forEach((row) => {
+            const id = row && row.id;
+            if (!id) return;
+            if (this.selectedStorageMap[id]) {
+              this.$refs.storageTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringSelection = false;
+        }
+      });
     },
     /** 新增按钮操作*/
     handleAdd(row) {
@@ -875,154 +1046,290 @@ export default {
       }
       this.getList();
     },
-    /** 修改按钮操作 ,该函数可以优化，没有必要从服务端获取数据。查询到的所有记录都缓存在了前端*/
+    /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
       this.firstLoad = true;
-      const StorageId = row.id || this.StorageIds;
-      getEquipmentStorage(StorageId).then((response) => {
-        this.form = response.data;
-        this.form.status = String(this.form.status);
-        this.title = "修改存储";
-        this.isEdit = true;
-        this.open = true;
-      });
+      // 使用对象展开运算符创建新对象
+      if (row && row.id !== undefined) {
+        this.form = { ...row };
+      } else {
+        this.form = this.selectedStorageRecords[0]
+          ? { ...this.selectedStorageRecords[0] }
+          : {};
+      }
+      this.title = "修改存储";
+      this.isEdit = true;
+      this.open = true;
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      this.AttributeValueList = [];
-      Object.keys(row).forEach((key) => {
-        const attributeValue = {
-          AttributeName: this.ColumnNameConvert.get(key),
-          Value: row[key],
-        };
-        this.AttributeValueList.push(attributeValue);
-      });
-      this.AttributeValueConfigList = [];
-      getEquipmentStorageConfig(row.id).then((response) => {
-        Object.keys(response.data).forEach((key) => {
-          const attributeValue = {
-            AttributeName: this.ColumnNameConfigConvert.get(key),
-            Value: response.data[key],
-          };
-          this.AttributeValueConfigList.push(attributeValue);
-        });
-      });
-      this.ViewOpen = true;
-      this.title = "";
+      this.viewData = row;
+      this.viewOpen = true;
     },
     /** 提交按钮 */
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.status = parseInt(this.form.status);
           if (this.form.id !== undefined) {
-            updateEquipmentStorage(this.form, this.form.id).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
-              } else {
-                this.msgError(response.msg);
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在修改存储...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            updateEquipmentStorage(this.form, this.form.id)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(1000);
+                  this.selectedStorageMap = {};
+                  this.selectedStorageRecords = [];
+                  this.getList();
+                  this.msgSuccess(response.msg);
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg);
+                }
+              })
+              .catch((error) => {
+                this.msgError("修改存储失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           } else {
-            addEquipmentStorage(this.form).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
-              } else {
-                this.msgError(response.msg);
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在创建存储...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            addEquipmentStorage(this.form)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(1000);
+                  this.getList();
+                  this.msgSuccess(response.msg);
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg);
+                }
+              })
+              .catch((error) => {
+                this.msgError("新增存储失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           }
         }
       });
     },
 
-    handleDelete(row) {
-      const StorageId = (row.id && [row.id]) || this.StorageIds;
-      this.$confirm(
-        '是否确认删除存储编号为"' + StorageId + '"的数据项?',
-        "警告",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
+    async handleDelete(row) {
+      try {
+        var storageIds = [];
+        var storageNos = [];
+        if (row && row.id !== undefined) {
+          storageIds = [row.id];
+          storageNos = [row.storageSiteNo];
+        } else {
+          storageIds = this.selectedStorageRecords.map((item) => item.id);
+          storageNos = this.selectedStorageRecords.map(
+            (item) => item.storageSiteNo
+          );
         }
-      )
-        .then(function () {
-          return delEquipmentStorage({ ids: StorageId });
-        })
-        .then((response) => {
+        await this.$confirm(
+          '是否确认删除存储编号为"' + storageNos + '"的数据项?',
+          "信息",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "info",
+          }
+        );
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在删除存储...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+        const response = await delEquipmentStorage({ ids: storageIds });
+        if (response.code === 200) {
+          await this.delay(1000);
+          this.selectedStorageMap = {};
+          this.selectedStorageRecords = [];
           this.getList();
-          this.msgSuccess(response.msg);
-        })
-        .catch(function () {});
+          this.msgSuccess(response.msg || "删除存储成功");
+        } else {
+          this.msgError(response.msg || "删除存储失败");
+        }
+        // 恢复鼠标状态
+        document.body.style.cursor = previousCursor;
+        loadingInstance.close();
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("删除存储失败：" + (error.message || "未知错误"));
+        }
+      }
+    },
+
+    normalizeQueryParams(params = {}) {
+      const query = { ...params };
+      Object.keys(query).forEach((key) => {
+        const value = query[key];
+        if (value === "" || value === null || value === undefined) {
+          delete query[key];
+        }
+      });
+      return query;
     },
 
     /** 导出按钮操作 */
     handleExport() {
-      this.$confirm("是否确认导出所有存储数据项?", "警告", {
+      const hasSelection =
+        Array.isArray(this.selectedStorageRecords) &&
+        this.selectedStorageRecords.length > 0;
+
+      const confirmText = hasSelection
+        ? `是否确认导出已勾选的 ${this.selectedStorageRecords.length} 条存储数据？`
+        : "是否确认导出所有存储数据项？";
+
+      this.$confirm(confirmText, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        type: "warning",
-      }).then(() => {
-        this.downloadLoading = true;
-        import("@/vendor/Export2Excel").then((excel) => {
-          const tHeader = [
-            "主键ID",
-            "编号",
-            "名称",
-            "IP地址",
-            "播放地址",
-            "详细地址",
-            "密钥",
-            "管理员",
-            "CPU",
-            "内存",
-            "存储",
-            "购置时间",
-            "操作系统",
-            "版本号",
-            "备注",
-            "品牌名称",
-            "归属单位",
-            "状态",
-          ];
-          const filterVal = [
-            "id",
-            "storageSiteNo",
-            "storageSiteName",
-            "storageSiteIp",
-            "storageSiteUrl",
-            "address",
-            "authKey",
-            "managerName",
-            "cpu",
-            "memory",
-            "disk",
-            "purchaseDate",
-            "system",
-            "version",
-            "remark",
-            "brandName",
-            "managerOrgFullName",
-            "status",
-          ];
-          const list = this.StorageList;
-          const data = formatJson(filterVal, list);
-          excel.export_json_to_excel({
-            header: tHeader,
-            data,
-            filename: "存储列表",
-            autoWidth: true, // Optional
-            bookType: "xlsx", // Optional
+        type: "info",
+      })
+        .then(async () => {
+          const loadingInstance = this.$loading({
+            lock: true,
+            text: "正在导出...",
+            spinner: "el-icon-loading",
+            background: "rgba(0, 0, 0, 0.3)",
           });
-          this.downloadLoading = false;
-        });
-      });
+
+          try {
+            const columnOptions = Array.isArray(this.columnOptions)
+              ? this.columnOptions
+              : [];
+            const visibleColumns = Array.isArray(this.visibleColumns)
+              ? this.visibleColumns
+              : [];
+            const exportColumns = columnOptions.filter((c) =>
+              visibleColumns.includes(c.prop)
+            );
+
+            if (!exportColumns.length) {
+              this.msgError("当前未选择任何可导出的列");
+              return;
+            }
+
+            const tHeader = exportColumns.map((c) => c.label);
+            const filterVal = exportColumns.map((c) => c.field || c.prop);
+
+            let list = [];
+            if (hasSelection) {
+              list = this.selectedStorageRecords;
+            } else {
+              const baseQueryParams = this.normalizeQueryParams(
+                this.queryParams || {}
+              );
+              const pageSize = 1000;
+              let pageIndex = 1;
+              let total = Infinity;
+
+              while (list.length < total) {
+                const query = {
+                  ...baseQueryParams,
+                  pageIndex,
+                  pageSize,
+                };
+                const resp = await listEquipmentStorage(query);
+                if (!resp || resp.code !== 200) {
+                  throw new Error((resp && resp.msg) || "查询存储列表失败");
+                }
+
+                const pageList = (resp.data && resp.data.list) || [];
+                total = (resp.data && resp.data.count) || 0;
+                list = list.concat(pageList);
+
+                if (!pageList.length) {
+                  break;
+                }
+                pageIndex += 1;
+              }
+            }
+
+            const formatDateTime = (value) => {
+              if (!value) return "-";
+              try {
+                return this.parseTime ? this.parseTime(value) : value;
+              } catch (error) {
+                return value;
+              }
+            };
+
+            const formatStatus = (value) => {
+              const option = (this.stateOptions || []).find(
+                (item) => String(item.value) === String(value)
+              );
+              return option ? option.label : value;
+            };
+
+            const formatOpenStatus = (value) => {
+              const option = (this.openStatusOptions || []).find(
+                (item) => String(item.value) === String(value)
+              );
+              return option ? option.label : value;
+            };
+
+            const normalizeList = (Array.isArray(list) ? list : []).map(
+              (row) => {
+                const output = { ...row };
+                output.status = formatStatus(row.status);
+                output.openStatus = formatOpenStatus(row.openStatus);
+                output.purchaseDate = formatDateTime(row.purchaseDate);
+                return output;
+              }
+            );
+
+            const data = formatJson(filterVal, normalizeList);
+
+            const excel = await import("@/vendor/Export2Excel");
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: "存储列表",
+              autoWidth: true,
+              bookType: "xlsx",
+            });
+          } catch (error) {
+            console.error("[StorageManage] 导出失败:", error);
+            this.msgError(error.message || "导出失败");
+          } finally {
+            loadingInstance.close();
+          }
+        })
+        .catch(() => {});
+    },
+
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
     },
   },
 };

@@ -29,7 +29,7 @@
               style="width: 170px"
             />
           </el-form-item>
-          <el-form-item label="管理人员">
+          <el-form-item label="管理人员" prop="managerId">
             <el-select
               v-model="queryParams.managerId"
               placeholder="请选择管理人员"
@@ -45,6 +45,21 @@
               />
             </el-select>
           </el-form-item>
+          <el-form-item label="品牌" prop="brandId">
+            <el-select
+              v-model="queryParams.brandId"
+              placeholder="请选择品牌"
+              style="width: 170px"
+              clearable
+            >
+              <el-option
+                v-for="item in brandOptions"
+                :key="item.id"
+                :label="item.brandName"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
           <el-form-item label="状态" prop="status">
             <el-select
               v-model="queryParams.status"
@@ -53,22 +68,13 @@
               style="width: 170px"
             >
               <el-option
-                v-for="dict in stateOptions"
+                v-for="dict in statusOptions"
                 :key="dict.value"
                 :label="dict.label"
                 :value="dict.value"
                 style="width: 150px"
               />
             </el-select>
-          </el-form-item>
-          <el-form-item label="品牌名称" prop="brandName">
-            <el-input
-              v-model="queryParams.brandName"
-              placeholder="请输入品牌名称"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
           </el-form-item>
           <el-form-item>
             <el-button
@@ -103,7 +109,7 @@
                   type="success"
                   icon="el-icon-edit"
                   size="mini"
-                  :disabled="single"
+                  :disabled="selectedTrialRecords.length !== 1"
                   @click="handleUpdate"
                   >修改</el-button
                 >
@@ -114,7 +120,7 @@
                   type="danger"
                   icon="el-icon-delete"
                   size="mini"
-                  :disabled="multiple"
+                  :disabled="selectedTrialRecords.length === 0"
                   @click="handleDelete"
                   >删除</el-button
                 >
@@ -163,6 +169,7 @@
         </el-row>
 
         <el-table
+          ref="trialTable"
           v-loading="loading"
           :data="equipmentTrialList"
           border
@@ -284,7 +291,11 @@
             <template slot-scope="scope">
               <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
                 否则为 'success'（通常显示为绿色）。-->
-              <el-tag disable-transitions>{{ StateFormat(scope.row) }}</el-tag>
+              <el-tag
+                :type="scope.row.status === 1 ? 'success' : 'danger'"
+                disable-transitions
+                >{{ StateFormat(scope.row) }}</el-tag
+              >
             </template>
           </el-table-column>
           <el-table-column
@@ -359,6 +370,18 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
                   <el-input v-model="form.trialName" placeholder="请输入名称" />
                 </el-form-item>
               </el-col>
+              <el-col :span="12">
+                <el-form-item label="品牌">
+                  <el-select v-model="form.brandId" placeholder="请选择">
+                    <el-option
+                      v-for="item in brandOptions"
+                      :key="item.id"
+                      :label="item.brandName"
+                      :value="item.id"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
             </el-row>
 
             <!-- 网络信息 -->
@@ -379,7 +402,10 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
             <el-row :gutter="20">
               <el-col :span="24">
                 <el-form-item label="播放地址" prop="trialUrl">
-                  <el-input v-model="form.trialUrl" placeholder="请输入播放地址" />
+                  <el-input
+                    v-model="form.trialUrl"
+                    placeholder="请输入播放地址"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="24">
@@ -396,14 +422,6 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
                   <el-input v-model="form.version" placeholder="请输入版本号" />
                 </el-form-item>
               </el-col>
-              <el-col :span="12">
-                <el-form-item label="品牌名称" prop="brandName">
-                  <el-input
-                    v-model="form.brandName"
-                    placeholder="请输入品牌名称"
-                  />
-                </el-form-item>
-              </el-col>
             </el-row>
 
             <!-- 状态与备注 -->
@@ -418,6 +436,17 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
                       >{{ dict.label }}</el-radio
                     >
                   </el-radio-group>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="购置时间" label-width="100px">
+                  <el-date-picker
+                    v-model="form.purchaseDate"
+                    type="datetime"
+                    placeholder="选择购置时间"
+                    value-format="yyyy-MM-ddTHH:mm:ssZ"
+                    class="full-width"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="24">
@@ -438,27 +467,57 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
           </div>
         </el-dialog>
 
-        <!--显示详情-->
+        <!-- 浏览试验场对话框 -->
         <el-dialog
-          :title="title"
-          :visible.sync="ViewOpen"
-          width="593px"
-          :close-on-click-modal="false"
+          title="浏览试验场"
+          :visible.sync="viewOpen"
+          width="800px"
+          append-to-body
         >
-          <el-table v-loading="loading" :data="AttributeValueList" border>
-            <el-table-column
-              prop="AttributeName"
-              label="属性"
-              width="100"
-              align="center"
-            />
-            <el-table-column
-              prop="Value"
-              label="值"
-              width="450"
-              align="center"
-            />
-          </el-table>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="试验场编号">{{
+              viewData.trialNo || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="试验场名称">{{
+              viewData.trialName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="品牌">{{
+              viewData.brandName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="管理组织">{{
+              viewData.managerOrgFullName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="管理人员">{{
+              viewData.managerName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="状态">{{
+              selectDictLabel(statusOptions, viewData.status) || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="IP 地址">{{
+              viewData.trialIp || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="播放地址">{{
+              viewData.trialUrl || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="密钥">{{
+              viewData.authKey || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="物理地址" :span="2">{{
+              viewData.address || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="版本号">{{
+              viewData.version || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="购置时间">{{
+              viewData.purchaseDate ? parseTime(viewData.purchaseDate) : "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="备注" :span="2">{{
+              viewData.remark || "无"
+            }}</el-descriptions-item>
+          </el-descriptions>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="viewOpen = false">关 闭</el-button>
+          </div>
         </el-dialog>
       </el-card>
     </template>
@@ -472,6 +531,7 @@ import {
   delEquipmentTrial,
   addEquipmentTrial,
   updateEquipmentTrial,
+  listEquipmentBrand,
 } from "@/api/admin/equipment_manage_api";
 import { formatJson } from "@/utils";
 import { orgTreeSelect } from "@/api/admin/sys-org";
@@ -488,10 +548,11 @@ export default {
       firstLoad: null,
       // 选中数组
       trialIds: [],
-      // 非单个禁用
-      single: true,
-      // 非多个禁用
-      multiple: true,
+      selectedTrialRecords: [],
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedTrialMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringSelection: false,
       // 总条数
       total: 0,
       // 角色表格数据
@@ -521,11 +582,13 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
-      ViewOpen: false,
+      viewOpen: false,
+      // 浏览数据
+      viewData: {},
       // 组织树选项
       orgOptions: undefined,
       userOptions: undefined,
-      AttributeValueList: [],
+      brandOptions: undefined,
       // 是否显示弹出层（数据权限）
       openDataScope: false,
       isEdit: false,
@@ -543,23 +606,9 @@ export default {
         managerId: undefined,
       },
       // 表单参数
-      form: {},
-      ColumnNameConvert: new Map([
-        ["id", "ID:"],
-        ["trialName", "名称:"],
-        ["trialNo", "编号:"],
-        ["trialIp", "IP:"],
-        ["address", "地址:"],
-        ["trialUrl", "播放地址:"],
-        ["authKey", "密钥:"],
-        ["managerName", "管理员:"],
-        ["managerOrgFullName", "归属单位:"],
-        ["purchaseDate", "购置时间:"],
-        ["version", "版本号:"],
-        ["status", "状态:"],
-        ["remark", "备注:"],
-        ["brandName", "品牌名称:"],
-      ]),
+      form: {
+        status: undefined,
+      },
       defaultProps: {
         children: "children",
         label: "label",
@@ -567,7 +616,9 @@ export default {
       // 表单校验
       rules: {
         trialNo: [{ required: true, message: "编号不能为空", trigger: "blur" }],
-        trialName: [{ required: true, message: "名称不能为空", trigger: "blur" }],
+        trialName: [
+          { required: true, message: "名称不能为空", trigger: "blur" },
+        ],
       },
     };
   },
@@ -594,6 +645,7 @@ export default {
   created() {
     this.getList();
     this.getTreeselect();
+    this.getFormBrand();
     this.getDicts("trial_status").then((response) => {
       this.statusOptions = response.data;
     });
@@ -638,11 +690,28 @@ export default {
     /** 查询trial列表 */
     getList() {
       this.loading = true;
-      listEquipmentTrial(this.queryParams).then((response) => {
-        this.equipmentTrialList = response.data.list;
-        this.total = response.data.count;
-        this.loading = false;
-      });
+      const query = this.normalizeQueryParams(this.queryParams);
+      listEquipmentTrial(query)
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.equipmentTrialList = response.data.list;
+            this.total = response.data.count;
+            // 分页/查询后回显跨分页选择
+            this.restoreSelection();
+          } else {
+            this.equipmentTrialList = [];
+            this.total = 0;
+            this.msgError(response.msg || "获取trial列表失败");
+          }
+        })
+        .catch((error) => {
+          this.equipmentTrialList = [];
+          this.total = 0;
+          this.msgError("获取trial列表失败：" + (error.message || "未知错误"));
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
     // 取消按钮
     cancel() {
@@ -664,13 +733,14 @@ export default {
         version: undefined,
         remark: undefined,
         brandName: undefined,
-        status: "1",
+        brandId: undefined,
+        status: undefined,
       };
       this.resetForm("form");
     },
     // 字典翻译
     StateFormat(row) {
-      return this.selectDictLabel(this.statusOptions, parseInt(row.status));
+      return this.selectDictLabel(this.statusOptions, row.status);
     },
     /** 查询组织下拉树结构 */
     getTreeselect() {
@@ -684,6 +754,12 @@ export default {
           this.userOptions = response.data.list;
         }
       );
+    },
+
+    getFormBrand() {
+      listEquipmentBrand().then((response) => {
+        this.brandOptions = response.data.list;
+      });
     },
 
     getQueryUser() {
@@ -705,9 +781,47 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.trialIds = selection.map((item) => item.id);
-      this.single = selection.length !== 1;
-      this.multiple = !selection.length;
+      if (this.isRestoringSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      );
+
+      (this.equipmentTrialList || []).forEach((row) => {
+        const id = row && row.id;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedTrialMap[id] = row;
+        } else {
+          delete this.selectedTrialMap[id];
+        }
+      });
+      this.selectedTrialRecords = Object.values(this.selectedTrialMap).filter(
+        Boolean
+      );
+    },
+
+    restoreSelection() {
+      if (this.isRestoringSelection) return;
+      if (!this.$refs.trialTable) return;
+      if (!this.equipmentTrialList || !this.equipmentTrialList.length) return;
+
+      this.isRestoringSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.equipmentTrialList.forEach((row) => {
+            const id = row && row.id;
+            if (!id) return;
+            if (this.selectedTrialMap[id]) {
+              this.$refs.trialTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringSelection = false;
+        }
+      });
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -733,131 +847,274 @@ export default {
     handleUpdate(row) {
       this.reset();
       this.firstLoad = true;
-      const trialId = row.id || this.trialIds;
-      getEquipmentTrial(trialId).then((response) => {
-        this.form = response.data;
-        this.form.status = String(this.form.status);
-        this.title = "修改场地";
-        this.isEdit = true;
-        this.open = true;
-      });
+      // 使用对象展开运算符创建新对象
+      if (row && row.id !== undefined) {
+        this.form = { ...row };
+      } else {
+        this.form = this.selectedTrialRecords[0]
+          ? { ...this.selectedTrialRecords[0] }
+          : {};
+      }
+      this.title = "修改场地";
+      this.isEdit = true;
+      this.open = true;
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      this.AttributeValueList = [];
-      Object.keys(row).forEach((key) => {
-        const attributeValue = {
-          AttributeName: this.ColumnNameConvert.get(key),
-          Value: row[key],
-        };
-        this.AttributeValueList.push(attributeValue);
-      });
-      this.ViewOpen = true;
-      this.title = "场地信息";
+      this.viewData = row;
+      this.viewOpen = true;
     },
     /** 提交按钮 */
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.status = parseInt(this.form.status);
           if (this.form.id !== undefined) {
-            updateEquipmentTrial(this.form, this.form.id).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
-              } else {
-                this.msgError(response.msg);
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在修改场地...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            updateEquipmentTrial(this.form, this.form.id)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(1000);
+                  this.selectedTrialMap = {};
+                  this.selectedTrialRecords = [];
+                  this.getList();
+                  this.msgSuccess(response.msg);
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg);
+                }
+              })
+              .catch((error) => {
+                this.msgError("修改场地失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           } else {
-            addEquipmentTrial(this.form).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
-              } else {
-                this.msgError(response.msg);
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在创建场地...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            addEquipmentTrial(this.form)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(1000);
+                  this.getList();
+                  this.msgSuccess(response.msg);
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg);
+                }
+              })
+              .catch((error) => {
+                this.msgError("新增场地失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           }
         }
       });
     },
-    /** 删除按钮操作
-     * row.Id && [row.Id]，用于根据条件设置roleIds变量的值。如果row.Id存在且不为null或undefined，则roleIds为[row.Id]，否则roleIds为this.ids的值。
-     */
-    handleDelete(row) {
-      const trialIds = (row.id && [row.id]) || this.trialIds;
-      this.$confirm(
-        '是否确认删除场地编号为"' + trialIds + '"的数据项?',
-        "警告",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
+    /** 删除按钮操作 */
+    async handleDelete(row) {
+      try {
+        var trialIds = [];
+        var trialNos = [];
+        if (row && row.id !== undefined) {
+          trialIds = [row.id];
+          trialNos = [row.trialNo];
+        } else {
+          trialIds = this.selectedTrialRecords.map((item) => item.id);
+          trialNos = this.selectedTrialRecords.map((item) => item.trialNo);
         }
-      )
-        .then(function () {
-          return delEquipmentTrial({ ids: trialIds });
-        })
-        .then((response) => {
+        await this.$confirm(
+          '是否确认删除场地编号为"' + trialNos + '"的数据项?',
+          "信息",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "info",
+          }
+        );
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在删除场地...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+        const response = await delEquipmentTrial({ ids: trialIds });
+        if (response.code === 200) {
+          await this.delay(1000);
+          this.selectedTrialMap = {};
+          this.selectedTrialRecords = [];
           this.getList();
-          this.msgSuccess(response.msg);
-        })
-        .catch(function () {});
+          this.msgSuccess(response.msg || "删除场地成功");
+        } else {
+          this.msgError(response.msg || "删除场地失败");
+        }
+        // 恢复鼠标状态
+        document.body.style.cursor = previousCursor;
+        loadingInstance.close();
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("删除场地失败：" + (error.message || "未知错误"));
+        }
+      }
+    },
+    normalizeQueryParams(params = {}) {
+      const query = { ...params };
+      Object.keys(query).forEach((key) => {
+        const value = query[key];
+        if (value === "" || value === null || value === undefined) {
+          delete query[key];
+        }
+      });
+      return query;
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.$confirm("是否确认导出所有场地数据项?", "警告", {
+      const hasSelection =
+        Array.isArray(this.selectedTrialRecords) &&
+        this.selectedTrialRecords.length > 0;
+
+      const confirmText = hasSelection
+        ? `是否确认导出已勾选的 ${this.selectedTrialRecords.length} 条场地数据？`
+        : "是否确认导出所有场地数据项？";
+
+      this.$confirm(confirmText, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        type: "warning",
-      }).then(() => {
-        this.downloadLoading = true;
-        import("@/vendor/Export2Excel").then((excel) => {
-          const tHeader = [
-            "编号",
-            "名称",
-            "IP",
-            "地址",
-            "播放地址",
-            "密钥",
-            "管理员",
-            "归属单位",
-            "购置时间",
-            "版本号",
-            "状态",
-            "备注",
-            "品牌名称",
-          ];
-          const filterVal = [
-            "trialNo",
-            "trialName",
-            "trialIp",
-            "address",
-            "trialUrl",
-            "authKey",
-            "managerName",
-            "managerOrgFullName",
-            "purchaseDate",
-            "version",
-            "status",
-            "remark",
-            "brandName",
-          ];
-          const list = this.equipmentTrialList;
-          const data = formatJson(filterVal, list);
-          excel.export_json_to_excel({
-            header: tHeader,
-            data,
-            filename: "场地列表",
-            autoWidth: true, // Optional
-            bookType: "xlsx", // Optional
+        type: "info",
+      })
+        .then(async () => {
+          const loadingInstance = this.$loading({
+            lock: true,
+            text: "正在导出...",
+            spinner: "el-icon-loading",
+            background: "rgba(0, 0, 0, 0.3)",
           });
-          this.downloadLoading = false;
-        });
-      });
+
+          try {
+            const columnOptions = Array.isArray(this.columnOptions)
+              ? this.columnOptions
+              : [];
+            const visibleColumns = Array.isArray(this.visibleColumns)
+              ? this.visibleColumns
+              : [];
+            const exportColumns = columnOptions.filter((c) =>
+              visibleColumns.includes(c.prop)
+            );
+
+            if (!exportColumns.length) {
+              this.msgError("当前未选择任何可导出的列");
+              return;
+            }
+
+            const tHeader = exportColumns.map((c) => c.label);
+            const filterVal = exportColumns.map((c) => c.field || c.prop);
+
+            let list = [];
+            if (hasSelection) {
+              list = this.selectedTrialRecords;
+            } else {
+              const baseQueryParams = this.normalizeQueryParams(
+                this.queryParams || {}
+              );
+              const pageSize = 1000;
+              let pageIndex = 1;
+              let total = Infinity;
+
+              while (list.length < total) {
+                const query = {
+                  ...baseQueryParams,
+                  pageIndex,
+                  pageSize,
+                };
+                const resp = await listEquipmentTrial(query);
+                if (!resp || resp.code !== 200) {
+                  throw new Error((resp && resp.msg) || "查询场地列表失败");
+                }
+
+                const pageList = (resp.data && resp.data.list) || [];
+                total = (resp.data && resp.data.count) || 0;
+                list = list.concat(pageList);
+
+                if (!pageList.length) {
+                  break;
+                }
+                pageIndex += 1;
+              }
+            }
+
+            const formatDateTime = (value) => {
+              if (!value) return "-";
+              try {
+                return this.parseTime ? this.parseTime(value) : value;
+              } catch (error) {
+                return value;
+              }
+            };
+
+            const formatStatus = (value) => {
+              const option = (this.statusOptions || []).find(
+                (item) => String(item.value) === String(value)
+              );
+              return option ? option.label : value;
+            };
+
+            const normalizeList = (Array.isArray(list) ? list : []).map(
+              (row) => {
+                const output = { ...row };
+                output.status = formatStatus(row.status);
+                output.purchaseDate = formatDateTime(row.purchaseDate);
+                return output;
+              }
+            );
+
+            const data = formatJson(filterVal, normalizeList);
+
+            const excel = await import("@/vendor/Export2Excel");
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: "场地列表",
+              autoWidth: true,
+              bookType: "xlsx",
+            });
+          } catch (error) {
+            console.error("[TrialManage] 导出失败:", error);
+            this.msgError(error.message || "导出失败");
+          } finally {
+            loadingInstance.close();
+          }
+        })
+        .catch(() => {});
+    },
+
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
     },
   },
 };

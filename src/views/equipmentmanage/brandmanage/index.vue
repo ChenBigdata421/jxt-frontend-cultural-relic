@@ -3,9 +3,9 @@
     <template #wrapper>
       <el-card class="box-card">
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="名称" prop="name">
+          <el-form-item label="名称" prop="brandName">
             <el-input
-              v-model="queryParams.name"
+              v-model="queryParams.brandName"
               placeholder="请输入品牌名称"
               clearable
               size="small"
@@ -81,7 +81,7 @@
               type="success"
               icon="el-icon-edit"
               size="mini"
-              :disabled="UpdateDisabled"
+              :disabled="selectedBrandRecords.length !== 1"
               @click="handleUpdate"
               >修改</el-button
             >
@@ -92,7 +92,7 @@
               type="danger"
               icon="el-icon-delete"
               size="mini"
-              :disabled="DeleteDisabled"
+              :disabled="selectedBrandRecords.length === 0"
               @click="handleDelete"
               >删除</el-button
             >
@@ -110,6 +110,7 @@
         </el-row>
 
         <el-table
+          ref="brandTable"
           v-loading="loading"
           :data="equipmentBrandList"
           border
@@ -143,7 +144,6 @@
               >
             </template>
           </el-table-column>
-          <el-table-column label="ID" prop="id" width="100" />
           <el-table-column
             label="名称"
             prop="brandName"
@@ -156,14 +156,17 @@
             min-width="140"
             :show-overflow-tooltip="true"
           />
-          <el-table-column label="状态" width="100">
+          <el-table-column prop="state" label="状态" width="100">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
               <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
                 否则为 'success'（通常显示为绿色）。-->
-              <el-tag disable-transitions title="状态">{{
-                StateFormat(scope.row)
-              }}</el-tag>
+              <el-tag
+                :type="scope.row.state === 1 ? 'success' : 'danger'"
+                disable-transitions
+                title="状态"
+                >{{ StateFormat(scope.row) }}</el-tag
+              >
             </template>
           </el-table-column>
           <el-table-column
@@ -254,12 +257,14 @@ export default {
     return {
       // 遮罩层
       loading: true,
+      firstLoad: null,
       // 选中数组
       BrandIds: [],
-      // 可否修改
-      UpdateDisabled: true,
-      // 可否删除
-      DeleteDisabled: true,
+      selectedBrandRecords: [],
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedBrandMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringSelection: false,
       // 总条数
       total: 0,
       // 角色表格数据
@@ -275,12 +280,14 @@ export default {
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
-        name: undefined,
+        brandName: undefined,
         hardware: undefined,
         state: undefined,
       },
       // 表单参数
-      form: {},
+      form: {
+        state: undefined,
+      },
       // 表单校验
       rules: {},
     };
@@ -292,14 +299,31 @@ export default {
     });
   },
   methods: {
-    /** 查询trial列表 */
+    /** 查询品牌列表 */
     getList() {
       this.loading = true;
-      listEquipmentBrand(this.queryParams).then((response) => {
-        this.equipmentBrandList = response.data.list;
-        this.total = response.data.count;
-        this.loading = false;
-      });
+      const query = this.normalizeQueryParams(this.queryParams);
+      listEquipmentBrand(query)
+        .then((response) => {
+          if (response.code == 200 && response.data) {
+            this.equipmentBrandList = response.data.list;
+            this.total = response.data.count;
+            // 分页/查询后回显跨分页选择
+            this.restoreSelection();
+          } else {
+            this.equipmentBrandList = [];
+            this.total = 0;
+            this.msgError(response.msg || "获取品牌列表失败");
+          }
+        })
+        .catch((error) => {
+          this.equipmentBrandList = [];
+          this.total = 0;
+          this.msgError("获取品牌列表失败：" + (error.message || "未知错误"));
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
     // 取消按钮
     cancel() {
@@ -311,13 +335,13 @@ export default {
       this.form = {
         brandName: undefined,
         hardware: undefined,
-        state: "1",
+        state: undefined,
       };
       this.resetForm("form");
     },
     // 字典翻译
     StateFormat(row) {
-      return this.selectDictLabel(this.statusOptions, parseInt(row.state));
+      return this.selectDictLabel(this.statusOptions, row.state);
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -331,9 +355,47 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.BrandIds = selection.map((item) => item.id);
-      this.UpdateDisabled = selection.length !== 1;
-      this.DeleteDisabled = !selection.length;
+      if (this.isRestoringSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      );
+
+      (this.equipmentBrandList || []).forEach((row) => {
+        const id = row && row.id;
+        if (!id) return;
+        if (selectedIdSet.has(id)) {
+          this.selectedBrandMap[id] = row;
+        } else {
+          delete this.selectedBrandMap[id];
+        }
+      });
+      this.selectedBrandRecords = Object.values(this.selectedBrandMap).filter(
+        Boolean
+      );
+    },
+
+    restoreSelection() {
+      if (this.isRestoringSelection) return;
+      if (!this.$refs.brandTable) return;
+      if (!this.equipmentBrandList || !this.equipmentBrandList.length) return;
+
+      this.isRestoringSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.equipmentBrandList.forEach((row) => {
+            const id = row && row.id;
+            if (!id) return;
+            if (this.selectedBrandMap[id]) {
+              this.$refs.brandTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringSelection = false;
+        }
+      });
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -358,104 +420,268 @@ export default {
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const BrandIds = row.id || this.BrandIds;
-      getEquipmentBrand(BrandIds).then((response) => {
-        this.form = response.data;
-        this.form.state = String(this.form.state);
-        this.title = "修改品牌";
-        this.isEdit = true;
-        this.open = true;
-      });
+      this.firstLoad = true;
+      // 使用对象展开运算符创建新对象
+      if (row && row.id !== undefined) {
+        this.form = { ...row };
+      } else {
+        this.form = this.selectedBrandRecords[0]
+          ? { ...this.selectedBrandRecords[0] }
+          : {};
+      }
+      this.title = "修改品牌";
+      this.isEdit = true;
+      this.open = true;
     },
     /** 提交按钮 */
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          this.form.state = parseInt(this.form.state);
           if (this.form.id !== undefined) {
-            updateEquipmentBrand(this.form, this.form.id).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
-              } else {
-                this.msgError(response.msg);
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在修改品牌...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            updateEquipmentBrand(this.form, this.form.id)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(1000);
+                  this.selectedBrandMap = {};
+                  this.selectedBrandRecords = [];
+                  this.getList();
+                  this.msgSuccess(response.msg);
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg);
+                }
+              })
+              .catch((error) => {
+                this.msgError("修改品牌失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           } else {
-            addEquipmentBrand(this.form).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
-              } else {
-                this.msgError(response.msg);
-              }
+            // 鼠标切换为等待状态
+            const previousCursor = document.body.style.cursor;
+            document.body.style.cursor = "wait";
+            const loadingInstance = this.$loading({
+              lock: true,
+              text: "正在创建品牌...",
+              spinner: "el-icon-loading",
+              background: "rgba(0, 0, 0, 0.3)",
             });
+            addEquipmentBrand(this.form)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  await this.delay(1000);
+                  this.getList();
+                  this.msgSuccess(response.msg);
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg);
+                }
+              })
+              .catch((error) => {
+                this.msgError("新增品牌失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                // 恢复鼠标状态
+                document.body.style.cursor = previousCursor;
+                loadingInstance.close();
+              });
           }
         }
       });
     },
-    /** 删除按钮操作
-     * row.Id && [row.Id]，用于根据条件设置roleIds变量的值。如果row.Id存在且不为null或undefined，则roleIds为[row.Id]，否则roleIds为this.ids的值。
-     */
-    handleDelete(row) {
-      const BrandIds = (row.id && [row.id]) || this.BrandIds;
-      this.$confirm(
-        '是否确认删除品牌编号为"' + BrandIds + '"的数据项?',
-        "警告",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
+    /** 删除按钮操作 */
+    async handleDelete(row) {
+      try {
+        var brandIds = [];
+        var brandNames = [];
+        if (row && row.id !== undefined) {
+          brandIds = [row.id];
+          brandNames = [row.brandName];
+        } else {
+          brandIds = this.selectedBrandRecords.map((item) => item.id);
+          brandNames = this.selectedBrandRecords.map((item) => item.brandName);
         }
-      )
-        .then(function () {
-          return delEquipmentBrand({ ids: BrandIds });
-        })
-        .then((response) => {
+        await this.$confirm(
+          '是否确认删除品牌"' + brandNames + '"的数据项?',
+          "信息",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "info",
+          }
+        );
+        // 鼠标切换为等待状态
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "wait";
+
+        const loadingInstance = this.$loading({
+          lock: true,
+          text: "正在删除品牌...",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.3)",
+        });
+        const response = await delEquipmentBrand({ ids: brandIds });
+        if (response.code === 200) {
+          await this.delay(1000);
+          this.selectedBrandMap = {};
+          this.selectedBrandRecords = [];
           this.getList();
-          this.msgSuccess(response.msg);
-        })
-        .catch(function () {});
+          this.msgSuccess(response.msg || "删除品牌成功");
+        } else {
+          this.msgError(response.msg || "删除品牌失败");
+        }
+        // 恢复鼠标状态
+        document.body.style.cursor = previousCursor;
+        loadingInstance.close();
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("删除品牌失败：" + (error.message || "未知错误"));
+        }
+      }
+    },
+    normalizeQueryParams(params = {}) {
+      const query = { ...params };
+      Object.keys(query).forEach((key) => {
+        const value = query[key];
+        if (value === "" || value === null || value === undefined) {
+          delete query[key];
+        }
+      });
+      return query;
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.$confirm("是否确认导出所有品牌数据项?", "警告", {
+      const hasSelection =
+        Array.isArray(this.selectedBrandRecords) &&
+        this.selectedBrandRecords.length > 0;
+
+      const confirmText = hasSelection
+        ? `是否确认导出已勾选的 ${this.selectedBrandRecords.length} 条品牌数据？`
+        : "是否确认导出所有品牌数据项？";
+
+      this.$confirm(confirmText, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        type: "warning",
-      }).then(() => {
-        this.downloadLoading = true;
-        import("@/vendor/Export2Excel").then((excel) => {
-          const tHeader = [
-            "ID",
-            "名称",
-            "硬件设备",
-            "状态",
-            "创建时间",
-            "更新时间",
-          ];
-          const filterVal = [
-            "id",
-            "brandName",
-            "hardware",
-            "state",
-            "createdAt",
-            "updatedAt",
-          ];
-          const list = this.equipmentBrandList;
-          const data = formatJson(filterVal, list);
-          excel.export_json_to_excel({
-            header: tHeader,
-            data,
-            filename: "品牌列表",
-            autoWidth: true, // Optional
-            bookType: "xlsx", // Optional
+        type: "info",
+      })
+        .then(async () => {
+          const loadingInstance = this.$loading({
+            lock: true,
+            text: "正在导出...",
+            spinner: "el-icon-loading",
+            background: "rgba(0, 0, 0, 0.3)",
           });
-          this.downloadLoading = false;
-        });
-      });
+
+          try {
+            const tHeader = [
+              "名称",
+              "硬件设备",
+              "状态",
+              "创建时间",
+              "更新时间",
+            ];
+            const filterVal = [
+              "brandName",
+              "hardware",
+              "state",
+              "createdAt",
+              "updatedAt",
+            ];
+
+            let list = [];
+            if (hasSelection) {
+              list = this.selectedBrandRecords;
+            } else {
+              const baseQueryParams = this.normalizeQueryParams(
+                this.queryParams || {}
+              );
+              const pageSize = 1000;
+              let pageIndex = 1;
+              let total = Infinity;
+
+              while (list.length < total) {
+                const query = {
+                  ...baseQueryParams,
+                  pageIndex,
+                  pageSize,
+                };
+                const resp = await listEquipmentBrand(query);
+                if (!resp || resp.code !== 200) {
+                  throw new Error((resp && resp.msg) || "查询品牌列表失败");
+                }
+
+                const pageList = (resp.data && resp.data.list) || [];
+                total = (resp.data && resp.data.count) || 0;
+                list = list.concat(pageList);
+
+                if (!pageList.length) {
+                  break;
+                }
+                pageIndex += 1;
+              }
+            }
+
+            const formatDateTime = (value) => {
+              if (!value) return "-";
+              try {
+                return this.parseTime ? this.parseTime(value) : value;
+              } catch (error) {
+                return value;
+              }
+            };
+
+            const formatStatus = (value) => {
+              const option = (this.statusOptions || []).find(
+                (item) => String(item.value) === String(value)
+              );
+              return option ? option.label : value;
+            };
+
+            const normalizeList = (Array.isArray(list) ? list : []).map(
+              (row) => {
+                const output = { ...row };
+                output.state = formatStatus(row.state);
+                output.createdAt = formatDateTime(row.createdAt);
+                output.updatedAt = formatDateTime(row.updatedAt);
+                return output;
+              }
+            );
+
+            const data = formatJson(filterVal, normalizeList);
+
+            const excel = await import("@/vendor/Export2Excel");
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename: "品牌列表",
+              autoWidth: true,
+              bookType: "xlsx",
+            });
+          } catch (error) {
+            console.error("[BrandManage] 导出失败:", error);
+            this.msgError(error.message || "导出失败");
+          } finally {
+            loadingInstance.close();
+          }
+        })
+        .catch(() => {});
+    },
+
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
     },
   },
 };

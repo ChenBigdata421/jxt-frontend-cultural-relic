@@ -801,13 +801,27 @@ export default {
         }
       });
 
-      listCases(query).then((response) => {
-        this.caseList = response.data.list || [];
-        this.total = response.data.count || 0;
-        this.loading = false;
-        // 分页/查询后回显跨分页选择
-        this.restoreSelection();
-      });
+      listCases(query)
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.caseList = response.data.list || [];
+            this.total = response.data.count || 0;
+            // 分页/查询后回显跨分页选择
+            this.restoreSelection();
+          } else {
+            this.caseList = [];
+            this.total = 0;
+            this.msgError(response.msg || "获取案件列表失败");
+          }
+        })
+        .catch((error) => {
+          this.caseList = [];
+          this.total = 0;
+          this.msgError("获取案件列表失败:" + (error.message || "未知错误"));
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
     /** 获取组织树 */
     getOrgTree() {

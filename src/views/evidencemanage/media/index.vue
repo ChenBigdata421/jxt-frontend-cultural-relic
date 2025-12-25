@@ -555,7 +555,7 @@ import {
 import { getEnforcementTypeTree } from "@/api/admin/enforcementtype";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
-import { getEquipmentLawcameraList } from "@/api/admin/equipment_manage_api";
+import { getEquipmentBwcList } from "@/api/admin/equipment_manage_api";
 import {
   addArchive,
   batchAddArchiveMediaRelations,
@@ -1191,7 +1191,7 @@ export default {
     handleFormPoliceSelect(policeId) {
       if (policeId) {
         // 根据警员ID获取其管理的执法仪列表
-        getEquipmentLawcameraList({ managerId: policeId }).then((response) => {
+        getEquipmentBwcList({ managerId: policeId }).then((response) => {
           this.lawcameraOptions = response.data.list || [];
         });
         // 清空执法仪选择

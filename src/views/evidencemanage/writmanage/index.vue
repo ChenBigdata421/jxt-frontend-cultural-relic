@@ -827,16 +827,23 @@ export default {
       });
       listWrits(query)
         .then((response) => {
-          this.writList = response.data.list || [];
-          this.total = response.data.count || 0;
-          this.loading = false;
-          // 分页/查询后回显跨分页选择
-          this.restoreSelection();
+          if (response.code === 200 && response.data) {
+            this.writList = response.data.list || [];
+            this.total = response.data.count || 0;
+            // 分页/查询后回显跨分页选择
+            this.restoreSelection();
+          } else {
+            this.writList = [];
+            this.total = 0;
+            this.msgError(response.msg || "获取文书列表失败");
+          }
         })
         .catch((error) => {
           this.msgError("查询文书列表失败：" + (error.message || "未知错误"));
           this.writList = [];
           this.total = 0;
+        })
+        .finally(() => {
           this.loading = false;
         });
     },
@@ -965,15 +972,8 @@ export default {
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      const id = row.id;
-      getWrit(id)
-        .then((response) => {
-          this.viewData = response.data;
-          this.viewOpen = true;
-        })
-        .catch((error) => {
-          this.msgError("获取文书详情失败：" + (error.message || "未知错误"));
-        });
+      this.viewData = row;
+      this.viewOpen = true;
     },
     /** 提交按钮 */
     submitForm() {

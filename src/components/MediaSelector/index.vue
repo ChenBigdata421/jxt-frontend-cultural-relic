@@ -1048,32 +1048,23 @@ export default {
       });
       apiFunc(query)
         .then((response) => {
-          // 兼容不同的数据结构
-          if (Array.isArray(response.data)) {
-            // 情况1: response.data 直接是数组 (旧版API)
-            this.mediaList = response.data;
-            this.total = response.data.length;
-          } else if (response.data.list) {
-            // 情况2: response.data.list 是数组 (标准格式)
-            this.mediaList = response.data.list;
-            // 优先使用 count,其次 total,最后使用 list.length
-            this.total =
-              response.data.count ||
-              response.data.total ||
-              response.data.list.length;
+          if (response.code === 200 && response.data) {
+            this.mediaList = response.data.list || [];
+            this.total = response.data.count || 0;
+            // 分页/查询后回显跨分页选择
+            this.restoreSelection();
           } else {
-            // 情况3: 其他情况
             this.mediaList = [];
             this.total = 0;
+            this.msgError(response.msg || "查询媒体失败");
           }
-
-          this.loading = false;
-
-          // 分页/查询后回显跨分页选择
-          this.restoreSelection();
         })
         .catch((error) => {
+          this.mediaList = [];
+          this.total = 0;
           this.msgError("查询媒体失败：" + (error.message || "未知错误"));
+        })
+        .finally(() => {
           this.loading = false;
         });
     },

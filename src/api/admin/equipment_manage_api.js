@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 // 执法仪API
-export function getEquipmentLawcameraList(query) {
+export function getEquipmentBwcList(query) {
   return request({
     url: '/api/v1/equipment/bwc',
     method: 'get',
@@ -16,7 +16,7 @@ export function getEquipmentLawcamera(lawcameraId) {
   })
 }
 
-export function addEquipmentLawcamera(data) {
+export function addEquipmentBwc(data) {
   return request({
     url: '/api/v1/equipment/bwc',
     method: 'post',
@@ -24,7 +24,7 @@ export function addEquipmentLawcamera(data) {
   })
 }
 
-export function updateEquipmentLawcamera(data, id) {
+export function updateEquipmentBwc(data, id) {
   return request({
     url: '/api/v1/equipment/bwc/' + id,
     method: 'put',
@@ -32,7 +32,7 @@ export function updateEquipmentLawcamera(data, id) {
   })
 }
 
-export function delEquipmentLawcamera(data) {
+export function delEquipmentBwc(data) {
   return request({
     url: '/api/v1/equipment/bwc',
     method: 'delete',
