@@ -184,7 +184,7 @@ export default {
     /** 刷新媒体列表 */
     refresh() {
       if (this.$refs.mediaSelector) {
-        this.$refs.mediaSelector.refresh();
+        this.$refs.mediaSelector.refreshList();
       }
     },
   },

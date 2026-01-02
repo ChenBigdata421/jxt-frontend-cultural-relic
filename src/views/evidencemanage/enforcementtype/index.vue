@@ -8,7 +8,7 @@
         <el-form :inline="true">
           <el-form-item label="执法类型名称">
             <el-input
-              v-model="queryParams.enforcementTypeName"
+              v-model="queryParams.enforceTypeName"
               placeholder="请输入执法类型名称"
               clearable
               size="small"
@@ -17,7 +17,7 @@
           </el-form-item>
           <el-form-item label="执法类型编码">
             <el-input
-              v-model="queryParams.enforcementTypeCode"
+              v-model="queryParams.enforceTypeCode"
               placeholder="请输入执法类型编码"
               clearable
               size="small"
@@ -34,7 +34,7 @@
               >搜索</el-button
             >
             <el-button
-              v-permisaction="['admin:enforcementType:add']"
+              v-permisaction="['admin:enforceType:add']"
               class="filter-item"
               type="primary"
               icon="el-icon-plus"
@@ -44,7 +44,7 @@
             >
           </el-form-item>
         </el-form>
-        <!--enforcementTypeList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
+        <!--enforceTypeList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
         <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 id
           作为每行数据的唯一键。这有助于 Vue 跟踪每行数据的变化，提高渲染性能。-->
         <!--tree-props 是一个对象，用于指定树形表格的数据结构。
@@ -54,7 +54,7 @@
           这意味着每个表格数据对象都可能有一个 hasChildren 字段，如果为 true，则表示该行有子节点。-->
         <el-table
           v-loading="loading"
-          :data="enforcementTypeList"
+          :data="enforceTypeList"
           row-key="id"
           default-expand-all
           border
@@ -63,17 +63,17 @@
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column
-            prop="enforcementTypeCode"
+            prop="enforceTypeCode"
             label="执法类型编码"
             width="200"
           />
           <el-table-column
-            prop="enforcementTypeName"
+            prop="enforceTypeName"
             label="执法类型名称"
             width="400"
           />
           <el-table-column
-            prop="enforcementTypeDesc"
+            prop="enforceTypeDesc"
             label="执法类型描述"
             width="500"
           />
@@ -97,7 +97,7 @@
           >
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['admin:enforcementType:edit']"
+                v-permisaction="['admin:enforceType:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
@@ -105,7 +105,7 @@
                 >修改</el-button
               >
               <el-button
-                v-permisaction="['admin:enforcementType:add']"
+                v-permisaction="['admin:enforceType:add']"
                 size="mini"
                 type="text"
                 icon="el-icon-plus"
@@ -113,7 +113,7 @@
                 >新增</el-button
               >
               <el-button
-                v-permisaction="['admin:enforcementType:remove']"
+                v-permisaction="['admin:enforceType:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
@@ -140,7 +140,7 @@
                 <el-form-item label="上级执法类型" prop="parentId">
                   <treeselect
                     v-model="form.parentId"
-                    :options="enforcementTypeLabel"
+                    :options="enforceTypeLabel"
                     :normalizer="normalizer"
                     :show-count="true"
                     placeholder="选择上级执法类型"
@@ -149,25 +149,25 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="执法类型编码" prop="enforcementTypeCode">
+                <el-form-item label="执法类型编码" prop="enforceTypeCode">
                   <el-input
-                    v-model="form.enforcementTypeCode"
+                    v-model="form.enforceTypeCode"
                     placeholder="请输入执法类型编码"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="执法类型名称" prop="enforcementTypeName">
+                <el-form-item label="执法类型名称" prop="enforceTypeName">
                   <el-input
-                    v-model="form.enforcementTypeName"
+                    v-model="form.enforceTypeName"
                     placeholder="请输入执法类型名称"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="24">
-                <el-form-item label="执法类型描述" prop="enforcementTypeDesc">
+                <el-form-item label="执法类型描述" prop="enforceTypeDesc">
                   <el-input
-                    v-model="form.enforcementTypeDesc"
+                    v-model="form.enforceTypeDesc"
                     type="textarea"
                     placeholder="请输入执法类型描述"
                     :rows="3"
@@ -203,30 +203,30 @@
 
 <script>
 import {
-  delEnforcementType,
-  addEnforcementType,
-  updateEnforcementType,
-} from "@/api/admin/enforcementtype";
+  delEnforceType,
+  addEnforceType,
+  updateEnforceType,
+} from "@/api/admin/enforcetype";
 import {
-  getEnforcementTypeList,
-  getEnforcementType,
-  getEnforcementTypeTree,
-} from "@/api/admin/enforcementtype";
+  getEnforceTypeList,
+  getEnforceType,
+  getEnforceTypeTree,
+} from "@/api/admin/enforcetype";
 
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
-  name: "EnforcementTypeManage",
+  name: "EnforceTypeManage",
   components: { Treeselect },
   data() {
     return {
       // 遮罩层
       loading: true,
       // 表格树数据
-      enforcementTypeList: [],
+      enforceTypeList: [],
       // 执法类型树选项
-      enforcementTypeLabel: [],
+      enforceTypeLabel: [],
       // 弹出层标题
       title: "",
       isEdit: false,
@@ -234,8 +234,8 @@ export default {
       open: false,
       // 查询参数
       queryParams: {
-        enforcementTypeName: undefined,
-        enforcementTypeCode: undefined,
+        enforceTypeName: undefined,
+        enforceTypeCode: undefined,
       },
       // 表单参数
       form: {},
@@ -244,10 +244,10 @@ export default {
         parentId: [
           { required: true, message: "上级执法类型不能为空", trigger: "blur" },
         ],
-        enforcementTypeCode: [
+        enforceTypeCode: [
           { required: true, message: "执法类型编码不能为空", trigger: "blur" },
         ],
-        enforcementTypeName: [
+        enforceTypeName: [
           { required: true, message: "执法类型名称不能为空", trigger: "blur" },
         ],
         sort: [{ required: true, message: "排序不能为空", trigger: "blur" }],
@@ -276,8 +276,8 @@ export default {
     getList() {
       this.loading = true;
       // 优先使用树形接口，如果不存在则使用普通列表接口
-      getEnforcementTypeList(this.queryParams).then((response) => {
-        this.enforcementTypeList = response.data ? response.data.list : [];
+      getEnforceTypeList(this.queryParams).then((response) => {
+        this.enforceTypeList = response.data ? response.data.list : [];
         this.loading = false;
       });
     },
@@ -294,21 +294,21 @@ export default {
       }
       return {
         id: node.id,
-        label: node.enforcementTypeName || node.label || "未知",
+        label: node.enforceTypeName || node.label || "未知",
         children: node.children,
       };
     },
     /** 查询执法类型下拉树结构 */
     getTreeselect() {
-      getEnforcementTypeTree().then((response) => {
-        this.enforcementTypeLabel = [];
-        const enforcementType = {
+      getEnforceTypeTree().then((response) => {
+        this.enforceTypeLabel = [];
+        const enforceType = {
           id: 0,
-          enforcementTypeName: "主类目",
+          enforceTypeName: "主类目",
           children: [],
         };
-        enforcementType.children = response.data;
-        this.enforcementTypeLabel.push(enforcementType);
+        enforceType.children = response.data;
+        this.enforceTypeLabel.push(enforceType);
       });
     },
     // 取消按钮
@@ -321,9 +321,9 @@ export default {
       this.form = {
         id: undefined,
         parentId: undefined,
-        enforcementTypeCode: undefined,
-        enforcementTypeName: undefined,
-        enforcementTypeDesc: undefined,
+        enforceTypeCode: undefined,
+        enforceTypeName: undefined,
+        enforceTypeDesc: undefined,
         sort: 10,
         source: undefined,
       };
@@ -348,7 +348,7 @@ export default {
       this.reset();
       this.getTreeselect();
       this.form.parentId = row.id;
-      getEnforcementType(row.id).then((response) => {
+      getEnforceType(row.id).then((response) => {
         this.form = response.data;
         this.open = true;
         this.title = "修改执法类型";
@@ -360,7 +360,7 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id !== undefined) {
-            updateEnforcementType(this.form, this.form.id).then((response) => {
+            updateEnforceType(this.form, this.form.id).then((response) => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg);
                 this.open = false;
@@ -370,7 +370,7 @@ export default {
               }
             });
           } else {
-            addEnforcementType(this.form).then((response) => {
+            addEnforceType(this.form).then((response) => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg);
                 this.open = false;
@@ -386,7 +386,7 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       this.$confirm(
-        '是否确认删除名称为"' + row.enforcementTypeName + '"的数据项?',
+        '是否确认删除名称为"' + row.enforceTypeName + '"的数据项?',
         "警告",
         {
           confirmButtonText: "确定",
@@ -395,7 +395,7 @@ export default {
         }
       )
         .then(() => {
-          return delEnforcementType(row.id);
+          return delEnforceType(row.id);
         })
         .then((response) => {
           if (response.code === 200) {

@@ -182,6 +182,7 @@
         prop="archiveTitle"
         label="档案标题"
         width="200"
+        sortable="custom"
         :resizable="false"
         show-overflow-tooltip
       />
@@ -304,14 +305,22 @@
         label="录入时间"
         width="160"
         align="center"
-      />
+      >
+        <template slot-scope="{ row }">
+          {{ parseTime(row.createdAt) }}
+        </template>
+      </el-table-column>
       <el-table-column
         v-if="isColumnVisible('updatedAt')"
         prop="updatedAt"
         label="更新时间"
         width="160"
         align="center"
-      />
+      >
+        <template slot-scope="{ row }">
+          {{ parseTime(row.updatedAt) }}
+        </template>
+      </el-table-column>
     </el-table>
 
     <!-- 分页 -->
@@ -378,8 +387,6 @@ export default {
         archiveType: undefined,
         orgId: undefined,
         status: undefined,
-        orderByColumn: undefined,
-        isAsc: "desc",
       },
       // 组织树选项
       orgOptions: [],
@@ -434,12 +441,8 @@ export default {
     /** 查询档案列表 */
     getList() {
       this.loading = true;
-      const query = { ...this.queryParams };
-      Object.keys(query).forEach((key) => {
-        if (query[key] === "" || query[key] === null) {
-          delete query[key];
-        }
-      });
+      const query = this.normalizeQueryParams(this.queryParams);
+
       // 如果提供了自定义API函数,使用自定义API,否则使用默认的listArchives
       const apiFunc = this.customListApi || listArchives;
       apiFunc(query)
@@ -481,28 +484,60 @@ export default {
         });
     },
 
-    /** 搜索按钮操作 */
-    handleQuery() {
+    /**
+     * 需要清空记录选中状态的场景如下：
+     * 1. 点击搜索按钮时，需要清空记录选中状态
+     * 2. 重置按钮操作时，需要清空记录选中状态
+     * 3. 执行删除、修改、导出时，需要清空记录选中状态
+     * 其他场景下，不需要清空记录选中状态
+     */
+    resetSelected() {
+      this.selectedArchiveMap = {};
+      // 向父组件发送数据变化事件
+      this.$emit(
+        "selection-change",
+        Object.values(this.selectedArchiveMap).filter(Boolean)
+      );
+    },
+
+    /** 清空跨页选中（供外部调用） */
+    clearSelection() {
+      this.selectedArchiveMap = {};
+      this.$emit("selection-change", []);
+      this.$nextTick(() => {
+        if (this.$refs.archiveTable) {
+          this.$refs.archiveTable.clearSelection();
+        }
+      });
+    },
+
+    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    resetPage() {
       this.queryParams.pageIndex = 1;
+    },
+
+    handleQuery() {
+      this.resetPage();
+      this.resetSelected();
       this.getList();
     },
 
     /** 重置按钮操作 */
     resetQuery() {
       this.resetForm("queryForm");
-      this.queryParams = {
-        pageIndex: 1,
-        pageSize: 10,
-        archiveCode: undefined,
-        archiveTitle: undefined,
-        archiveType: undefined,
-        orgId: undefined,
-        status: undefined,
-        orderByColumn: undefined,
-        isAsc: "desc",
-        ...this.initialQuery,
-      };
       this.handleQuery();
+    },
+
+    normalizeQueryParams(params = {}) {
+      const query = { ...params };
+      Object.keys(query).forEach((key) => {
+        const value = query[key];
+        if (value === "" || value === null || value === undefined) {
+          delete query[key];
+        }
+      });
+      return query;
     },
 
     // 单个选择框点击事件,selection表示所有被选中的行，row表示当前点击的行
@@ -577,9 +612,21 @@ export default {
     },
 
     /** 排序回调函数 */
-    handleSortChange(column) {
-      this.queryParams.orderByColumn = column.prop;
-      this.queryParams.isAsc = column.order === "ascending" ? "asc" : "desc";
+    handleSortChange(column, prop, order) {
+      prop = column.prop;
+      order = column.order;
+      if (this.order !== "" && this.order !== prop + "Order") {
+        this.queryParams[this.order] = undefined;
+      }
+      if (order === "descending") {
+        this.queryParams[prop + "Order"] = "desc";
+        this.order = prop + "Order";
+      } else if (order === "ascending") {
+        this.queryParams[prop + "Order"] = "asc";
+        this.order = prop + "Order";
+      } else {
+        this.queryParams[prop + "Order"] = undefined;
+      }
       this.getList();
     },
 
@@ -621,8 +668,7 @@ export default {
     },
 
     /** 刷新列表 */
-    refresh() {
-      this.selectedArchiveMap = {};
+    refreshList() {
       this.getList();
     },
 

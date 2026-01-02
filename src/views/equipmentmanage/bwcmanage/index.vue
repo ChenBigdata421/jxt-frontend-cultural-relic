@@ -242,12 +242,14 @@
             prop="bwcNo"
             label="编号"
             width="120"
+            sortable="custom"
           />
           <el-table-column
             v-if="isColumnVisible('name')"
             prop="bwcName"
             label="名称"
             width="140"
+            sortable="custom"
             :show-overflow-tooltip="true"
           />
           <el-table-column
@@ -352,6 +354,7 @@
             prop="purchaseDate"
             label="购买时间"
             width="180"
+            sortable="custom"
           >
             <template slot-scope="{ row }">
               {{ parseTime(row.purchaseDate) }}
@@ -538,8 +541,8 @@
                     v-model="form.purchaseDate"
                     type="datetime"
                     placeholder="请输入购置时间"
-                    format="yyyy-MM-ddTHH:mm:ssZ"
-                    value-format="yyyy-MM-ddTHH:mm:ssZ"
+                    format="yyyy-MM-dd HH:mm:ss"
+                    value-format="yyyy-MM-dd HH:mm:ss"
                   />
                 </el-form-item>
               </el-col>
@@ -725,6 +728,11 @@ export default {
       rules: {
         no: [{ required: true, message: "编号不能为空", trigger: "blur" }],
       },
+      exporting: false,
+      blurWhileExport: false, //标记页面失去焦点的状态
+      processingInstance: null, //Element UI全局加载动画的实例
+      focusListener: null, //页面获焦点事件的 (focus）的监听器
+      previousCursor: null, //记录鼠标状态
     };
   },
   watch: {
@@ -898,8 +906,27 @@ export default {
       this.open = false;
       this.reset();
     },
-    /** 搜索按钮操作 */
+    /**
+     * 需要清空记录选中状态的场景如下：
+     * 1. 点击搜索按钮时，需要清空记录选中状态
+     * 2. 重置按钮操作时，需要清空记录选中状态
+     * 3. 执行删除、修改、导出时，需要清空记录选中状态
+     * 其他场景下，不需要清空记录选中状态
+     */
+    resetSelected() {
+      this.selectedBwcMap = {};
+      this.selectedBwcRecords = [];
+    },
+
+    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    resetPage() {
+      this.queryParams.pageIndex = 1;
+    },
+
     handleQuery() {
+      this.resetPage();
+      this.resetSelected();
       this.getList();
     },
     // 多选框选中数据
@@ -993,21 +1020,12 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id !== undefined) {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在修改执法仪...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在修改执法仪...");
             updateEquipmentBwc(this.form, this.form.id)
               .then(async (response) => {
                 if (response.code === 200) {
                   await this.delay(1000);
-                  this.selectedBwcMap = {};
-                  this.selectedBwcRecords = [];
+                  this.resetSelected();
                   this.getList();
                   this.msgSuccess(response.msg);
                   this.open = false;
@@ -1021,20 +1039,10 @@ export default {
                 );
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           } else {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在创建执法仪...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在创建执法仪...");
             addEquipmentBwc(this.form)
               .then(async (response) => {
                 if (response.code === 200) {
@@ -1052,9 +1060,7 @@ export default {
                 );
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           }
         }
@@ -1081,29 +1087,19 @@ export default {
             type: "info",
           }
         );
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
 
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在删除执法仪...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+        this.startProcessing("正在删除执法仪...");
         const response = await delEquipmentBwc({ ids: bwcIds });
         if (response.code === 200) {
           await this.delay(1000);
-          this.selectedBwcMap = {};
-          this.selectedBwcRecords = [];
+          this.resetSelected();
+          this.resetPage();
           this.getList();
           this.msgSuccess(response.msg || "删除执法仪成功");
         } else {
           this.msgError(response.msg || "删除执法仪失败");
         }
-        // 恢复鼠标状态
-        document.body.style.cursor = previousCursor;
-        loadingInstance.close();
+        this.stopProcessing();
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("删除执法仪失败：" + (error.message || "未知错误"));
@@ -1111,130 +1107,181 @@ export default {
       }
     },
 
+    /** 开始执行操作 */
+    startProcessing(text) {
+      this.processingInstance = this.$loading({
+        lock: true,
+        text: text,
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
+      });
+      // 鼠标切换为等待状态
+      this.previousCursor = document.body.style.cursor;
+      document.body.style.cursor = "wait";
+    },
+
+    /** 停止执行操作 */
+    stopProcessing() {
+      if (this.processingInstance) {
+        this.processingInstance.close();
+        this.processingInstance = null;
+      }
+      // 恢复鼠标状态
+      document.body.style.cursor = this.previousCursor;
+    },
+
+    /** 清理导出事件监听 */
+    cleanupExportListeners() {
+      if (this.focusListener) {
+        window.removeEventListener("focus", this.focusListener);
+        this.focusListener = null;
+      }
+    },
+
     /** 导出按钮操作 */
-    handleExport() {
-      const hasSelection = this.selectedBwcRecords.length > 0;
+    async handleExport() {
+      try {
+        const hasSelection = this.selectedBwcRecords.length > 0;
 
-      const confirmText = hasSelection
-        ? `是否确认导出已勾选的 ${this.selectedBwcRecords.length} 条执法仪数据？`
-        : "是否确认导出所有执法仪数据项？";
+        const confirmText = hasSelection
+          ? `是否确认导出已勾选的 ${this.selectedBwcRecords.length} 条执法仪数据？`
+          : "是否确认导出所有执法仪数据项？";
 
-      this.$confirm(confirmText, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "info",
-      })
-        .then(async () => {
-          const loadingInstance = this.$loading({
-            lock: true,
-            text: "正在导出...",
-            spinner: "el-icon-loading",
-            background: "rgba(0, 0, 0, 0.3)",
-          });
+        await this.$confirm(confirmText, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "info",
+        });
 
-          try {
-            const columnOptions = Array.isArray(this.columnOptions)
-              ? this.columnOptions
-              : [];
-            const visibleColumns = Array.isArray(this.visibleColumns)
-              ? this.visibleColumns
-              : [];
-            const exportColumns = columnOptions.filter((c) =>
-              visibleColumns.includes(c.prop)
-            );
+        const columnOptions = Array.isArray(this.columnOptions)
+          ? this.columnOptions
+          : [];
+        const visibleColumns = Array.isArray(this.visibleColumns)
+          ? this.visibleColumns
+          : [];
+        const exportColumns = columnOptions.filter((c) =>
+          visibleColumns.includes(c.prop)
+        );
 
-            if (!exportColumns.length) {
-              this.msgError("当前未选择任何可导出的列");
-              return;
+        if (!exportColumns.length) {
+          this.msgError("当前未选择任何可导出的列");
+          return;
+        }
+
+        const tHeader = exportColumns.map((c) => c.label);
+        const filterVal = exportColumns.map((c) => c.field || c.prop);
+
+        let list = [];
+        if (hasSelection) {
+          list = this.selectedBwcRecords;
+        } else {
+          const baseQueryParams = this.normalizeQueryParams(
+            this.queryParams || {}
+          );
+          const pageSize = 1000;
+          let pageIndex = 1;
+          let total = Infinity;
+
+          while (list.length < total) {
+            const query = {
+              ...baseQueryParams,
+              pageIndex,
+              pageSize,
+            };
+            const resp = await getEquipmentBwcList(query);
+            if (!resp || resp.code !== 200) {
+              throw new Error((resp && resp.msg) || "查询执法仪列表失败");
             }
 
-            const tHeader = exportColumns.map((c) => c.label);
-            const filterVal = exportColumns.map((c) => c.field || c.prop);
+            const pageList = (resp.data && resp.data.list) || [];
+            total = (resp.data && resp.data.count) || 0;
+            list = list.concat(pageList);
 
-            let list = [];
-            if (hasSelection) {
-              list = this.selectedBwcRecords;
-            } else {
-              const baseQueryParams = this.normalizeQueryParams(
-                this.queryParams || {}
-              );
-              const pageSize = 1000;
-              let pageIndex = 1;
-              let total = Infinity;
-
-              while (list.length < total) {
-                const query = {
-                  ...baseQueryParams,
-                  pageIndex,
-                  pageSize,
-                };
-                const resp = await getEquipmentBwcList(query);
-                if (!resp || resp.code !== 200) {
-                  throw new Error((resp && resp.msg) || "查询执法仪列表失败");
-                }
-
-                const pageList = (resp.data && resp.data.list) || [];
-                total = (resp.data && resp.data.count) || 0;
-                list = list.concat(pageList);
-
-                if (!pageList.length) {
-                  break;
-                }
-                pageIndex += 1;
-              }
+            if (!pageList.length) {
+              break;
             }
-
-            const formatDateTime = (value) => {
-              if (!value) return "-";
-              try {
-                return this.parseTime ? this.parseTime(value) : value;
-              } catch (error) {
-                return value;
-              }
-            };
-
-            const formatStatus = (value) => {
-              const option = (this.stateOptions || []).find(
-                (item) => String(item.value) === String(value)
-              );
-              return option ? option.label : value;
-            };
-
-            const formatEnableUseOptions = (value) => {
-              const option = (this.enableUseOptions || []).find(
-                (item) => String(item.value) === String(value)
-              );
-              return option ? option.label : value;
-            };
-
-            const normalizeList = (Array.isArray(list) ? list : []).map(
-              (row) => {
-                const output = { ...row };
-                output.status = formatStatus(row.status);
-                output.enableUse = formatEnableUseOptions(row.enableUse);
-                output.purchaseDate = formatDateTime(row.purchaseDate);
-                return output;
-              }
-            );
-
-            const data = formatJson(filterVal, normalizeList);
-
-            const excel = await import("@/vendor/Export2Excel");
-            excel.export_json_to_excel({
-              header: tHeader,
-              data,
-              filename: "执法仪列表",
-              autoWidth: true,
-              bookType: "xlsx",
-            });
-          } catch (error) {
-            console.error("[BwcQuery] 导出失败:", error);
-            this.msgError(error.message || "导出失败");
-          } finally {
-            loadingInstance.close();
+            pageIndex += 1;
           }
-        })
-        .catch(() => {});
+        }
+
+        const formatDateTime = (value) => {
+          if (!value) return "-";
+          try {
+            return this.parseTime ? this.parseTime(value) : value;
+          } catch (error) {
+            return value;
+          }
+        };
+
+        const formatStatus = (value) => {
+          const option = (this.stateOptions || []).find(
+            (item) => String(item.value) === String(value)
+          );
+          return option ? option.label : value;
+        };
+
+        const formatEnableUseOptions = (value) => {
+          const option = (this.enableUseOptions || []).find(
+            (item) => String(item.value) === String(value)
+          );
+          return option ? option.label : value;
+        };
+
+        const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
+          const output = { ...row };
+          output.status = formatStatus(row.status);
+          output.enableUse = formatEnableUseOptions(row.enableUse);
+          output.purchaseDate = formatDateTime(row.purchaseDate);
+          return output;
+        });
+
+        const data = formatJson(filterVal, normalizeList);
+
+        // 标记导出开始
+        this.exporting = true;
+        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
+
+        // 注册 focus 事件：当用户从“另存为”对话框返回时
+        this.focusListener = () => {
+          if (this.exporting && this.blurWhileExport) {
+            this.blurWhileExport = false;
+            console.log(
+              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
+            );
+          }
+        };
+
+        window.addEventListener("focus", this.focusListener);
+
+        // 触发导出（会弹出另存为对话框）
+        const excel = await import("@/vendor/Export2Excel");
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: "执法仪列表",
+          autoWidth: true,
+          bookType: "xlsx",
+        });
+
+        // 等待用户从“另存为”对话框返回
+        while (this.blurWhileExport) {
+          await this.delay(100);
+        }
+        this.startProcessing("正在导出...");
+        await this.delay(3000);
+        this.resetSelected();
+        this.getList();
+        this.msgSuccess("导出执法仪成功");
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("导出失败：" + (error.message || "未知错误"));
+        }
+      } finally {
+        // 清理状态和事件监听
+        this.exporting = false;
+        this.stopProcessing();
+        this.cleanupExportListeners();
+      }
     },
 
     /** 延迟函数 */

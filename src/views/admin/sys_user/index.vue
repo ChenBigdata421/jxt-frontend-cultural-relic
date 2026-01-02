@@ -200,21 +200,16 @@
             >
               <el-table-column type="selection" width="45" align="center" />
               <el-table-column
-                label="编号"
-                width="75"
-                prop="userId"
+                label="警号"
+                prop="policeNo"
                 sortable="custom"
+                :show-overflow-tooltip="true"
               />
               <el-table-column
                 label="登录名"
                 width="105"
                 prop="userName"
                 sortable="custom"
-                :show-overflow-tooltip="true"
-              />
-              <el-table-column
-                label="警号"
-                prop="policeNo"
                 :show-overflow-tooltip="true"
               />
               <el-table-column label="性别" prop="sexName" />

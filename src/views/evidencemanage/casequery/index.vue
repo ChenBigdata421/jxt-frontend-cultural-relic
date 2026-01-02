@@ -63,15 +63,25 @@
             </el-select>
           </el-form-item>
           <el-form-item label="案发时间">
-            <el-date-picker
-              v-model="caseTimeRange"
-              type="datetimerange"
-              range-separator="至"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
-              value-format="yyyy-MM-ddTHH:mm:ssZ"
-              style="width: 340px"
-            />
+            <el-form-item prop="caseTimeStart">
+              <el-date-picker
+                v-model="queryParams.caseTimeStart"
+                type="datetime"
+                placeholder="请选择开始时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+            <span>至</span>
+            <el-form-item prop="caseTimeEnd">
+              <el-date-picker
+                v-model="queryParams.caseTimeEnd"
+                type="datetime"
+                placeholder="请选择结束时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
           </el-form-item>
           <el-form-item>
             <el-button
@@ -173,6 +183,7 @@
           :data="caseList"
           border
           @selection-change="handleSelectionChange"
+          @sort-change="handleSortChang"
         >
           <el-table-column type="selection" width="55" align="center" />
           <el-table-column
@@ -223,6 +234,7 @@
             align="center"
             prop="caseCode"
             width="150"
+            sortable="custom"
           />
           <el-table-column
             v-if="isColumnVisible('caseName')"
@@ -230,6 +242,7 @@
             align="center"
             prop="caseName"
             width="200"
+            sortable="custom"
             :show-overflow-tooltip="true"
           />
           <el-table-column
@@ -394,7 +407,7 @@
                   v-model="form.caseTime"
                   type="datetime"
                   placeholder="选择案发时间"
-                  value-format="yyyy-MM-ddTHH:mm:ssZ"
+                  value-format="yyyy-MM-dd HH:mm:ss"
                   style="width: 100%"
                 />
               </el-form-item>
@@ -656,8 +669,6 @@ export default {
       annotateOpen: false,
       // 是否显示详情对话框
       viewOpen: false,
-      // 案发时间范围
-      caseTimeRange: [],
       // 组织树选项
       orgOptions: [],
       // 用户选项
@@ -738,6 +749,11 @@ export default {
       ],
       // 可见列
       visibleColumns: [],
+      exporting: false,
+      blurWhileExport: false, //标记页面失去焦点的状态
+      processingInstance: null, //Element UI全局加载动画的实例
+      focusListener: null, //页面获焦点事件的 (focus）的监听器
+      previousCursor: null, //记录鼠标状态
     };
   },
   watch: {
@@ -786,20 +802,8 @@ export default {
     /** 查询案件列表 */
     getList() {
       this.loading = true;
-      // 处理时间范围
-      if (this.caseTimeRange && this.caseTimeRange.length === 2) {
-        this.queryParams.caseTimeStart = this.caseTimeRange[0];
-        this.queryParams.caseTimeEnd = this.caseTimeRange[1];
-      } else {
-        this.queryParams.caseTimeStart = undefined;
-        this.queryParams.caseTimeEnd = undefined;
-      }
-      const query = { ...this.queryParams };
-      Object.keys(query).forEach((key) => {
-        if (query[key] === "" || query[key] === null) {
-          delete query[key];
-        }
-      });
+
+      const query = this.normalizeQueryParams(this.queryParams);
 
       listCases(query)
         .then((response) => {
@@ -912,16 +916,68 @@ export default {
         }
       }
     },
-    /** 搜索按钮操作 */
-    handleQuery() {
+
+    /**
+     * 需要清空记录选中状态的场景如下：
+     * 1. 点击搜索按钮时，需要清空记录选中状态
+     * 2. 重置按钮操作时，需要清空记录选中状态
+     * 3. 执行删除、修改、导出时，需要清空记录选中状态
+     * 其他场景下，不需要清空记录选中状态
+     */
+    resetSelected() {
+      this.selectedCaseMap = {};
+      this.selectedCaseRecords = [];
+    },
+
+    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    resetPage() {
       this.queryParams.pageIndex = 1;
+    },
+
+    handleQuery() {
+      this.resetSelected();
+      this.resetPage();
       this.getList();
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.caseTimeRange = [];
       this.resetForm("queryForm");
       this.handleQuery();
+    },
+
+    normalizeQueryParams(params = {}) {
+      const query = { ...params };
+      Object.keys(query).forEach((key) => {
+        const value = query[key];
+        if (value === "" || value === null || value === undefined) {
+          delete query[key];
+        }
+      });
+      return query;
+    },
+
+    /** 开始执行操作 */
+    startProcessing(text) {
+      this.processingInstance = this.$loading({
+        lock: true,
+        text: text,
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
+      });
+      // 鼠标切换为等待状态
+      this.previousCursor = document.body.style.cursor;
+      document.body.style.cursor = "wait";
+    },
+
+    /** 停止执行操作 */
+    stopProcessing() {
+      if (this.processingInstance) {
+        this.processingInstance.close();
+        this.processingInstance = null;
+      }
+      // 恢复鼠标状态
+      document.body.style.cursor = this.previousCursor;
     },
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
@@ -945,6 +1001,20 @@ export default {
       this.selectedCaseRecords = Object.values(this.selectedCaseMap).filter(
         Boolean
       );
+    },
+
+    handleSortChang(column, prop, order) {
+      prop = column.prop;
+      order = column.order;
+      if (order === "descending") {
+        this.queryParams[prop + "Order"] = "desc";
+      } else if (order === "ascending") {
+        this.queryParams[prop + "Order"] = "asc";
+      } else {
+        this.queryParams[prop + "Order"] = undefined;
+      }
+
+      this.getList();
     },
 
     restoreSelection() {
@@ -1001,11 +1071,8 @@ export default {
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      const id = row.id;
-      getCase(id).then((response) => {
-        this.viewData = response.data;
-        this.viewOpen = true;
-      });
+      this.viewData = row;
+      this.viewOpen = true;
     },
     /** 标注按钮操作 */
     handleAnnotate(row) {
@@ -1076,22 +1143,13 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id != null) {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在修改案件...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在修改案件...");
             updateCase(this.form, this.form.id)
               .then(async (response) => {
                 if (response.code === 200) {
                   // 延迟2秒后刷新媒体列表
                   await this.delay(2000);
-                  this.selectedCaseMap = {};
-                  this.selectedCaseRecords = [];
+                  this.resetSelected();
                   this.getList();
                   this.open = false;
                   this.msgSuccess("修改案件成功");
@@ -1103,20 +1161,10 @@ export default {
                 this.msgError("修改案件失败：" + (error.message || "未知错误"));
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           } else {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在创建案件...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在创建案件...");
             addCase(this.form)
               .then(async (response) => {
                 if (response.code === 200) {
@@ -1132,9 +1180,7 @@ export default {
                 this.msgError("创建案件失败：" + (error.message || "未知错误"));
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           }
         } else {
@@ -1155,16 +1201,7 @@ export default {
           caseIds = values.map((item) => item.id);
           caseCodes = values.map((item) => item.caseCode);
         }
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在删除文书...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+        this.startProcessing("正在删除案件...");
         await this.$confirm(
           "是否确认删除编号为" + caseCodes + "的案件?",
           "信息",
@@ -1182,16 +1219,14 @@ export default {
         }
         if (response.code === 200) {
           await this.delay(2000);
-          this.selectedCaseMap = {};
-          this.selectedCaseRecords = [];
+          this.resetPage();
+          this.resetSelected();
           this.getList();
           this.msgSuccess(response.msg || "删除案件成功");
         } else {
           this.msgError(response.msg || "删除案件失败");
         }
-        // 恢复鼠标状态
-        document.body.style.cursor = previousCursor;
-        loadingInstance.close();
+        this.stopProcessing();
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("删除案件失败：" + (error.message || "未知错误"));
@@ -1229,148 +1264,153 @@ export default {
     },
 
     /** 导出按钮操作 */
-    handleExport() {
-      const hasSelection =
-        Array.isArray(this.selectedCaseRecords) &&
-        this.selectedCaseRecords.length > 0;
+    async handleExport() {
+      try {
+        const hasSelection =
+          Array.isArray(this.selectedCaseRecords) &&
+          this.selectedCaseRecords.length > 0;
 
-      const confirmText = hasSelection
-        ? `是否确认导出已勾选的 ${this.selectedCaseRecords.length} 条案件数据？`
-        : "是否确认导出所有案件数据项？";
+        const confirmText = hasSelection
+          ? `是否确认导出已勾选的 ${this.selectedCaseRecords.length} 条案件数据？`
+          : "是否确认导出所有案件数据项？";
 
-      this.$confirm(confirmText, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "info",
-      })
-        .then(async () => {
-          const loadingInstance = this.$loading({
-            lock: true,
-            text: "正在导出...",
-            spinner: "el-icon-loading",
-            background: "rgba(0, 0, 0, 0.3)",
-          });
+        await this.$confirm(confirmText, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "info",
+        });
 
-          try {
-            const columnOptions = Array.isArray(this.columnOptions)
-              ? this.columnOptions
-              : [];
-            const visibleColumns = Array.isArray(this.visibleColumns)
-              ? this.visibleColumns
-              : [];
-            const exportColumns = columnOptions.filter((c) =>
-              visibleColumns.includes(c.prop)
-            );
+        const columnOptions = Array.isArray(this.columnOptions)
+          ? this.columnOptions
+          : [];
+        const visibleColumns = Array.isArray(this.visibleColumns)
+          ? this.visibleColumns
+          : [];
+        const exportColumns = columnOptions.filter((c) =>
+          visibleColumns.includes(c.prop)
+        );
 
-            if (!exportColumns.length) {
-              this.msgError("当前未选择任何可导出的列");
-              return;
+        if (!exportColumns.length) {
+          this.msgError("当前未选择任何可导出的列");
+          return;
+        }
+
+        const tHeader = exportColumns.map((c) => c.label);
+        const filterVal = exportColumns.map((c) => c.prop);
+
+        let list = [];
+        if (hasSelection) {
+          list = this.selectedCaseRecords;
+        } else {
+          const baseQueryParams = { ...(this.queryParams || {}) };
+
+          const pageSize = 1000;
+          let pageIndex = 1;
+          let total = Infinity;
+
+          while (list.length < total) {
+            const query = {
+              ...baseQueryParams,
+              pageIndex,
+              pageSize,
+            };
+            const resp = await listCases(query);
+            if (!resp || resp.code !== 200) {
+              throw new Error((resp && resp.msg) || "查询案件列表失败");
             }
 
-            const tHeader = exportColumns.map((c) => c.label);
-            const filterVal = exportColumns.map((c) => c.prop);
+            const pageList = (resp.data && resp.data.list) || [];
+            total = (resp.data && resp.data.count) || 0;
+            list = list.concat(pageList);
 
-            let list = [];
-            if (hasSelection) {
-              list = this.selectedCaseRecords;
-            } else {
-              const baseQueryParams = { ...(this.queryParams || {}) };
-              if (this.caseTimeRange && this.caseTimeRange.length === 2) {
-                baseQueryParams.caseTimeStart = this.caseTimeRange[0];
-                baseQueryParams.caseTimeEnd = this.caseTimeRange[1];
-              } else {
-                baseQueryParams.caseTimeStart = undefined;
-                baseQueryParams.caseTimeEnd = undefined;
-              }
-
-              const pageSize = 1000;
-              let pageIndex = 1;
-              let total = Infinity;
-
-              while (list.length < total) {
-                const query = {
-                  ...baseQueryParams,
-                  pageIndex,
-                  pageSize,
-                };
-                const resp = await listCases(query);
-                if (!resp || resp.code !== 200) {
-                  throw new Error((resp && resp.msg) || "查询案件列表失败");
-                }
-
-                const pageList = (resp.data && resp.data.list) || [];
-                total = (resp.data && resp.data.count) || 0;
-                list = list.concat(pageList);
-
-                if (!pageList.length) {
-                  break;
-                }
-                pageIndex += 1;
-              }
+            if (!pageList.length) {
+              break;
             }
-
-            const formatDateTime = (value) => {
-              if (!value) return "-";
-              try {
-                return this.parseTime ? this.parseTime(value) : value;
-              } catch (error) {
-                return value;
-              }
-            };
-
-            const formatCaseType = (value) => {
-              return (
-                this.selectDictLabel(this.caseTypeOptions || [], value) || value
-              );
-            };
-
-            const formatCaseFlow = (value, caseType) => {
-              const label = this.getCaseFlowLabel
-                ? this.getCaseFlowLabel(value, caseType)
-                : value;
-              return label || value;
-            };
-
-            const formatRelation = (value) => {
-              return (
-                this.selectDictLabel(
-                  this.caseRelationStatusOptions || [],
-                  value
-                ) || value
-              );
-            };
-
-            const normalizeList = (Array.isArray(list) ? list : []).map(
-              (row) => {
-                const output = { ...row };
-                output.caseType = formatCaseType(row.caseType);
-                output.caseFlow = formatCaseFlow(row.caseFlow, row.caseType);
-                output.isRelation = formatRelation(row.isRelation);
-                output.caseTime = formatDateTime(row.caseTime);
-                output.procTime = formatDateTime(row.procTime);
-                output.createdAt = formatDateTime(row.createdAt);
-                return output;
-              }
-            );
-
-            const data = formatJson(filterVal, normalizeList);
-
-            const excel = await import("@/vendor/Export2Excel");
-            excel.export_json_to_excel({
-              header: tHeader,
-              data,
-              filename: "案件列表",
-              autoWidth: true,
-              bookType: "xlsx",
-            });
-          } catch (error) {
-            console.error("[CaseQuery] 导出失败:", error);
-            this.msgError(error.message || "导出失败");
-          } finally {
-            loadingInstance.close();
+            pageIndex += 1;
           }
-        })
-        .catch(() => {});
+        }
+
+        const formatDateTime = (value) => {
+          if (!value) return "-";
+          try {
+            return this.parseTime ? this.parseTime(value) : value;
+          } catch (error) {
+            return value;
+          }
+        };
+
+        const formatCaseType = (value) => {
+          return (
+            this.selectDictLabel(this.caseTypeOptions || [], value) || value
+          );
+        };
+
+        const formatCaseFlow = (value, caseType) => {
+          const label = this.getCaseFlowLabel
+            ? this.getCaseFlowLabel(value, caseType)
+            : value;
+          return label || value;
+        };
+
+        const formatRelation = (value) => {
+          return (
+            this.selectDictLabel(this.caseRelationStatusOptions || [], value) ||
+            value
+          );
+        };
+
+        const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
+          const output = { ...row };
+          output.caseType = formatCaseType(row.caseType);
+          output.caseFlow = formatCaseFlow(row.caseFlow, row.caseType);
+          output.isRelation = formatRelation(row.isRelation);
+          output.caseTime = formatDateTime(row.caseTime);
+          output.procTime = formatDateTime(row.procTime);
+          output.createdAt = formatDateTime(row.createdAt);
+          return output;
+        });
+
+        const data = formatJson(filterVal, normalizeList);
+        // 标记导出开始
+        this.exporting = true;
+        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
+        // 注册 focus 事件：当用户从“另存为”对话框返回时
+        this.focusListener = () => {
+          if (this.exporting && this.blurWhileExport) {
+            this.blurWhileExport = false;
+            console.log(
+              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
+            );
+          }
+        };
+        window.addEventListener("focus", this.focusListener);
+        // 触发导出（会弹出另存为对话框）
+        const excel = await import("@/vendor/Export2Excel");
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: "案件列表",
+          autoWidth: true,
+          bookType: "xlsx",
+        });
+        // 等待用户从“另存为”对话框返回
+        while (this.blurWhileExport) {
+          await this.delay(100);
+        }
+        this.startProcessing("正在导出...");
+        await this.delay(3000);
+        this.resetSelected();
+        this.getList();
+        this.msgSuccess("导出案件成功");
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("导出失败：" + (error.message || "未知错误"));
+        }
+      } finally {
+        this.exporting = false;
+        this.stopProcessing();
+        this.cleanupExportListeners();
+      }
     },
   },
 };

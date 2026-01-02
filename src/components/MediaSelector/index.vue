@@ -9,24 +9,28 @@
       size="small"
     >
       <el-form-item label="拍摄时间">
-        <el-date-picker
-          v-model="queryParams.captureTimeStart"
-          type="datetime"
-          placeholder="请选择时间"
-          value-format="yyyy-MM-ddTHH:mm:ssZ"
-        >
-        </el-date-picker>
+        <el-form-item prop="captureTimeStart">
+          <el-date-picker
+            v-model="queryParams.captureTimeStart"
+            type="datetime"
+            placeholder="请选择开始时间"
+            value-format="yyyy-MM-dd HH:mm:ss"
+          >
+          </el-date-picker>
+        </el-form-item>
         <span>至</span>
-        <el-date-picker
-          v-model="queryParams.captureTimeEnd"
-          type="datetime"
-          placeholder="请选择时间"
-          value-format="yyyy-MM-ddTHH:mm:ssZ"
-        >
-        </el-date-picker>
+        <el-form-item prop="captureTimeEnd">
+          <el-date-picker
+            v-model="queryParams.captureTimeEnd"
+            type="datetime"
+            placeholder="请选择结束时间"
+            value-format="yyyy-MM-dd HH:mm:ss"
+          >
+          </el-date-picker>
+        </el-form-item>
       </el-form-item>
 
-      <el-form-item label="单位组织">
+      <el-form-item label="单位组织" prop="orgId">
         <div class="horizontal-container">
           <treeselect
             v-model="queryParams.orgId"
@@ -42,7 +46,7 @@
         </div>
       </el-form-item>
 
-      <el-form-item label="拍摄警员">
+      <el-form-item label="拍摄警员" prop="policeId">
         <el-select
           v-model="queryParams.policeId"
           placeholder="请选择拍摄警员"
@@ -96,41 +100,39 @@
             v-for="dict in mediaCateOptions"
             :key="dict.value"
             :label="dict.label"
-            :value="parseInt(dict.value)"
+            :value="dict.value"
           />
         </el-select>
       </el-form-item>
 
-      <el-form-item v-if="showMore" label="导入时间">
-        <el-date-picker
-          v-model="queryParams.uploadTimeStart"
-          type="datetime"
-          placeholder="请选择时间"
-          value-format="yyyy-MM-ddTHH:mm:ssZ"
-        >
-        </el-date-picker>
+      <el-form-item label="导入时间">
+        <el-form-item prop="uploadTimeStart">
+          <el-date-picker
+            v-model="queryParams.uploadTimeStart"
+            type="datetime"
+            placeholder="请选择开始时间"
+            value-format="yyyy-MM-dd HH:mm:ss"
+          >
+          </el-date-picker>
+        </el-form-item>
         <span>至</span>
-        <el-date-picker
-          v-model="queryParams.uploadTimeEnd"
-          type="datetime"
-          placeholder="请选择时间"
-          value-format="yyyy-MM-ddTHH:mm:ssZ"
-        >
-        </el-date-picker>
+        <el-form-item prop="uploadTimeEnd">
+          <el-date-picker
+            v-model="queryParams.uploadTimeEnd"
+            type="datetime"
+            placeholder="请选择结束时间"
+            value-format="yyyy-MM-dd HH:mm:ss"
+          >
+          </el-date-picker>
+        </el-form-item>
       </el-form-item>
 
-      <el-form-item v-if="showMore" label="执法仪编号">
+      <el-form-item v-if="showMore" label="执法仪编号" prop="recorderId">
         <el-input
           v-model="queryParams.recorderId"
           placeholder="请输入执法仪编号"
+          clearable
         />
-      </el-form-item>
-
-      <el-form-item v-if="showMore" label="数据来源">
-        <el-select v-model="queryParams.dataSource" placeholder="请选择">
-          <el-option label="采集站" value="0" />
-          <el-option label="采集客户端" value="1" />
-        </el-select>
       </el-form-item>
 
       <el-form-item v-if="showMore" label="存储方式" prop="storageType">
@@ -150,21 +152,22 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item v-if="showMore" label="执法类型">
+      <el-form-item v-if="showMore" label="执法类型" prop="enforceType">
         <treeselect
           v-model="queryParams.enforceType"
-          :options="enforcementTypeOptions"
-          :normalizer="normalizeEnforcementType"
+          :options="enforceTypeOptions"
+          :normalizer="normalizeEnforceType"
           placeholder="请选择执法类型"
           style="width: 200px"
           clearable
         />
       </el-form-item>
 
-      <el-form-item v-if="showMore" label="媒体名称">
+      <el-form-item v-if="showMore" label="媒体名称" prop="mediaName">
         <el-input
           v-model="queryParams.mediaName"
           placeholder="请输入媒体名称"
+          clearable
         />
       </el-form-item>
     </el-form>
@@ -264,7 +267,7 @@
             >删除</el-button
           >
           <el-button
-            v-if="isVideoMedia(scope.row)"
+            v-if="scope.row.mediaCate === 3"
             size="mini"
             type="text"
             @click="handleOperation(scope.row, 'track')"
@@ -277,6 +280,7 @@
         prop="mediaName"
         label="媒体名称"
         min-width="160"
+        sortable="custom"
         :show-overflow-tooltip="true"
       />
       <el-table-column
@@ -721,12 +725,188 @@
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
     />
+
+    <!-- 媒体详情对话框 -->
+    <el-dialog
+      title="媒体详情"
+      :visible.sync="viewMediaOpen"
+      width="800px"
+      append-to-body
+    >
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="媒体名称">{{
+          viewMediaData.mediaName || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="媒体类型">
+          {{
+            selectDictLabel(mediaCateOptions, viewMediaData.mediaCate) || "-"
+          }}
+        </el-descriptions-item>
+        <el-descriptions-item label="媒体后缀">{{
+          viewMediaData.mediaSuffix || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="拍摄时间">{{
+          parseTime(viewMediaData.captureTime) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="拍摄结束时间">{{
+          parseTime(viewMediaData.captureEndTime) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="视频清晰度">{{
+          selectDictLabel(videoClarityOptions, viewMediaData.clarity) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="视频时长(毫秒)">{{
+          viewMediaData.duration || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="重要级别(平台)">{{
+          viewMediaData.importantLevel || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="重要级别(设备)">{{
+          viewMediaData.importantLevelRec || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="图片宽度">{{
+          viewMediaData.width || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="图片高度">{{
+          viewMediaData.height || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="是否执法媒体">{{
+          selectDictLabel(
+            isNonEnforcementMediaOptions,
+            viewMediaData.isNonEnforcementMedia
+          ) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="标注内容" :span="2">{{
+          viewMediaData.comments || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="视频序列标识">{{
+          viewMediaData.sequence || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="执法类型名称">{{
+          viewMediaData.enforceTypeName || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="是否锁定">{{
+          selectDictLabel(isLockedOptions, viewMediaData.isLocked) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="过期时间">{{
+          parseTime(viewMediaData.expiryTime) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="档案编号">{{
+          viewMediaData.archiveCode || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="是否归档">{{
+          selectDictLabel(isArchivedOptions, viewMediaData.isArchived) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="归档时间">{{
+          parseTime(viewMediaData.archivedAt) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="文件标识">{{
+          viewMediaData.fileIdentity || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="文件名称">{{
+          viewMediaData.fileName || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="文件大小">{{
+          viewMediaData.fileSize || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="文件MD5">{{
+          viewMediaData.fileMd5 || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="文件类型">{{
+          viewMediaData.fileType || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="MIME类型">{{
+          viewMediaData.contentType || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="采集站编号">{{
+          viewMediaData.collectSiteNo || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="采集站名称">{{
+          viewMediaData.collectSiteName || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="采集站地址" :span="2">{{
+          viewMediaData.collectSiteUrl || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="存储方式">{{
+          selectDictLabel(storageTypeOptions, viewMediaData.storageType) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="是否上传至存储">{{
+          selectDictLabel(
+            isSendToStorageOptions,
+            viewMediaData.isSendToStorage
+          ) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="是否通知发送">{{
+          viewMediaData.isNoticeSend || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="警员编号">{{
+          viewMediaData.policeNo || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="警员姓名">{{
+          viewMediaData.policeName || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="警员身份证号">{{
+          viewMediaData.policeIdCard || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="单位编码">{{
+          viewMediaData.orgCode || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="单位名称">{{
+          viewMediaData.orgName || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="单位全称" :span="2">{{
+          viewMediaData.orgFullName || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="单位简称">{{
+          viewMediaData.orgJc || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="终端类型">{{
+          selectDictLabel(terminalTypeOptions, viewMediaData.terminalType) ||
+          "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="执法仪编号">{{
+          viewMediaData.recorderNo || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="警情号">{{
+          viewMediaData.incidentCode || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="是否关联">{{
+          selectDictLabel(
+            relationStatusOptions,
+            viewMediaData.isIncidentAssociated
+          ) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="关联时间">{{
+          parseTime(viewMediaData.incidentAssociatedAt) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="请求标识">{{
+          viewMediaData.requestIdentity || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="认证码">{{
+          viewMediaData.authKey || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="追溯码">{{
+          viewMediaData.traceCode || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="上传时间">{{
+          parseTime(viewMediaData.uploadTime) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="接收时间">{{
+          parseTime(viewMediaData.acquisitionTime) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="存储路径" :span="2">{{
+          viewMediaData.filePath || "-"
+        }}</el-descriptions-item>
+      </el-descriptions>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="viewMediaOpen = false">关 闭</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { listMedia } from "@/api/evidence/evidence_manage_query_api";
-import { getEnforcementTypeTree } from "@/api/admin/enforcementtype";
+import { getEnforceTypeTree } from "@/api/admin/enforcetype";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
 import Treeselect from "@riophae/vue-treeselect";
@@ -781,6 +961,7 @@ export default {
         captureTimeStart: undefined,
         captureTimeEnd: undefined,
         orgId: undefined,
+        policeId: undefined,
         includeSubUnits: true,
         policeId: undefined,
         mediaCate: undefined,
@@ -791,8 +972,6 @@ export default {
         storageType: undefined,
         enforceType: undefined,
         mediaName: undefined,
-        orderBy: undefined,
-        isDesc: true,
       },
       // 组织树选项
       orgOptions: undefined,
@@ -803,7 +982,7 @@ export default {
       // 存储方式选项
       storageTypeOptions: [],
       // 执法类型选项
-      enforcementTypeOptions: [],
+      enforceTypeOptions: [],
       // 是否归档选项
       isArchivedOptions: [],
       // 是否上传至存储选项
@@ -816,6 +995,12 @@ export default {
       isNonEnforcementMediaOptions: [],
       // 视频清晰度选项
       videoClarityOptions: [],
+      // 关联状态选项
+      relationStatusOptions: [],
+      // 媒体详情对话框
+      viewMediaOpen: false,
+      // 媒体详情数据
+      viewMediaData: {},
       // 列配置选项
       columnOptions: [
         {
@@ -911,7 +1096,17 @@ export default {
 
       selectedMediaMap: {},
       isRestoringSelection: false,
+      order: "", // 当前排序字段，用于追踪排序状态
     };
+  },
+  watch: {
+    "queryParams.orgId": function (newVal) {
+      // 当组织选择变化时，清空人员选择并重新加载该组织的人员列表
+      if (newVal) {
+        this.queryParams.policeId = undefined;
+        this.getUserListByOrg(newVal);
+      }
+    },
   },
   created() {
     // 合并初始查询参数
@@ -919,7 +1114,7 @@ export default {
     this.initVisibleColumns();
     this.getOrgTreeSelect();
     this.getUserList();
-    this.getEnforcementTypeTree();
+    this.getEnforceTypeTree();
 
     // 使用Promise.all等待所有字典加载完成
     Promise.all([
@@ -955,6 +1150,7 @@ export default {
           this.isNonEnforcementMediaOptions = isNonEnforcementMediaRes.data;
           this.videoClarityOptions = videoClarityRes.data;
 
+          console.log("[MediaSelector] 字典加载完成");
           // 字典加载完成后再加载列表
           this.getList();
         }
@@ -968,6 +1164,15 @@ export default {
   methods: {
     getRowKey(row) {
       return row && row.mediaId;
+    },
+
+    /** 组织选择事件 */
+    handleOrgSelect(node) {
+      if (node) {
+        listUser({ orgId: "/" + node.id + "/" }).then((response) => {
+          this.userOptions = response.data.list || [];
+        });
+      }
     },
 
     restoreSelection() {
@@ -1035,17 +1240,23 @@ export default {
       this.$message.success("已重置为默认显示");
     },
 
+    normalizeQueryParams(params = {}) {
+      const query = { ...params };
+      Object.keys(query).forEach((key) => {
+        const value = query[key];
+        if (value === "" || value === null || value === undefined) {
+          delete query[key];
+        }
+      });
+      return query;
+    },
+
     /** 查询媒体列表 */
     getList() {
       this.loading = true;
       // 如果提供了自定义API函数,使用自定义API,否则使用默认的listMedia
       const apiFunc = this.customListApi || listMedia;
-      const query = { ...this.queryParams };
-      Object.keys(query).forEach((key) => {
-        if (query[key] === "" || query[key] === null) {
-          delete query[key];
-        }
-      });
+      const query = this.normalizeQueryParams(this.queryParams);
       apiFunc(query)
         .then((response) => {
           if (response.code === 200 && response.data) {
@@ -1084,41 +1295,48 @@ export default {
     },
 
     /** 获取执法类型树 */
-    getEnforcementTypeTree() {
-      getEnforcementTypeTree().then((response) => {
-        this.enforcementTypeOptions = response.data || [];
+    getEnforceTypeTree() {
+      getEnforceTypeTree().then((response) => {
+        this.enforceTypeOptions = response.data || [];
       });
     },
 
-    /** 搜索按钮操作 */
-    handleQuery() {
+    /**
+     * 需要清空记录选中状态的场景如下：
+     * 1. 点击搜索按钮时，需要清空记录选中状态
+     * 2. 重置按钮操作时，需要清空记录选中状态
+     * 3. 执行删除、修改、导出时，需要清空记录选中状态
+     * 其他场景下，不需要清空记录选中状态
+     */
+    resetSelected() {
+      this.selectedMediaMap = {};
+      // 向父组件发送数据变化事件
+      this.$emit(
+        "selection-change",
+        Object.values(this.selectedMediaMap).filter(Boolean)
+      );
+      this.$nextTick(() => {
+        if (this.$refs.mediaTable) {
+          this.$refs.mediaTable.clearSelection();
+        }
+      });
+    },
+
+    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    resetPage() {
       this.queryParams.pageIndex = 1;
+    },
+
+    handleQuery() {
+      this.resetPage();
+      this.resetSelected();
       this.getList();
     },
 
     /** 重置按钮操作 */
     resetQuery() {
       this.resetForm("queryForm");
-      this.queryParams = {
-        pageIndex: 1,
-        pageSize: 10,
-        captureTimeStart: undefined,
-        captureTimeEnd: undefined,
-        orgId: undefined,
-        includeSubUnits: true,
-        policeId: undefined,
-        mediaCate: undefined,
-        uploadTimeStart: undefined,
-        uploadTimeEnd: undefined,
-        recorderId: undefined,
-        dataSource: undefined,
-        storageType: undefined,
-        enforceType: undefined,
-        mediaName: undefined,
-        orderBy: undefined,
-        isDesc: true,
-        ...this.initialQuery,
-      };
       this.handleQuery();
     },
 
@@ -1196,9 +1414,9 @@ export default {
 
     /** 根据组织获取用户列表 */
     getUserListByOrg(orgId) {
-      const params = { orgId };
+      const params = { orgId: "/" + orgId + "/" };
       listUser(params).then((response) => {
-        this.userOptions = response.data || [];
+        this.userOptions = response.data.list || [];
       });
     },
 
@@ -1213,13 +1431,13 @@ export default {
     },
 
     /** 执法类型数据格式化 */
-    normalizeEnforcementType(node) {
+    normalizeEnforceType(node) {
       if (node.children && !node.children.length) {
         delete node.children;
       }
       return {
         id: node.id,
-        label: node.enforcementTypeName || node.label || "未知",
+        label: node.enforceTypeName || node.label || "未知",
         children: node.children,
       };
     },
@@ -1266,36 +1484,15 @@ export default {
       return `${current.toFixed(2)} ${units[index]}`;
     },
 
-    // 以下方法仅在非选择模式下使用
-    /** 新增按钮操作 */
-    handleAdd() {
-      this.$emit("add");
-    },
-
-    /** 修改按钮操作 */
-    handleUpdate() {
-      this.$emit("update", this.selectedMedia[0]);
-    },
-
     /** 删除按钮操作 */
     handleDelete() {
       this.$emit("delete", this.selectedMedia);
     },
 
-    isVideoMedia(row) {
-      // 使用字典查找替代format函数
-      // 添加安全检查,防止mediaCateOptions未初始化或row为空
-      if (!row || row.mediaCate === null || row.mediaCate === undefined) {
-        return false;
-      }
-      if (!this.mediaCateOptions || !Array.isArray(this.mediaCateOptions)) {
-        return false;
-      }
-      // 使用宽松相等(==)支持数字和字符串类型的匹配
-      const option = this.mediaCateOptions.find(
-        (item) => item.value == row.mediaCate
-      );
-      return option ? option.label === "视频" : false;
+    /** 浏览媒体详情 */
+    handleViewMedia(row) {
+      this.viewMediaData = row;
+      this.viewMediaOpen = true;
     },
 
     /** 操作按钮 */
@@ -1304,26 +1501,13 @@ export default {
       if (!row) {
         return;
       }
-      // 使用字典查找替代format函数
-      // 添加安全检查,防止mediaCateOptions未初始化
-      const mediaCateOption =
-        this.mediaCateOptions &&
-        Array.isArray(this.mediaCateOptions) &&
-        row.mediaCate !== null &&
-        row.mediaCate !== undefined
-          ? this.mediaCateOptions.find(
-              (item) =>
-                item.value == row.mediaCate ||
-                item.value === String(row.mediaCate)
-            )
-          : null;
 
-      var newRow = {
-        ...row,
-        mediaCate: mediaCateOption ? mediaCateOption.label : row.mediaCate,
-        orgFullName: this.formatOrgName(row),
-      };
-      this.$emit("operation", newRow, action);
+      // 处理浏览操作
+      if (action === "view") {
+        this.handleViewMedia(row);
+        return;
+      }
+      this.$emit("operation", row, action);
     },
 
     /** 获取选中的媒体数据 */
@@ -1332,7 +1516,7 @@ export default {
     },
 
     /** 刷新列表 */
-    refresh() {
+    refreshList() {
       this.getList();
     },
 

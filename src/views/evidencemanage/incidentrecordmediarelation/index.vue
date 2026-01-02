@@ -452,7 +452,7 @@
                       v-model="form.createTime"
                       type="datetime"
                       placeholder="选择创建时间"
-                      value-format="yyyy-MM-ddTHH:mm:ssZ"
+                      value-format="yyyy-MM-dd HH:mm:ss"
                       class="full-width"
                     />
                   </el-form-item>
@@ -463,7 +463,7 @@
                       v-model="form.reportTime"
                       type="datetime"
                       placeholder="选择报警时间"
-                      value-format="yyyy-MM-ddTHH:mm:ssZ"
+                      value-format="yyyy-MM-dd HH:mm:ss"
                       class="full-width"
                     />
                   </el-form-item>
@@ -476,7 +476,7 @@
                       v-model="form.receiveTime"
                       type="datetime"
                       placeholder="选择接警时间"
-                      value-format="yyyy-MM-ddTHH:mm:ssZ"
+                      value-format="yyyy-MM-dd HH:mm:ss"
                       class="full-width"
                     />
                   </el-form-item>
@@ -487,7 +487,7 @@
                       v-model="form.processTime"
                       type="datetime"
                       placeholder="选择处警时间"
-                      value-format="yyyy-MM-ddTHH:mm:ssZ"
+                      value-format="yyyy-MM-dd HH:mm:ss"
                       class="full-width"
                     />
                   </el-form-item>
@@ -500,7 +500,7 @@
                       v-model="form.endTime"
                       type="datetime"
                       placeholder="选择结束时间"
-                      value-format="yyyy-MM-ddTHH:mm:ssZ"
+                      value-format="yyyy-MM-dd HH:mm:ss"
                       class="full-width"
                     />
                   </el-form-item>
@@ -593,7 +593,7 @@ import {
   getIncidentRecordMediaRelationsByIncidentRecordId,
   getUnassociatedMediaByIncidentRecordId,
 } from "@/api/evidence/evidence_manage_query_api";
-import { getEnforcementTypeTree } from "@/api/admin/enforcementtype";
+import { getEnforceTypeTree } from "@/api/admin/enforcetype";
 import { formatJson } from "@/utils";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
@@ -737,7 +737,7 @@ export default {
   },
   created() {
     this.getTreeselect();
-    this.getEnforcementTypeTreeselect();
+    this.getEnforceTypeTreeselect();
 
     // 使用Promise.all等待所有字典加载完成后再加载列表
     Promise.all([
@@ -981,25 +981,24 @@ export default {
     },
 
     /** 获取执法类型树形数据 */
-    getEnforcementTypeTreeselect() {
-      getEnforcementTypeTree()
+    getEnforceTypeTreeselect() {
+      getEnforceTypeTree()
         .then((response) => {
-          this.enforcementTypeOptions =
-            response.data.list || response.data || [];
+          this.enforceTypeOptions = response.data.list || response.data || [];
         })
         .catch(() => {
-          this.enforcementTypeOptions = [];
+          this.enforceTypeOptions = [];
         });
     },
 
     /** 执法类型数据结构转换 */
-    normalizeEnforcementType(node) {
+    normalizeEnforceType(node) {
       if (node.children && !node.children.length) {
         delete node.children;
       }
       return {
         id: node.id,
-        label: node.enforcementTypeName || node.label || "未知",
+        label: node.enforceTypeName || node.label || "未知",
         children: node.children,
       };
     },
@@ -1233,7 +1232,7 @@ export default {
       this.$nextTick(() => {
         if (this.$refs.mediaSelector) {
           this.$refs.mediaSelector.clearSelection();
-          this.$refs.mediaSelector.refresh();
+          this.$refs.mediaSelector.refreshList();
         }
       });
     },

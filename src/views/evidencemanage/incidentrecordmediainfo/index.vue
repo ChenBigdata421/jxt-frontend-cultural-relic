@@ -318,7 +318,7 @@
                     v-model="entryForm.expiryTime"
                     type="datetime"
                     placeholder="请选择保存截至时间"
-                    value-format="yyyy-MM-ddTHH:mm:ssZ"
+                    value-format="yyyy-MM-dd HH:mm:ss"
                     class="full-width"
                   />
                 </el-form-item>

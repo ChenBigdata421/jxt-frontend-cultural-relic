@@ -135,7 +135,7 @@
                   type="danger"
                   icon="el-icon-delete"
                   size="mini"
-                  :disabled="multiple"
+                  :disabled="selectedIncidentRecords.length === 0"
                   @click="handleDelete"
                   >删除</el-button
                 >
@@ -241,18 +241,21 @@
             prop="code"
             label="警情号"
             width="120"
+            sortable="custom"
           />
           <el-table-column
             v-if="isColumnVisible('name')"
             prop="name"
             label="报警人姓名"
             width="140"
+            sortable="custom"
           />
           <el-table-column
             v-if="isColumnVisible('title')"
             prop="title"
             label="警情标题"
             min-width="160"
+            sortable="custom"
             :show-overflow-tooltip="true"
           />
           <el-table-column
@@ -586,7 +589,7 @@
                         v-model="form.createTime"
                         type="datetime"
                         placeholder="选择创建时间"
-                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        value-format="yyyy-MM-dd HH:mm:ss"
                         class="full-width"
                       />
                     </el-form-item>
@@ -597,7 +600,7 @@
                         v-model="form.reportTime"
                         type="datetime"
                         placeholder="选择报警时间"
-                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        value-format="yyyy-MM-dd HH:mm:ss"
                         class="full-width"
                       />
                     </el-form-item>
@@ -610,7 +613,7 @@
                         v-model="form.receiveTime"
                         type="datetime"
                         placeholder="选择接警时间"
-                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        value-format="yyyy-MM-dd HH:mm:ss"
                         class="full-width"
                       />
                     </el-form-item>
@@ -621,7 +624,7 @@
                         v-model="form.processTime"
                         type="datetime"
                         placeholder="选择处警时间"
-                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        value-format="yyyy-MM-dd HH:mm:ss"
                         class="full-width"
                       />
                     </el-form-item>
@@ -634,7 +637,7 @@
                         v-model="form.endTime"
                         type="datetime"
                         placeholder="选择结束时间"
-                        value-format="yyyy-MM-ddTHH:mm:ssZ"
+                        value-format="yyyy-MM-dd HH:mm:ss"
                         class="full-width"
                       />
                     </el-form-item>
@@ -694,25 +697,121 @@
 
         <!--显示详情-->
         <el-dialog
-          :title="title"
+          title="警情详情"
           :visible.sync="ViewOpen"
-          width="593px"
+          width="800px"
+          append-to-body
           :close-on-click-modal="false"
         >
-          <el-table v-loading="loading" :data="AttributeValueList" border>
-            <el-table-column
-              prop="AttributeName"
-              label="属性"
-              width="100"
-              align="center"
-            />
-            <el-table-column
-              prop="Value"
-              label="值"
-              width="450"
-              align="center"
-            />
-          </el-table>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="警情编号">
+              {{ viewData.code || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="警情标题">
+              {{ viewData.title || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="报警人姓名">
+              {{ viewData.name || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="报警电话">
+              {{ viewData.tel || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="处警单编号">
+              {{ viewData.processCode || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="接警单编号">
+              {{ viewData.receiveCode || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="反馈单编号">
+              {{ viewData.feedbackCode || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="警情监督类型">
+              {{ viewData.superviseType || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="案件编号">
+              {{ viewData.caseId || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="归档编号">
+              {{ viewData.archiveCode || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="处警组织路径" :span="2">
+              {{ viewData.orgPaths || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="处警组织名称">
+              {{ viewData.orgName || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="组织编码">
+              {{ viewData.orgCode || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="组织简称">
+              {{ viewData.orgJc || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="处警人员">
+              {{ viewData.processPoliceNames || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="状态">
+              <el-tag
+                :type="viewData.status === 1 ? 'success' : 'info'"
+                size="small"
+                effect="dark"
+              >
+                {{ selectDictLabel(statusOptions, viewData.status) || "-" }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="是否关联">
+              <el-tag
+                :type="viewData.isRelation === 1 ? 'success' : 'info'"
+                size="small"
+                effect="dark"
+              >
+                {{
+                  selectDictLabel(
+                    incidentRelationStatusOptions,
+                    viewData.isRelation
+                  ) || "-"
+                }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="报警地址" :span="2">
+              {{ viewData.address || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="报警内容" :span="2">
+              {{ viewData.context || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="处警结果" :span="2">
+              {{ viewData.result || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="报警时间">
+              {{ parseTime(viewData.reportTime) || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="接警时间">
+              {{ parseTime(viewData.receiveTime) || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="处警时间">
+              {{ parseTime(viewData.processTime) || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="结束时间">
+              {{ parseTime(viewData.endTime) || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="创建时间">
+              {{ parseTime(viewData.createTime) || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="创建用户">
+              {{ viewData.createUserName || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="创建用户警号">
+              {{ viewData.createUserNo || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="更新用户">
+              {{ viewData.updateUserName || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="更新用户警号">
+              {{ viewData.updateUserNo || "-" }}
+            </el-descriptions-item>
+          </el-descriptions>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="ViewOpen = false">关 闭</el-button>
+          </div>
         </el-dialog>
       </el-card>
     </template>
@@ -731,7 +830,7 @@ import {
   getIncidentRecordList,
   getIncidentRecordMediaRelationsByIncidentRecord,
 } from "@/api/evidence/evidence_manage_query_api";
-import { getEnforcementTypeTree } from "@/api/admin/enforcementtype";
+import { getEnforceTypeTree } from "@/api/admin/enforcetype";
 import { formatJson } from "@/utils";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
@@ -748,8 +847,6 @@ export default {
       // 遮罩层
       loading: true,
       firstLoad: null,
-      // 非多个禁用
-      multiple: true,
       // 总条数
       total: 0,
       // 警情数据
@@ -773,6 +870,8 @@ export default {
       ViewOpen: false,
       // 当前选中的警情记录
       currentIncidentRecord: null,
+      // 详情数据
+      viewData: {},
       // 组织树选项
       orgOptions: undefined,
       userOptions: undefined,
@@ -795,27 +894,31 @@ export default {
         isRelation: undefined,
       },
       AttributeValueList: [],
-      ColumnNameConvert: new Map([
-        ["code", "警情号"],
-        ["name", "报警人姓名"],
-        ["title", "警情标题"],
-        ["tel", "报警电话"],
-        ["context", "报警内容"],
-        ["address", "警情发生地址"],
-        ["processPoliceNames", "处警人"],
-        ["orgPaths", "处警组织"],
-        ["createTime", "创建时间"],
-        ["reportTime", "报警时间"],
-        ["receiveTime", "接警时间"],
-        ["processTime", "处警时间"],
-        ["endTime", "处警结束时间"],
-        ["result", "处警结果"],
-        ["superviseType", "警情监督情况类型"],
-        ["status", "警情状态"],
-        ["isRelation", "是否已关联"],
-      ]),
       // 表单参数
-      form: {},
+      form: {
+        code: undefined,
+        name: undefined,
+        title: undefined,
+        tel: undefined,
+        context: undefined,
+        address: undefined,
+        orgId: undefined,
+        processPoliceIds: [],
+        createTime: undefined,
+        reportTime: undefined,
+        receiveTime: undefined,
+        processTime: undefined,
+        endTime: undefined,
+        result: undefined,
+        feedbackCode: undefined,
+        processCode: undefined,
+        receiveCode: undefined,
+        caseId: undefined,
+        archiveCode: undefined,
+        superviseType: undefined,
+        status: undefined,
+        isRelation: undefined,
+      },
       // 列配置选项
       columnOptions: [
         { prop: "code", label: "警情号", fixed: true, defaultVisible: true },
@@ -854,6 +957,11 @@ export default {
       ],
       // 可见列
       visibleColumns: [],
+      exporting: false,
+      blurWhileExport: false, //标记页面失去焦点的状态
+      processingInstance: null, //Element UI全局加载动画的实例
+      focusListener: null, //页面获焦点事件的 (focus）的监听器
+      previousCursor: null, //记录鼠标状态
     };
   },
   watch: {
@@ -872,7 +980,7 @@ export default {
   created() {
     this.initVisibleColumns();
     this.getTreeselect();
-    this.getEnforcementTypeTreeselect();
+    this.getEnforceTypeTreeselect();
 
     // 使用Promise.all等待所有字典加载完成后再加载列表
     Promise.all([
@@ -899,15 +1007,21 @@ export default {
       });
     },
 
-    /** 查询警情列表 */
-    getList() {
-      this.loading = true;
-      const query = { ...this.queryParams };
+    normalizeQueryParams(params = {}) {
+      const query = { ...params };
       Object.keys(query).forEach((key) => {
-        if (query[key] === "" || query[key] === null) {
+        const value = query[key];
+        if (value === "" || value === null || value === undefined) {
           delete query[key];
         }
       });
+      return query;
+    },
+
+    /** 查询警情列表 */
+    getList() {
+      this.loading = true;
+      const query = this.normalizeQueryParams(this.queryParams);
       getIncidentRecordList(query)
         .then((response) => {
           if (response.code === 200 && response.data) {
@@ -977,7 +1091,6 @@ export default {
 
     // 表单重置
     reset() {
-      this.form = {};
       this.resetForm("form");
     },
     /** 重置按钮操作 */
@@ -992,8 +1105,28 @@ export default {
       this.open = false;
       this.reset();
     },
-    /** 搜索按钮操作 */
+
+    /** 搜索按钮操作
+     * 需要清空记录选中状态的场景如下：
+     * 1. 点击搜索按钮时，需要清空记录选中状态
+     * 2. 重置按钮操作时，需要清空记录选中状态
+     * 3. 执行删除、修改、导出时，需要清空记录选中状态
+     * 其他场景下，不需要清空记录选中状态
+     */
+    resetSelected() {
+      this.selectedIncidentRecordMap = {};
+      this.selectedIncidentRecords = [];
+    },
+
+    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    resetPage() {
+      this.queryParams.pageIndex = 1;
+    },
+
     handleQuery() {
+      this.resetPage();
+      this.resetSelected();
       this.getList();
     },
     // 多选框选中数据
@@ -1056,32 +1189,33 @@ export default {
       this.isEdit = true;
       this.open = true;
     },
+
+    /** 开始执行操作 */
+    startProcessing(text) {
+      this.processingInstance = this.$loading({
+        lock: true,
+        text: text,
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
+      });
+      // 鼠标切换为等待状态
+      this.previousCursor = document.body.style.cursor;
+      document.body.style.cursor = "wait";
+    },
+
+    /** 停止执行操作 */
+    stopProcessing() {
+      if (this.processingInstance) {
+        this.processingInstance.close();
+        this.processingInstance = null;
+      }
+      // 恢复鼠标状态
+      document.body.style.cursor = this.previousCursor;
+    },
+
     /** 浏览按钮操作 */
     handleView(row) {
-      this.AttributeValueList = [];
-      Object.keys(row).forEach((key) => {
-        var attributeName = this.ColumnNameConvert.get(key);
-        var value = row[key];
-        if (key === "status") {
-          const statusOption = this.statusOptions.find(
-            (item) => item.value === String(row.status)
-          );
-          value = statusOption ? statusOption.label : row.status;
-        }
-        if (key === "isRelation") {
-          const relationOption = this.incidentRelationStatusOptions.find(
-            (item) => item.value === String(row.isRelation)
-          );
-          value = relationOption ? relationOption.label : row.isRelation;
-        }
-        const attributeValue = {
-          AttributeName: attributeName,
-          Value: value,
-        };
-        if (attributeValue.AttributeName !== undefined) {
-          this.AttributeValueList.push(attributeValue);
-        }
-      });
+      this.viewData = { ...(row || {}) };
       this.ViewOpen = true;
       this.title = "警情信息";
     },
@@ -1090,21 +1224,12 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id !== undefined) {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在修改警情...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在修改警情...");
             updateIncidentRecord(this.form, this.form.id)
               .then(async (response) => {
                 if (response.code === 200) {
                   await this.delay(2000);
-                  this.selectedIncidentRecordMap = {};
-                  this.selectedIncidentRecords = [];
+                  this.resetSelected();
                   this.getList();
                   this.msgSuccess(response.msg);
                   this.open = false;
@@ -1116,20 +1241,10 @@ export default {
                 this.msgError("修改警情失败：" + (error.message || "未知错误"));
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           } else {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在创建警情...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在创建警情...");
             addIncidentRecord(this.form)
               .then(async (response) => {
                 if (response.code === 200) {
@@ -1145,9 +1260,7 @@ export default {
                 this.msgError("新增警情失败：" + (error.message || "未知错误"));
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           }
         }
@@ -1178,16 +1291,7 @@ export default {
             type: "info",
           }
         );
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在删除警情...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+        this.startProcessing("正在删除警情...");
         var response = null;
         if (Array.isArray(incidentRecordIds)) {
           response = await batchDelIncidentRecord({ ids: incidentRecordIds });
@@ -1196,16 +1300,14 @@ export default {
         }
         if (response.code === 200) {
           await this.delay(2000);
-          this.selectedIncidentRecordMap = {};
-          this.selectedIncidentRecords = [];
+          this.resetSelected();
+          this.resetPage();
           this.getList();
           this.msgSuccess(response.msg || "删除警情成功");
         } else {
           this.msgError(response.msg || "删除警情失败");
         }
-        // 恢复鼠标状态
-        document.body.style.cursor = previousCursor;
-        loadingInstance.close();
+        this.stopProcessing();
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("删除警情失败：" + (error.message || "未知错误"));
@@ -1214,155 +1316,170 @@ export default {
     },
 
     /** 导出按钮操作 */
-    handleExport() {
-      const hasSelection =
-        Array.isArray(this.selectedIncidentRecords) &&
-        this.selectedIncidentRecords.length > 0;
+    async handleExport() {
+      try {
+        const hasSelection =
+          Array.isArray(this.selectedIncidentRecords) &&
+          this.selectedIncidentRecords.length > 0;
 
-      const confirmText = hasSelection
-        ? `是否确认导出已勾选的 ${this.selectedIncidentRecords.length} 条警情数据？`
-        : "是否确认导出所有警情数据项？";
+        const confirmText = hasSelection
+          ? `是否确认导出已勾选的 ${this.selectedIncidentRecords.length} 条警情数据？`
+          : "是否确认导出所有警情数据项？";
 
-      this.$confirm(confirmText, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "info",
-      })
-        .then(async () => {
-          const loadingInstance = this.$loading({
-            lock: true,
-            text: "正在导出...",
-            spinner: "el-icon-loading",
-            background: "rgba(0, 0, 0, 0.3)",
-          });
+        await this.$confirm(confirmText, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "info",
+        });
 
-          try {
-            const columnOptions = Array.isArray(this.columnOptions)
-              ? this.columnOptions
-              : [];
-            const visibleColumns = Array.isArray(this.visibleColumns)
-              ? this.visibleColumns
-              : [];
-            const exportColumns = columnOptions.filter((c) =>
-              visibleColumns.includes(c.prop)
-            );
+        const columnOptions = Array.isArray(this.columnOptions)
+          ? this.columnOptions
+          : [];
+        const visibleColumns = Array.isArray(this.visibleColumns)
+          ? this.visibleColumns
+          : [];
+        const exportColumns = columnOptions.filter((c) =>
+          visibleColumns.includes(c.prop)
+        );
 
-            if (!exportColumns.length) {
-              this.msgError("当前未选择任何可导出的列");
-              return;
+        if (!exportColumns.length) {
+          this.msgError("当前未选择任何可导出的列");
+          return;
+        }
+
+        const tHeader = exportColumns.map((c) => c.label);
+        const filterVal = exportColumns.map((c) => c.prop);
+
+        let list = [];
+        if (hasSelection) {
+          list = this.selectedIncidentRecords;
+        } else {
+          const baseQueryParams = { ...(this.queryParams || {}) };
+          const pageSize = 1000;
+          let pageIndex = 1;
+          let total = Infinity;
+
+          while (list.length < total) {
+            const query = {
+              ...baseQueryParams,
+              pageIndex,
+              pageSize,
+            };
+            const resp = await getIncidentRecordList(query);
+            if (!resp || resp.code !== 200) {
+              throw new Error((resp && resp.msg) || "查询警情列表失败");
             }
 
-            const tHeader = exportColumns.map((c) => c.label);
-            const filterVal = exportColumns.map((c) => c.prop);
+            const pageList = (resp.data && resp.data.list) || [];
+            total = (resp.data && resp.data.count) || 0;
+            list = list.concat(pageList);
 
-            let list = [];
-            if (hasSelection) {
-              list = this.selectedIncidentRecords;
-            } else {
-              const baseQueryParams = { ...(this.queryParams || {}) };
-              const pageSize = 1000;
-              let pageIndex = 1;
-              let total = Infinity;
-
-              while (list.length < total) {
-                const query = {
-                  ...baseQueryParams,
-                  pageIndex,
-                  pageSize,
-                };
-                const resp = await getIncidentRecordList(query);
-                if (!resp || resp.code !== 200) {
-                  throw new Error((resp && resp.msg) || "查询警情列表失败");
-                }
-
-                const pageList = (resp.data && resp.data.list) || [];
-                total = (resp.data && resp.data.count) || 0;
-                list = list.concat(pageList);
-
-                if (!pageList.length) {
-                  break;
-                }
-                pageIndex += 1;
-              }
+            if (!pageList.length) {
+              break;
             }
-
-            const formatDateTime = (value) => {
-              if (!value) return "-";
-              try {
-                return this.parseTime ? this.parseTime(value) : value;
-              } catch (error) {
-                return value;
-              }
-            };
-
-            const formatStatus = (value) => {
-              const option = (this.statusOptions || []).find(
-                (item) => String(item.value) === String(value)
-              );
-              return option ? option.label : value;
-            };
-
-            const formatRelation = (value) => {
-              const option = (this.incidentRelationStatusOptions || []).find(
-                (item) => String(item.value) === String(value)
-              );
-              return option ? option.label : value;
-            };
-
-            const normalizeList = (Array.isArray(list) ? list : []).map(
-              (row) => {
-                const output = { ...row };
-                output.status = formatStatus(row.status);
-                output.isRelation = formatRelation(row.isRelation);
-                output.createTime = formatDateTime(row.createTime);
-                output.reportTime = formatDateTime(row.reportTime);
-                output.receiveTime = formatDateTime(row.receiveTime);
-                output.processTime = formatDateTime(row.processTime);
-                output.endTime = formatDateTime(row.endTime);
-                return output;
-              }
-            );
-
-            const data = formatJson(filterVal, normalizeList);
-
-            const excel = await import("@/vendor/Export2Excel");
-            excel.export_json_to_excel({
-              header: tHeader,
-              data,
-              filename: "警情列表",
-              autoWidth: true,
-              bookType: "xlsx",
-            });
-          } catch (error) {
-            console.error("[IncidentRecordQuery] 导出失败:", error);
-            this.msgError(error.message || "导出失败");
-          } finally {
-            loadingInstance.close();
+            pageIndex += 1;
           }
-        })
-        .catch(() => {});
+        }
+
+        const formatDateTime = (value) => {
+          if (!value) return "-";
+          try {
+            return this.parseTime ? this.parseTime(value) : value;
+          } catch (error) {
+            return value;
+          }
+        };
+
+        const formatStatus = (value) => {
+          const option = (this.statusOptions || []).find(
+            (item) => String(item.value) === String(value)
+          );
+          return option ? option.label : value;
+        };
+
+        const formatRelation = (value) => {
+          const option = (this.incidentRelationStatusOptions || []).find(
+            (item) => String(item.value) === String(value)
+          );
+          return option ? option.label : value;
+        };
+
+        const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
+          const output = { ...row };
+          output.status = formatStatus(row.status);
+          output.isRelation = formatRelation(row.isRelation);
+          output.createTime = formatDateTime(row.createTime);
+          output.reportTime = formatDateTime(row.reportTime);
+          output.receiveTime = formatDateTime(row.receiveTime);
+          output.processTime = formatDateTime(row.processTime);
+          output.endTime = formatDateTime(row.endTime);
+          return output;
+        });
+
+        const data = formatJson(filterVal, normalizeList);
+        // 标记导出开始
+        this.exporting = true;
+        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
+
+        // 注册 focus 事件：当用户从“另存为”对话框返回时
+        this.focusListener = () => {
+          if (this.exporting && this.blurWhileExport) {
+            this.blurWhileExport = false;
+            console.log(
+              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
+            );
+          }
+        };
+
+        window.addEventListener("focus", this.focusListener);
+        // 触发导出（会弹出另存为对话框）
+        const excel = await import("@/vendor/Export2Excel");
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: "警情列表",
+          autoWidth: true,
+          bookType: "xlsx",
+        });
+        // 等待用户从“另存为”对话框返回
+        while (this.blurWhileExport) {
+          await this.delay(100);
+        }
+        this.startProcessing("正在导出...");
+        await this.delay(3000);
+        this.resetSelected();
+        this.getList();
+        this.msgSuccess("导出警情成功");
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("导出失败：" + (error.message || "未知错误"));
+        }
+      } finally {
+        this.exporting = false;
+        this.stopProcessing();
+        this.cleanupExportListeners();
+      }
     },
 
     /** 获取执法类型树形数据 */
-    getEnforcementTypeTreeselect() {
-      getEnforcementTypeTree()
+    getEnforceTypeTreeselect() {
+      getEnforceTypeTree()
         .then((response) => {
-          this.enforcementTypeOptions =
-            response.data.list || response.data || [];
+          this.enforceTypeOptions = response.data.list || response.data || [];
         })
         .catch(() => {
-          this.enforcementTypeOptions = [];
+          this.enforceTypeOptions = [];
         });
     },
 
     /** 执法类型数据结构转换 */
-    normalizeEnforcementType(node) {
+    normalizeEnforceType(node) {
       if (node.children && !node.children.length) {
         delete node.children;
       }
       return {
         id: node.id,
-        label: node.enforcementTypeName || node.label || "未知",
+        label: node.enforceTypeName || node.label || "未知",
         children: node.children,
       };
     },

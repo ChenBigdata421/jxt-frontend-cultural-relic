@@ -1,14 +1,14 @@
 import request from '@/utils/request'
 
 // 查询执法类型详细
-export function getEnforcementType(id) {
+export function getEnforceType(id) {
   return request({
     url: '/api/v1/enforcement-type/' + id,
     method: 'get'
   })
 }
 // 查询执法类型列表
-export function getEnforcementTypeList(query) {
+export function getEnforceTypeList(query) {
   return request({
     url: '/api/v1/enforcement-type',
     method: 'get',
@@ -16,7 +16,7 @@ export function getEnforcementTypeList(query) {
   })
 }
 // 查询执法类型树形结构
-export function getEnforcementTypeTree(query) {
+export function getEnforceTypeTree(query) {
   return request({
     url: '/api/v1/enforcement-type/tree',
     method: 'get',
@@ -25,7 +25,7 @@ export function getEnforcementTypeTree(query) {
 }
 
 // 新增执法类型
-export function addEnforcementType(data) {
+export function addEnforceType(data) {
   return request({
     url: '/api/v1/enforcement-type',
     method: 'post',
@@ -34,7 +34,7 @@ export function addEnforcementType(data) {
 }
 
 // 修改执法类型
-export function updateEnforcementType(data, id) {
+export function updateEnforceType(data, id) {
   return request({
     url: '/api/v1/enforcement-type/' + id,
     method: 'put',
@@ -43,7 +43,7 @@ export function updateEnforcementType(data, id) {
 }
 
 // 删除执法类型
-export function delEnforcementType(id) {
+export function delEnforceType(id) {
   return request({
     url: '/api/v1/enforcement-type/' + id,
     method: 'delete'

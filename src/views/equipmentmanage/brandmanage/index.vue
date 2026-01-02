@@ -148,12 +148,14 @@
             label="名称"
             prop="brandName"
             min-width="140"
+            sortable="custom"
             :show-overflow-tooltip="true"
           />
           <el-table-column
             label="硬件设备"
             prop="hardware"
             min-width="140"
+            sortable="custom"
             :show-overflow-tooltip="true"
           />
           <el-table-column prop="state" label="状态" width="100">
@@ -290,6 +292,11 @@ export default {
       },
       // 表单校验
       rules: {},
+      exporting: false,
+      blurWhileExport: false, //标记页面失去焦点的状态
+      processingInstance: null, //Element UI全局加载动画的实例
+      focusListener: null, //页面获焦点事件的 (focus）的监听器
+      previousCursor: null, //记录鼠标状态
     };
   },
   created() {
@@ -343,16 +350,60 @@ export default {
     StateFormat(row) {
       return this.selectDictLabel(this.statusOptions, row.state);
     },
-    /** 搜索按钮操作 */
-    handleQuery() {
+
+    /**
+     * 需要清空记录选中状态的场景如下：
+     * 1. 点击搜索按钮时，需要清空记录选中状态
+     * 2. 重置按钮操作时，需要清空记录选中状态
+     * 3. 执行删除、修改、导出时，需要清空记录选中状态
+     * 其他场景下，不需要清空记录选中状态
+     */
+    resetSelected() {
+      this.selectedBrandMap = {};
+      this.selectedBrandRecords = [];
+    },
+
+    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    resetPage() {
       this.queryParams.pageIndex = 1;
+    },
+
+    handleQuery() {
+      this.resetPage();
+      this.resetSelected();
       this.getList();
     },
+
     /** 重置按钮操作 */
     resetQuery() {
       this.resetForm("queryForm");
       this.handleQuery();
     },
+
+    /** 开始执行操作 */
+    startProcessing(text) {
+      this.processingInstance = this.$loading({
+        lock: true,
+        text: text,
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
+      });
+      // 鼠标切换为等待状态
+      this.previousCursor = document.body.style.cursor;
+      document.body.style.cursor = "wait";
+    },
+
+    /** 停止执行操作 */
+    stopProcessing() {
+      if (this.processingInstance) {
+        this.processingInstance.close();
+        this.processingInstance = null;
+      }
+      // 恢复鼠标状态
+      document.body.style.cursor = this.previousCursor;
+    },
+
     // 多选框选中数据
     handleSelectionChange(selection) {
       if (this.isRestoringSelection) {
@@ -438,21 +489,12 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id !== undefined) {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在修改品牌...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在修改品牌...");
             updateEquipmentBrand(this.form, this.form.id)
               .then(async (response) => {
                 if (response.code === 200) {
                   await this.delay(1000);
-                  this.selectedBrandMap = {};
-                  this.selectedBrandRecords = [];
+                  this.resetSelected();
                   this.getList();
                   this.msgSuccess(response.msg);
                   this.open = false;
@@ -464,20 +506,10 @@ export default {
                 this.msgError("修改品牌失败：" + (error.message || "未知错误"));
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           } else {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在创建品牌...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在创建品牌...");
             addEquipmentBrand(this.form)
               .then(async (response) => {
                 if (response.code === 200) {
@@ -493,9 +525,7 @@ export default {
                 this.msgError("新增品牌失败：" + (error.message || "未知错误"));
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           }
         }
@@ -522,29 +552,18 @@ export default {
             type: "info",
           }
         );
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在删除品牌...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+        this.startProcessing("正在删除品牌...");
         const response = await delEquipmentBrand({ ids: brandIds });
         if (response.code === 200) {
           await this.delay(1000);
-          this.selectedBrandMap = {};
-          this.selectedBrandRecords = [];
+          this.resetQuery();
+          this.resetSelected();
           this.getList();
           this.msgSuccess(response.msg || "删除品牌成功");
         } else {
           this.msgError(response.msg || "删除品牌失败");
         }
-        // 恢复鼠标状态
-        document.body.style.cursor = previousCursor;
-        loadingInstance.close();
+        this.stopProcessing();
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("删除品牌失败：" + (error.message || "未知错误"));
@@ -562,121 +581,133 @@ export default {
       return query;
     },
     /** 导出按钮操作 */
-    handleExport() {
-      const hasSelection =
-        Array.isArray(this.selectedBrandRecords) &&
-        this.selectedBrandRecords.length > 0;
+    async handleExport() {
+      try {
+        const hasSelection =
+          Array.isArray(this.selectedBrandRecords) &&
+          this.selectedBrandRecords.length > 0;
 
-      const confirmText = hasSelection
-        ? `是否确认导出已勾选的 ${this.selectedBrandRecords.length} 条品牌数据？`
-        : "是否确认导出所有品牌数据项？";
+        const confirmText = hasSelection
+          ? `是否确认导出已勾选的 ${this.selectedBrandRecords.length} 条品牌数据？`
+          : "是否确认导出所有品牌数据项？";
 
-      this.$confirm(confirmText, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "info",
-      })
-        .then(async () => {
-          const loadingInstance = this.$loading({
-            lock: true,
-            text: "正在导出...",
-            spinner: "el-icon-loading",
-            background: "rgba(0, 0, 0, 0.3)",
-          });
+        await this.$confirm(confirmText, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "info",
+        });
 
-          try {
-            const tHeader = [
-              "名称",
-              "硬件设备",
-              "状态",
-              "创建时间",
-              "更新时间",
-            ];
-            const filterVal = [
-              "brandName",
-              "hardware",
-              "state",
-              "createdAt",
-              "updatedAt",
-            ];
+        const tHeader = ["名称", "硬件设备", "状态", "创建时间", "更新时间"];
+        const filterVal = [
+          "brandName",
+          "hardware",
+          "state",
+          "createdAt",
+          "updatedAt",
+        ];
 
-            let list = [];
-            if (hasSelection) {
-              list = this.selectedBrandRecords;
-            } else {
-              const baseQueryParams = this.normalizeQueryParams(
-                this.queryParams || {}
-              );
-              const pageSize = 1000;
-              let pageIndex = 1;
-              let total = Infinity;
+        let list = [];
+        if (hasSelection) {
+          list = this.selectedBrandRecords;
+        } else {
+          const baseQueryParams = this.normalizeQueryParams(
+            this.queryParams || {}
+          );
+          const pageSize = 1000;
+          let pageIndex = 1;
+          let total = Infinity;
 
-              while (list.length < total) {
-                const query = {
-                  ...baseQueryParams,
-                  pageIndex,
-                  pageSize,
-                };
-                const resp = await listEquipmentBrand(query);
-                if (!resp || resp.code !== 200) {
-                  throw new Error((resp && resp.msg) || "查询品牌列表失败");
-                }
-
-                const pageList = (resp.data && resp.data.list) || [];
-                total = (resp.data && resp.data.count) || 0;
-                list = list.concat(pageList);
-
-                if (!pageList.length) {
-                  break;
-                }
-                pageIndex += 1;
-              }
+          while (list.length < total) {
+            const query = {
+              ...baseQueryParams,
+              pageIndex,
+              pageSize,
+            };
+            const resp = await listEquipmentBrand(query);
+            if (!resp || resp.code !== 200) {
+              throw new Error((resp && resp.msg) || "查询品牌列表失败");
             }
 
-            const formatDateTime = (value) => {
-              if (!value) return "-";
-              try {
-                return this.parseTime ? this.parseTime(value) : value;
-              } catch (error) {
-                return value;
-              }
-            };
+            const pageList = (resp.data && resp.data.list) || [];
+            total = (resp.data && resp.data.count) || 0;
+            list = list.concat(pageList);
 
-            const formatStatus = (value) => {
-              const option = (this.statusOptions || []).find(
-                (item) => String(item.value) === String(value)
-              );
-              return option ? option.label : value;
-            };
-
-            const normalizeList = (Array.isArray(list) ? list : []).map(
-              (row) => {
-                const output = { ...row };
-                output.state = formatStatus(row.state);
-                output.createdAt = formatDateTime(row.createdAt);
-                output.updatedAt = formatDateTime(row.updatedAt);
-                return output;
-              }
-            );
-
-            const data = formatJson(filterVal, normalizeList);
-
-            const excel = await import("@/vendor/Export2Excel");
-            excel.export_json_to_excel({
-              header: tHeader,
-              data,
-              filename: "品牌列表",
-              autoWidth: true,
-              bookType: "xlsx",
-            });
-          } catch (error) {
-            console.error("[BrandManage] 导出失败:", error);
-            this.msgError(error.message || "导出失败");
-          } finally {
-            loadingInstance.close();
+            if (!pageList.length) {
+              break;
+            }
+            pageIndex += 1;
           }
-        })
-        .catch(() => {});
+        }
+
+        const formatDateTime = (value) => {
+          if (!value) return "-";
+          try {
+            return this.parseTime ? this.parseTime(value) : value;
+          } catch (error) {
+            return value;
+          }
+        };
+
+        const formatStatus = (value) => {
+          const option = (this.statusOptions || []).find(
+            (item) => String(item.value) === String(value)
+          );
+          return option ? option.label : value;
+        };
+
+        const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
+          const output = { ...row };
+          output.state = formatStatus(row.state);
+          output.createdAt = formatDateTime(row.createdAt);
+          output.updatedAt = formatDateTime(row.updatedAt);
+          return output;
+        });
+
+        const data = formatJson(filterVal, normalizeList);
+        // 标记导出开始
+        this.exporting = true;
+        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
+
+        // 注册 focus 事件：当用户从“另存为”对话框返回时
+        this.focusListener = () => {
+          if (this.exporting && this.blurWhileExport) {
+            this.blurWhileExport = false;
+            console.log(
+              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
+            );
+          }
+        };
+
+        window.addEventListener("focus", this.focusListener);
+
+        // 触发导出（会弹出另存为对话框）
+        const excel = await import("@/vendor/Export2Excel");
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: "品牌列表",
+          autoWidth: true,
+          bookType: "xlsx",
+        });
+        // 等待用户从“另存为”对话框返回
+        while (this.blurWhileExport) {
+          await this.delay(100);
+        }
+        this.startProcessing("正在导出...");
+        await this.delay(3000);
+        this.resetSelected();
+        this.getList();
+        this.msgSuccess("导出品牌成功");
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("导出失败：" + (error.message || "未知错误"));
+        }
+      } finally {
+        // 清理状态和事件监听
+        this.exporting = false;
+        this.stopProcessing();
+        this.cleanupExportListeners();
+      }
     },
 
     /** 延迟函数 */

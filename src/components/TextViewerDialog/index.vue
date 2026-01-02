@@ -16,11 +16,7 @@
         >
           查看原文件
         </el-button>
-        <el-button
-          size="small"
-          :disabled="!loadError"
-          @click="handleRetry"
-        >
+        <el-button size="small" :disabled="!loadError" @click="handleRetry">
           重试
         </el-button>
       </div>

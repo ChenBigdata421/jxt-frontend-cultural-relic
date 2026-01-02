@@ -1240,7 +1240,7 @@ export default {
       this.$nextTick(() => {
         if (this.$refs.mediaSelector) {
           this.$refs.mediaSelector.clearSelection();
-          this.$refs.mediaSelector.refresh();
+          this.$refs.mediaSelector.refreshList();
         }
       });
     },
@@ -1697,7 +1697,7 @@ export default {
         this.uploadForm.deviceCode === "" ||
         this.uploadForm.policeCode === ""
       ) {
-        this.msgError("请输入设备编号和警员编号");
+        this.msgError("请输入设备编号和警员编号、存储服务器编号");
         return;
       }
       // 检查是否选择了文件

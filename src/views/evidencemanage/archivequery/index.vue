@@ -403,6 +403,11 @@ export default {
       selectedMediaRelationMap: {},
       // 防止恢复选中时触发事件循环
       isRestoringMediaRelationSelection: false,
+      exporting: false,
+      blurWhileExport: false, //标记页面失去焦点的状态
+      processingInstance: null, //Element UI全局加载动画的实例
+      focusListener: null, //页面获焦点事件的 (focus）的监听器
+      previousCursor: null, //记录鼠标状态
     };
   },
   created() {
@@ -451,6 +456,28 @@ export default {
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
       this.selectedArchiveRecords = selection;
+    },
+    /** 开始执行操作 */
+    startProcessing(text) {
+      this.processingInstance = this.$loading({
+        lock: true,
+        text: text,
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
+      });
+      // 鼠标切换为等待状态
+      this.previousCursor = document.body.style.cursor;
+      document.body.style.cursor = "wait";
+    },
+
+    /** 停止执行操作 */
+    stopProcessing() {
+      if (this.processingInstance) {
+        this.processingInstance.close();
+        this.processingInstance = null;
+      }
+      // 恢复鼠标状态
+      document.body.style.cursor = this.previousCursor;
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -503,21 +530,13 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.archiveId) {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在修改档案...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在修改档案...");
             updateArchive(this.form, this.form.archiveId)
               .then(async (response) => {
                 if (response.code === 200) {
                   await this.delay(2000);
-                  this.$refs.archiveSelector.refresh();
-                  this.selectedArchiveRecords = [];
+                  this.$refs.archiveSelector.resetSelected();
+                  this.$refs.archiveSelector.refreshList();
                   this.msgSuccess("修改档案成功");
                   this.open = false;
                 }
@@ -526,25 +545,15 @@ export default {
                 this.msgError("修改档案失败：" + (error.message || "未知错误"));
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           } else {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在创建档案...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在创建档案...");
             addArchive(this.form)
               .then(async (response) => {
                 if (response.code === 200) {
                   await this.delay(2000);
-                  this.$refs.archiveSelector.refresh();
+                  this.$refs.archiveSelector.refreshList();
                   this.msgSuccess("创建档案成功");
                   this.open = false;
                 }
@@ -553,9 +562,7 @@ export default {
                 this.msgError("创建档案失败：" + (error.message || "未知错误"));
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           }
         }
@@ -587,16 +594,7 @@ export default {
             type: "info",
           }
         );
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在删除档案...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+        this.startProcessing("正在删除档案...");
         var response = null;
         if (Array.isArray(archiveIds)) {
           response = await batchDelArchives({ ids: archiveIds });
@@ -605,16 +603,15 @@ export default {
         }
         if (response.code === 200) {
           await this.delay(2000);
-          this.$refs.archiveSelector.refresh();
-          this.selectedArchiveRecords = [];
+          this.$refs.archiveSelector.resetSelected();
+          this.$refs.archiveSelector.resetPage();
+          this.$refs.archiveSelector.refreshList();
           this.msgSuccess(response.msg || "删除档案成功");
         } else {
           this.msgError(response.msg || "删除档案失败");
         }
 
-        // 恢复鼠标状态
-        document.body.style.cursor = previousCursor;
-        loadingInstance.close();
+        this.stopProcessing();
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("删除档案失败：" + (error.message || "未知错误"));
@@ -622,116 +619,133 @@ export default {
       }
     },
     /** 导出按钮操作 */
-    handleExport() {
-      const archiveSelector = this.$refs.archiveSelector;
-      if (!archiveSelector) {
-        this.msgError("档案列表组件未就绪，无法导出");
-        return;
-      }
+    async handleExport() {
+      try {
+        const archiveSelector = this.$refs.archiveSelector;
+        if (!archiveSelector) {
+          this.msgError("档案列表组件未就绪，无法导出");
+          return;
+        }
 
-      const hasSelection = this.selectedArchiveRecords.length;
+        const hasSelection = this.selectedArchiveRecords.length;
 
-      const confirmText = hasSelection
-        ? `是否确认导出已勾选的 ${this.selectedArchiveRecords.length} 条档案数据？`
-        : "是否确认导出所有档案数据项？";
+        const confirmText = hasSelection
+          ? `是否确认导出已勾选的 ${this.selectedArchiveRecords.length} 条档案数据？`
+          : "是否确认导出所有档案数据项？";
 
-      this.$confirm(confirmText, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "info",
-      })
-        .then(async () => {
-          const loadingInstance = this.$loading({
-            lock: true,
-            text: "正在导出...",
-            spinner: "el-icon-loading",
-            background: "rgba(0, 0, 0, 0.3)",
-          });
+        await this.$confirm(confirmText, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "info",
+        });
+        // 仅导出用户当前列设置中“可见”的列
+        const columnOptions = Array.isArray(archiveSelector.columnOptions)
+          ? archiveSelector.columnOptions
+          : [];
+        const visibleColumns = Array.isArray(archiveSelector.visibleColumns)
+          ? archiveSelector.visibleColumns
+          : [];
+        const exportColumns = columnOptions.filter((c) =>
+          visibleColumns.includes(c.prop)
+        );
 
-          try {
-            // 仅导出用户当前列设置中“可见”的列
-            const columnOptions = Array.isArray(archiveSelector.columnOptions)
-              ? archiveSelector.columnOptions
-              : [];
-            const visibleColumns = Array.isArray(archiveSelector.visibleColumns)
-              ? archiveSelector.visibleColumns
-              : [];
-            const exportColumns = columnOptions.filter((c) =>
-              visibleColumns.includes(c.prop)
-            );
+        if (!exportColumns.length) {
+          this.msgError("当前未选择任何可导出的列");
+          return;
+        }
 
-            if (!exportColumns.length) {
-              this.msgError("当前未选择任何可导出的列");
-              return;
+        const tHeader = exportColumns.map((c) => c.label);
+        const filterVal = exportColumns.map((c) => c.prop);
+
+        // 获取要导出的数据：有勾选则导出勾选，否则导出全部（按当前查询条件拉取）
+        let list = [];
+        if (hasSelection) {
+          list = this.selectedArchiveRecords;
+        } else {
+          const baseQueryParams = archiveSelector.queryParams || {};
+          const pageSize = 1000;
+          let pageIndex = 1;
+          let total = Infinity;
+
+          while (list.length < total) {
+            const query = {
+              ...baseQueryParams,
+              pageIndex,
+              pageSize,
+            };
+            const resp = await listArchives(query);
+            if (!resp || resp.code !== 200) {
+              throw new Error((resp && resp.msg) || "查询档案列表失败");
             }
 
-            const tHeader = exportColumns.map((c) => c.label);
-            const filterVal = exportColumns.map((c) => c.prop);
+            const pageList = (resp.data && resp.data.list) || [];
+            total = (resp.data && resp.data.count) || 0;
+            list = list.concat(pageList);
 
-            // 获取要导出的数据：有勾选则导出勾选，否则导出全部（按当前查询条件拉取）
-            let list = [];
-            if (hasSelection) {
-              list = this.selectedArchiveRecords;
-            } else {
-              const baseQueryParams = archiveSelector.queryParams || {};
-              const pageSize = 1000;
-              let pageIndex = 1;
-              let total = Infinity;
-
-              while (list.length < total) {
-                const query = {
-                  ...baseQueryParams,
-                  pageIndex,
-                  pageSize,
-                };
-                const resp = await listArchives(query);
-                if (!resp || resp.code !== 200) {
-                  throw new Error((resp && resp.msg) || "查询档案列表失败");
-                }
-
-                const pageList = (resp.data && resp.data.list) || [];
-                total = (resp.data && resp.data.count) || 0;
-                list = list.concat(pageList);
-
-                if (!pageList.length) {
-                  break;
-                }
-                pageIndex += 1;
-              }
+            if (!pageList.length) {
+              break;
             }
-
-            // 对导出字段做必要的格式化（与页面展示保持一致）
-            const normalizeList = (Array.isArray(list) ? list : []).map(
-              (row) => {
-                const out = { ...row };
-                out.archiveType = this.archiveTypeFormatter(row);
-                out.status = this.statusFormatter(row);
-                out.createdAt = this.dateFormatter(row, null, row.createdAt);
-                out.updatedAt = this.dateFormatter(row, null, row.updatedAt);
-                out.expirationTime = this.dateFormatter(
-                  row,
-                  null,
-                  row.expirationTime
-                );
-                return out;
-              }
-            );
-
-            const data = formatJson(filterVal, normalizeList);
-
-            const excel = await import("@/vendor/Export2Excel");
-            excel.export_json_to_excel({
-              header: tHeader,
-              data,
-              filename: "档案列表",
-              autoWidth: true,
-              bookType: "xlsx",
-            });
-          } finally {
-            loadingInstance.close();
+            pageIndex += 1;
           }
-        })
-        .catch(() => {});
+        }
+
+        // 对导出字段做必要的格式化（与页面展示保持一致）
+        const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
+          const out = { ...row };
+          out.archiveType = this.archiveTypeFormatter(row);
+          out.status = this.statusFormatter(row);
+          out.createdAt = this.dateFormatter(row, null, row.createdAt);
+          out.updatedAt = this.dateFormatter(row, null, row.updatedAt);
+          out.expirationTime = this.dateFormatter(
+            row,
+            null,
+            row.expirationTime
+          );
+          return out;
+        });
+
+        const data = formatJson(filterVal, normalizeList);
+
+        // 标记导出开始
+        this.exporting = true;
+        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
+        // 注册 focus 事件：当用户从“另存为”对话框返回时
+        this.focusListener = () => {
+          if (this.exporting && this.blurWhileExport) {
+            this.blurWhileExport = false;
+            console.log(
+              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
+            );
+          }
+        };
+        window.addEventListener("focus", this.focusListener);
+        // 触发导出（会弹出另存为对话框）
+        const excel = await import("@/vendor/Export2Excel");
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: "档案列表",
+          autoWidth: true,
+          bookType: "xlsx",
+        });
+        // 等待用户从“另存为”对话框返回
+        while (this.blurWhileExport) {
+          await this.delay(100);
+        }
+        this.startProcessing("正在导出...");
+        await this.delay(3000);
+        this.$refs.archiveSelector.resetSelected();
+        this.$refs.archiveSelector.refreshList();
+        this.msgSuccess("导出档案成功");
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("导出失败：" + (error.message || "未知错误"));
+        }
+      } finally {
+        this.stopProcessing();
+        this.exporting = false;
+        this.cleanupExportListeners();
+      }
     },
     /** 表单重置 */
     reset() {
@@ -802,16 +816,7 @@ export default {
           }
         );
 
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在解除归档...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+        this.startProcessing("正在解除归档...");
 
         try {
           const response = await delArchiveMediaRelationById(row.id);
@@ -826,9 +831,7 @@ export default {
             this.msgError(response.msg || "解除归档失败");
           }
         } finally {
-          // 恢复鼠标状态
-          document.body.style.cursor = previousCursor;
-          loadingInstance.close();
+          this.stopProcessing();
         }
       } catch (error) {
         // 用户取消操作或发生错误
@@ -914,16 +917,7 @@ export default {
           }
         );
 
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在批量解除归档...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+        this.startProcessing("正在批量解除归档...");
 
         try {
           // 提取选中的关联ID列表
@@ -945,9 +939,7 @@ export default {
             this.msgError(response.msg || "批量解除归档失败");
           }
         } finally {
-          // 恢复鼠标状态
-          document.body.style.cursor = previousCursor;
-          loadingInstance.close();
+          this.stopProcessing();
         }
       } catch (error) {
         // 用户取消操作或发生错误

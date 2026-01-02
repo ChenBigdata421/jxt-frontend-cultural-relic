@@ -47,15 +47,25 @@
             />
           </el-form-item>
           <el-form-item label="开书时间">
-            <el-date-picker
-              v-model="writTimeRange"
-              type="datetimerange"
-              range-separator="至"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
-              value-format="yyyy-MM-ddTHH:mm:ssZ"
-              style="width: 340px"
-            />
+            <el-form-item prop="writTimeStart">
+              <el-date-picker
+                v-model="queryParams.writTimeStart"
+                type="datetime"
+                placeholder="请选择开始时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+            <span>至</span>
+            <el-form-item prop="writTimeEnd">
+              <el-date-picker
+                v-model="queryParams.writTimeEnd"
+                type="datetime"
+                placeholder="请选择结束时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
           </el-form-item>
           <el-form-item>
             <el-button
@@ -90,7 +100,7 @@
                   type="success"
                   icon="el-icon-edit"
                   size="mini"
-                  :disabled="selectedWrits.length !== 1"
+                  :disabled="selectedWritRecords.length !== 1"
                   @click="handleUpdate"
                   >修改</el-button
                 >
@@ -155,6 +165,7 @@
           v-loading="loading"
           :data="writList"
           @selection-change="handleSelectionChange"
+          @sort-change="handleSortChang"
         >
           <el-table-column type="selection" width="50" align="center" />
           <el-table-column
@@ -207,12 +218,14 @@
             label="文书编号"
             align="center"
             prop="writCode"
+            sortable="custom"
           />
           <el-table-column
             v-if="isColumnVisible('writName')"
             label="文书名称"
             align="center"
             prop="writName"
+            sortable="custom"
           />
           <el-table-column
             v-if="isColumnVisible('writType')"
@@ -230,6 +243,7 @@
             align="center"
             prop="writTime"
             width="180"
+            sortable="custom"
           >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.writTime) }}</span>
@@ -682,8 +696,6 @@ export default {
       selectedMediaList: [],
       // 选中的已关联媒体列表（用于批量取消关联）
       selectedMediaRelations: [],
-      // 开书时间范围
-      writTimeRange: [],
       // 组织树选项
       orgOptions: [],
       // 用户选项
@@ -693,7 +705,7 @@ export default {
       // 防止恢复选中时触发事件循环
       isRestoringSelection: false,
       //所有选中的文书记录
-      selectedWrits: [],
+      selectedWritRecords: [],
       // 使用 Map 存储所有选中的项（跨分页）
       selectedMediaRelationMap: {},
       // 防止恢复选中时触发事件循环
@@ -764,6 +776,11 @@ export default {
           { required: true, message: "评分不能为空", trigger: "blur" },
         ],
       },
+      exporting: false,
+      blurWhileExport: false, //标记页面失去焦点的状态
+      processingInstance: null, //Element UI全局加载动画的实例
+      focusListener: null, //页面获焦点事件的 (focus）的监听器
+      previousCursor: null, //记录鼠标状态
     };
   },
   computed: {
@@ -811,15 +828,7 @@ export default {
     /** 查询文书列表 */
     getList() {
       this.loading = true;
-      // 处理时间范围
-      if (this.writTimeRange && this.writTimeRange.length === 2) {
-        this.queryParams.writTimeStart = this.writTimeRange[0];
-        this.queryParams.writTimeEnd = this.writTimeRange[1];
-      } else {
-        this.queryParams.writTimeStart = undefined;
-        this.queryParams.writTimeEnd = undefined;
-      }
-      const query = { ...this.queryParams };
+      const query = this.normalizeQueryParams(this.queryParams);
       Object.keys(query).forEach((key) => {
         if (query[key] === "" || query[key] === null) {
           delete query[key];
@@ -891,17 +900,48 @@ export default {
         this.form.writPoliceIds = [];
       }
     },
-    /** 搜索按钮操作 */
-    handleQuery() {
+
+    /** 搜索按钮操作
+     * 需要清空记录选中状态的场景如下：
+     * 1. 点击搜索按钮时，需要清空记录选中状态
+     * 2. 重置按钮操作时，需要清空记录选中状态
+     * 3. 执行删除、修改、导出时，需要清空记录选中状态
+     * 其他场景下，不需要清空记录选中状态
+     */
+    resetSelected() {
+      this.selectedWritMap = {};
+      this.selectedWritRecords = [];
+    },
+
+    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    resetPage() {
       this.queryParams.pageIndex = 1;
+      this.queryParams.pageSize = 10;
+    },
+
+    handleQuery() {
+      this.resetPage();
+      this.resetSelected();
       this.getList();
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.writTimeRange = [];
       this.resetForm("queryForm");
       this.handleQuery();
     },
+
+    normalizeQueryParams(params = {}) {
+      const query = { ...params };
+      Object.keys(query).forEach((key) => {
+        const value = query[key];
+        if (value === "" || value === null || value === undefined) {
+          delete query[key];
+        }
+      });
+      return query;
+    },
+
     /** 恢复选中状态 */
     restoreSelection() {
       if (this.isRestoringSelection) return;
@@ -924,6 +964,43 @@ export default {
       });
     },
 
+    /** 开始执行操作 */
+    startProcessing(text) {
+      this.processingInstance = this.$loading({
+        lock: true,
+        text: text,
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
+      });
+      // 鼠标切换为等待状态
+      this.previousCursor = document.body.style.cursor;
+      document.body.style.cursor = "wait";
+    },
+
+    /** 停止执行操作 */
+    stopProcessing() {
+      if (this.processingInstance) {
+        this.processingInstance.close();
+        this.processingInstance = null;
+      }
+      // 恢复鼠标状态
+      document.body.style.cursor = this.previousCursor;
+    },
+
+    handleSortChang(column, prop, order) {
+      prop = column.prop;
+      order = column.order;
+      if (order === "descending") {
+        this.queryParams[prop + "Order"] = "desc";
+      } else if (order === "ascending") {
+        this.queryParams[prop + "Order"] = "asc";
+      } else {
+        this.queryParams[prop + "Order"] = undefined;
+      }
+
+      this.getList();
+    },
+
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
       if (this.isRestoringSelection) {
@@ -943,7 +1020,9 @@ export default {
           delete this.selectedWritMap[id];
         }
       });
-      this.selectedWrits = Object.values(this.selectedWritMap).filter(Boolean);
+      this.selectedWritRecords = Object.values(this.selectedWritMap).filter(
+        Boolean
+      );
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -961,7 +1040,9 @@ export default {
       if (row && row.id !== undefined) {
         this.form = { ...row };
       } else {
-        this.form = this.selectedWrits[0] ? { ...this.selectedWrits[0] } : {};
+        this.form = this.selectedWritRecords[0]
+          ? { ...this.selectedWritRecords[0] }
+          : {};
       }
       // 加载对应的用户列表
       if (this.form.orgId) {
@@ -980,22 +1061,13 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id != null) {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在修改文书...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在修改文书...");
             updateWrit(this.form.id, this.form)
               .then(async (response) => {
                 if (response.code === 200) {
                   // 延迟2秒后刷新媒体列表
                   await this.delay(2000);
-                  this.selectedWritMap = {};
-                  this.selectedWrits = [];
+                  this.resetSelected();
                   this.getList();
                   this.msgSuccess(response.msg || "修改文书成功");
                   this.open = false;
@@ -1007,20 +1079,10 @@ export default {
                 this.msgError("修改文书失败：" + (error.message || "未知错误"));
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           } else {
-            // 鼠标切换为等待状态
-            const previousCursor = document.body.style.cursor;
-            document.body.style.cursor = "wait";
-            const loadingInstance = this.$loading({
-              lock: true,
-              text: "正在创建文书...",
-              spinner: "el-icon-loading",
-              background: "rgba(0, 0, 0, 0.3)",
-            });
+            this.startProcessing("正在创建文书...");
             addWrit(this.form)
               .then(async (response) => {
                 if (response.code === 200) {
@@ -1037,9 +1099,7 @@ export default {
                 this.msgError("新增文书失败：" + (error.message || "未知错误"));
               })
               .finally(() => {
-                // 恢复鼠标状态
-                document.body.style.cursor = previousCursor;
-                loadingInstance.close();
+                this.stopProcessing();
               });
           }
         }
@@ -1054,8 +1114,8 @@ export default {
           writIds = row.id;
           writCodes = row.writCode;
         } else {
-          writIds = this.selectedWrits.map((item) => item.id);
-          writCodes = this.selectedWrits.map((item) => item.writCode);
+          writIds = this.selectedWritRecords.map((item) => item.id);
+          writCodes = this.selectedWritRecords.map((item) => item.writCode);
         }
 
         await this.$confirm(
@@ -1067,16 +1127,7 @@ export default {
             type: "info",
           }
         );
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在删除文书...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+        this.startProcessing("正在删除文书...");
         var response = null;
         if (Array.isArray(writIds)) {
           response = await batchDelWrit({ ids: writIds });
@@ -1086,17 +1137,14 @@ export default {
         if (response.code === 200) {
           // 延迟2秒后刷新媒体列表
           await this.delay(2000);
-          this.selectedWritMap = {};
-          this.selectedWrits = [];
+          this.resetPage();
+          this.resetSelected();
           this.getList();
           this.msgSuccess(response.msg || "删除成功");
         } else {
           this.msgError(response.msg || "删除失败");
         }
-
-        // 恢复鼠标状态
-        document.body.style.cursor = previousCursor;
-        loadingInstance.close();
+        this.stopProcessing();
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("删除失败：" + (error.message || "未知错误"));
@@ -1194,137 +1242,145 @@ export default {
     },
 
     /** 导出按钮操作 */
-    handleExport() {
-      const hasSelection =
-        Array.isArray(this.selectedWrits) && this.selectedWrits.length > 0;
+    async handleExport() {
+      try {
+        const hasSelection =
+          Array.isArray(this.selectedWritRecords) &&
+          this.selectedWritRecords.length > 0;
 
-      const confirmText = hasSelection
-        ? `是否确认导出已勾选的 ${this.selectedWrits.length} 条文书数据？`
-        : "是否确认导出所有文书数据项？";
+        const confirmText = hasSelection
+          ? `是否确认导出已勾选的 ${this.selectedWritRecords.length} 条文书数据？`
+          : "是否确认导出所有文书数据项？";
 
-      this.$confirm(confirmText, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "info",
-      })
-        .then(async () => {
-          const loadingInstance = this.$loading({
-            lock: true,
-            text: "正在导出...",
-            spinner: "el-icon-loading",
-            background: "rgba(0, 0, 0, 0.3)",
-          });
+        await this.$confirm(confirmText, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "info",
+        });
 
-          try {
-            const columnOptions = Array.isArray(this.columnOptions)
-              ? this.columnOptions
-              : [];
-            const visibleColumns = Array.isArray(this.visibleColumns)
-              ? this.visibleColumns
-              : [];
-            const exportColumns = columnOptions.filter((c) =>
-              visibleColumns.includes(c.prop)
-            );
+        const columnOptions = Array.isArray(this.columnOptions)
+          ? this.columnOptions
+          : [];
+        const visibleColumns = Array.isArray(this.visibleColumns)
+          ? this.visibleColumns
+          : [];
+        const exportColumns = columnOptions.filter((c) =>
+          visibleColumns.includes(c.prop)
+        );
 
-            if (!exportColumns.length) {
-              this.msgError("当前未选择任何可导出的列");
-              return;
+        if (!exportColumns.length) {
+          this.msgError("当前未选择任何可导出的列");
+          return;
+        }
+
+        const tHeader = exportColumns.map((c) => c.label);
+        const filterVal = exportColumns.map((c) => c.prop);
+
+        let list = [];
+        if (hasSelection) {
+          list = this.selectedWritRecords;
+        } else {
+          const baseQueryParams = { ...(this.queryParams || {}) };
+
+          const pageSize = 1000;
+          let pageIndex = 1;
+          let total = Infinity;
+
+          while (list.length < total) {
+            const query = {
+              ...baseQueryParams,
+              pageIndex,
+              pageSize,
+            };
+            const resp = await listWrits(query);
+            if (!resp || resp.code !== 200) {
+              throw new Error((resp && resp.msg) || "查询文书列表失败");
             }
 
-            const tHeader = exportColumns.map((c) => c.label);
-            const filterVal = exportColumns.map((c) => c.prop);
+            const pageList = (resp.data && resp.data.list) || [];
+            total = (resp.data && resp.data.count) || 0;
+            list = list.concat(pageList);
 
-            let list = [];
-            if (hasSelection) {
-              list = this.selectedWrits;
-            } else {
-              const baseQueryParams = { ...(this.queryParams || {}) };
-              if (this.writTimeRange && this.writTimeRange.length === 2) {
-                baseQueryParams.writTimeStart = this.writTimeRange[0];
-                baseQueryParams.writTimeEnd = this.writTimeRange[1];
-              } else {
-                baseQueryParams.writTimeStart = undefined;
-                baseQueryParams.writTimeEnd = undefined;
-              }
-
-              const pageSize = 1000;
-              let pageIndex = 1;
-              let total = Infinity;
-
-              while (list.length < total) {
-                const query = {
-                  ...baseQueryParams,
-                  pageIndex,
-                  pageSize,
-                };
-                const resp = await listWrits(query);
-                if (!resp || resp.code !== 200) {
-                  throw new Error((resp && resp.msg) || "查询文书列表失败");
-                }
-
-                const pageList = (resp.data && resp.data.list) || [];
-                total = (resp.data && resp.data.count) || 0;
-                list = list.concat(pageList);
-
-                if (!pageList.length) {
-                  break;
-                }
-                pageIndex += 1;
-              }
+            if (!pageList.length) {
+              break;
             }
-
-            const formatDateTime = (value) => {
-              if (!value) return "-";
-              try {
-                return this.parseTime ? this.parseTime(value) : value;
-              } catch (error) {
-                return value;
-              }
-            };
-
-            const formatWritType = (value) => {
-              return (
-                this.selectDictLabel(this.writTypeOptions || [], value) || value
-              );
-            };
-
-            const formatRelation = (value) => {
-              return (
-                this.selectDictLabel(this.relationStatusOptions || [], value) ||
-                value
-              );
-            };
-
-            const normalizeList = (Array.isArray(list) ? list : []).map(
-              (row) => {
-                const output = { ...row };
-                output.writType = formatWritType(row.writType);
-                output.isRelation = formatRelation(row.isRelation);
-                output.writTime = formatDateTime(row.writTime);
-                output.createdAt = formatDateTime(row.createdAt);
-                output.updatedAt = formatDateTime(row.updatedAt);
-                return output;
-              }
-            );
-
-            const data = formatJson(filterVal, normalizeList);
-
-            const excel = await import("@/vendor/Export2Excel");
-            excel.export_json_to_excel({
-              header: tHeader,
-              data,
-              filename: "文书列表",
-              autoWidth: true,
-              bookType: "xlsx",
-            });
-          } catch (error) {
-            console.error("[WritManage] 导出失败:", error);
-            this.msgError(error.message || "导出失败");
-          } finally {
-            loadingInstance.close();
+            pageIndex += 1;
           }
-        })
-        .catch(() => {});
+        }
+
+        const formatDateTime = (value) => {
+          if (!value) return "-";
+          try {
+            return this.parseTime ? this.parseTime(value) : value;
+          } catch (error) {
+            return value;
+          }
+        };
+
+        const formatWritType = (value) => {
+          return (
+            this.selectDictLabel(this.writTypeOptions || [], value) || value
+          );
+        };
+
+        const formatRelation = (value) => {
+          return (
+            this.selectDictLabel(this.relationStatusOptions || [], value) ||
+            value
+          );
+        };
+
+        const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
+          const output = { ...row };
+          output.writType = formatWritType(row.writType);
+          output.isRelation = formatRelation(row.isRelation);
+          output.writTime = formatDateTime(row.writTime);
+          output.createdAt = formatDateTime(row.createdAt);
+          output.updatedAt = formatDateTime(row.updatedAt);
+          return output;
+        });
+
+        const data = formatJson(filterVal, normalizeList);
+        // 标记导出开始
+        this.exporting = true;
+        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
+        // 注册 focus 事件：当用户从“另存为”对话框返回时
+        this.focusListener = () => {
+          if (this.exporting && this.blurWhileExport) {
+            this.blurWhileExport = false;
+            console.log(
+              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
+            );
+          }
+        };
+        window.addEventListener("focus", this.focusListener);
+        // 触发导出（会弹出另存为对话框）
+        const excel = await import("@/vendor/Export2Excel");
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: "文书列表",
+          autoWidth: true,
+          bookType: "xlsx",
+        });
+        // 等待用户从“另存为”对话框返回
+        while (this.blurWhileExport) {
+          await this.delay(100);
+        }
+        this.startProcessing("正在导出...");
+        await this.delay(3000);
+        this.resetSelected();
+        this.getList();
+        this.msgSuccess("导出文书成功");
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("导出失败：" + (error.message || "未知错误"));
+        }
+      } finally {
+        this.exporting = false;
+        this.stopProcessing();
+        this.cleanupExportListeners();
+      }
     },
 
     /** ------------第一层抽屉 -----------------*/
@@ -1431,16 +1487,7 @@ export default {
           type: "info",
         });
 
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在取消关联...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+        this.startProcessing("正在取消关联...");
 
         try {
           const response = await deleteWritMediaRelation(row.id);
@@ -1456,9 +1503,7 @@ export default {
             this.msgError(response.msg || "取消关联失败");
           }
         } finally {
-          // 恢复鼠标状态
-          document.body.style.cursor = previousCursor;
-          loadingInstance.close();
+          this.stopProcessing();
         }
       } catch (error) {
         // 用户取消操作或发生错误
@@ -1485,16 +1530,7 @@ export default {
           }
         );
 
-        // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
-
-        const loadingInstance = this.$loading({
-          lock: true,
-          text: "正在批量取消关联...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+        this.startProcessing("正在批量取消关联...");
 
         try {
           // 提取选中的关联ID列表
@@ -1520,9 +1556,7 @@ export default {
             this.msgError(response.msg || "批量取消关联失败");
           }
         } finally {
-          // 恢复鼠标状态
-          document.body.style.cursor = previousCursor;
-          loadingInstance.close();
+          this.stopProcessing();
         }
       } catch (error) {
         if (error !== "cancel") {
@@ -1540,7 +1574,7 @@ export default {
       this.$nextTick(() => {
         if (this.$refs.mediaSelector) {
           this.$refs.mediaSelector.clearSelection();
-          this.$refs.mediaSelector.refresh();
+          this.$refs.mediaSelector.refreshList();
         }
       });
     },
@@ -1564,16 +1598,7 @@ export default {
         return;
       }
 
-      // 鼠标切换为等待状态
-      const previousCursor = document.body.style.cursor;
-      document.body.style.cursor = "wait";
-
-      const loadingInstance = this.$loading({
-        lock: true,
-        text: "正在关联媒体...",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.3)",
-      });
+      this.startProcessing("正在关联媒体...");
 
       try {
         const data = {
@@ -1599,9 +1624,7 @@ export default {
       } catch (error) {
         this.msgError("关联失败：" + (error.message || "未知错误"));
       } finally {
-        // 恢复鼠标状态
-        document.body.style.cursor = previousCursor;
-        loadingInstance.close();
+        this.stopProcessing();
       }
     },
   },
