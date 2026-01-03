@@ -9,9 +9,9 @@ export function getIncidentRecordList(query) {
   })
 }
 
-export function getIncidentRecord(lawcameraId) {
+export function getIncidentRecord(bwcId) {
   return request({
-    url: '/api/v1/incidentRecords/' + lawcameraId,
+    url: '/api/v1/incidentRecords/' + bwcId,
     method: 'get'
   })
 }

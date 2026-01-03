@@ -112,7 +112,7 @@
             <el-row :gutter="10">
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['equipment:lawcamera:create']"
+                  v-permisaction="['equipment:bwc:create']"
                   type="primary"
                   icon="el-icon-plus"
                   size="mini"
@@ -122,7 +122,7 @@
               </el-col>
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['equipment:lawcamera:edit']"
+                  v-permisaction="['equipment:bwc:edit']"
                   type="success"
                   icon="el-icon-edit"
                   size="mini"
@@ -133,7 +133,7 @@
               </el-col>
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['equipment:lawcamera:remove']"
+                  v-permisaction="['equipment:bwc:remove']"
                   type="danger"
                   icon="el-icon-delete"
                   size="mini"
@@ -144,7 +144,7 @@
               </el-col>
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['equipment:lawcamera:export']"
+                  v-permisaction="['equipment:bwc:export']"
                   type="warning"
                   icon="el-icon-download"
                   size="mini"
@@ -212,7 +212,7 @@
           >
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['equipment:lawcamera:browse']"
+                v-permisaction="['equipment:bwc:browse']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
@@ -220,7 +220,7 @@
                 >浏览</el-button
               >
               <el-button
-                v-permisaction="['equipment:lawcamera:edit']"
+                v-permisaction="['equipment:bwc:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
@@ -228,7 +228,7 @@
                 >修改</el-button
               >
               <el-button
-                v-permisaction="['equipment:lawcamera:remove']"
+                v-permisaction="['equipment:bwc:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
@@ -653,7 +653,7 @@ export default {
       loading: true,
       firstLoad: null,
       // 选中数组
-      LawCameraIds: [],
+      BwcIds: [],
       // 总条数
       total: 0,
       // 执法仪数据
@@ -774,7 +774,7 @@ export default {
         .map((item) => item.prop);
     },
     initVisibleColumns() {
-      const saved = localStorage.getItem("lawcamera_manage_visible_columns");
+      const saved = localStorage.getItem("bwc_manage_visible_columns");
       if (saved) {
         try {
           this.visibleColumns = JSON.parse(saved);
@@ -791,14 +791,14 @@ export default {
     handleColumnChange(value) {
       this.visibleColumns = value;
       localStorage.setItem(
-        "lawcamera_manage_visible_columns",
+        "bwc_manage_visible_columns",
         JSON.stringify(this.visibleColumns)
       );
     },
     resetColumns() {
       this.visibleColumns = this.getDefaultVisibleColumns();
       localStorage.setItem(
-        "lawcamera_manage_visible_columns",
+        "bwc_manage_visible_columns",
         JSON.stringify(this.visibleColumns)
       );
       this.$message.success("已重置为默认显示");

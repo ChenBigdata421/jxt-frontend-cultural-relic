@@ -108,7 +108,7 @@
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['incidentrecord:lawcamera:create']"
+              v-permisaction="['incidentrecord:bwc:create']"
               type="primary"
               icon="el-icon-plus"
               size="mini"
@@ -118,7 +118,7 @@
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['incidentrecord:lawcamera:export']"
+              v-permisaction="['incidentrecord:bwc:export']"
               type="warning"
               icon="el-icon-download"
               size="mini"
@@ -156,7 +156,7 @@
           >
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['incidentrecord:lawcamera:browse']"
+                v-permisaction="['incidentrecord:bwc:browse']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
@@ -164,7 +164,7 @@
                 >浏览</el-button
               >
               <el-button
-                v-permisaction="['incidentrecord:lawcamera:link']"
+                v-permisaction="['incidentrecord:bwc:link']"
                 size="mini"
                 type="text"
                 icon="el-icon-link"

@@ -9,9 +9,16 @@ export function getEquipmentBwcList(query) {
   })
 }
 
-export function getEquipmentLawcamera(lawcameraId) {
+export function getEquipmentBwc(bwcId) {
   return request({
-    url: '/api/v1/equipment/bwc/' + lawcameraId,
+    url: '/api/v1/equipment/bwc/' + bwcId,
+    method: 'get'
+  })
+}
+
+export function getEquipmentBwcByManagerId(managerId) {
+  return request({
+    url: '/api/v1/equipment/bwc/managerId/' + managerId,
     method: 'get'
   })
 }

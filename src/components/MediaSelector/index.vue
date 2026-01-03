@@ -127,12 +127,20 @@
         </el-form-item>
       </el-form-item>
 
-      <el-form-item v-if="showMore" label="执法仪编号" prop="recorderId">
-        <el-input
+      <el-form-item v-if="showMore" label="执法仪" prop="recorderId">
+        <el-select
           v-model="queryParams.recorderId"
-          placeholder="请输入执法仪编号"
+          placeholder="请选择执法仪"
           clearable
-        />
+          style="width: 200px"
+        >
+          <el-option
+            v-for="item in bwcOptions"
+            :key="item.id"
+            :label="item.bwcNo"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
 
       <el-form-item v-if="showMore" label="存储方式" prop="storageType">
@@ -909,6 +917,7 @@ import { listMedia } from "@/api/evidence/evidence_manage_query_api";
 import { getEnforceTypeTree } from "@/api/admin/enforcetype";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
+import { getEquipmentBwcByManagerId } from "@/api/admin/equipment_manage_api";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import { selectDictLabel } from "@/utils/costum";
@@ -977,6 +986,8 @@ export default {
       orgOptions: undefined,
       // 用户选项
       userOptions: [],
+      // 执法仪选项
+      bwcOptions: [],
       // 媒体类型选项
       mediaCateOptions: [],
       // 存储方式选项
@@ -1104,7 +1115,22 @@ export default {
       // 当组织选择变化时，清空人员选择并重新加载该组织的人员列表
       if (newVal) {
         this.queryParams.policeId = undefined;
-        this.getUserListByOrg(newVal);
+        this.getUserListByOrgId(newVal);
+      } else {
+        // 如果清空组织选择，则清空人员列表
+        this.userOptions = [];
+        this.queryParams.policeId = undefined;
+      }
+    },
+    "queryParams.policeId": function (newVal) {
+      // 当警员选择变化时，清空执法仪选择并重新加载该警员管理的执法仪列表
+      if (newVal) {
+        this.queryParams.recorderId = undefined;
+        this.getBwcListByPoliceId(newVal);
+      } else {
+        // 如果清空警员选择，则清空执法仪列表
+        this.bwcOptions = [];
+        this.queryParams.recorderId = undefined;
       }
     },
   },
@@ -1114,6 +1140,7 @@ export default {
     this.initVisibleColumns();
     this.getOrgTreeSelect();
     this.getUserList();
+    this.getBwcList();
     this.getEnforceTypeTree();
 
     // 使用Promise.all等待所有字典加载完成
@@ -1167,13 +1194,13 @@ export default {
     },
 
     /** 组织选择事件 */
-    handleOrgSelect(node) {
+    /*handleOrgSelect(node) {
       if (node) {
         listUser({ orgId: "/" + node.id + "/" }).then((response) => {
           this.userOptions = response.data.list || [];
         });
       }
-    },
+    },*/
 
     restoreSelection() {
       if (this.isRestoringSelection) return;
@@ -1289,9 +1316,38 @@ export default {
 
     /** 获取用户列表 */
     getUserList() {
-      listUser().then((response) => {
+      /*listUser().then((response) => {
         this.userOptions = response.data || [];
+      });*/
+      this.userOptions = [];
+    },
+
+    /** 获取执法仪列表（根据警员ID） */
+    getBwcListByPoliceId(policeId) {
+      if (!policeId) {
+        this.bwcOptions = [];
+        return;
+      }
+      console.log("policeId:", policeId);
+      getEquipmentBwcByManagerId(policeId).then((response) => {
+        // 判断返回数据的结构
+        if (Array.isArray(response.data)) {
+          // 如果 response.data 是数组，直接使用
+          this.bwcOptions = response.data;
+        } else if (response.data && Array.isArray(response.data.list)) {
+          // 如果 response.data.list 是数组，使用 list
+          this.bwcOptions = response.data.list;
+        } else {
+          // 其他情况，设置为空数组
+          this.bwcOptions = [];
+        }
       });
+    },
+
+    /** 获取执法仪列表（全部） */
+    getBwcList() {
+      // 初始化时不加载执法仪列表，等待用户选择警员后再加载
+      this.bwcOptions = [];
     },
 
     /** 获取执法类型树 */
@@ -1401,19 +1457,20 @@ export default {
     },
 
     /** 组织选择事件 */
-    handleOrgSelect(node) {
+    /*handleOrgSelect(node) {
       if (node) {
-        this.getUserListByOrg(node.id);
+        this.getUserListByOrgId(node.id);
       }
-    },
+    },*/
 
     /** 警员选择事件 */
-    handlePoliceSelect() {
-      // 可以在这里添加警员选择后的逻辑
+    handlePoliceSelect(policeId) {
+      // 当警员选择变化时，通过 watch 自动触发获取执法仪列表
+      // 这里可以添加其他需要的逻辑
     },
 
     /** 根据组织获取用户列表 */
-    getUserListByOrg(orgId) {
+    getUserListByOrgId(orgId) {
       const params = { orgId: "/" + orgId + "/" };
       listUser(params).then((response) => {
         this.userOptions = response.data.list || [];

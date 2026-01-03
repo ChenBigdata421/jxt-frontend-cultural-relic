@@ -383,7 +383,7 @@ export default {
       // 用户选项
       userOptions: [],
       // 执法仪选项
-      lawcameraOptions: [],
+      bwcOptions: [],
       // 媒体类型数据字典
       mediaCateOptions: [],
       // 表单校验
@@ -518,7 +518,7 @@ export default {
       };
       // 重置下拉选项
       this.userOptions = [];
-      this.lawcameraOptions = [];
+      this.bwcOptions = [];
       if (this.$refs.form) {
         this.$refs.form.resetFields();
       }
@@ -815,12 +815,12 @@ export default {
         // 清空警员和执法仪选择
         this.form.policeId = undefined;
         this.form.recorderId = undefined;
-        this.lawcameraOptions = [];
+        this.bwcOptions = [];
       } else {
         this.userOptions = [];
         this.form.policeId = undefined;
         this.form.recorderId = undefined;
-        this.lawcameraOptions = [];
+        this.bwcOptions = [];
       }
     },
 
@@ -829,12 +829,12 @@ export default {
       if (policeId) {
         // 根据警员ID获取其管理的执法仪列表
         getEquipmentBwcList({ managerId: policeId }).then((response) => {
-          this.lawcameraOptions = response.data.list || [];
+          this.bwcOptions = response.data.list || [];
         });
         // 清空执法仪选择
         this.form.recorderId = undefined;
       } else {
-        this.lawcameraOptions = [];
+        this.bwcOptions = [];
         this.form.recorderId = undefined;
       }
     },

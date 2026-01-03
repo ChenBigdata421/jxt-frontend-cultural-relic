@@ -113,7 +113,7 @@
               </el-col>
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['case:lawcamera:edit']"
+                  v-permisaction="['case:bwc:edit']"
                   type="success"
                   icon="el-icon-edit"
                   size="mini"
@@ -124,7 +124,7 @@
               </el-col>
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['case:lawcamera:remove']"
+                  v-permisaction="['case:bwc:remove']"
                   type="danger"
                   icon="el-icon-delete"
                   size="mini"
@@ -135,7 +135,7 @@
               </el-col>
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['case:lawcamera:export']"
+                  v-permisaction="['case:bwc:export']"
                   type="warning"
                   icon="el-icon-download"
                   size="mini"

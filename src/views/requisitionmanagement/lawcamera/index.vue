@@ -86,7 +86,7 @@
           这意味着每个表格数据对象都可能有一个 hasChildren 字段，如果为 true，则表示该行有子节点。-->
         <el-table
           v-loading="loading"
-          :data="lawcameraRequisitionList"
+          :data="bwcRequisitionList"
           row-key="id"
           default-expand-all
           border
@@ -101,7 +101,7 @@
             <template slot-scope="scope">
               <el-button
                 v-if="scope.row.useState === 0"
-                v-permisaction="['lawcamera:requisition']"
+                v-permisaction="['bwc:requisition']"
                 size="mini"
                 type="text"
                 icon="el-icon-setting"
@@ -113,7 +113,7 @@
                   scope.row.useState !== 0 &&
                   userId === scope.row.requisitionerId
                 "
-                v-permisaction="['lawcamera:return']"
+                v-permisaction="['bwc:return']"
                 size="mini"
                 type="text"
                 icon="el-icon-setting"
@@ -122,7 +122,7 @@
                 >退还</el-button
               >
               <el-button
-                v-permisaction="['lawcamera:info']"
+                v-permisaction="['bwc:info']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
@@ -130,7 +130,7 @@
                 >执法仪信息</el-button
               >
               <el-button
-                v-permisaction="['lawcamera:requisitionrecord']"
+                v-permisaction="['bwc:requisitionrecord']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
@@ -184,16 +184,8 @@
           >
             <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
             <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
-            <el-table-column
-              prop="lawcameraNo"
-              label="执法仪编号"
-              width="100"
-            />
-            <el-table-column
-              prop="lawcameraName"
-              label="执法仪名称"
-              width="100"
-            />
+            <el-table-column prop="bwcNo" label="执法仪编号" width="100" />
+            <el-table-column prop="bwcName" label="执法仪名称" width="100" />
             <el-table-column
               prop="requisitionerName"
               label="领用人"
@@ -245,10 +237,10 @@
 
 <script>
 import {
-  getLawcameraRequisitionList,
-  getLawCameraLogList,
-  lawcameraRequisition,
-  lawcameraReturn,
+  getBwcRequisitionList,
+  getBwcLogList,
+  bwcRequisition,
+  bwcReturn,
 } from "@/api/admin/bwc_requisition_manage_api";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import Treeselect from "@riophae/vue-treeselect";
@@ -262,7 +254,7 @@ export default {
       // 遮罩层
       loading: true,
       // 执法仪数据
-      lawcameraRequisitionList: [],
+      bwcRequisitionList: [],
       // 领用记录数据
       requisitionLogList: [],
       // 组织树选项
@@ -329,7 +321,7 @@ export default {
   created() {
     this.getList();
     this.getTreeselect();
-    this.getDicts("lawcamera_state").then((response) => {
+    this.getDicts("bwc_state").then((response) => {
       this.stateOptions = response.data;
     });
     this.getDicts("collect_status").then((response) => {
@@ -346,14 +338,14 @@ export default {
     /** 查询执法仪列表 */
     getList() {
       this.loading = true;
-      getLawcameraRequisitionList(this.queryParams).then((response) => {
+      getBwcRequisitionList(this.queryParams).then((response) => {
         // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
-        this.lawcameraRequisitionList = response.data.list;
+        this.bwcRequisitionList = response.data.list;
         this.loading = false;
       });
     },
     handleRequisition(row) {
-      lawcameraRequisition({ id: row.id }).then((response) => {
+      bwcRequisition({ id: row.id }).then((response) => {
         if (response.msg === "领用成功") {
           this.$confirm("领用成功！", "信息", {
             confirmButtonText: "确定",
@@ -375,7 +367,7 @@ export default {
       this.handleQuery();
     },
     handleReturn(row) {
-      lawcameraReturn({ id: row.id }).then((response) => {
+      bwcReturn({ id: row.id }).then((response) => {
         if (response.msg === "退还成功") {
           this.$confirm("退还成功！", "信息", {
             confirmButtonText: "确定",
@@ -403,7 +395,7 @@ export default {
     /** 查询领用记录 */
     getRequisitionLog(no) {
       this.loading = true;
-      getLawCameraLogList({ no: no }).then((response) => {
+      getBwcLogList({ no: no }).then((response) => {
         // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
         this.requisitionLogList = response.data.list;
         this.loading = false;

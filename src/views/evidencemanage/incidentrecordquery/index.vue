@@ -110,7 +110,7 @@
             <el-row :gutter="10">
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['incidentrecord:lawcamera:create']"
+                  v-permisaction="['incidentrecord:bwc:create']"
                   type="primary"
                   icon="el-icon-plus"
                   size="mini"
@@ -120,7 +120,7 @@
               </el-col>
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['incidentrecord:lawcamera:edit']"
+                  v-permisaction="['incidentrecord:bwc:edit']"
                   type="success"
                   icon="el-icon-edit"
                   size="mini"
@@ -131,7 +131,7 @@
               </el-col>
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['incidentrecord:lawcamera:remove']"
+                  v-permisaction="['incidentrecord:bwc:remove']"
                   type="danger"
                   icon="el-icon-delete"
                   size="mini"
@@ -142,7 +142,7 @@
               </el-col>
               <el-col :span="1.5">
                 <el-button
-                  v-permisaction="['incidentrecord:lawcamera:export']"
+                  v-permisaction="['incidentrecord:bwc:export']"
                   type="warning"
                   icon="el-icon-download"
                   size="mini"
@@ -211,7 +211,7 @@
           >
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['incidentrecord:lawcamera:browse']"
+                v-permisaction="['incidentrecord:bwc:browse']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
@@ -219,7 +219,7 @@
                 >浏览</el-button
               >
               <el-button
-                v-permisaction="['incidentrecord:lawcamera:edit']"
+                v-permisaction="['incidentrecord:bwc:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
@@ -227,7 +227,7 @@
                 >修改</el-button
               >
               <el-button
-                v-permisaction="['incidentrecord:lawcamera:remove']"
+                v-permisaction="['incidentrecord:bwc:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
