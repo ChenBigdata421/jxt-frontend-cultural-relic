@@ -6,18 +6,18 @@
           内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
           这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="执法仪编号" prop="No">
+          <el-form-item label="执法仪编号" prop="bwcNo">
             <el-input
-              v-model="queryParams.no"
+              v-model="queryParams.bwcNo"
               placeholder="请输入执法仪编号"
               clearable
               style="width: 170px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="执法仪名称" prop="Name">
+          <el-form-item label="执法仪名称" prop="bwcName">
             <el-input
-              v-model="queryParams.name"
+              v-model="queryParams.bwcName"
               placeholder="请输入执法仪名称"
               clearable
               style="width: 170px"
@@ -48,7 +48,7 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="使用状态">
+          <el-form-item label="使用状态" prop="useState">
             <el-select
               v-model="queryParams.useState"
               placeholder="使用状态"
@@ -56,7 +56,7 @@
               style="width: 170px"
             >
               <el-option
-                v-for="dict in useStatusOptions"
+                v-for="dict in requisitionStatusOptions"
                 :key="dict.value"
                 :label="dict.label"
                 :value="dict.value"
@@ -90,6 +90,7 @@
           row-key="id"
           default-expand-all
           border
+          @sort-change="handleSortChang"
         >
           <el-table-column
             label="操作"
@@ -100,7 +101,7 @@
           >
             <template slot-scope="scope">
               <el-button
-                v-if="scope.row.useState === 0"
+                v-if="scope.row.useState === 2"
                 v-permisaction="['bwc:requisition']"
                 size="mini"
                 type="text"
@@ -110,7 +111,7 @@
               >
               <el-button
                 v-if="
-                  scope.row.useState !== 0 &&
+                  scope.row.useState === 1 &&
                   userId === scope.row.requisitionerId
                 "
                 v-permisaction="['bwc:return']"
@@ -141,8 +142,18 @@
           </el-table-column>
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
-          <el-table-column prop="no" label="编号" width="80" />
-          <el-table-column prop="name" label="名称" width="100" />
+          <el-table-column
+            prop="bwcNo"
+            label="编号"
+            width="80"
+            sortable="custom"
+          />
+          <el-table-column
+            prop="bwcName"
+            label="名称"
+            width="100"
+            sortable="custom"
+          />
           <el-table-column prop="managerName" label="管理人员" width="80" />
           <el-table-column
             prop="managerOrgFullName"
@@ -168,6 +179,13 @@
             width="300"
           />
         </el-table>
+        <pagination
+          v-show="total > 0"
+          :total="total"
+          :page.sync="queryParams.pageIndex"
+          :limit.sync="queryParams.pageSize"
+          @pagination="getList"
+        />
         <!--展示领用记录-->
         <el-dialog
           :title="title"
@@ -208,27 +226,76 @@
             />
           </el-table>
         </el-dialog>
-        <!--显示详情-->
+        <!-- 浏览执法仪对话框 -->
         <el-dialog
-          :title="title"
+          title="执法仪信息"
           :visible.sync="ViewOpen"
-          width="593px"
-          :close-on-click-modal="false"
+          width="800px"
+          append-to-body
         >
-          <el-table v-loading="loading" :data="AttributeValueList" border>
-            <el-table-column
-              prop="AttributeName"
-              label="属性"
-              width="100"
-              align="center"
-            />
-            <el-table-column
-              prop="Value"
-              label="值"
-              width="450"
-              align="center"
-            />
-          </el-table>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="执法仪编号">{{
+              viewData.bwcNo || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="执法仪名称">{{
+              viewData.bwcName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="品牌">{{
+              viewData.brandName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="管理组织">{{
+              viewData.managerOrgFullName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="管理人员">{{
+              viewData.managerName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="是否可用">{{
+              selectDictLabel(enableUseOptions, viewData.enableUse) || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="状态">{{
+              selectDictLabel(stateOptions, viewData.status) || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="CPU">{{
+              viewData.cpu || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="内存(G)">{{
+              viewData.memory || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="存储(G)">{{
+              viewData.disk || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="网卡">{{
+              viewData.networkCard || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="USB数量">{{
+              viewData.usbNum || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="操作系统">{{
+              viewData.system || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="版本">{{
+              viewData.version || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="购买时间">{{
+              viewData.purchaseDate ? parseTime(viewData.purchaseDate) : "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="领用状态">{{
+              selectDictLabel(requisitionStatusOptions, viewData.useState) ||
+              "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="领用者">{{
+              viewData.requisitionerName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="领用者组织">{{
+              viewData.requisitionerOrgFullName || "-"
+            }}</el-descriptions-item>
+            <el-descriptions-item label="备注" :span="2">{{
+              viewData.remark || "无"
+            }}</el-descriptions-item>
+          </el-descriptions>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="ViewOpen = false">关 闭</el-button>
+          </div>
         </el-dialog>
       </el-card>
     </template>
@@ -253,6 +320,8 @@ export default {
     return {
       // 遮罩层
       loading: true,
+      // 分页总条数
+      total: 0,
       // 执法仪数据
       bwcRequisitionList: [],
       // 领用记录数据
@@ -271,28 +340,21 @@ export default {
       // 状态数据字典
       stateOptions: [],
       // 是否可用数据字典
-      useStatusOptions: [],
+      enableUseOptions: [],
+      // 领用状态数据字典
+      requisitionStatusOptions: [],
       // 查询参数
       queryParams: {
-        name: undefined,
+        pageIndex: 1,
+        pageSize: 10,
+        bwcNo: undefined,
+        bwcName: undefined,
         managerOrgId: undefined,
         managerId: undefined,
         useState: undefined,
       },
-      AttributeValueList: [],
-      ColumnNameConvert: new Map([
-        ["no", "编号"],
-        ["name", "名称"],
-        ["cpu", "CPU"],
-        ["memory", "内存(G)"],
-        ["disk", "存储(G)"],
-        ["networkCard", "网卡"],
-        ["usbNum", "USB数量"],
-        ["system", "操作系统"],
-        ["version", "版本"],
-        ["buyTime", "购买时间"],
-        ["remark", "备注"],
-      ]),
+      // 浏览数据
+      viewData: {},
       // 表单参数
       form: {},
       // 表单校验,触发时机（trigger: 'blur'）：当输入框失去焦点（blur 事件）时触发验证。
@@ -315,17 +377,23 @@ export default {
       if (newVal) {
         this.queryParams.managerId = null; // 清空管理人员选择
         this.getQueryUser();
+      } else {
+        this.userOptions = [];
+        this.queryParams.managerId = undefined;
       }
     },
   },
   created() {
     this.getList();
     this.getTreeselect();
-    this.getDicts("bwc_state").then((response) => {
+    this.getDicts("bwc_status").then((response) => {
       this.stateOptions = response.data;
     });
-    this.getDicts("collect_status").then((response) => {
-      this.useStatusOptions = response.data;
+    this.getDicts("enableuse_state").then((response) => {
+      this.enableUseOptions = response.data;
+    });
+    this.getDicts("requisition_status").then((response) => {
+      this.requisitionStatusOptions = response.data;
     });
   },
   methods: {
@@ -339,8 +407,8 @@ export default {
     getList() {
       this.loading = true;
       getBwcRequisitionList(this.queryParams).then((response) => {
-        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
         this.bwcRequisitionList = response.data.list;
+        this.total = response.data.count;
         this.loading = false;
       });
     },
@@ -361,10 +429,15 @@ export default {
         }
       );
     },
-    /** 重置按钮操作 */
+    /** 重置按钮操作
+     * resetForm() 清空表单字段时，managerOrgId 的变化触发了 watch 监听器，watch 会异步清空 managerId 和 userOptions。
+     * 但 resetQuery() 中的 handleQuery() 是同步执行的，导致查询时数据还未完全清空，需要再点一次才能获取完整数据。
+     * $nextTick() 包装 handleQuery()，确保表单重置和 watch 监听器完全执行后再进行查询*/
     resetQuery() {
       this.resetForm("queryForm");
-      this.handleQuery();
+      this.$nextTick(() => {
+        this.handleQuery();
+      });
     },
     handleReturn(row) {
       bwcReturn({ id: row.id }).then((response) => {
@@ -376,20 +449,24 @@ export default {
         }
       });
     },
+
+    handleSortChang(column, prop, order) {
+      prop = column.prop;
+      order = column.order;
+      if (order === "descending") {
+        this.queryParams[prop + "Order"] = "desc";
+      } else if (order === "ascending") {
+        this.queryParams[prop + "Order"] = "asc";
+      } else {
+        this.queryParams[prop + "Order"] = undefined;
+      }
+      this.getList();
+    },
+
     /** 浏览按钮操作 */
     handleView(row) {
-      this.AttributeValueList = [];
-      Object.keys(row).forEach((key) => {
-        const attributeValue = {
-          AttributeName: this.ColumnNameConvert.get(key),
-          Value: row[key],
-        };
-        if (attributeValue.AttributeName !== undefined) {
-          this.AttributeValueList.push(attributeValue);
-        }
-      });
+      this.viewData = row;
       this.ViewOpen = true;
-      this.title = "执法仪信息";
     },
 
     /** 查询领用记录 */
@@ -422,10 +499,7 @@ export default {
     },
     // 字典状态字典翻译
     useStatusFormat(row) {
-      return this.selectDictLabel(
-        this.useStatusOptions,
-        parseInt(row.useState)
-      );
+      return this.selectDictLabel(this.requisitionStatusOptions, row.useState);
     },
     // 取消按钮
     cancel() {
@@ -434,6 +508,7 @@ export default {
     },
     /** 搜索按钮操作 */
     handleQuery() {
+      this.queryParams.pageIndex = 1;
       this.getList();
     },
     /** 查看领用记录 */
