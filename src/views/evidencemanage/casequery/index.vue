@@ -83,6 +83,27 @@
               </el-date-picker>
             </el-form-item>
           </el-form-item>
+          <el-form-item label="处警时间">
+            <el-form-item prop="procTimeStart">
+              <el-date-picker
+                v-model="queryParams.procTimeStart"
+                type="datetime"
+                placeholder="请选择开始时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+            <span>至</span>
+            <el-form-item prop="procTimeEnd">
+              <el-date-picker
+                v-model="queryParams.procTimeEnd"
+                type="datetime"
+                placeholder="请选择结束时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+          </el-form-item>
           <el-form-item>
             <el-button
               type="primary"
@@ -310,6 +331,18 @@
             :show-overflow-tooltip="true"
           />
           <el-table-column
+            v-if="isColumnVisible('procTime')"
+            label="处警时间"
+            align="center"
+            prop="procTime"
+            width="150"
+            :show-overflow-tooltip="true"
+          >
+            <template slot-scope="scope">
+              <span>{{ parseTime(scope.row.procTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
             v-if="isColumnVisible('isRelation')"
             label="是否关联"
             align="center"
@@ -468,7 +501,7 @@
                   v-model="form.procTime"
                   type="datetime"
                   placeholder="选择处警时间"
-                  value-format="yyyy-MM-ddTHH:mm:ssZ"
+                  value-format="yyyy-MM-dd HH:mm:ss"
                   style="width: 100%"
                 />
               </el-form-item>
@@ -744,6 +777,7 @@ export default {
         { prop: "caseOrgName", label: "办案单位", fixed: false },
         { prop: "procOrgPaths", label: "处警单位", fixed: false },
         { prop: "processPoliceNames", label: "处警人员", fixed: false },
+        { prop: "procTime", label: "处警时间", fixed: false },
         { prop: "isRelation", label: "是否关联", fixed: false },
         { prop: "createdAt", label: "创建时间", fixed: false },
       ],
@@ -952,6 +986,19 @@ export default {
         const value = query[key];
         if (value === "" || value === null || value === undefined) {
           delete query[key];
+        } else if (
+          (key === "caseTimeStart" ||
+            key === "caseTimeEnd" ||
+            key === "procTimeStart" ||
+            key === "procTimeEnd") &&
+          typeof value === "string"
+        ) {
+          // 将本地时间字符串转换为 ISO 8601 格式（UTC 时间）
+          // 例如: "2024-01-04 08:30:00" -> "2024-01-04T00:30:00.000Z"
+          const date = new Date(value);
+          if (!isNaN(date.getTime())) {
+            query[key] = date.toISOString();
+          }
         }
       });
       return query;
@@ -1138,13 +1185,34 @@ export default {
       );
       this.$message.success("已重置为默认显示");
     },
+    /** 将 form 对象中的时间字段转换为国际标准格式 */
+    convertFormTimeToISO(formData = {}) {
+      const form = { ...formData };
+      const timeFields = ["caseTime", "procTime"];
+
+      timeFields.forEach((key) => {
+        const value = form[key];
+        if (value && typeof value === "string") {
+          // 将本地时间字符串转换为 ISO 8601 格式（UTC 时间）
+          // 例如: "2024-01-04 08:30:00" -> "2024-01-04T00:30:00.000Z"
+          const date = new Date(value);
+          if (!isNaN(date.getTime())) {
+            form[key] = date.toISOString();
+          }
+        }
+      });
+
+      return form;
+    },
+
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id != null) {
             this.startProcessing("正在修改案件...");
-            updateCase(this.form, this.form.id)
+            const formData = this.convertFormTimeToISO(this.form);
+            updateCase(formData, formData.id)
               .then(async (response) => {
                 if (response.code === 200) {
                   // 延迟2秒后刷新媒体列表
@@ -1165,7 +1233,8 @@ export default {
               });
           } else {
             this.startProcessing("正在创建案件...");
-            addCase(this.form)
+            const formData = this.convertFormTimeToISO(this.form);
+            addCase(formData)
               .then(async (response) => {
                 if (response.code === 200) {
                   await this.delay(2000);

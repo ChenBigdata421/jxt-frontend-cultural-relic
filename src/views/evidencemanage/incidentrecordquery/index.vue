@@ -92,6 +92,90 @@
               />
             </el-select>
           </el-form-item>
+          <el-form-item label="报警时间">
+            <el-form-item prop="reportTimeStart">
+              <el-date-picker
+                v-model="queryParams.reportTimeStart"
+                type="datetime"
+                placeholder="请选择开始时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+            <span>至</span>
+            <el-form-item prop="reportTimeEnd">
+              <el-date-picker
+                v-model="queryParams.reportTimeEnd"
+                type="datetime"
+                placeholder="请选择结束时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+          </el-form-item>
+          <el-form-item label="接警时间">
+            <el-form-item prop="receiveTimeStart">
+              <el-date-picker
+                v-model="queryParams.receiveTimeStart"
+                type="datetime"
+                placeholder="请选择开始时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+            <span>至</span>
+            <el-form-item prop="receiveTimeEnd">
+              <el-date-picker
+                v-model="queryParams.receiveTimeEnd"
+                type="datetime"
+                placeholder="请选择结束时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+          </el-form-item>
+          <el-form-item label="处警时间">
+            <el-form-item prop="processTimeStart">
+              <el-date-picker
+                v-model="queryParams.processTimeStart"
+                type="datetime"
+                placeholder="请选择开始时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+            <span>至</span>
+            <el-form-item prop="processTimeEnd">
+              <el-date-picker
+                v-model="queryParams.processTimeEnd"
+                type="datetime"
+                placeholder="请选择结束时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+          </el-form-item>
+          <el-form-item label="结束时间">
+            <el-form-item prop="endTimeStart">
+              <el-date-picker
+                v-model="queryParams.endTimeStart"
+                type="datetime"
+                placeholder="请选择开始时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+            <span>至</span>
+            <el-form-item prop="endTimeEnd">
+              <el-date-picker
+                v-model="queryParams.endTimeEnd"
+                type="datetime"
+                placeholder="请选择结束时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+              >
+              </el-date-picker>
+            </el-form-item>
+          </el-form-item>
           <el-form-item>
             <el-button
               type="primary"
@@ -1013,6 +1097,23 @@ export default {
         const value = query[key];
         if (value === "" || value === null || value === undefined) {
           delete query[key];
+        } else if (
+          (key === "reportTimeStart" ||
+            key === "reportTimeEnd" ||
+            key === "receiveTimeStart" ||
+            key === "receiveTimeEnd" ||
+            key === "processTimeStart" ||
+            key === "processTimeEnd" ||
+            key === "endTimeStart" ||
+            key === "endTimeEnd") &&
+          typeof value === "string"
+        ) {
+          // 将本地时间字符串转换为 ISO 8601 格式（UTC 时间）
+          // 例如: "2024-01-04 08:30:00" -> "2024-01-04T00:30:00.000Z"
+          const date = new Date(value);
+          if (!isNaN(date.getTime())) {
+            query[key] = date.toISOString();
+          }
         }
       });
       return query;
@@ -1219,13 +1320,40 @@ export default {
       this.ViewOpen = true;
       this.title = "警情信息";
     },
+    /** 将 form 对象中的时间字段转换为国际标准格式 */
+    convertFormTimeToISO(formData = {}) {
+      const form = { ...formData };
+      const timeFields = [
+        "reportTime",
+        "receiveTime",
+        "processTime",
+        "endTime",
+        "createTime",
+      ];
+
+      timeFields.forEach((key) => {
+        const value = form[key];
+        if (value && typeof value === "string") {
+          // 将本地时间字符串转换为 ISO 8601 格式（UTC 时间）
+          // 例如: "2024-01-04 08:30:00" -> "2024-01-04T00:30:00.000Z"
+          const date = new Date(value);
+          if (!isNaN(date.getTime())) {
+            form[key] = date.toISOString();
+          }
+        }
+      });
+
+      return form;
+    },
+
     /** 提交按钮 */
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id !== undefined) {
             this.startProcessing("正在修改警情...");
-            updateIncidentRecord(this.form, this.form.id)
+            const formData = this.convertFormTimeToISO(this.form);
+            updateIncidentRecord(formData, formData.id)
               .then(async (response) => {
                 if (response.code === 200) {
                   await this.delay(2000);
@@ -1245,7 +1373,8 @@ export default {
               });
           } else {
             this.startProcessing("正在创建警情...");
-            addIncidentRecord(this.form)
+            const formData = this.convertFormTimeToISO(this.form);
+            addIncidentRecord(formData)
               .then(async (response) => {
                 if (response.code === 200) {
                   await this.delay(2000);

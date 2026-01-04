@@ -937,6 +937,16 @@ export default {
         const value = query[key];
         if (value === "" || value === null || value === undefined) {
           delete query[key];
+        } else if (
+          (key === "writTimeStart" || key === "writTimeEnd") &&
+          typeof value === "string"
+        ) {
+          // 将本地时间字符串转换为 ISO 8601 格式（UTC 时间）
+          // 例如: "2024-01-04 08:30:00" -> "2024-01-04T00:30:00.000Z"
+          const date = new Date(value);
+          if (!isNaN(date.getTime())) {
+            query[key] = date.toISOString();
+          }
         }
       });
       return query;
