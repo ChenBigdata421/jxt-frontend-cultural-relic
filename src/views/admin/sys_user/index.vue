@@ -3,32 +3,8 @@
     <template #wrapper>
       <el-card class="box-card">
         <el-row :gutter="20">
-          <!--组织数据-->
-          <el-col :span="4" :xs="24">
-            <div class="head-container">
-              <el-input
-                v-model="orgName"
-                placeholder="请输入单位名称"
-                clearable
-                size="small"
-                prefix-icon="el-icon-search"
-                style="margin-bottom: 20px"
-              />
-            </div>
-            <div class="head-container">
-              <el-tree
-                ref="tree"
-                :data="orgOptions"
-                :props="defaultProps"
-                :expand-on-click-node="false"
-                :filter-node-method="filterNode"
-                default-expand-all
-                @node-click="handleNodeClick"
-              />
-            </div>
-          </el-col>
           <!--用户数据-->
-          <el-col :span="20" :xs="24">
+          <el-col :span="24">
             <el-form
               ref="queryForm"
               :model="queryParams"
@@ -103,6 +79,15 @@
                   />
                 </el-select>
               </el-form-item>
+              <el-form-item label="组织" prop="orgId">
+                <treeselect
+                  v-model="queryParams.orgId"
+                  :options="orgOptions"
+                  placeholder="请选择组织"
+                  style="width: 170px"
+                  clearable
+                />
+              </el-form-item>
               <el-form-item label="状态" prop="status">
                 <el-select
                   v-model="queryParams.status"
@@ -136,155 +121,231 @@
               </el-form-item>
             </el-form>
 
-            <el-row :gutter="10" class="mb8">
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['admin:sysUser:add']"
-                  type="primary"
-                  icon="el-icon-plus"
-                  size="mini"
-                  @click="handleAdd"
-                  >新增</el-button
-                >
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['admin:sysUser:edit']"
-                  type="success"
-                  icon="el-icon-edit"
-                  size="mini"
-                  :disabled="no_single"
-                  @click="handleUpdate"
-                  >修改</el-button
-                >
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['admin:sysUser:remove']"
-                  type="danger"
-                  icon="el-icon-delete"
-                  size="mini"
-                  :disabled="zero"
-                  @click="handleDelete"
-                  >删除</el-button
-                >
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['admin:sysUser:import']"
-                  type="warning"
-                  icon="el-icon-upload"
-                  size="mini"
-                  @click="handleImport"
-                  >导入</el-button
-                >
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['admin:sysUser:export']"
-                  type="info"
-                  icon="el-icon-download"
-                  size="mini"
-                  @click="handleExport"
-                  >导出</el-button
-                >
-              </el-col>
-            </el-row>
-
-            <el-table
-              v-loading="loading"
-              :data="userList"
-              border
-              @selection-change="handleSelectionChange"
-              @sort-change="handleSortChang"
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                margin-bottom: 8px;
+                gap: 10px;
+              "
             >
-              <el-table-column type="selection" width="45" align="center" />
-              <el-table-column
-                label="警号"
-                prop="policeNo"
-                sortable="custom"
-                :show-overflow-tooltip="true"
-              />
-              <el-table-column
-                label="登录名"
-                width="105"
-                prop="userName"
-                sortable="custom"
-                :show-overflow-tooltip="true"
-              />
-              <el-table-column label="性别" prop="sexName" />
-              <el-table-column
-                label="单位"
-                prop="orgName"
-                :show-overflow-tooltip="true"
-              />
-              <el-table-column
-                label="角色"
-                prop="roleName"
-                :show-overflow-tooltip="true"
-              />
-              <el-table-column
-                label="岗位"
-                prop="postName"
-                :show-overflow-tooltip="true"
-              />
-              <el-table-column label="手机号" prop="phone" width="108" />
-              <el-table-column label="邮箱" prop="email" width="108" />
-              <el-table-column label="状态" width="80" sortable="custom">
-                <template slot-scope="scope">
-                  <el-switch
-                    v-model="scope.row.status"
-                    :active-value="2"
-                    :inactive-value="1"
-                    @change="handleStatusChange(scope.row)"
-                  />
-                </template>
-              </el-table-column>
-              <el-table-column
-                label="创建时间"
-                prop="createdAt"
-                sortable="custom"
-                width="155"
+              <el-button
+                v-permisaction="['admin:sysUser:add']"
+                type="primary"
+                icon="el-icon-plus"
+                size="mini"
+                @click="handleAdd"
+                >新增</el-button
               >
-                <template slot-scope="scope">
-                  <span>{{ parseTime(scope.row.createdAt) }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column
-                label="操作"
-                width="160"
-                fix="right"
-                class-name="small-padding fixed-width"
+              <el-button
+                v-permisaction="['admin:sysUser:edit']"
+                type="success"
+                icon="el-icon-edit"
+                size="mini"
+                :disabled="selectedUserRecords.length !== 1"
+                @click="handleUpdate"
+                >修改</el-button
               >
-                <template slot-scope="scope">
-                  <el-button
-                    v-permisaction="['admin:sysUser:edit']"
-                    size="mini"
-                    type="text"
-                    icon="el-icon-edit"
-                    @click="handleUpdate(scope.row)"
-                    >修改</el-button
+              <el-button
+                v-permisaction="['admin:sysUser:remove']"
+                type="danger"
+                icon="el-icon-delete"
+                size="mini"
+                :disabled="selectedUserRecords.length === 0"
+                @click="handleDelete"
+                >删除</el-button
+              >
+              <el-button
+                v-permisaction="['admin:sysUser:import']"
+                type="warning"
+                icon="el-icon-upload"
+                size="mini"
+                @click="handleImport"
+                >导入</el-button
+              >
+              <el-button
+                v-permisaction="['admin:sysUser:export']"
+                type="warning"
+                icon="el-icon-download"
+                size="mini"
+                @click="handleExport"
+                >导出</el-button
+              >
+              <div style="flex: 1"></div>
+              <div class="column-settings-trigger">
+                <el-popover placement="bottom-end" width="300" trigger="click">
+                  <div class="column-settings">
+                    <div class="column-settings-header">
+                      <span>列显示设置</span>
+                      <el-button type="text" size="mini" @click="resetColumns"
+                        >重置</el-button
+                      >
+                    </div>
+                    <el-checkbox-group
+                      v-model="visibleColumns"
+                      @change="handleColumnChange"
+                    >
+                      <div
+                        v-for="col in columnOptions"
+                        :key="col.prop"
+                        class="column-item"
+                      >
+                        <el-checkbox :label="col.prop" :disabled="col.fixed">
+                          {{ col.label }}
+                        </el-checkbox>
+                      </div>
+                    </el-checkbox-group>
+                  </div>
+                  <el-button slot="reference" size="mini" icon="el-icon-setting"
+                    >列设置</el-button
                   >
-                  <el-button
-                    v-if="scope.row.userId !== 1"
-                    v-permisaction="['admin:sysUser:remove']"
-                    size="mini"
-                    type="text"
-                    icon="el-icon-delete"
-                    @click="handleDelete(scope.row)"
-                    >删除</el-button
-                  >
-                  <el-button
-                    v-permisaction="['admin:sysUser:resetPassword']"
-                    size="mini"
-                    type="text"
-                    icon="el-icon-key"
-                    @click="handleResetPwd(scope.row)"
-                    >重置</el-button
-                  >
-                </template>
-              </el-table-column>
-            </el-table>
+                </el-popover>
+              </div>
+            </div>
+
+            <div style="overflow-x: auto">
+              <el-table
+                ref="userTable"
+                v-loading="loading"
+                :data="userList"
+                border
+                style="min-width: 100%"
+                @selection-change="handleSelectionChange"
+                @sort-change="handleSortChang"
+              >
+                <el-table-column type="selection" width="50" align="center" />
+                <el-table-column
+                  label="操作"
+                  min-width="180"
+                  fix="right"
+                  class-name="small-padding fixed-width"
+                >
+                  <template slot-scope="scope">
+                    <el-button
+                      v-permisaction="['admin:sysUser:edit']"
+                      size="mini"
+                      type="text"
+                      icon="el-icon-edit"
+                      @click="handleUpdate(scope.row)"
+                      >修改</el-button
+                    >
+                    <el-button
+                      v-if="scope.row.userId !== 1"
+                      v-permisaction="['admin:sysUser:remove']"
+                      size="mini"
+                      type="text"
+                      icon="el-icon-delete"
+                      @click="handleDelete(scope.row)"
+                      >删除</el-button
+                    >
+                    <el-button
+                      v-permisaction="['admin:sysUser:resetPassword']"
+                      size="mini"
+                      type="text"
+                      icon="el-icon-key"
+                      @click="handleResetPwd(scope.row)"
+                      >重置</el-button
+                    >
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  v-if="isColumnVisible('policeNo')"
+                  label="警号"
+                  prop="policeNo"
+                  sortable="custom"
+                  min-width="100"
+                  :show-overflow-tooltip="true"
+                />
+                <el-table-column
+                  v-if="isColumnVisible('userName')"
+                  label="登录名"
+                  prop="userName"
+                  sortable="custom"
+                  min-width="100"
+                  :show-overflow-tooltip="true"
+                />
+                <el-table-column
+                  v-if="isColumnVisible('sex')"
+                  label="性别"
+                  prop="sex"
+                  min-width="80"
+                >
+                  <template slot-scope="scope">
+                    {{ sexFormat(scope.row) }}
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  v-if="isColumnVisible('orgName')"
+                  label="组织"
+                  prop="orgName"
+                  min-width="100"
+                  :show-overflow-tooltip="true"
+                />
+                <el-table-column
+                  v-if="isColumnVisible('orgFullName')"
+                  label="组织全称"
+                  prop="orgFullName"
+                  min-width="120"
+                  :show-overflow-tooltip="true"
+                >
+                </el-table-column>
+                <el-table-column
+                  v-if="isColumnVisible('roleName')"
+                  label="角色"
+                  prop="roleName"
+                  min-width="100"
+                  :show-overflow-tooltip="true"
+                />
+                <el-table-column
+                  v-if="isColumnVisible('postName')"
+                  label="岗位"
+                  prop="postName"
+                  min-width="100"
+                  :show-overflow-tooltip="true"
+                />
+                <el-table-column
+                  v-if="isColumnVisible('phone')"
+                  label="手机号"
+                  prop="phone"
+                  min-width="120"
+                  :show-overflow-tooltip="true"
+                />
+                <el-table-column
+                  v-if="isColumnVisible('email')"
+                  label="邮箱"
+                  prop="email"
+                  min-width="120"
+                  :show-overflow-tooltip="true"
+                />
+                <el-table-column
+                  v-if="isColumnVisible('status')"
+                  label="状态"
+                  min-width="80"
+                  sortable="custom"
+                >
+                  <template slot-scope="scope">
+                    <el-switch
+                      v-model="scope.row.status"
+                      :active-value="2"
+                      :inactive-value="1"
+                      @change="handleStatusChange(scope.row)"
+                    />
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  v-if="isColumnVisible('createdAt')"
+                  label="创建时间"
+                  prop="createdAt"
+                  sortable="custom"
+                  min-width="140"
+                  :show-overflow-tooltip="true"
+                >
+                  <template slot-scope="scope">
+                    <span>{{ parseTime(scope.row.createdAt) }}</span>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
 
             <pagination
               v-show="total > 0"
@@ -512,10 +573,6 @@ export default {
       loading: true,
       // 选中数组
       ids: [],
-      // 非单个禁用
-      no_single: true,
-      // 非多个禁用
-      zero: true,
       // 总条数
       total: 0,
       // 用户表格数据
@@ -573,6 +630,31 @@ export default {
         roleId: undefined,
         postId: undefined,
       },
+      // 使用 Map 存储所有选中的项（跨分页）
+      selectedUserMap: {},
+      // 防止恢复选中时触发事件循环
+      isRestoringSelection: false,
+      //所有选中的文书记录
+      selectedUserRecords: [],
+      // 导出相关
+      processingInstance: null,
+      previousCursor: null,
+      // 列配置选项
+      columnOptions: [
+        { prop: "policeNo", label: "警号", fixed: true },
+        { prop: "userName", label: "登录名", fixed: false },
+        { prop: "sex", label: "性别", fixed: false },
+        { prop: "orgName", label: "组织", fixed: false },
+        { prop: "orgFullName", label: "组织全称", fixed: false },
+        { prop: "roleName", label: "角色", fixed: false },
+        { prop: "postName", label: "岗位", fixed: false },
+        { prop: "phone", label: "手机号", fixed: false },
+        { prop: "email", label: "邮箱", fixed: false },
+        { prop: "status", label: "状态", fixed: false },
+        { prop: "createdAt", label: "创建时间", fixed: false },
+      ],
+      // 可见列
+      visibleColumns: [],
       // 表单校验
       rules: {
         userName: [
@@ -613,6 +695,8 @@ export default {
     },
   },
   created() {
+    // 初始化可见列
+    this.initVisibleColumns();
     this.getList();
     this.getTreeselect();
     this.getDicts("sys_normal_disable").then((response) => {
@@ -624,10 +708,7 @@ export default {
     });
     this.getDicts("sys_user_sex").then((response) => {
       // 将字典数据的value统一转换为整型
-      this.sexOptions = response.data.map((item) => ({
-        ...item,
-        value: parseInt(item.value),
-      }));
+      this.sexOptions = response.data;
     });
     this.getConfigKey("sys_user_initPassword").then((response) => {
       this.initPassword = response.data.configValue;
@@ -643,31 +724,32 @@ export default {
     /** 查询用户列表 */
     getList() {
       this.loading = true;
-      listUser(this.addDateRange(this.queryParams, this.dateRange)).then(
-        (response) => {
-          this.userList = response.data.list.map((item) => {
-            // 使用字典查找替代format函数
-            const statusOption = this.statusOptions.find(
-              (opt) => opt.value === Number(item.status)
-            );
-            const sexOption = this.sexOptions.find(
-              (opt) => opt.value === Number(item.sex)
-            );
-
-            return {
-              ...item,
-              status: Number(item.status),
-              sex: Number(item.sex),
-              roleName: item.role ? item.role.roleName : "",
-              postName: item.post ? item.post.postName : "",
-              statusName: statusOption ? statusOption.label : "",
-              sexName: sexOption ? sexOption.label : "",
-            };
-          });
-          this.total = response.data.count;
+      const query = this.normalizeQueryParams(this.queryParams);
+      listUser(query)
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.userList = response.data.list;
+            this.total = response.data.count || 0;
+            // 分页/查询后回显跨分页选择
+            this.restoreSelection();
+          } else {
+            this.userList = [];
+            this.total = 0;
+            this.msgError(response.msg || "获取用户列表失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError("查询用户列表失败：" + (error.message || "未知错误"));
+          this.userList = [];
+          this.total = 0;
+        })
+        .finally(() => {
           this.loading = false;
-        }
-      );
+        });
+    },
+
+    sexFormat(row) {
+      return this.selectDictLabel(this.sexOptions, row.sex);
     },
     /** 查询单位下拉树结构 */
     getTreeselect() {
@@ -685,6 +767,37 @@ export default {
     handleNodeClick(data) {
       this.queryParams.orgId = "/" + data.id + "/"; // 比如：/0/1/7/，/0/1/7/8，通过搜索/7/，就可以将该组织以及它的下级组织都搜索出来
       this.getList();
+    },
+    normalizeQueryParams(params = {}) {
+      const query = { ...params };
+      Object.keys(query).forEach((key) => {
+        const value = query[key];
+        if (value === "" || value === null || value === undefined) {
+          delete query[key];
+        }
+      });
+      return query;
+    },
+    /** 恢复选中状态 */
+    restoreSelection() {
+      if (this.isRestoringSelection) return;
+      if (!this.$refs.userTable) return;
+      if (!this.userList || !this.userList.length) return;
+
+      this.isRestoringSelection = true;
+      this.$nextTick(() => {
+        try {
+          this.userList.forEach((row) => {
+            const userId = row && row.userId;
+            if (!userId) return;
+            if (this.selectedUserMap[userId]) {
+              this.$refs.userTable.toggleRowSelection(row, true);
+            }
+          });
+        } finally {
+          this.isRestoringSelection = false;
+        }
+      });
     },
     /** 转换菜单数据结构 ，目前没有使用，暂时保留*/
     normalizer(node) {
@@ -762,21 +875,49 @@ export default {
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.page = 1;
+      this.resetPage();
+      this.resetSelected();
       this.getList();
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.dateRange = [];
       this.resetForm("queryForm");
-      this.queryParams.orgId = "";
       this.handleQuery();
     },
-    // 多选框选中数据
+    /** 搜索按钮操作
+     * 需要清空记录选中状态的场景如下：
+     * 1. 点击搜索按钮时，需要清空记录选中状态
+     * 2. 重置按钮操作时，需要清空记录选中状态
+     * 3. 执行删除、修改、导出时，需要清空记录选中状态
+     * 其他场景下，不需要清空记录选中状态
+     */
+    resetSelected() {
+      this.selectedUserMap = {};
+      this.selectedUserRecords = [];
+    },
+
+    /** 多选框选中数据 */
     handleSelectionChange(selection) {
-      this.ids = selection.map((item) => item.userId);
-      this.no_single = selection.length !== 1;
-      this.zero = !selection.length;
+      if (this.isRestoringSelection) {
+        return;
+      }
+      // 以当前页为准增删选中项（实现跨分页记忆）
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.userId).filter(Boolean)
+      );
+
+      (this.userList || []).forEach((row) => {
+        const userId = row && row.userId;
+        if (!userId) return;
+        if (selectedIdSet.has(userId)) {
+          this.selectedUserMap[userId] = row;
+        } else {
+          delete this.selectedUserMap[userId];
+        }
+      });
+      this.selectedUserRecords = Object.values(this.selectedUserMap).filter(
+        Boolean
+      );
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -787,17 +928,20 @@ export default {
       this.title = "添加用户";
       this.form.password = this.initPassword;
     },
+
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-
-      const userId = row.userId || this.ids;
-      getUser(userId).then((response) => {
-        this.form = response.data;
-        this.open = true;
-        this.title = "修改用户";
-        this.form.password = "";
-      });
+      // 使用对象展开运算符创建新对象
+      if (row && row.userId !== undefined) {
+        this.form = { ...row };
+      } else {
+        this.form = this.selectedUserRecords[0]
+          ? { ...this.selectedUserRecords[0] }
+          : {};
+      }
+      this.title = "修改用户";
+      this.open = true;
       listPost({ pageSize: 1000 }).then((response) => {
         this.postOptions = response.data.list;
       });
@@ -823,103 +967,292 @@ export default {
         .catch(() => {});
     },
     /** 提交按钮 */
-    submitForm: function () {
+    submitForm() {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          if (this.form.userId !== undefined) {
-            updateUser(this.form).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
-              } else {
-                this.msgError(response.msg);
-              }
-            });
+          if (this.form.id != null) {
+            this.startProcessing("正在修改用户...");
+            updateUser(this.form.id, this.form)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  // 延迟2秒后刷用户列表
+                  this.getList();
+                  this.msgSuccess(response.msg || "修改用户成功");
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg || "修改用户失败");
+                }
+              })
+              .catch((error) => {
+                this.msgError("修改用户失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                this.stopProcessing();
+              });
           } else {
-            addUser(this.form).then((response) => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
-              } else {
-                this.msgError(response.msg);
-              }
-            });
+            this.startProcessing("正在创建用户...");
+            addUser(this.form)
+              .then(async (response) => {
+                if (response.code === 200) {
+                  this.getList();
+                  this.msgSuccess(response.msg || "新增用户成功");
+                  this.open = false;
+                } else {
+                  this.msgError(response.msg || "新增用户失败");
+                }
+              })
+              .catch((error) => {
+                this.msgError("新增用户失败：" + (error.message || "未知错误"));
+              })
+              .finally(() => {
+                this.stopProcessing();
+              });
           }
         }
       });
     },
-
-    /** 删除按钮操作 */
-    handleDelete(row) {
-      const Ids = (row.userId && [row.userId]) || this.ids;
-      this.$confirm('是否确认删除用户编号为"' + Ids + '"的数据项?', "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
-        .then(function () {
-          return delUser({ ids: Ids });
-        })
-        .then((response) => {
-          if (response.code === 200) {
-            this.msgSuccess(response.msg);
-            this.open = false;
-            this.getList();
-          } else {
-            this.msgError(response.msg);
-          }
-        })
-        .catch(function () {});
-    },
-    /** 导出按钮操作 */
-    handleExport() {
-      this.$confirm("是否确认导出所有用户数据项?", "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      }).then(() => {
-        this.downloadLoading = true;
-        import("@/vendor/Export2Excel").then((excel) => {
-          const tHeader = [
-            "用户编号",
-            "登录名",
-            "警号",
-            "性别",
-            "组织",
-            "角色",
-            "岗位",
-            "手机",
-            "邮箱",
-            "状态",
-            "创建时间",
-          ];
-          const filterVal = [
-            "userId",
-            "userName",
-            "policeNo",
-            "sexName",
-            "orgName",
-            "roleName",
-            "postName",
-            "phone",
-            "email",
-            "statusName",
-            "createdAt",
-          ];
-          const list = this.userList;
-          const data = formatJson(filterVal, list);
-          excel.export_json_to_excel({
-            header: tHeader,
-            data,
-            filename: "用户管理",
-            autoWidth: true, // Optional
-            bookType: "xlsx", // Optional
-          });
-          this.downloadLoading = false;
-        });
+    /** 开始执行操作 */
+    startProcessing(text) {
+      this.processingInstance = this.$loading({
+        lock: true,
+        text: text,
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
       });
+      // 鼠标切换为等待状态
+      this.previousCursor = document.body.style.cursor;
+      document.body.style.cursor = "wait";
+    },
+
+    /** 停止执行操作 */
+    stopProcessing() {
+      if (this.processingInstance) {
+        this.processingInstance.close();
+        this.processingInstance = null;
+      }
+      // 恢复鼠标状态
+      document.body.style.cursor = this.previousCursor;
+    },
+    /** 删除按钮操作 */
+    async handleDelete(row) {
+      try {
+        var userIds;
+        var userCodes;
+        if (row && row.userId !== undefined) {
+          userIds = [row.userId];
+          userCodes = row.policeNo;
+        } else {
+          userIds = this.selectedUserRecords.map((item) => item.userId);
+          userCodes = this.selectedUserRecords.map((item) => item.policeNo);
+        }
+
+        await this.$confirm(
+          '是否确认删除用户编号为"' + userCodes + '"的数据项?',
+          "信息",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "info",
+          }
+        );
+        this.startProcessing("正在删除用户...");
+        const response = await delUser({ ids: userIds });
+        if (response.code === 200) {
+          this.resetPage();
+          this.resetSelected();
+          this.getList();
+          this.msgSuccess(response.msg || "删除用户成功");
+        } else {
+          this.msgError(response.msg || "删除用户失败");
+        }
+        this.stopProcessing();
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("删除用户失败：" + (error.message || "未知错误"));
+        }
+      }
+    },
+    /** 初始化可见列 */
+    initVisibleColumns() {
+      const saved = localStorage.getItem("sys_user_visible_columns");
+      if (saved) {
+        try {
+          this.visibleColumns = JSON.parse(saved);
+        } catch (error) {
+          this.visibleColumns = this.columnOptions.map((item) => item.prop);
+        }
+      } else {
+        this.visibleColumns = this.columnOptions.map((item) => item.prop);
+      }
+    },
+    /** 判断列是否显示 */
+    isColumnVisible(prop) {
+      return this.visibleColumns.includes(prop);
+    },
+    /** 列显示变更 */
+    handleColumnChange(value) {
+      localStorage.setItem("sys_user_visible_columns", JSON.stringify(value));
+    },
+    /** 重置列配置 */
+    resetColumns() {
+      this.visibleColumns = this.columnOptions.map((item) => item.prop);
+      localStorage.setItem(
+        "sys_user_visible_columns",
+        JSON.stringify(this.visibleColumns)
+      );
+      this.$message.success("已重置为默认显示");
+    },
+    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    resetPage() {
+      this.queryParams.pageIndex = 1;
+      this.queryParams.pageSize = 10;
+    },
+    /** 延迟函数 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    },
+
+    /** 开始执行操作 */
+    startProcessing(text) {
+      this.processingInstance = this.$loading({
+        lock: true,
+        text: text,
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
+      });
+      this.previousCursor = document.body.style.cursor;
+      document.body.style.cursor = "wait";
+    },
+
+    /** 停止执行操作 */
+    stopProcessing() {
+      if (this.processingInstance) {
+        this.processingInstance.close();
+        this.processingInstance = null;
+      }
+      document.body.style.cursor = this.previousCursor;
+    },
+
+    /** 导出按钮操作 */
+    async handleExport() {
+      try {
+        const hasSelection =
+          Array.isArray(this.selectedUserRecords) &&
+          this.selectedUserRecords.length > 0;
+
+        const confirmText = hasSelection
+          ? `是否确认导出已勾选的 ${this.selectedUserRecords.length} 条用户数据？`
+          : "是否确认导出所有用户数据项？";
+
+        await this.$confirm(confirmText, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "info",
+        });
+
+        const columnOptions = Array.isArray(this.columnOptions)
+          ? this.columnOptions
+          : [];
+        const visibleColumns = Array.isArray(this.visibleColumns)
+          ? this.visibleColumns
+          : [];
+        const exportColumns = columnOptions.filter((c) =>
+          visibleColumns.includes(c.prop)
+        );
+
+        if (!exportColumns.length) {
+          this.msgError("当前未选择任何可导出的列");
+          return;
+        }
+
+        const tHeader = exportColumns.map((c) => c.label);
+        const filterVal = exportColumns.map((c) => c.prop);
+
+        let list = [];
+        if (hasSelection) {
+          list = this.selectedUserRecords;
+        } else {
+          const baseQueryParams = { ...(this.queryParams || {}) };
+
+          const pageSize = 1000;
+          let pageIndex = 1;
+          let total = Infinity;
+
+          while (list.length < total) {
+            const query = {
+              ...baseQueryParams,
+              pageIndex,
+              pageSize,
+            };
+            const resp = await listUser(query);
+            if (!resp || resp.code !== 200) {
+              throw new Error((resp && resp.msg) || "查询用户列表失败");
+            }
+
+            const pageList = (resp.data && resp.data.list) || [];
+            total = (resp.data && resp.data.count) || 0;
+            list = list.concat(pageList);
+
+            if (!pageList.length) {
+              break;
+            }
+            pageIndex += 1;
+          }
+        }
+
+        const formatDateTime = (value) => {
+          if (!value) return "-";
+          try {
+            return this.parseTime ? this.parseTime(value) : value;
+          } catch (error) {
+            return value;
+          }
+        };
+
+        const formatStatus = (value) => {
+          return this.selectDictLabel(this.statusOptions || [], value) || value;
+        };
+
+        const formatSex = (value) => {
+          return this.selectDictLabel(this.sexOptions || [], value) || value;
+        };
+
+        const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
+          const output = { ...row };
+          output.sex = formatSex(row.sex);
+          output.status = formatStatus(row.status);
+          output.createdAt = formatDateTime(row.createdAt);
+          // 处理角色、岗位、单位字段
+          if (!output.roleName && row.role) {
+            output.roleName = row.role.roleName || "";
+          }
+          if (!output.postName && row.post) {
+            output.postName = row.post.postName || "";
+          }
+          if (!output.orgFullName && row.org) {
+            output.orgFullName = row.org.orgFullName || "";
+          }
+          return output;
+        });
+
+        const data = formatJson(filterVal, normalizeList);
+
+        // 触发导出
+        const excel = await import("@/vendor/Export2Excel");
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: "用户列表",
+          autoWidth: true,
+          bookType: "xlsx",
+        });
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("导出失败：" + (error.message || "未知错误"));
+        }
+      } finally {
+      }
     },
     /** 导入按钮操作 */
     handleImport() {
@@ -965,3 +1298,44 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.column-settings-trigger {
+  text-align: right;
+}
+
+.column-settings {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.column-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.column-item {
+  padding: 5px 0;
+}
+
+::v-deep .el-table {
+  width: 100% !important;
+  table-layout: auto !important;
+}
+
+::v-deep .el-table__body-wrapper {
+  width: 100% !important;
+}
+
+::v-deep .el-table__header-wrapper {
+  width: 100% !important;
+}
+
+::v-deep .el-table th {
+  background-color: #f5f7fa;
+}
+</style>

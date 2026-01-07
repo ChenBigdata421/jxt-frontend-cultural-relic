@@ -829,11 +829,6 @@ export default {
     getList() {
       this.loading = true;
       const query = this.normalizeQueryParams(this.queryParams);
-      Object.keys(query).forEach((key) => {
-        if (query[key] === "" || query[key] === null) {
-          delete query[key];
-        }
-      });
       listWrits(query)
         .then((response) => {
           if (response.code === 200 && response.data) {
