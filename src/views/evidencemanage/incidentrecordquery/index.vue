@@ -531,7 +531,7 @@
                 size="small"
                 effect="dark"
               >
-                {{ selectDictLabel(statusOptions, row.status) }}
+                {{ statusFormat(row) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -839,7 +839,7 @@
                 size="small"
                 effect="dark"
               >
-                {{ selectDictLabel(statusOptions, viewData.status) || "-" }}
+                {{ statusFormat(viewData) || "-" }}
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="是否关联">
@@ -1041,10 +1041,7 @@ export default {
       ],
       // 可见列
       visibleColumns: [],
-      exporting: false,
-      blurWhileExport: false, //标记页面失去焦点的状态
       processingInstance: null, //Element UI全局加载动画的实例
-      focusListener: null, //页面获焦点事件的 (focus）的监听器
       previousCursor: null, //记录鼠标状态
     };
   },
@@ -1118,7 +1115,15 @@ export default {
       });
       return query;
     },
-
+    incidentRelationStatusFormat(row) {
+      return this.selectDictLabel(
+        this.incidentRelationStatusOptions,
+        row.isRelation
+      );
+    },
+    statusFormat(row) {
+      return this.selectDictLabel(this.statusOptions, row.status);
+    },
     /** 查询警情列表 */
     getList() {
       this.loading = true;
@@ -1510,57 +1515,20 @@ export default {
           }
         }
 
-        const formatDateTime = (value) => {
-          if (!value) return "-";
-          try {
-            return this.parseTime ? this.parseTime(value) : value;
-          } catch (error) {
-            return value;
-          }
-        };
-
-        const formatStatus = (value) => {
-          const option = (this.statusOptions || []).find(
-            (item) => String(item.value) === String(value)
-          );
-          return option ? option.label : value;
-        };
-
-        const formatRelation = (value) => {
-          const option = (this.incidentRelationStatusOptions || []).find(
-            (item) => String(item.value) === String(value)
-          );
-          return option ? option.label : value;
-        };
-
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
           const output = { ...row };
-          output.status = formatStatus(row.status);
-          output.isRelation = formatRelation(row.isRelation);
-          output.createTime = formatDateTime(row.createTime);
-          output.reportTime = formatDateTime(row.reportTime);
-          output.receiveTime = formatDateTime(row.receiveTime);
-          output.processTime = formatDateTime(row.processTime);
-          output.endTime = formatDateTime(row.endTime);
+          output.status = this.statusFormat(row);
+          output.isRelation = this.incidentRelationStatusFormat(row);
+          output.createTime = this.parseTime(row.createTime);
+          output.reportTime = this.parseTime(row.reportTime);
+          output.receiveTime = this.parseTime(row.receiveTime);
+          output.processTime = this.parseTime(row.processTime);
+          output.endTime = this.parseTime(row.endTime);
           return output;
         });
 
         const data = formatJson(filterVal, normalizeList);
-        // 标记导出开始
-        this.exporting = true;
-        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
 
-        // 注册 focus 事件：当用户从“另存为”对话框返回时
-        this.focusListener = () => {
-          if (this.exporting && this.blurWhileExport) {
-            this.blurWhileExport = false;
-            console.log(
-              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
-            );
-          }
-        };
-
-        window.addEventListener("focus", this.focusListener);
         // 触发导出（会弹出另存为对话框）
         const excel = await import("@/vendor/Export2Excel");
         excel.export_json_to_excel({
@@ -1570,23 +1538,11 @@ export default {
           autoWidth: true,
           bookType: "xlsx",
         });
-        // 等待用户从“另存为”对话框返回
-        while (this.blurWhileExport) {
-          await this.delay(100);
-        }
-        this.startProcessing("正在导出...");
-        await this.delay(3000);
-        this.resetSelected();
-        this.getList();
-        this.msgSuccess("导出警情成功");
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("导出失败：" + (error.message || "未知错误"));
         }
       } finally {
-        this.exporting = false;
-        this.stopProcessing();
-        this.cleanupExportListeners();
       }
     },
 

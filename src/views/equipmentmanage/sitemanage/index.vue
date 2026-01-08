@@ -778,10 +778,8 @@ export default {
       rules: {
         no: [{ required: true, message: "编号不能为空", trigger: "blur" }],
       },
-      exporting: false,
       blurWhileExport: false, //标记页面失去焦点的状态
       processingInstance: null, //Element UI全局加载动画的实例
-      focusListener: null, //页面获焦点事件的 (focus）的监听器
       previousCursor: null, //记录鼠标状态
     };
   },
@@ -1254,54 +1252,15 @@ export default {
           }
         }
 
-        const formatDateTime = (value) => {
-          if (!value) return "-";
-          try {
-            return this.parseTime ? this.parseTime(value) : value;
-          } catch (error) {
-            return value;
-          }
-        };
-
-        const formatStatus = (value) => {
-          const option = (this.stateOptions || []).find(
-            (item) => String(item.value) === String(value)
-          );
-          return option ? option.label : value;
-        };
-
-        const formatOpenStatus = (value) => {
-          const option = (this.openStatusOptions || []).find(
-            (item) => String(item.value) === String(value)
-          );
-          return option ? option.label : value;
-        };
-
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
           const output = { ...row };
-          output.status = formatStatus(row.status);
-          output.openStatus = formatOpenStatus(row.openStatus);
-          output.purchaseDate = formatDateTime(row.purchaseDate);
+          output.status = this.stateFormat(row);
+          output.openStatus = this.openStatusFormat(row);
+          output.purchaseDate = this.parseTime(row.purchaseDate);
           return output;
         });
 
         const data = formatJson(filterVal, normalizeList);
-
-        // 标记导出开始
-        this.exporting = true;
-        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
-
-        // 注册 focus 事件：当用户从“另存为”对话框返回时
-        this.focusListener = () => {
-          if (this.exporting && this.blurWhileExport) {
-            this.blurWhileExport = false;
-            console.log(
-              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
-            );
-          }
-        };
-
-        window.addEventListener("focus", this.focusListener);
 
         // 触发导出（会弹出另存为对话框）
         const excel = await import("@/vendor/Export2Excel");
@@ -1312,25 +1271,11 @@ export default {
           autoWidth: true,
           bookType: "xlsx",
         });
-        // 等待用户从“另存为”对话框返回
-        while (this.blurWhileExport) {
-          await this.delay(100);
-        }
-        this.startProcessing("正在导出...");
-        await this.delay(3000);
-        this.selectedSiteMap = {};
-        this.selectedSiteRecords = [];
-        this.getList();
-        this.msgSuccess("导出采集站成功");
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("导出失败：" + (error.message || "未知错误"));
         }
       } finally {
-        // 清理状态和事件监听
-        this.exporting = false;
-        this.stopProcessing();
-        this.cleanupExportListeners();
       }
     },
 

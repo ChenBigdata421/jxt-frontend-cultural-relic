@@ -274,7 +274,7 @@
             width="120"
           >
             <template slot-scope="scope">
-              {{ selectDictLabel(caseTypeOptions, scope.row.caseType) }}
+              {{ caseTypeFormatter(scope.row) }}
             </template>
           </el-table-column>
           <el-table-column
@@ -285,7 +285,7 @@
             width="120"
           >
             <template slot-scope="scope">
-              {{ getCaseFlowLabel(scope.row.caseFlow, scope.row.caseType) }}
+              {{ caseFlowFormatter(scope.row) }}
             </template>
           </el-table-column>
           <el-table-column
@@ -349,13 +349,13 @@
             prop="isRelation"
             width="100"
           >
-            <template slot-scope="{ row }">
+            <template slot-scope="scope">
               <el-tag
-                :type="row.isRelation === 1 ? 'success' : 'info'"
+                :type="scope.row.isRelation === 1 ? 'success' : 'info'"
                 size="small"
                 effect="dark"
               >
-                {{ selectDictLabel(caseRelationStatusOptions, row.isRelation) }}
+                {{ relationStatusFormatter(scope.row) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -606,10 +606,10 @@
             viewData.caseName
           }}</el-descriptions-item>
           <el-descriptions-item label="案件类型">{{
-            selectDictLabel(caseTypeOptions, viewData.caseType)
+            caseTypeFormatter(viewData)
           }}</el-descriptions-item>
           <el-descriptions-item label="案件流程">{{
-            getCaseFlowLabel(viewData.caseFlow, viewData.caseType)
+            caseFlowFormatter(viewData)
           }}</el-descriptions-item>
           <el-descriptions-item label="案发时间">{{
             parseTime(viewData.caseTime)
@@ -783,10 +783,7 @@ export default {
       ],
       // 可见列
       visibleColumns: [],
-      exporting: false,
-      blurWhileExport: false, //标记页面失去焦点的状态
       processingInstance: null, //Element UI全局加载动画的实例
-      focusListener: null, //页面获焦点事件的 (focus）的监听器
       previousCursor: null, //记录鼠标状态
     };
   },
@@ -833,6 +830,22 @@ export default {
       });
   },
   methods: {
+    // 案件类型字典翻译
+    caseTypeFormatter(row) {
+      return this.selectDictLabel(this.caseTypeOptions, row.caseType);
+    },
+    // 案件流程字典翻译
+    caseFlowFormatter(row) {
+      return this.getCaseFlowLabel(row.caseFlow, row.caseType);
+    },
+    // 关联状态字典翻译
+    relationStatusFormatter(row) {
+      return this.selectDictLabel(
+        this.caseRelationStatusOptions,
+        row.isRelation
+      );
+    },
+
     /** 查询案件列表 */
     getList() {
       this.loading = true;
@@ -1399,60 +1412,19 @@ export default {
           }
         }
 
-        const formatDateTime = (value) => {
-          if (!value) return "-";
-          try {
-            return this.parseTime ? this.parseTime(value) : value;
-          } catch (error) {
-            return value;
-          }
-        };
-
-        const formatCaseType = (value) => {
-          return (
-            this.selectDictLabel(this.caseTypeOptions || [], value) || value
-          );
-        };
-
-        const formatCaseFlow = (value, caseType) => {
-          const label = this.getCaseFlowLabel
-            ? this.getCaseFlowLabel(value, caseType)
-            : value;
-          return label || value;
-        };
-
-        const formatRelation = (value) => {
-          return (
-            this.selectDictLabel(this.caseRelationStatusOptions || [], value) ||
-            value
-          );
-        };
-
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
           const output = { ...row };
-          output.caseType = formatCaseType(row.caseType);
-          output.caseFlow = formatCaseFlow(row.caseFlow, row.caseType);
-          output.isRelation = formatRelation(row.isRelation);
-          output.caseTime = formatDateTime(row.caseTime);
-          output.procTime = formatDateTime(row.procTime);
-          output.createdAt = formatDateTime(row.createdAt);
+          output.caseType = this.caseTypeFormatter(row);
+          output.caseFlow = this.caseFlowFormatter(row);
+          output.isRelation = this.relationStatusFormatter(row);
+          output.caseTime = this.parseTime(row.caseTime);
+          output.procTime = this.parseTime(row.procTime);
+          output.createdAt = this.parseTime(row.createdAt);
           return output;
         });
 
         const data = formatJson(filterVal, normalizeList);
-        // 标记导出开始
-        this.exporting = true;
-        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
-        // 注册 focus 事件：当用户从“另存为”对话框返回时
-        this.focusListener = () => {
-          if (this.exporting && this.blurWhileExport) {
-            this.blurWhileExport = false;
-            console.log(
-              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
-            );
-          }
-        };
-        window.addEventListener("focus", this.focusListener);
+
         // 触发导出（会弹出另存为对话框）
         const excel = await import("@/vendor/Export2Excel");
         excel.export_json_to_excel({
@@ -1462,23 +1434,11 @@ export default {
           autoWidth: true,
           bookType: "xlsx",
         });
-        // 等待用户从“另存为”对话框返回
-        while (this.blurWhileExport) {
-          await this.delay(100);
-        }
-        this.startProcessing("正在导出...");
-        await this.delay(3000);
-        this.resetSelected();
-        this.getList();
-        this.msgSuccess("导出案件成功");
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("导出失败：" + (error.message || "未知错误"));
         }
       } finally {
-        this.exporting = false;
-        this.stopProcessing();
-        this.cleanupExportListeners();
       }
     },
   },

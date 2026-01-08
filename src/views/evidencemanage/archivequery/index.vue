@@ -184,7 +184,7 @@
             viewData.archiveTitle
           }}</el-descriptions-item>
           <el-descriptions-item label="档案类型">{{
-            archiveTypeFormatter(viewData)
+            archiveTypeFormat(viewData)
           }}</el-descriptions-item>
           <el-descriptions-item label="管理部门">{{
             viewData.orgName
@@ -197,7 +197,7 @@
           }}</el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="getStatusType(viewData.status)">{{
-              statusFormatter(viewData)
+              statusFormat(viewData)
             }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="录入人员">{{
@@ -363,18 +363,9 @@ export default {
         ],
       },
       // 档案类型选项
-      archiveTypeOptions: [
-        { label: "案件档案", value: 1 },
-        { label: "证据档案", value: 2 },
-        { label: "执法档案", value: 3 },
-        { label: "其他档案", value: 4 },
-      ],
+      archiveTypeOptions: [],
       // 状态选项
-      statusOptions: [
-        { label: "正常", value: 0 },
-        { label: "异常", value: 1 },
-        { label: "其他", value: 2 },
-      ],
+      statusOptions: [],
       // 媒体类型字典
       mediaCateOptions: [],
       // 是否显示媒体抽屉
@@ -403,10 +394,8 @@ export default {
       selectedMediaRelationMap: {},
       // 防止恢复选中时触发事件循环
       isRestoringMediaRelationSelection: false,
-      exporting: false,
-      blurWhileExport: false, //标记页面失去焦点的状态
+
       processingInstance: null, //Element UI全局加载动画的实例
-      focusListener: null, //页面获焦点事件的 (focus）的监听器
       previousCursor: null, //记录鼠标状态
     };
   },
@@ -416,22 +405,14 @@ export default {
     this.getDicts("evidence_media_type").then((response) => {
       this.mediaCateOptions = response.data;
     });
+    this.getDicts("archive_status").then((response) => {
+      this.statusOptions = response.data;
+    });
+    this.getDicts("archive_type").then((response) => {
+      this.archiveTypeOptions = response.data;
+    });
   },
   methods: {
-    /** 档案类型格式化 */
-    archiveTypeFormatter(row) {
-      const type = this.archiveTypeOptions.find(
-        (item) => item.value === row.archiveType
-      );
-      return type ? type.label : row.archiveType;
-    },
-    /** 状态格式化 */
-    statusFormatter(row) {
-      const status = this.statusOptions.find(
-        (item) => item.value === row.status
-      );
-      return status ? status.label : row.status;
-    },
     /** 获取状态标签类型 */
     getStatusType(status) {
       const typeMap = {
@@ -440,6 +421,14 @@ export default {
         2: "info",
       };
       return typeMap[status] || "info";
+    },
+
+    statusFormat(row) {
+      return this.selectDictLabel(this.statusOptions, row.status);
+    },
+
+    archiveTypeFormat(row) {
+      return this.selectDictLabel(this.archiveTypeOptions, row.archiveType);
     },
 
     /** 多选框选中数据 */
@@ -681,8 +670,8 @@ export default {
         // 对导出字段做必要的格式化（与页面展示保持一致）
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
           const out = { ...row };
-          out.archiveType = this.archiveTypeFormatter(row);
-          out.status = this.statusFormatter(row);
+          out.archiveType = this.archiveTypeFormat(row);
+          out.status = this.statusFormat(row);
           out.createdAt = this.parseTime(row.createdAt);
           out.updatedAt = this.parseTime(row.updatedAt);
           out.expirationTime = this.parseTime(row.expirationTime);
@@ -691,19 +680,6 @@ export default {
 
         const data = formatJson(filterVal, normalizeList);
 
-        // 标记导出开始
-        this.exporting = true;
-        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
-        // 注册 focus 事件：当用户从“另存为”对话框返回时
-        this.focusListener = () => {
-          if (this.exporting && this.blurWhileExport) {
-            this.blurWhileExport = false;
-            console.log(
-              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
-            );
-          }
-        };
-        window.addEventListener("focus", this.focusListener);
         // 触发导出（会弹出另存为对话框）
         const excel = await import("@/vendor/Export2Excel");
         excel.export_json_to_excel({
@@ -713,23 +689,11 @@ export default {
           autoWidth: true,
           bookType: "xlsx",
         });
-        // 等待用户从“另存为”对话框返回
-        while (this.blurWhileExport) {
-          await this.delay(100);
-        }
-        this.startProcessing("正在导出...");
-        await this.delay(3000);
-        this.$refs.archiveSelector.resetSelected();
-        this.$refs.archiveSelector.refreshList();
-        this.msgSuccess("导出档案成功");
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("导出失败：" + (error.message || "未知错误"));
         }
       } finally {
-        this.stopProcessing();
-        this.exporting = false;
-        this.cleanupExportListeners();
       }
     },
     /** 取消按钮 */

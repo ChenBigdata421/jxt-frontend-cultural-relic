@@ -234,7 +234,7 @@
             prop="writType"
           >
             <template slot-scope="scope">
-              {{ selectDictLabel(writTypeOptions, scope.row.writType) }}
+              {{ writTypeFormat(scope.row) }}
             </template>
           </el-table-column>
           <el-table-column
@@ -273,13 +273,13 @@
             align="center"
             prop="isRelation"
           >
-            <template slot-scope="{ row }">
+            <template slot-scope="scope">
               <el-tag
-                :type="row.isRelation === 1 ? 'success' : 'info'"
+                :type="scope.row.isRelation === 1 ? 'success' : 'info'"
                 size="small"
                 effect="dark"
               >
-                {{ selectDictLabel(relationStatusOptions, row.isRelation) }}
+                {{ relationStatusFormat(scope.row) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -466,7 +466,7 @@
             viewData.writName
           }}</el-descriptions-item>
           <el-descriptions-item label="文书类型">{{
-            selectDictLabel(writTypeOptions, viewData.writType)
+            writTypeFormat(viewData)
           }}</el-descriptions-item>
           <el-descriptions-item label="开书时间">{{
             parseTime(viewData.writTime)
@@ -481,10 +481,7 @@
             viewData.writScore || "未评分"
           }}</el-descriptions-item>
           <el-descriptions-item label="是否关联">{{
-            selectDictLabel(
-              relationStatusOptions,
-              viewData.isRelation > 0 ? 1 : 0
-            )
+            relationStatusFormat(viewData)
           }}</el-descriptions-item>
           <el-descriptions-item label="评分说明" :span="2">{{
             viewData.scoreDesc || "无"
@@ -553,7 +550,7 @@
             <el-table-column label="媒体名称" align="center" prop="mediaName" />
             <el-table-column label="媒体类型" align="center" prop="mediaCate">
               <template slot-scope="scope">
-                {{ selectDictLabel(mediaCateOptions, scope.row.mediaCate) }}
+                {{ mediaCateFormat(scope.row) }}
               </template>
             </el-table-column>
             <el-table-column label="关联人" align="center" prop="policeName" />
@@ -776,10 +773,7 @@ export default {
           { required: true, message: "评分不能为空", trigger: "blur" },
         ],
       },
-      exporting: false,
-      blurWhileExport: false, //标记页面失去焦点的状态
       processingInstance: null, //Element UI全局加载动画的实例
-      focusListener: null, //页面获焦点事件的 (focus）的监听器
       previousCursor: null, //记录鼠标状态
     };
   },
@@ -824,6 +818,16 @@ export default {
     });
   },
   methods: {
+    writTypeFormat(row) {
+      return this.selectDictLabel(this.writTypeOptions, row.writType);
+    },
+    relationStatusFormat(row) {
+      return this.selectDictLabel(this.relationStatusOptions, row.isRelation);
+    },
+    mediaCateFormat(row) {
+      return this.selectDictLabel(this.mediaCateOptions, row.mediaCate);
+    },
+
     /** -----------主界面 --------------*/
     /** 查询文书列表 */
     getList() {
@@ -1162,7 +1166,7 @@ export default {
         id: row.id,
         writCode: row.writCode,
         writTime: this.parseTime(row.writTime),
-        writTypeLabel: this.selectDictLabel(this.writTypeOptions, row.writType),
+        writTypeLabel: this.writTypeFormat(row),
         writScore: row.writScore || 0,
         scoreDesc: row.scoreDesc || "",
       };
@@ -1313,52 +1317,18 @@ export default {
           }
         }
 
-        const formatDateTime = (value) => {
-          if (!value) return "-";
-          try {
-            return this.parseTime ? this.parseTime(value) : value;
-          } catch (error) {
-            return value;
-          }
-        };
-
-        const formatWritType = (value) => {
-          return (
-            this.selectDictLabel(this.writTypeOptions || [], value) || value
-          );
-        };
-
-        const formatRelation = (value) => {
-          return (
-            this.selectDictLabel(this.relationStatusOptions || [], value) ||
-            value
-          );
-        };
-
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
           const output = { ...row };
-          output.writType = formatWritType(row.writType);
-          output.isRelation = formatRelation(row.isRelation);
-          output.writTime = formatDateTime(row.writTime);
-          output.createdAt = formatDateTime(row.createdAt);
-          output.updatedAt = formatDateTime(row.updatedAt);
+          output.writType = this.writTypeFormat(row);
+          output.isRelation = this.relationStatusFormat(row);
+          output.writTime = this.parseTime(row.writTime);
+          output.createdAt = this.parseTime(row.createdAt);
+          output.updatedAt = this.parseTime(row.updatedAt);
           return output;
         });
 
         const data = formatJson(filterVal, normalizeList);
-        // 标记导出开始
-        this.exporting = true;
-        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
-        // 注册 focus 事件：当用户从“另存为”对话框返回时
-        this.focusListener = () => {
-          if (this.exporting && this.blurWhileExport) {
-            this.blurWhileExport = false;
-            console.log(
-              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
-            );
-          }
-        };
-        window.addEventListener("focus", this.focusListener);
+
         // 触发导出（会弹出另存为对话框）
         const excel = await import("@/vendor/Export2Excel");
         excel.export_json_to_excel({
@@ -1368,23 +1338,11 @@ export default {
           autoWidth: true,
           bookType: "xlsx",
         });
-        // 等待用户从“另存为”对话框返回
-        while (this.blurWhileExport) {
-          await this.delay(100);
-        }
-        this.startProcessing("正在导出...");
-        await this.delay(3000);
-        this.resetSelected();
-        this.getList();
-        this.msgSuccess("导出文书成功");
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("导出失败：" + (error.message || "未知错误"));
         }
       } finally {
-        this.exporting = false;
-        this.stopProcessing();
-        this.cleanupExportListeners();
       }
     },
 

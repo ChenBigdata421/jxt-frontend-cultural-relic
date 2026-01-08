@@ -71,7 +71,7 @@
               style="width: 170px"
             >
               <el-option
-                v-for="dict in stateOptions"
+                v-for="dict in statusOptions"
                 :key="dict.value"
                 :label="dict.label"
                 :value="dict.value"
@@ -301,7 +301,7 @@
               <el-tag
                 :type="scope.row.status === 1 ? 'success' : 'danger'"
                 disable-transitions
-                >{{ stateFormat(scope.row) }}</el-tag
+                >{{ statusFormat(scope.row) }}</el-tag
               >
             </template>
           </el-table-column>
@@ -463,7 +463,7 @@
                 <el-form-item label="状态">
                   <el-radio-group v-model="form.status">
                     <el-radio
-                      v-for="dict in stateOptions"
+                      v-for="dict in statusOptions"
                       :key="dict.value"
                       :label="dict.value"
                       >{{ dict.label }}</el-radio
@@ -587,7 +587,7 @@
               selectDictLabel(enableUseOptions, viewData.enableUse) || "-"
             }}</el-descriptions-item>
             <el-descriptions-item label="状态">{{
-              selectDictLabel(stateOptions, viewData.status) || "-"
+              selectDictLabel(statusOptions, viewData.status) || "-"
             }}</el-descriptions-item>
             <el-descriptions-item label="CPU">{{
               viewData.cpu || "-"
@@ -659,7 +659,7 @@ export default {
       // 执法仪数据
       bwcList: [],
       // 状态数据字典
-      stateOptions: [],
+      statusOptions: [],
       // 是否可用数据字典
       enableUseOptions: [],
       // 使用 Map 存储所有选中的项（跨分页）
@@ -728,10 +728,7 @@ export default {
       rules: {
         no: [{ required: true, message: "编号不能为空", trigger: "blur" }],
       },
-      exporting: false,
-      blurWhileExport: false, //标记页面失去焦点的状态
       processingInstance: null, //Element UI全局加载动画的实例
-      focusListener: null, //页面获焦点事件的 (focus）的监听器
       previousCursor: null, //记录鼠标状态
     };
   },
@@ -760,7 +757,7 @@ export default {
     this.getTreeselect();
     this.getFormBrand();
     this.getDicts("bwc_status").then((response) => {
-      this.stateOptions = response.data;
+      this.statusOptions = response.data;
     });
     this.getDicts("enableuse_state").then((response) => {
       this.enableUseOptions = response.data;
@@ -846,8 +843,8 @@ export default {
       });
     },
     // 字典状态字典翻译
-    stateFormat(row) {
-      return this.selectDictLabel(this.stateOptions, row.status);
+    statusFormat(row) {
+      return this.selectDictLabel(this.statusOptions, row.status);
     },
     // 字典状态字典翻译
     enableUseFormat(row) {
@@ -1130,14 +1127,6 @@ export default {
       document.body.style.cursor = this.previousCursor;
     },
 
-    /** 清理导出事件监听 */
-    cleanupExportListeners() {
-      if (this.focusListener) {
-        window.removeEventListener("focus", this.focusListener);
-        this.focusListener = null;
-      }
-    },
-
     /** 导出按钮操作 */
     async handleExport() {
       try {
@@ -1204,54 +1193,15 @@ export default {
           }
         }
 
-        const formatDateTime = (value) => {
-          if (!value) return "-";
-          try {
-            return this.parseTime ? this.parseTime(value) : value;
-          } catch (error) {
-            return value;
-          }
-        };
-
-        const formatStatus = (value) => {
-          const option = (this.stateOptions || []).find(
-            (item) => String(item.value) === String(value)
-          );
-          return option ? option.label : value;
-        };
-
-        const formatEnableUseOptions = (value) => {
-          const option = (this.enableUseOptions || []).find(
-            (item) => String(item.value) === String(value)
-          );
-          return option ? option.label : value;
-        };
-
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
           const output = { ...row };
-          output.status = formatStatus(row.status);
-          output.enableUse = formatEnableUseOptions(row.enableUse);
-          output.purchaseDate = formatDateTime(row.purchaseDate);
+          output.status = this.statusFormat(row);
+          output.enableUse = this.enableUseFormat(row);
+          output.purchaseDate = this.parseTime(row.purchaseDate);
           return output;
         });
 
         const data = formatJson(filterVal, normalizeList);
-
-        // 标记导出开始
-        this.exporting = true;
-        this.blurWhileExport = true; //弹出“另存为”对话框时，页面将失焦
-
-        // 注册 focus 事件：当用户从“另存为”对话框返回时
-        this.focusListener = () => {
-          if (this.exporting && this.blurWhileExport) {
-            this.blurWhileExport = false;
-            console.log(
-              "[导出] 页面获焦，用户已从另存为对话框返回，启动 loading"
-            );
-          }
-        };
-
-        window.addEventListener("focus", this.focusListener);
 
         // 触发导出（会弹出另存为对话框）
         const excel = await import("@/vendor/Export2Excel");
@@ -1262,25 +1212,11 @@ export default {
           autoWidth: true,
           bookType: "xlsx",
         });
-
-        // 等待用户从“另存为”对话框返回
-        while (this.blurWhileExport) {
-          await this.delay(100);
-        }
-        this.startProcessing("正在导出...");
-        await this.delay(3000);
-        this.resetSelected();
-        this.getList();
-        this.msgSuccess("导出执法仪成功");
       } catch (error) {
         if (error !== "cancel") {
           this.msgError("导出失败：" + (error.message || "未知错误"));
         }
       } finally {
-        // 清理状态和事件监听
-        this.exporting = false;
-        this.stopProcessing();
-        this.cleanupExportListeners();
       }
     },
 
