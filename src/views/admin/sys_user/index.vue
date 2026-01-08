@@ -701,10 +701,7 @@ export default {
     this.getTreeselect();
     this.getDicts("sys_normal_disable").then((response) => {
       // 将字典数据的value统一转换为整型
-      this.statusOptions = response.data.map((item) => ({
-        ...item,
-        value: parseInt(item.value, 10),
-      }));
+      this.statusOptions = response.data;
     });
     this.getDicts("sys_user_sex").then((response) => {
       // 将字典数据的value统一转换为整型
@@ -751,6 +748,9 @@ export default {
     sexFormat(row) {
       return this.selectDictLabel(this.sexOptions, row.sex);
     },
+    statusFormat(row) {
+      return this.selectDictLabel(this.statusOptions, row.status);
+    },
     /** 查询单位下拉树结构 */
     getTreeselect() {
       orgTreeselect().then((response) => {
@@ -762,11 +762,6 @@ export default {
     filterNode(value, data) {
       if (!value) return true;
       return data.label.indexOf(value) !== -1;
-    },
-    // 节点单击事件
-    handleNodeClick(data) {
-      this.queryParams.orgId = "/" + data.id + "/"; // 比如：/0/1/7/，/0/1/7/8，通过搜索/7/，就可以将该组织以及它的下级组织都搜索出来
-      this.getList();
     },
     normalizeQueryParams(params = {}) {
       const query = { ...params };
@@ -829,26 +824,31 @@ export default {
       this.getList();
     },
     // 用户状态修改
-    handleStatusChange(row) {
-      const text = row.status === 2 ? "启用" : "停用";
-      this.$confirm(
-        '确认要"' + text + '""' + row.userName + '"用户吗?',
-        "警告",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
-        }
-      )
-        .then(function () {
-          return changeUserStatus(row);
-        })
-        .then(() => {
+    async handleStatusChange(row) {
+      try {
+        const text = this.statusFormat(row);
+        await this.$confirm(
+          '确认要"' + text + '""' + row.userName + '"用户吗?',
+          "警告",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning",
+          }
+        );
+        const response = await changeUserStatus(row);
+        if (response.code === 200) {
           this.msgSuccess(text + "成功");
-        })
-        .catch(function () {
-          row.status = row.status === 2 ? 1 : 2;
-        });
+          this.getList();
+        } else {
+          this.msgError(response.msg);
+        }
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("操作失败：" + (error.message || "未知错误"));
+        }
+        row.status = row.status === 2 ? 1 : 2;
+      }
     },
     // 取消按钮
     cancel() {
@@ -970,12 +970,11 @@ export default {
     submitForm() {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          if (this.form.id != null) {
+          if (this.form.userId != null) {
             this.startProcessing("正在修改用户...");
-            updateUser(this.form.id, this.form)
+            updateUser(this.form)
               .then(async (response) => {
                 if (response.code === 200) {
-                  // 延迟2秒后刷用户列表
                   this.getList();
                   this.msgSuccess(response.msg || "修改用户成功");
                   this.open = false;

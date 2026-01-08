@@ -193,7 +193,7 @@
             >{{ viewData.storageDuration }} 月</el-descriptions-item
           >
           <el-descriptions-item label="过期时间">{{
-            dateFormatter(viewData, null, viewData.expirationTime)
+            parseTime(viewData.expirationTime)
           }}</el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="getStatusType(viewData.status)">{{
@@ -204,13 +204,13 @@
             viewData.createUserName
           }}</el-descriptions-item>
           <el-descriptions-item label="录入时间">{{
-            dateFormatter(viewData, null, viewData.createdAt)
+            parseTime(viewData.createdAt)
           }}</el-descriptions-item>
           <el-descriptions-item label="更新人员">{{
             viewData.updateUserName
           }}</el-descriptions-item>
           <el-descriptions-item label="更新时间">{{
-            dateFormatter(viewData, null, viewData.updatedAt)
+            parseTime(viewData.updatedAt)
           }}</el-descriptions-item>
           <el-descriptions-item label="档案描述" :span="2">{{
             viewData.description
@@ -441,18 +441,7 @@ export default {
       };
       return typeMap[status] || "info";
     },
-    /** 日期格式化 */
-    dateFormatter(row, column, cellValue) {
-      if (!cellValue) return "-";
-      const date = new Date(cellValue);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const seconds = String(date.getSeconds()).padStart(2, "0");
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    },
+
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
       this.selectedArchiveRecords = selection;
@@ -694,13 +683,9 @@ export default {
           const out = { ...row };
           out.archiveType = this.archiveTypeFormatter(row);
           out.status = this.statusFormatter(row);
-          out.createdAt = this.dateFormatter(row, null, row.createdAt);
-          out.updatedAt = this.dateFormatter(row, null, row.updatedAt);
-          out.expirationTime = this.dateFormatter(
-            row,
-            null,
-            row.expirationTime
-          );
+          out.createdAt = this.parseTime(row.createdAt);
+          out.updatedAt = this.parseTime(row.updatedAt);
+          out.expirationTime = this.parseTime(row.expirationTime);
           return out;
         });
 

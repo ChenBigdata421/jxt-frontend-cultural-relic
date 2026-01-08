@@ -135,7 +135,7 @@
                 size="mini"
                 type="text"
                 icon="el-icon-view"
-                @click="requisitionLog(scope.row.no)"
+                @click="requisitionLog(scope.row.bwcNo)"
                 >领用记录</el-button
               >
             </template>
@@ -190,41 +190,11 @@
         <el-dialog
           :title="title"
           :visible.sync="requisitionLogOpen"
-          width="800px"
+          width="1200px"
           :close-on-click-modal="false"
+          append-to-body
         >
-          <el-table
-            v-loading="loading"
-            :data="requisitionLogList"
-            row-key="id"
-            default-expand-all
-            border
-          >
-            <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
-            <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
-            <el-table-column prop="bwcNo" label="执法仪编号" width="100" />
-            <el-table-column prop="bwcName" label="执法仪名称" width="100" />
-            <el-table-column
-              prop="requisitionerName"
-              label="领用人"
-              width="100"
-            />
-            <el-table-column
-              prop="requisitionerOrgName"
-              label="领用人组织"
-              width="250"
-            />
-            <el-table-column
-              prop="requisitionStartTime"
-              label="领用开始时间"
-              width="100"
-            />
-            <el-table-column
-              prop="requisitionEndTime"
-              label="领用结束时间"
-              width="100"
-            />
-          </el-table>
+          <RequisitionLogSelector :bwc-no="currentBwcNo" />
         </el-dialog>
         <!-- 浏览执法仪对话框 -->
         <el-dialog
@@ -305,7 +275,6 @@
 <script>
 import {
   getBwcRequisitionList,
-  getBwcLogList,
   bwcRequisition,
   bwcReturn,
 } from "@/api/admin/bwc_requisition_manage_api";
@@ -313,9 +282,10 @@ import { orgTreeSelect } from "@/api/admin/sys-org";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import { listUser } from "@/api/admin/sys-user";
+import RequisitionLogSelector from "@/components/RequisitionLogSelector";
 export default {
   name: "LawCaremaRequisition",
-  components: { Treeselect },
+  components: { Treeselect, RequisitionLogSelector },
   data() {
     return {
       // 遮罩层
@@ -324,8 +294,8 @@ export default {
       total: 0,
       // 执法仪数据
       bwcRequisitionList: [],
-      // 领用记录数据
-      requisitionLogList: [],
+      // 当前查看的执法仪编号
+      currentBwcNo: undefined,
       // 组织树选项
       orgOptions: undefined,
       userOptions: undefined,
@@ -469,15 +439,6 @@ export default {
       this.ViewOpen = true;
     },
 
-    /** 查询领用记录 */
-    getRequisitionLog(no) {
-      this.loading = true;
-      getBwcLogList({ no: no }).then((response) => {
-        // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
-        this.requisitionLogList = response.data.list;
-        this.loading = false;
-      });
-    },
     // 表单重置
     reset() {
       this.form = {
@@ -512,10 +473,15 @@ export default {
       this.getList();
     },
     /** 查看领用记录 */
-    requisitionLog(no) {
+    requisitionLog(bwcNo) {
       this.title = "领用记录";
-      this.requisitionLogOpen = true;
-      this.getRequisitionLog(no);
+      // 先清空 currentBwcNo，然后在 $nextTick 中设置新值
+      // 这样可以确保即使点击同一个执法仪多次，也会触发 watch 监听器
+      this.currentBwcNo = undefined;
+      this.$nextTick(() => {
+        this.currentBwcNo = bwcNo;
+        this.requisitionLogOpen = true;
+      });
     },
   },
 };
