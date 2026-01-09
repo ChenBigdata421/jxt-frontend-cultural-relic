@@ -391,18 +391,9 @@ export default {
       // 组织树选项
       orgOptions: [],
       // 档案类型选项
-      archiveTypeOptions: [
-        { label: "案件档案", value: 1 },
-        { label: "证据档案", value: 2 },
-        { label: "执法档案", value: 3 },
-        { label: "其他档案", value: 4 },
-      ],
+      archiveTypeOptions: [],
       // 状态选项
-      statusOptions: [
-        { label: "正常", value: 0 },
-        { label: "异常", value: 1 },
-        { label: "其他", value: 2 },
-      ],
+      statusOptions: [],
       // 列配置选项
       columnOptions: [
         { prop: "archiveCode", label: "档案编号", fixed: true },
@@ -436,8 +427,21 @@ export default {
     this.queryParams = { ...this.queryParams, ...this.initialQuery };
     this.getList();
     this.getOrgTree();
+    this.getDicts("archive_status").then((response) => {
+      this.statusOptions = response.data;
+    });
+    this.getDicts("archive_type").then((response) => {
+      this.archiveTypeOptions = response.data;
+    });
   },
   methods: {
+    statusFormat(row) {
+      return this.selectDictLabel(this.statusOptions, row.status);
+    },
+
+    archiveTypeFormat(row) {
+      return this.selectDictLabel(this.archiveTypeOptions, row.archiveType);
+    },
     /** 查询档案列表 */
     getList() {
       this.loading = true;
@@ -630,28 +634,12 @@ export default {
       this.getList();
     },
 
-    /** 档案类型格式化 */
-    archiveTypeFormat(row) {
-      const type = this.archiveTypeOptions.find(
-        (item) => item.value === row.archiveType
-      );
-      return type ? type.label : row.archiveType;
-    },
-
-    /** 状态格式化 */
-    statusFormat(row) {
-      const status = this.statusOptions.find(
-        (item) => item.value === row.status
-      );
-      return status ? status.label : row.status;
-    },
-
     /** 获取状态标签类型 */
     getStatusType(status) {
       const typeMap = {
-        0: "success",
-        1: "danger",
-        2: "info",
+        1: "success",
+        2: "danger",
+        3: "info",
       };
       return typeMap[status] || "info";
     },

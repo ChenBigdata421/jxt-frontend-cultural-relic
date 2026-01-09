@@ -517,6 +517,10 @@ export default {
                   this.$refs.archiveSelector.refreshList();
                   this.msgSuccess("修改档案成功");
                   this.open = false;
+                } else {
+                  this.msgError(
+                    response.msg || "修改档案失败：后端返回异常状态"
+                  );
                 }
               })
               .catch((error) => {
@@ -534,6 +538,10 @@ export default {
                   this.$refs.archiveSelector.refreshList();
                   this.msgSuccess("创建档案成功");
                   this.open = false;
+                } else {
+                  this.msgError(
+                    response.msg || "创建档案失败：后端返回异常状态"
+                  );
                 }
               })
               .catch((error) => {
