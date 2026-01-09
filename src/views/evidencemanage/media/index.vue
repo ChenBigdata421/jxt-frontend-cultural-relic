@@ -85,6 +85,15 @@
               >
             </el-col>
             <el-col :span="1.5">
+              <el-button
+                icon="el-icon-download"
+                type="warning"
+                size="mini"
+                @click="handleExport"
+                >导出</el-button
+              >
+            </el-col>
+            <el-col :span="1.5">
               <el-button icon="el-icon-save" size="mini" @click="onSaveCols"
                 >保存列头</el-button
               >
@@ -292,6 +301,7 @@ import {
 import {
   getMedia,
   getMediaPlayURL,
+  listMedia,
 } from "@/api/evidence/evidence_manage_query_api";
 import { getEnforceTypeTree } from "@/api/admin/enforcetype";
 import { orgTreeSelect } from "@/api/admin/sys-org";
@@ -310,6 +320,7 @@ import TaskProcessDialog from "@/components/TaskProcessDialog";
 import workflowMixin from "@/mixins/workflowMixin";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import { formatJson } from "@/utils";
 
 export default {
   name: "MediaManage",
@@ -497,6 +508,108 @@ export default {
     onSubmitDownload() {
       // 提交下载逻辑
       this.downloadDialogVisible = false;
+    },
+
+    /** 导出按钮操作 */
+    async handleExport() {
+      try {
+        const mediaSelector = this.$refs.mediaSelector;
+        if (!mediaSelector) {
+          this.msgError("媒体列表组件未就绪，无法导出");
+          return;
+        }
+
+        const hasSelection = this.selectedMediaRecords.length;
+
+        const confirmText = hasSelection
+          ? `是否确认导出已勾选的 ${this.selectedMediaRecords.length} 条媒体数据？`
+          : "是否确认导出所有媒体数据项？";
+
+        await this.$confirm(confirmText, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "info",
+        });
+
+        // 仅导出用户当前列设置中"可见"的列
+        const columnOptions = Array.isArray(mediaSelector.columnOptions)
+          ? mediaSelector.columnOptions
+          : [];
+        const visibleColumns = Array.isArray(mediaSelector.visibleColumns)
+          ? mediaSelector.visibleColumns
+          : [];
+        const exportColumns = columnOptions.filter((c) =>
+          visibleColumns.includes(c.prop)
+        );
+
+        if (!exportColumns.length) {
+          this.msgError("当前未选择任何可导出的列");
+          return;
+        }
+
+        const tHeader = exportColumns.map((c) => c.label);
+        const filterVal = exportColumns.map((c) => c.prop);
+
+        // 获取要导出的数据：有勾选则导出勾选，否则导出全部（按当前查询条件拉取）
+        let list = [];
+        if (hasSelection) {
+          list = this.selectedMediaRecords;
+        } else {
+          const baseQueryParams = mediaSelector.queryParams || {};
+          const pageSize = 1000;
+          let pageIndex = 1;
+          let total = Infinity;
+
+          while (list.length < total) {
+            const query = {
+              ...baseQueryParams,
+              pageIndex,
+              pageSize,
+            };
+            const resp = await listMedia(query);
+            if (!resp || resp.code !== 200) {
+              throw new Error((resp && resp.msg) || "查询媒体列表失败");
+            }
+
+            const pageList = (resp.data && resp.data.list) || [];
+            total = (resp.data && resp.data.count) || 0;
+            list = list.concat(pageList);
+
+            if (!pageList.length) {
+              break;
+            }
+            pageIndex += 1;
+          }
+        }
+
+        // 对导出字段做必要的格式化（与页面展示保持一致）
+        const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
+          const out = { ...row };
+          out.mediaCate = this.selectDictLabel(
+            this.mediaCateOptions,
+            row.mediaCate
+          );
+          out.createdAt = this.parseTime(row.createdAt);
+          out.updatedAt = this.parseTime(row.updatedAt);
+          return out;
+        });
+
+        const data = formatJson(filterVal, normalizeList);
+
+        // 触发导出
+        const excel = await import("@/vendor/Export2Excel");
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: "媒体列表",
+          autoWidth: true,
+          bookType: "xlsx",
+        });
+      } catch (error) {
+        if (error !== "cancel") {
+          this.msgError("导出失败：" + (error.message || "未知错误"));
+        }
+      }
     },
 
     // 表单重置
