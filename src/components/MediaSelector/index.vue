@@ -664,7 +664,18 @@
         label="警情号"
         min-width="160"
         :show-overflow-tooltip="true"
-      />
+      >
+        <template slot-scope="{ row }">
+          <el-button
+            v-if="row.incidentCode"
+            type="text"
+            size="mini"
+            @click="handleViewIncident(row)"
+            >{{ row.incidentCode }}</el-button
+          >
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column
         v-if="isColumnVisible('isAssociated')"
         prop="isIncidentAssociated"
@@ -921,6 +932,35 @@
         <el-button @click="viewMediaOpen = false">关 闭</el-button>
       </div>
     </el-dialog>
+
+    <!-- 警情详情对话框 -->
+    <el-dialog
+      title="警情详情"
+      :visible.sync="viewIncidentOpen"
+      width="800px"
+      append-to-body
+    >
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="警情编号">{{
+          viewIncidentData.incidentCode || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="报警人">{{
+          viewIncidentData.incidentName || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="处警人" :span="2">{{
+          viewIncidentData.incedentProcessPoliceNames || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="接警时间">{{
+          parseTime(viewIncidentData.incidentReceiveTime) || "-"
+        }}</el-descriptions-item>
+        <el-descriptions-item label="报警内容" :span="2">{{
+          viewIncidentData.incidentContext || "-"
+        }}</el-descriptions-item>
+      </el-descriptions>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="viewIncidentOpen = false">关 闭</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -1025,6 +1065,10 @@ export default {
       viewMediaOpen: false,
       // 媒体详情数据
       viewMediaData: {},
+      // 警情详情对话框
+      viewIncidentOpen: false,
+      // 警情详情数据
+      viewIncidentData: {},
       // 列配置选项
       columnOptions: [
         {
@@ -1579,6 +1623,12 @@ export default {
     handleViewMedia(row) {
       this.viewMediaData = row;
       this.viewMediaOpen = true;
+    },
+
+    /** 浏览警情详情 */
+    handleViewIncident(row) {
+      this.viewIncidentData = row;
+      this.viewIncidentOpen = true;
     },
 
     /** 操作按钮 */
