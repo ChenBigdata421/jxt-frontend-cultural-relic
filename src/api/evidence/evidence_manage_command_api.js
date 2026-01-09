@@ -75,6 +75,51 @@ export function batchMarkMediaNoEnforcementStatus(data) {
   })
 }
 
+// 批量更新媒体执法类型
+export function batchUpdateMediaEnforceType(data) {
+  return request({
+    url: '/api/v1/media/batch/update-enforce-type',
+    method: 'post',
+    data: data
+  })
+}
+
+// 批量更新媒体锁定状态
+export function batchUpdateMediaIsLocked(data) {
+  return request({
+    url: '/api/v1/media/batch/update-is-locked',
+    method: 'post',
+    data: data
+  })
+}
+
+// 批量更新媒体重要级别
+export function batchUpdateMediaImportanceLevel(data) {
+  return request({
+    url: '/api/v1/media/batch/update-importance-level',
+    method: 'post',
+    data: data
+  })
+}
+
+// 批量更新媒体备注（标注内容）
+export function batchUpdateMediaComments(data) {
+  return request({
+    url: '/api/v1/media/batch/update-comments',
+    method: 'post',
+    data: data
+  })
+}
+
+// 批量更新媒体过期时间
+export function batchUpdateMediaExpiryTime(data) {
+  return request({
+    url: '/api/v1/media/batch/update-expiry-time',
+    method: 'post',
+    data: data
+  })
+}
+
 // 新增警情媒体关联关系
 export function addIncidentRecordMediaRelations(data) {
   return request({

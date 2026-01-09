@@ -143,6 +143,188 @@
           </div>
         </el-dialog>
 
+        <!-- 手动标注对话框 -->
+        <el-dialog
+          title="手动标注"
+          :visible.sync="manualMarkDialogVisible"
+          width="800px"
+          :close-on-click-modal="false"
+          append-to-body
+        >
+          <el-alert
+            :title="`已选中 ${mediaIds.length} 条媒体`"
+            type="info"
+            :closable="false"
+            show-icon
+            style="margin-bottom: 12px"
+          />
+
+          <el-tabs v-model="manualMarkActiveTab" type="card">
+            <el-tab-pane label="重要级别" name="importance">
+              <el-form label-width="120px">
+                <el-form-item label="重要级别">
+                  <el-select
+                    v-model="manualMarkForm.importantLevel"
+                    placeholder="请选择重要级别"
+                    style="width: 300px"
+                    clearable
+                  >
+                    <el-option
+                      v-for="dict in mediaImportanceOptions"
+                      :key="dict.value"
+                      :label="dict.label"
+                      :value="parseInt(dict.value)"
+                    />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="原因">
+                  <el-input
+                    v-model="manualMarkForm.importanceReason"
+                    placeholder="可选"
+                    maxlength="255"
+                    show-word-limit
+                    style="width: 520px"
+                  />
+                </el-form-item>
+              </el-form>
+              <div class="dialog-footer" style="text-align: right">
+                <el-button @click="manualMarkDialogVisible = false"
+                  >关 闭</el-button
+                >
+                <el-button
+                  type="primary"
+                  :loading="manualMarkSubmitting"
+                  @click="submitManualMarkImportance"
+                  >确 定</el-button
+                >
+              </div>
+            </el-tab-pane>
+
+            <el-tab-pane label="执法类型" name="enforceType">
+              <el-form label-width="120px">
+                <el-form-item label="执法类型">
+                  <treeselect
+                    v-model="manualMarkForm.enforceType"
+                    :options="enforceTypeLabel"
+                    :normalizer="normalizeEnforceType"
+                    placeholder="请选择执法类型"
+                    style="width: 520px"
+                    clearable
+                  />
+                </el-form-item>
+              </el-form>
+              <div class="dialog-footer" style="text-align: right">
+                <el-button @click="manualMarkDialogVisible = false"
+                  >关 闭</el-button
+                >
+                <el-button
+                  type="primary"
+                  :loading="manualMarkSubmitting"
+                  @click="submitManualMarkEnforceType"
+                  >确 定</el-button
+                >
+              </div>
+            </el-tab-pane>
+
+            <el-tab-pane label="标注内容" name="comments">
+              <el-form label-width="120px">
+                <el-form-item label="标注内容">
+                  <el-input
+                    v-model="manualMarkForm.comments"
+                    type="textarea"
+                    :rows="5"
+                    maxlength="255"
+                    show-word-limit
+                    placeholder="请输入标注内容"
+                    style="width: 520px"
+                  />
+                </el-form-item>
+              </el-form>
+              <div class="dialog-footer" style="text-align: right">
+                <el-button @click="manualMarkDialogVisible = false"
+                  >关 闭</el-button
+                >
+                <el-button
+                  type="primary"
+                  :loading="manualMarkSubmitting"
+                  @click="submitManualMarkComments"
+                  >确 定</el-button
+                >
+              </div>
+            </el-tab-pane>
+
+            <el-tab-pane label="过期时间" name="expiryTime">
+              <el-form label-width="120px">
+                <el-form-item label="方式">
+                  <el-radio-group v-model="manualMarkForm.expiryMode">
+                    <el-radio label="fixed">固定</el-radio>
+                    <el-radio label="forever">永久</el-radio>
+                    <el-radio label="custom">自定义</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+
+                <el-form-item
+                  v-if="manualMarkForm.expiryMode === 'fixed'"
+                  label="固定天数"
+                >
+                  <el-input-number
+                    v-model="manualMarkForm.fixedDays"
+                    :min="1"
+                    :max="36500"
+                    style="width: 200px"
+                  />
+                </el-form-item>
+
+                <el-form-item
+                  v-if="manualMarkForm.expiryMode === 'custom'"
+                  label="过期时间"
+                >
+                  <el-date-picker
+                    v-model="manualMarkForm.customExpiryTime"
+                    type="datetime"
+                    placeholder="请选择过期时间"
+                    style="width: 300px"
+                    clearable
+                  />
+                </el-form-item>
+              </el-form>
+              <div class="dialog-footer" style="text-align: right">
+                <el-button @click="manualMarkDialogVisible = false"
+                  >关 闭</el-button
+                >
+                <el-button
+                  type="primary"
+                  :loading="manualMarkSubmitting"
+                  @click="submitManualMarkExpiryTime"
+                  >确 定</el-button
+                >
+              </div>
+            </el-tab-pane>
+
+            <el-tab-pane label="锁定状态" name="locked">
+              <el-form label-width="120px">
+                <el-form-item label="锁定状态">
+                  <el-radio-group v-model="manualMarkForm.isLocked">
+                    <el-radio :label="1">锁定</el-radio>
+                    <el-radio :label="0">解锁</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+              </el-form>
+              <div class="dialog-footer" style="text-align: right">
+                <el-button @click="manualMarkDialogVisible = false"
+                  >关 闭</el-button
+                >
+                <el-button
+                  type="primary"
+                  :loading="manualMarkSubmitting"
+                  @click="submitManualMarkIsLocked"
+                  >确 定</el-button
+                >
+              </div>
+            </el-tab-pane>
+          </el-tabs>
+        </el-dialog>
+
         <!-- 一键归档对话框 -->
         <el-dialog
           :title="isBatchArchive ? '批量归档' : '一键归档'"
@@ -297,6 +479,11 @@ import {
   updateMedia,
   batchDelMedia,
   batchMarkMediaNoEnforcementStatus,
+  batchUpdateMediaEnforceType,
+  batchUpdateMediaIsLocked,
+  batchUpdateMediaImportanceLevel,
+  batchUpdateMediaComments,
+  batchUpdateMediaExpiryTime,
 } from "@/api/evidence/evidence_manage_command_api";
 import {
   getMedia,
@@ -340,6 +527,25 @@ export default {
       selectedMediaRecords: [],
       // 选中数组
       mediaIds: [],
+      processingInstance: null,
+      // 手动标注对话框
+      manualMarkDialogVisible: false,
+      manualMarkActiveTab: "importance",
+      manualMarkSubmitting: false,
+      manualMarkForm: {
+        importantLevel: undefined,
+        importanceReason: "",
+        enforceType: undefined,
+        comments: "",
+        expiryMode: "fixed", // fixed | forever | custom
+        fixedDays: 30,
+        customExpiryTime: undefined,
+        isLocked: 0,
+      },
+      // 媒体重要级别字典
+      mediaImportanceOptions: [],
+      // 执法类型树
+      enforceTypeLabel: [],
       // 是否显示下载文件类型选择对话框
       downloadDialogVisible: false,
       downloadForm: {
@@ -363,12 +569,7 @@ export default {
       isBatchArchive: false, // 是否为批量归档
       archiveSelectorVisible: false,
       // 档案类型选项
-      archiveTypeOptions: [
-        { label: "案件档案", value: 1 },
-        { label: "证据档案", value: 2 },
-        { label: "执法档案", value: 3 },
-        { label: "其他档案", value: 4 },
-      ],
+      archiveTypeOptions: [],
       // 视频播放相关
       videoPlayerVisible: false,
       currentVideoUrl: "",
@@ -429,8 +630,42 @@ export default {
     this.getDicts("evidence_media_type").then((response) => {
       this.mediaCateOptions = response.data;
     });
+
+    // 加载媒体重要级别字典（用于手动标注）
+    this.getDicts("media_importance").then((response) => {
+      this.mediaImportanceOptions = response.data;
+    });
+    this.getDicts("archive_type").then((response) => {
+      this.archiveTypeOptions = response.data;
+    });
   },
   methods: {
+    async refreshMediaListWithDelay() {
+      if (!this.$refs.mediaSelector) {
+        return;
+      }
+      await this.delay(2000);
+      this.$refs.mediaSelector.refreshList();
+    },
+
+    /** 开始执行操作 */
+    startProcessing(text) {
+      this.processingInstance = this.$loading({
+        lock: true,
+        text: text,
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.3)",
+      });
+    },
+
+    /** 停止执行操作 */
+    stopProcessing() {
+      if (this.processingInstance) {
+        this.processingInstance.close();
+        this.processingInstance = null;
+      }
+    },
+
     /** 获取执法类型树形数据 */
     getEnforceTypeTreeselect() {
       getEnforceTypeTree()
@@ -464,7 +699,23 @@ export default {
       // 智能标注逻辑
     },
     onManualMark() {
-      // 手动标注逻辑
+      if (this.selectedMediaRecords.length === 0) {
+        this.$message.warning("请至少选择一条媒体数据");
+        return;
+      }
+      this.manualMarkActiveTab = "importance";
+      this.manualMarkSubmitting = false;
+      this.manualMarkForm = {
+        importantLevel: undefined,
+        importanceReason: "",
+        enforceType: undefined,
+        comments: "",
+        expiryMode: "fixed",
+        fixedDays: 30,
+        customExpiryTime: undefined,
+        isLocked: 0,
+      };
+      this.manualMarkDialogVisible = true;
     },
     onNoMark() {
       if (this.selectedMediaRecords.length === 0) {
@@ -481,10 +732,10 @@ export default {
       })
         .then((response) => {
           if (response.code === 200) {
-            this.msgSuccess("标注成功");
             this.noMarkDialogVisible = false;
             // 刷新列表
-            this.$refs.mediaSelector.refreshList();
+            this.refreshMediaListWithDelay();
+            this.msgSuccess("标注成功");
           } else {
             this.msgError(response.msg || "标注失败");
           }
@@ -508,6 +759,205 @@ export default {
     onSubmitDownload() {
       // 提交下载逻辑
       this.downloadDialogVisible = false;
+    },
+
+    submitManualMarkImportance() {
+      if (this.mediaIds.length === 0) {
+        this.msgError("请至少选择一条媒体数据");
+        return;
+      }
+      if (
+        this.manualMarkForm.importantLevel === undefined ||
+        this.manualMarkForm.importantLevel === null
+      ) {
+        this.msgError("请选择重要级别");
+        return;
+      }
+      this.manualMarkSubmitting = true;
+      this.startProcessing("正在更新重要级别...");
+      batchUpdateMediaImportanceLevel({
+        ids: this.mediaIds,
+        importantLevel: this.manualMarkForm.importantLevel,
+        reason: this.manualMarkForm.importanceReason || "",
+      })
+        .then(async (response) => {
+          if (response && response.code === 200) {
+            await this.refreshMediaListWithDelay();
+            this.msgSuccess("批量更新重要级别成功");
+          } else {
+            this.msgError((response && response.msg) || "批量更新重要级别失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError(
+            "批量更新重要级别失败：" + (error.message || "未知错误")
+          );
+        })
+        .finally(() => {
+          this.manualMarkSubmitting = false;
+          this.stopProcessing();
+        });
+    },
+
+    submitManualMarkEnforceType() {
+      if (this.mediaIds.length === 0) {
+        this.msgError("请至少选择一条媒体数据");
+        return;
+      }
+      if (
+        this.manualMarkForm.enforceType === undefined ||
+        this.manualMarkForm.enforceType === null
+      ) {
+        this.msgError("请选择执法类型");
+        return;
+      }
+      this.manualMarkSubmitting = true;
+      this.startProcessing("正在更新执法类型...");
+      batchUpdateMediaEnforceType({
+        ids: this.mediaIds,
+        enforceType: this.manualMarkForm.enforceType,
+      })
+        .then(async (response) => {
+          if (response && response.code === 200) {
+            await this.refreshMediaListWithDelay();
+            this.msgSuccess("批量更新执法类型成功");
+          } else {
+            this.msgError((response && response.msg) || "批量更新执法类型失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError(
+            "批量更新执法类型失败：" + (error.message || "未知错误")
+          );
+        })
+        .finally(() => {
+          this.manualMarkSubmitting = false;
+          this.stopProcessing();
+        });
+    },
+
+    submitManualMarkComments() {
+      if (this.mediaIds.length === 0) {
+        this.msgError("请至少选择一条媒体数据");
+        return;
+      }
+      if (!this.manualMarkForm.comments) {
+        this.msgError("请输入标注内容");
+        return;
+      }
+      this.manualMarkSubmitting = true;
+      this.startProcessing("正在更新标注内容...");
+      batchUpdateMediaComments({
+        ids: this.mediaIds,
+        comments: this.manualMarkForm.comments,
+      })
+        .then(async (response) => {
+          if (response && response.code === 200) {
+            await this.refreshMediaListWithDelay();
+            this.msgSuccess("批量更新标注内容成功");
+          } else {
+            this.msgError((response && response.msg) || "批量更新标注内容失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError(
+            "批量更新标注内容失败：" + (error.message || "未知错误")
+          );
+        })
+        .finally(() => {
+          this.manualMarkSubmitting = false;
+          this.stopProcessing();
+        });
+    },
+
+    submitManualMarkExpiryTime() {
+      if (this.mediaIds.length === 0) {
+        this.msgError("请至少选择一条媒体数据");
+        return;
+      }
+
+      let expiryTimeISO;
+      if (this.manualMarkForm.expiryMode === "forever") {
+        expiryTimeISO = new Date("2999-01-01T00:00:00Z").toISOString();
+      } else if (this.manualMarkForm.expiryMode === "fixed") {
+        const days = Number(this.manualMarkForm.fixedDays || 0);
+        if (!days || days <= 0) {
+          this.msgError("请输入固定天数");
+          return;
+        }
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        expiryTimeISO = d.toISOString();
+      } else {
+        if (!this.manualMarkForm.customExpiryTime) {
+          this.msgError("请选择过期时间");
+          return;
+        }
+        expiryTimeISO = new Date(
+          this.manualMarkForm.customExpiryTime
+        ).toISOString();
+      }
+
+      this.manualMarkSubmitting = true;
+      this.startProcessing("正在更新过期时间...");
+      batchUpdateMediaExpiryTime({
+        ids: this.mediaIds,
+        expiryTime: expiryTimeISO,
+      })
+        .then(async (response) => {
+          if (response && response.code === 200) {
+            await this.refreshMediaListWithDelay();
+            this.msgSuccess("批量更新过期时间成功");
+          } else {
+            this.msgError((response && response.msg) || "批量更新过期时间失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError(
+            "批量更新过期时间失败：" + (error.message || "未知错误")
+          );
+        })
+        .finally(() => {
+          this.manualMarkSubmitting = false;
+          this.stopProcessing();
+        });
+    },
+
+    submitManualMarkIsLocked() {
+      if (this.mediaIds.length === 0) {
+        this.msgError("请至少选择一条媒体数据");
+        return;
+      }
+      if (
+        this.manualMarkForm.isLocked !== 0 &&
+        this.manualMarkForm.isLocked !== 1
+      ) {
+        this.msgError("请选择锁定状态");
+        return;
+      }
+      this.manualMarkSubmitting = true;
+      this.startProcessing("正在更新锁定状态...");
+      batchUpdateMediaIsLocked({
+        ids: this.mediaIds,
+        isLocked: this.manualMarkForm.isLocked,
+      })
+        .then(async (response) => {
+          if (response && response.code === 200) {
+            await this.refreshMediaListWithDelay();
+            this.msgSuccess("批量更新锁定状态成功");
+          } else {
+            this.msgError((response && response.msg) || "批量更新锁定状态失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError(
+            "批量更新锁定状态失败：" + (error.message || "未知错误")
+          );
+        })
+        .finally(() => {
+          this.manualMarkSubmitting = false;
+          this.stopProcessing();
+        });
     },
 
     /** 导出按钮操作 */

@@ -352,13 +352,21 @@
         prop="importantLevel"
         label="重要级别(平台)"
         width="140"
-      />
+      >
+        <template slot-scope="{ row }">
+          {{ selectDictLabel(mediaImportanceOptions, row.importantLevel) }}
+        </template>
+      </el-table-column>
       <el-table-column
         v-if="isColumnVisible('importantLevelRec')"
         prop="importantLevelRec"
         label="重要级别(设备)"
         width="150"
-      />
+      >
+        <template slot-scope="{ row }">
+          {{ selectDictLabel(mediaImportanceOptions, row.importantLevelRec) }}
+        </template>
+      </el-table-column>
       <el-table-column
         v-if="isColumnVisible('width')"
         prop="width"
@@ -436,7 +444,11 @@
         width="180"
       >
         <template slot-scope="{ row }">
-          {{ parseTime(row.expiryTime) }}
+          {{
+            parseTime(row.expiryTime) === "2999-01-01 08:00:00"
+              ? "永久"
+              : parseTime(row.expiryTime)
+          }}
         </template>
       </el-table-column>
       <el-table-column
@@ -1006,6 +1018,7 @@ export default {
       isNonEnforcementMediaOptions: [],
       // 视频清晰度选项
       videoClarityOptions: [],
+      mediaImportanceOptions: [],
       // 关联状态选项
       relationStatusOptions: [],
       // 媒体详情对话框
@@ -1154,6 +1167,7 @@ export default {
       this.getDicts("terminal_type"),
       this.getDicts("is_non_enforcement_media"),
       this.getDicts("video_clarity"),
+      this.getDicts("media_importance"),
     ])
       .then(
         ([
@@ -1166,6 +1180,7 @@ export default {
           terminalTypeRes,
           isNonEnforcementMediaRes,
           videoClarityRes,
+          mediaImportanceRes,
         ]) => {
           this.mediaCateOptions = mediaCateRes.data;
           this.storageTypeOptions = storageTypeRes.data;
@@ -1176,6 +1191,7 @@ export default {
           this.terminalTypeOptions = terminalTypeRes.data;
           this.isNonEnforcementMediaOptions = isNonEnforcementMediaRes.data;
           this.videoClarityOptions = videoClarityRes.data;
+          this.mediaImportanceOptions = mediaImportanceRes.data;
 
           console.log("[MediaSelector] 字典加载完成");
           // 字典加载完成后再加载列表
