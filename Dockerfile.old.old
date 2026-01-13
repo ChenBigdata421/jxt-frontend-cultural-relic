@@ -1,0 +1,14 @@
+#用带有Alpine Linux的Node.js长期支持(LTS)版本作为基础镜像，并将这个阶段命名为build-stage。Alpine Linux是一个轻量级的Linux发行版，有助于减小最终镜像的大小。
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:14-alpine AS build-stage
+WORKDIR /app
+COPY package*.json ./
+RUN npm install 
+COPY . .
+RUN npm run build:dev
+
+# production stage
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/nginx:latest
+COPY --from=build-stage /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

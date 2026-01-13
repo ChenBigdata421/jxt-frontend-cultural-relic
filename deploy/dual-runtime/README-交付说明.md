@@ -95,7 +95,7 @@ docker compose -f deploy/dual-runtime/docker-compose.prod.yml up -d
 
 ## 4. Nginx 反代与网络要求
 
-本镜像默认采用“**容器名/服务名解析**”的方式作为上游（例如 `http://security-management:8000`）。
+本镜像默认采用"**容器名/服务名解析**"的方式作为上游（例如 `http://security-management:8000`）。
 
 因此客户侧有两种部署方式：
 
@@ -111,21 +111,117 @@ docker compose -f deploy/dual-runtime/docker-compose.prod.yml up -d
 
 ---
 
-## 5. 常见问题与排查
+## 5. 基础设施服务依赖
 
-### 5.1 浏览器访问失败（但命令行可访问）
+本前端镜像依赖以下共享基础设施服务：
 
-现象：浏览器提示“未发送任何数据”等，但用命令行测试（例如 `Invoke-WebRequest`）是 200。
+### 5.1 ETCD（服务发现）
+
+- **容器名**: `jxt-etcd`
+- **端口**: 2379（客户端）, 2380（节点通信）
+- **用途**: 服务注册与发现
+- **网络**: 必须与前端容器在同一网络
+
+### 5.2 RedPanda（事件总线）
+
+- **容器名**: `jxt-redpanda`
+- **端口**: 9092（Kafka API）, 8082（HTTP Proxy）
+- **用途**: 事件驱动架构的消息队列
+- **网络**: 必须与前端容器在同一网络
+
+### 5.3 启动顺序
+
+重要：必须先启动基础设施服务，再启动业务服务：
+
+```bash
+# 1. 启动基础设施
+cd infrastructure
+docker-compose up -d
+
+# 2. 等待基础设施就绪后，启动各业务服务
+cd security-management && docker-compose up -d
+cd platform-control-service && docker-compose up -d
+cd evidence-management && docker-compose up -d
+cd file-storage-service && docker-compose up -d
+
+# 3. 最后启动前端
+cd jxt-frontend/deploy/dual-runtime
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+---
+
+## 6. Nginx 配置说明
+
+### 6.1 配置文件结构
+
+```
+/etc/nginx/
+├── nginx.conf              # 主配置（DNS resolver + backend maps）
+└── conf.d/
+    └── dual-runtime.conf   # 路由配置（platform + business server）
+```
+
+### 6.2 DNS 解析配置
+
+`nginx.conf` 中包含关键的 DNS 解析器配置：
+
+```nginx
+resolver 127.0.0.11 valid=30s;
+resolver_timeout 10s;
+```
+
+- `127.0.0.11` 是 Docker 内置 DNS 服务器
+- 用于解析容器名到 IP 地址
+
+### 6.3 Backend Map 定义
+
+所有 CQRS 后端映射都在 `nginx.conf` 中定义：
+
+```nginx
+map $request_method $media_backend {
+    GET     http://evidence-query:8002;
+    default http://evidence-command:8001;
+}
+```
+
+这些映射使业务站能够根据 HTTP 方法路由请求到正确的服务。
+
+### 6.4 路由优先级
+
+业务站的路由匹配优先级（从高到低）：
+
+1. 精确匹配：`location ^~ /api/v1/media`
+2. 前缀匹配：`location /api`
+3. 兜底路由：`location /`
+
+---
+
+## 7. 常见问题与排查
+
+### 7.1 浏览器访问失败（但命令行可访问）
+
+现象：浏览器提示"未发送任何数据"等，但用命令行测试（例如 `Invoke-WebRequest`）是 200。
 
 优先检查：
 
-- **浏览器/系统代理**：将以下域名与地址加入“直连/不走代理”
+- **浏览器/系统代理**：将以下域名与地址加入"直连/不走代理"
   - `platform.xxx.com`
   - `app.xxx.com`
   - `127.0.0.1`
   - `localhost`
 
-### 5.2 Windows 本机测试时 `host.docker.internal` 在容器里解析失败
+### 7.2 API 请求返回 "no resolver defined to resolve xxx"
+
+现象：Nginx 错误日志显示 `no resolver defined to resolve evidence-query`。
+
+原因：`nginx.conf` 中缺少 DNS 解析器配置。
+
+解决：
+- 确认 `nginx.conf` 包含：`resolver 127.0.0.11 valid=30s;`
+- 重新构建镜像并重启容器
+
+### 7.3 Windows 本机测试时 `host.docker.internal` 在容器里解析失败
 
 现象：Nginx 启动报错 `host not found in upstream "host.docker.internal"`。
 
@@ -140,7 +236,7 @@ docker compose -f deploy/dual-runtime/docker-compose.prod.yml up -d
 
 - 前端 nginx 与后端加入同一个 docker network，直接用 `http://服务名:端口`
 
-### 5.3 Nginx 模板渲染（envsubst）与 `$` 变量
+### 7.4 Nginx 模板渲染（envsubst）与 `$` 变量
 
 说明：Nginx 配置里有大量 `$host/$uri/$request_method` 等变量。
 
@@ -148,7 +244,18 @@ docker compose -f deploy/dual-runtime/docker-compose.prod.yml up -d
 
 - `DOLLAR=$`
 
-### 5.4 Windows 下用 curl 调接口时 JSON body 被截断
+### 7.5 Logo 图片不显示
+
+现象：平台站或业务站登录页面 logo 不显示。
+
+检查：
+
+1. 数据库配置中的 logo 路径是否为 `/static/uploadfile/logo.png`
+2. 后端服务是否正常提供静态文件服务
+3. Nginx 配置中是否包含 `/static/uploadfile` 代理规则
+4. 静态文件是否已上传到后端的 `static/uploadfile/` 目录
+
+### 7.6 Windows 下用 curl 调接口时 JSON body 被截断
 
 现象：后端返回 `参数错误`，抓包发现请求体只剩 `}`（例如 `Content-Length: 2`）。
 
@@ -156,7 +263,7 @@ docker compose -f deploy/dual-runtime/docker-compose.prod.yml up -d
 
 - 在 Windows 上联调写接口优先使用 PowerShell：`Invoke-RestMethod`/`Invoke-WebRequest`
 
-### 5.5 租户创建 quotaJson 必须是合法 JSON
+### 7.7 租户创建 quotaJson 必须是合法 JSON
 
 说明：租户表的 `quota_json` 是 JSON 类型字段。
 
@@ -167,3 +274,27 @@ docker compose -f deploy/dual-runtime/docker-compose.prod.yml up -d
 建议创建时至少传：
 
 - `"quotaJson": "{}"`
+
+---
+
+## 8. 版本历史
+
+### v1.1.0 (当前版本)
+
+**新增**：
+- 添加完整的 DNS resolver 配置
+- 添加 12 个 CQRS backend map 定义
+- 完善业务站 API 路由配置
+- 添加平台站 `/static/uploadfile` 代理规则
+- 更新部署文档，补充基础设施服务说明
+
+**修复**：
+- 修复 API 请求 404 问题（no resolver defined）
+- 修复平台站 logo 不显示问题
+
+### v1.0.0
+
+**初始版本**：
+- 双运行时架构（Platform + Business）
+- 基于 Docker Compose 的部署方式
+- 环境变量配置支持
