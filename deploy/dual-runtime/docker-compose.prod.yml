@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  jxt-frontend-dual:
+    # 交付给客户时：将 image 改成你们发布的版本号并从客户仓库/离线 load 获取
+    image: jxt-frontend-dual-nginx:latest
+    build:
+      context: ../..
+      dockerfile: deploy/dual-runtime/Dockerfile.dual-runtime
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      # 必须传入：用于 nginx 模板中的 ${DOLLAR}host/${DOLLAR}uri 等变量在 envsubst 后还原为 $host/$uri
+      DOLLAR: "$"
+      # 平台站域名（客户可按实际域名修改）
+      PLATFORM_SERVER_NAME: platform.jxt.com
+      # 业务站域名（客户可按实际域名修改）
+      BUSINESS_SERVER_NAME: app.jxt.com
+
+      # ====== 平台站后端（platform-control-service）======
+      # 必须带协议：http://host:port 或 http://service:port
+      PLATFORM_UPSTREAM: http://platform-control-service:8010
+
+      # ====== 业务站后端（security-management 为兜底）======
+      # /api 与 /static/uploadfile 兜底上游
+      SECURITY_MANAGEMENT_UPSTREAM: http://security-management:8000
+
+      # ====== 业务站读写分离/微服务分发（来自原 nginx.conf 的 map 逻辑）======
+      # GET 走 query，其它方法走 command（必须带协议）
+      EVIDENCE_QUERY_UPSTREAM: http://evidence-query:8002
+      EVIDENCE_COMMAND_UPSTREAM: http://evidence-command:8001
+
+      # 流程管理
+      PROCESS_MANAGEMENT_UPSTREAM: http://process-management-api:8003
+
+      # 文件存储
+      FILE_STORAGE_UPSTREAM: http://file-storage-service:8004
+    networks:
+      - jxt-web
+
+networks:
+  jxt-web:
+    external: true

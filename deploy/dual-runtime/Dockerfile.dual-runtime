@@ -1,0 +1,45 @@
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:lts-alpine AS build
+
+WORKDIR /app
+
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
+ARG BUILD_CMD=build:prod
+ARG PLATFORM_BASE_API=/
+ARG BUSINESS_BASE_API=/
+ARG PLATFORM_TITLE=平台管控
+ARG BUSINESS_TITLE=业务管理
+
+COPY package*.json ./
+RUN npm install -g cnpm --registry=https://registry.npmmirror.com
+RUN cnpm install webpack@4.46.0 webpack-cli@4.9.2 --save-dev && \
+    cnpm install
+
+COPY . .
+
+# Build platform dist - 添加 VUE_APP_MODE=platform
+RUN VUE_APP_BASE_API=${PLATFORM_BASE_API} \
+    VUE_APP_TITLE=${PLATFORM_TITLE} \
+    VUE_APP_MODE=platform \
+    npm run ${BUILD_CMD} && \
+    rm -rf /tmp/dist-platform && mkdir -p /tmp/dist-platform && \
+    mv dist/* /tmp/dist-platform/
+
+# Build business dist - 添加 VUE_APP_MODE=business
+RUN VUE_APP_BASE_API=${BUSINESS_BASE_API} \
+    VUE_APP_TITLE=${BUSINESS_TITLE} \
+    VUE_APP_MODE=business \
+    npm run ${BUILD_CMD} && \
+    rm -rf /tmp/dist-business && mkdir -p /tmp/dist-business && \
+    mv dist/* /tmp/dist-business/
+
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/nginx:alpine
+
+COPY --from=build /tmp/dist-platform /usr/share/nginx/html/platform
+COPY --from=build /tmp/dist-business /usr/share/nginx/html/business
+
+COPY deploy/dual-runtime/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY deploy/dual-runtime/nginx/templates /etc/nginx/templates
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

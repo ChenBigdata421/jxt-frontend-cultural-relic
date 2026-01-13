@@ -1,0 +1,21 @@
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:lts-alpine AS build
+ 
+ WORKDIR /app
+ 
+ ENV NODE_OPTIONS=--openssl-legacy-provider
+ 
+ ARG VUE_APP_BASE_API
+ ARG VUE_APP_TITLE
+ ARG BUILD_CMD=build:prod
+ 
+ ENV VUE_APP_BASE_API=${VUE_APP_BASE_API}
+ ENV VUE_APP_TITLE=${VUE_APP_TITLE}
+ 
+ COPY package*.json ./
+ RUN npm install -g cnpm --registry=https://registry.npmmirror.com
+ RUN cnpm install webpack@4.46.0 webpack-cli@4.9.2 --save-dev && \
+     cnpm install
+ 
+ COPY . .
+ RUN npm run ${BUILD_CMD}
+

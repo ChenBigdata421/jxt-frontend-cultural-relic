@@ -1,0 +1,123 @@
+import request from '@/utils/request'
+
+export function listTenants(query) {
+  return request({
+    url: '/api/v1/tenants',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getTenant(id) {
+  return request({
+    url: `/api/v1/tenants/${id}`,
+    method: 'get'
+  })
+}
+
+export function createTenant(data) {
+  return request({
+    url: '/api/v1/tenants',
+    method: 'post',
+    data
+  })
+}
+
+export function updateTenant(id, data) {
+  return request({
+    url: `/api/v1/tenants/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+export function deleteTenants(data) {
+  return request({
+    url: '/api/v1/tenants',
+    method: 'delete',
+    data
+  })
+}
+
+export function updateTenantStatus(id, data) {
+  return request({
+    url: `/api/v1/tenants/${id}/status`,
+    method: 'put',
+    data
+  })
+}
+
+export function getTenantByHost(host) {
+  return request({
+    url: '/api/v1/tenants/host',
+    method: 'get',
+    params: { host }
+  })
+}
+
+export function getTenantHosts(id) {
+  return request({
+    url: `/api/v1/tenants/${id}/hosts`,
+    method: 'get'
+  })
+}
+
+export function updateTenantHosts(id, data) {
+  return request({
+    url: `/api/v1/tenants/${id}/hosts`,
+    method: 'put',
+    data
+  })
+}
+
+export function getTenantDatabase(id) {
+  return request({
+    url: `/api/v1/tenants/${id}/database`,
+    method: 'get'
+  })
+}
+
+export function updateTenantDatabase(id, data) {
+  return request({
+    url: `/api/v1/tenants/${id}/database`,
+    method: 'put',
+    data
+  })
+}
+
+export function getTenantFtp(id) {
+  return request({
+    url: `/api/v1/tenants/${id}/ftp`,
+    method: 'get'
+  })
+}
+
+export function updateTenantFtp(id, data) {
+  return request({
+    url: `/api/v1/tenants/${id}/ftp`,
+    method: 'put',
+    data
+  })
+}
+
+export function getTenantStorage(id) {
+  return request({
+    url: `/api/v1/tenants/${id}/storage`,
+    method: 'get'
+  })
+}
+
+export function updateTenantStorage(id, data) {
+  return request({
+    url: `/api/v1/tenants/${id}/storage`,
+    method: 'put',
+    data
+  })
+}
+
+export function getTenantPrecheck(id) {
+  return request({
+    url: `/api/v1/tenants/${id}/precheck`,
+    method: 'get'
+  })
+}

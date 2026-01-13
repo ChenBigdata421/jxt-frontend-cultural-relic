@@ -1,35 +1,51 @@
 <template>
-  <div class="sidebar-logo-container" :class="{'collapse':collapse}" :style="{ backgroundColor: $store.state.settings.themeStyle === 'dark' ? variables.menuBg : variables.menuLightBg }">
-    <transition name="sidebarLogoFade"><!--在 Vue.js 中，<transition> 是一个特殊的组件，用于在元素或组件的插入、更新或移除时应用淡入或淡出的过渡效果。-->
+  <div
+    class="sidebar-logo-container"
+    :class="{ collapse: collapse }"
+    :style="{
+      backgroundColor:
+        $store.state.settings.themeStyle === 'dark'
+          ? variables.menuBg
+          : variables.menuLightBg,
+    }"
+  >
+    <transition name="sidebarLogoFade"
+      ><!--在 Vue.js 中，<transition> 是一个特殊的组件，用于在元素或组件的插入、更新或移除时应用淡入或淡出的过渡效果。-->
       <router-link key="collapse" class="sidebar-logo-link" to="/">
-        <img v-if="appInfo.sys_app_logo" :src="appInfo.sys_app_logo" class="sidebar-logo">
+        <img v-if="logoUrl" :src="logoUrl" class="sidebar-logo" />
       </router-link>
     </transition>
   </div>
 </template>
 
 <script>
-
-import variables from '@/styles/variables.scss'
-import { mapGetters } from 'vuex'
+import variables from "@/styles/variables.scss";
+import { mapGetters } from "vuex";
 
 export default {
-  name: 'SidebarLogo',
+  name: "SidebarLogo",
   props: {
     collapse: {
       type: Boolean,
-      required: true
-    }
+      required: true,
+    },
   },
   computed: {
-    ...mapGetters([
-      'appInfo'
-    ]),
+    ...mapGetters(["appInfo"]),
     variables() {
-      return variables
-    }
-  }
-}
+      return variables;
+    },
+    logoUrl() {
+      const appInfo = this.appInfo || {};
+      // 根据构建模式选择 Logo 键名
+      if (process.env.VUE_APP_MODE === "platform") {
+        return appInfo.console_app_logo;
+      } else {
+        return appInfo.sys_app_logo;
+      }
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
@@ -70,7 +86,12 @@ export default {
       font-weight: 600;
       line-height: 50px;
       font-size: 14px;
-      font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
+      font-family:
+        Avenir,
+        Helvetica Neue,
+        Arial,
+        Helvetica,
+        sans-serif;
       vertical-align: middle;
     }
   }
