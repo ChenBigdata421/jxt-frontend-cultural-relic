@@ -10,7 +10,7 @@ This project uses a single codebase with two builds, distinguishing between two 
 
 | Runtime Mode | Domain | Purpose | Backend Service |
 |--------------|--------|---------|-----------------|
-| **Platform** | `platform.jxt.com` | Platform Control Station | platform-control-service:8010 |
+| **Platform** | `platform.jxt.com` | Tenant Management Station | tenant-service:8010 |
 | **Business** | `app.jxt.com` | Business Management Station | security-management:8000 + microservices |
 
 ### Build-Time Differences
@@ -107,7 +107,7 @@ Configure the following environment variables in `docker-compose.prod.yml`:
 |----------|-------------|---------------|
 | `PLATFORM_SERVER_NAME` | Platform station domain | `platform.jxt.com` |
 | `BUSINESS_SERVER_NAME` | Business station domain | `app.jxt.com` |
-| `PLATFORM_UPSTREAM` | Platform backend address | `http://platform-control-service:8010` |
+| `PLATFORM_UPSTREAM` | Tenant service backend address | `http://tenant-service:8010` |
 | `SECURITY_MANAGEMENT_UPSTREAM` | Security management backend | `http://security-management:8000` |
 | `EVIDENCE_QUERY_UPSTREAM` | Evidence query service | `http://evidence-query:8002` |
 | `EVIDENCE_COMMAND_UPSTREAM` | Evidence command service | `http://evidence-command:8001` |
@@ -199,7 +199,7 @@ Confirm the API endpoint in `src/api/login.js` matches the actual backend route:
 
 ## Related Projects
 
-- [platform-control-service](../platform-control-service) - Platform control backend service
+- [tenant-service](../tenant-service) - Tenant management backend service
 - [security-management](../security-management) - Security management backend service
 - [evidence-management](../evidence-management) - Evidence management microservices
 - [file-storage-service](../file-storage-service) - File storage service

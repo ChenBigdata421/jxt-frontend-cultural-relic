@@ -10,7 +10,7 @@ JXT 数字证据管理系统的前端项目，采用 **双运行时架构**，�
 
 | 运行模式 | 域名 | 用途 | 后端服务 |
 |---------|------|------|---------|
-| **Platform** | `platform.jxt.com` | 平台管控站 | platform-control-service:8010 |
+| **Platform** | `platform.jxt.com` | 租户管理站 | tenant-service:8010 |
 | **Business** | `app.jxt.com` | 业务管理站 | security-management:8000 + 微服务集群 |
 
 ### 构建时差异
@@ -107,7 +107,7 @@ docker-compose -f docker-compose.prod.yml logs -f
 |-------|------|-------|
 | `PLATFORM_SERVER_NAME` | 平台站域名 | `platform.jxt.com` |
 | `BUSINESS_SERVER_NAME` | 业务站域名 | `app.jxt.com` |
-| `PLATFORM_UPSTREAM` | 平台站后端地址 | `http://platform-control-service:8010` |
+| `PLATFORM_UPSTREAM` | 租户站后端地址 | `http://tenant-service:8010` |
 | `SECURITY_MANAGEMENT_UPSTREAM` | 安全管理后端地址 | `http://security-management:8000` |
 | `EVIDENCE_QUERY_UPSTREAM` | 证据查询服务地址 | `http://evidence-query:8002` |
 | `EVIDENCE_COMMAND_UPSTREAM` | 证据命令服务地址 | `http://evidence-command:8001` |
@@ -199,7 +199,7 @@ computed: {
 
 ## 相关项目
 
-- [platform-control-service](../platform-control-service) - 平台管控后端服务
+- [tenant-service](../tenant-service) - 租户管理后端服务
 - [security-management](../security-management) - 安全管理后端服务
 - [evidence-management](../evidence-management) - 证据管理微服务
 - [file-storage-service](../file-storage-service) - 文件存储服务

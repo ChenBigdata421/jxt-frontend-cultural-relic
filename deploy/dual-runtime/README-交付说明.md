@@ -76,7 +76,7 @@ docker compose -f deploy/dual-runtime/docker-compose.prod.yml up -d
   - 业务站域名（Nginx `server_name`）
 
 - `PLATFORM_UPSTREAM`
-  - 平台站 `/api/v1/` 代理上游（必须带协议，如 `http://10.0.0.10:8010` 或 `http://platform-control-service:8010`）
+  - 租户站 `/api/v1/` 代理上游（必须带协议，如 `http://10.0.0.10:8010` 或 `http://tenant-service:8010`）
 
 - `SECURITY_MANAGEMENT_UPSTREAM`
   - 业务站 `/api` 与 `/static/uploadfile` 兜底上游（必须带协议，如 `http://10.0.0.11:8000` 或 `http://security-management:8000`）
@@ -140,7 +140,7 @@ docker-compose up -d
 
 # 2. 等待基础设施就绪后，启动各业务服务
 cd security-management && docker-compose up -d
-cd platform-control-service && docker-compose up -d
+cd tenant-service && docker-compose up -d
 cd evidence-management && docker-compose up -d
 cd file-storage-service && docker-compose up -d
 

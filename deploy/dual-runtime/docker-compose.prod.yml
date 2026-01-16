@@ -18,9 +18,9 @@ services:
       # 业务站域名（客户可按实际域名修改）
       BUSINESS_SERVER_NAME: app.jxt.com
 
-      # ====== 平台站后端（platform-control-service）======
+      # ====== 平台站后端（tenant-service）======
       # 必须带协议：http://host:port 或 http://service:port
-      PLATFORM_UPSTREAM: http://platform-control-service:8010
+      PLATFORM_UPSTREAM: http://tenant-service:8010
 
       # ====== 业务站后端（security-management 为兜底）======
       # /api 与 /static/uploadfile 兜底上游
