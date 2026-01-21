@@ -25,6 +25,23 @@
               />
             </el-select>
           </el-form-item>
+          <el-form-item label="负责人">
+            <el-select
+              v-model="queryParams.leaderId"
+              placeholder="请选择负责人"
+              clearable
+              filterable
+              size="small"
+              style="width: 170px"
+            >
+              <el-option
+                v-for="user in allUserOptions"
+                :key="user.userId"
+                :label="user.userName"
+                :value="user.userId"
+              />
+            </el-select>
+          </el-form-item>
           <el-form-item>
             <el-button
               class="filter-item"
@@ -63,7 +80,7 @@
           <!--:formatter 是一个属性绑定（也称为"v-bind"或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column prop="orgName" label="组织名称" />
           <el-table-column prop="orgCode" label="组织编码" />
-          <el-table-column prop="sort" label="排序" width="100" />
+          <el-table-column prop="leader" label="负责人" width="100" />
           <!--<el-table-column prop="status" label="状态" :formatter="statusFormat" width="100">在<template slot-scope="scope">中已经调用了statusFormat，这里就不需要了-->
           <el-table-column prop="status" label="状态" width="100">
             <template slot-scope="scope">
@@ -124,6 +141,7 @@
                     :show-count="true"
                     placeholder="选择上级组织"
                     :disabled="isEdit"
+                    @input="handleParentOrgChange"
                   />
                 </el-form-item>
               </el-col>
@@ -136,7 +154,7 @@
               <el-col :span="12">
                 <!-- prop="orgCode" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 orgCode 规则进行校验。-->
                 <el-form-item label="组织编码" prop="orgCode">
-                  <el-input v-model="form.orgCode" placeholder="请输入组织编码" />
+                  <el-input v-model="form.orgCode" placeholder="请输入组织编码" :disabled="title !== '添加组织'"/>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -145,8 +163,21 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="负责人" prop="leader">
-                  <el-input v-model="form.leader" placeholder="请输入负责人" maxlength="20" />
+                <el-form-item label="负责人" prop="leaderId">
+                  <el-select
+                    v-model="form.leaderId"
+                    placeholder="请选择负责人"
+                    clearable
+                    filterable
+                    style="width: 100%"
+                  >
+                    <el-option
+                      v-for="user in userOptions"
+                      :key="user.userId"
+                      :label="user.userName"
+                      :value="user.userId"
+                    />
+                  </el-select>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -174,6 +205,7 @@
 
 <script>
 import { getOrgList, getOrg, delOrg, addOrg, updateOrg, changeOrgStatus } from '@/api/admin/sys-organization'
+import { listUser } from '@/api/admin/sys-user'
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
@@ -188,6 +220,10 @@ export default {
       orgList: [],
       // 组织树选项
       orgOptions: [],
+      // 用户选项（对话框中使用）
+      userOptions: [],
+      // 全部用户选项（查询表单中使用）
+      allUserOptions: [],
       // 弹出层标题
       title: '',
       isEdit: false,
@@ -198,7 +234,8 @@ export default {
       // 查询参数
       queryParams: {
         orgName: undefined,
-        status: undefined
+        status: undefined,
+        leaderId: undefined
       },
       // 表单参数
       form: {
@@ -217,7 +254,7 @@ export default {
         sort: [
           { required: true, message: '菜单顺序不能为空', trigger: 'blur' }
         ],
-        leader: [
+        leaderId: [
           { required: true, message: '负责人不能为空', trigger: 'blur' }
         ],
         email: [
@@ -245,6 +282,7 @@ export default {
         value: Number(item.value)
       }))
     })
+    this.getAllUsers()
   },
   methods: {
     /** 查询组织列表 */
@@ -304,8 +342,9 @@ export default {
         orgId: undefined,
         parentId: undefined,
         orgName: undefined,
+        orgCode: undefined,
         sort: 10,
-        leader: undefined,
+        leaderId: undefined,
         phone: undefined,
         email: undefined,
         status: 2
@@ -321,6 +360,11 @@ export default {
       this.getTreeselect('add')
       if (row !== undefined) {
         this.form.parentId = row.orgId
+        // 新增时，加载上级组织的人员列表
+        this.getUserListByOrgId(row.orgId)
+      } else {
+        // 如果没有指定上级组织，加载全体人员
+        this.userOptions = this.allUserOptions
       }
       this.open = true
       this.title = '添加组织'
@@ -330,6 +374,8 @@ export default {
     handleUpdate(row) {
       this.reset()
       this.getTreeselect('update')
+      // 修改时，加载本部门的人员列表
+      this.getUserListByOrgId(row.orgId)
 
       getOrg(row.orgId).then(response => {
         this.form = response.data// 只返回一个组织的信息，则是一个对象类型，如果返回的是多个组织信息，则为数组类型
@@ -407,11 +453,60 @@ export default {
       }).then(function() {
         return changeOrgStatus(row.orgId, row.status)
       }).then((res) => {
-        console.log('res', res)
         this.msgSuccess(res.msg)
       }).catch(function() {
         row.status = row.status === 2 ? 1 : 2
       })
+    },
+    /** 获取全体人员列表（用于查询表单） */
+    getAllUsers() {
+      listUser({ pageIndex: 1, pageSize: 10000 })
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.allUserOptions = response.data.list || []
+          } else {
+            console.error('获取全体人员列表失败，响应码:', response.code)
+            this.allUserOptions = []
+          }
+        })
+        .catch((error) => {
+          console.error('获取全体人员列表失败:', error)
+          this.allUserOptions = []
+        })
+    },
+    /** 根据组织ID获取人员列表 */
+    getUserListByOrgId(orgId) {
+
+      // 如果是主类目（orgId为0），加载全体人员
+      if (orgId === 0) {
+        this.userOptions = [...this.allUserOptions]
+        return
+      }
+
+      listUser({ orgId: '/' + orgId + '/', pageIndex: 1, pageSize: 10000 })
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.userOptions = response.data.list || []
+          } else {
+            console.error('获取组织人员列表失败，响应码:', response.code)
+            this.userOptions = []
+          }
+        })
+        .catch((error) => {
+          console.error('获取组织人员列表失败:', error)
+          this.userOptions = []
+        })
+    },
+    /** 上级组织变更时的处理（仅在新增时生效） */
+    handleParentOrgChange(orgId) {
+
+      if (!this.isEdit && orgId !== undefined) {
+        // 清空已选择的负责人
+        this.form.leaderId = undefined
+
+        // 加载新选择的上级组织的人员列表
+        this.getUserListByOrgId(orgId)
+      }
     }
   }
 }
