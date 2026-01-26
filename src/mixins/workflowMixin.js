@@ -2,8 +2,8 @@
  * 工作流处理 Mixin
  * 提供工作流启动、任务处理等通用功能
  */
-import { listWorkflows, getWorkflow } from '@/api/process/workflow'
-import { startInstance, getInstanceTasks } from '@/api/process/instance'
+import { getWorkflow, getWorkflowByName } from '@/api/process/workflow'
+import { startInstance, getRecentTaskByInstance } from '@/api/process/instance'
 import { getTask, approveTask, rejectTask } from '@/api/process/task'
 
 export default {
@@ -18,16 +18,17 @@ export default {
 
       // 任务处理表单
       processForm: {
-        task_name: '',
-        workflow_name: '',
+        taskName: '',
+        workflowName: '',
         priority: 'medium',
-        task_data: {},
-        previous_tasks_history: [],
-        form_fields: [],
+        taskData: {},
+        previousTasksHistory: [],
+        formFields: [],
         formData: {},
         comment: '',
         output: '',
-        rejection_info: null
+        rejectionInfo: null,
+        nextTaskApprover:undefined,
       },
 
       // 表单验证规则
@@ -46,24 +47,23 @@ export default {
     async startWorkflowInstance(workflowName, inputData, onSuccess, onError) {
       try {
         // 1. 查询工作流列表
-        const workflowsResponse = await listWorkflows({ limit: 100, offset: 0 })
+        const workflowsResponse = await getWorkflowByName(workflowName)
 
         if (workflowsResponse.code !== 200) {
           throw new Error(workflowsResponse.msg || '查询工作流失败')
         }
 
-        const workflows = workflowsResponse.data.items || workflowsResponse.data || []
-        const workflow = workflows.find(wf => wf.name === workflowName)
+        const workflow = workflowsResponse.data
 
         if (!workflow) {
           throw new Error(`未找到"${workflowName}"工作流，请先创建该工作流`)
         }
 
-        this.currentWorkflowId = workflow.id
+        this.currentWorkflowId = workflow.id || workflow.workflowId
 
         // 2. 创建工作流实例（后端会自动创建第一个任务）
         const instanceResponse = await startInstance({
-          workflow_id: workflow.id,
+          id: this.currentWorkflowId,
           input: inputData
         })
 
@@ -79,19 +79,19 @@ export default {
         await new Promise(resolve => setTimeout(resolve, 500))
 
         // 4. 查询该实例的任务列表
-        const tasksResponse = await getInstanceTasks(instanceId, { limit: 10, offset: 0 })
+        const tasksResponse = await getRecentTaskByInstance(instanceId)
 
         if (tasksResponse.code !== 200) {
           throw new Error(tasksResponse.msg || '查询任务失败')
         }
 
-        const tasks = tasksResponse.data.items || tasksResponse.data || []
-        const pendingTask = tasks.find(t => t.status === 'pending')
+        const pendingTask = tasksResponse.data
 
         if (pendingTask) {
           //this.msgSuccess('任务已创建')
+          this.currentTaskId = pendingTask.id || pendingTask.taskId
           if (onSuccess) {
-            onSuccess(pendingTask.id)
+            onSuccess(pendingTask.id || pendingTask.taskId)
           }
         } else {
           throw new Error('未找到待办任务，请到"我的待办"中查看')
@@ -123,10 +123,10 @@ export default {
 
         const task = taskResponse.data
         this.currentTask = task
-        this.currentInstanceId = task.instance_id
+        this.currentInstanceId = task.instanceId
 
         // 2. 获取工作流定义
-        const workflowResponse = await getWorkflow(task.workflow_id)
+        const workflowResponse = await getWorkflow(task.workflowId)
 
         if (workflowResponse.code !== 200) {
           throw new Error(workflowResponse.msg || '获取工作流定义失败')
@@ -147,7 +147,7 @@ export default {
         // 4. 判断是否是第一个任务
         if (definition.steps && definition.steps.length > 0) {
           const firstStepId = definition.steps[0].id
-          this.isFirstTask = task.task_key === firstStepId
+          this.isFirstTask = task.taskKey === firstStepId
         } else {
           this.isFirstTask = false
         }
@@ -160,16 +160,16 @@ export default {
 
         // 7. 构建处理表单
         this.processForm = {
-          task_name: task.task_name,
-          workflow_name: task.workflow_name,
+          taskName: task.taskName,
+          workflowName: task.workflowName,
           priority: task.priority || 'medium',
-          task_data: taskData,
-          previous_tasks_history: previousTasksHistory,
-          form_fields: formFields,
+          taskData: taskData,
+          previousTasksHistory: previousTasksHistory,
+          formFields: formFields,
           formData: formData,
           comment: '',
           output: '',
-          rejection_info: rejectionInfo
+          rejectionInfo: rejectionInfo,
         }
 
         // 8. 动态生成表单验证规则
@@ -190,22 +190,22 @@ export default {
     parseTaskFormData(task, taskData = {}) {
       // 解析 form_data
       let formDataObj = {}
-      if (task.form_data) {
+      if (task.formData) {
         try {
-          if (typeof task.form_data === 'string') {
-            formDataObj = JSON.parse(task.form_data)
-          } else if (typeof task.form_data === 'object') {
-            formDataObj = task.form_data
+          if (typeof task.formData === 'string') {
+            formDataObj = JSON.parse(task.formData)
+          } else if (typeof task.formData === 'object') {
+            formDataObj = task.formData
           }
         } catch (e) {
           console.error('解析 form_data 失败:', e)
         }
       }
 
-      // 解析 form_fields
+      // 解析 formFields
       let formFields = []
-      if (formDataObj && formDataObj.form_fields) {
-        formFields = formDataObj.form_fields
+      if (formDataObj && formDataObj.formFields) {
+        formFields = formDataObj.formFields
       }
 
       // 初始化表单数据对象
@@ -250,28 +250,28 @@ export default {
       let rejectionInfo = null
       let previousTasksHistory = []
 
-      if (task.task_data) {
+      if (task.taskData) {
         try {
-          if (typeof task.task_data === 'string') {
-            taskData = JSON.parse(task.task_data)
+          if (typeof task.taskData === 'string') {
+            taskData = JSON.parse(task.taskData)
             if (typeof taskData === 'string') {
               taskData = JSON.parse(taskData)
             }
-          } else if (typeof task.task_data === 'object' && task.task_data !== null) {
-            taskData = task.task_data
+          } else if (typeof task.taskData === 'object' && task.taskData !== null) {
+            taskData = task.taskData
           }
 
-          if (taskData.rejected_by) {
+          if (taskData.rejectedBy) {
             rejectionInfo = {
-              rejected_by: taskData.rejected_by,
-              rejected_at: taskData.rejected_at,
-              rejection_reason: taskData.rejection_reason,
-              rejected_task_id: taskData.rejected_task_id
+              rejectedBy: taskData.rejectedBy,
+              rejectedAt: taskData.rejectedAt,
+              rejectionReason: taskData.rejectionReason,
+              rejectedTaskId: taskData.rejectedTaskId
             }
           }
 
-          if (taskData.previous_tasks_history && Array.isArray(taskData.previous_tasks_history)) {
-            previousTasksHistory = taskData.previous_tasks_history
+          if (taskData.previousTasksHistory && Array.isArray(taskData.previousTasksHistory)) {
+            previousTasksHistory = taskData.previousTasksHistory
           }
         } catch (e) {
           console.error('解析任务数据失败:', e)
@@ -295,7 +295,7 @@ export default {
           try {
             // 构建输出数据
             let outputData = ''
-            if (this.processForm.form_fields && this.processForm.form_fields.length > 0) {
+            if (this.processForm.formFields && this.processForm.formFields.length > 0) {
               outputData = JSON.stringify(this.processForm.formData)
             } else {
               outputData = this.processForm.output || '{}'
@@ -303,7 +303,8 @@ export default {
 
             const data = {
               comment: this.processForm.comment || '审批通过',
-              output: outputData
+              output: outputData,
+              nextTaskApprover: this.processForm.nextTaskApprover,
             }
 
             const response = await approveTask(this.currentTaskId, data)
@@ -340,7 +341,7 @@ export default {
 
             const data = {
               comment: this.processForm.comment,
-              reason: this.processForm.comment
+              reason: this.processForm.comment,
             }
 
             const response = await rejectTask(this.currentTaskId, data)
@@ -417,8 +418,8 @@ export default {
         status: '状态',
 
         // 文档相关
-        document_id: '文档编号',
-        document_name: '文档名称',
+        documentId: '文档编号',
+        documentName: '文档名称',
         document_type: '文档类型',
         document_number: '文档编号',
         file_name: '文件名称',
@@ -427,8 +428,8 @@ export default {
         attachment: '附件',
 
         // 媒体相关
-        media_id: '媒体编号',
-        media_name: '媒体名称',
+        mediaId: '媒体编号',
+        mediaName: '媒体名称',
         media_type: '媒体类型',
 
         // 物证相关
@@ -443,7 +444,7 @@ export default {
         receiver: '接收人',
 
         // 审批相关
-        approver: '审批人',
+        approverOrg: '审批组织',
         approval_date: '审批日期',
         approval_time: '审批时间',
         approval_result: '审批结果',
@@ -545,7 +546,7 @@ export default {
         storage: '存储',
         location: '位置',
         approval: '审批',
-        approver: '审批人',
+        approver: '审批组织',
         reason: '原因',
         comment: '意见',
         department: '部门',
@@ -667,6 +668,12 @@ export default {
         fieldLower.startsWith('can_')
       ) {
         return 'boolean'
+      }
+
+      if (
+        fieldLower.includes('approver')
+      ) {
+        return 'approver'
       }
 
       // 文本域类型

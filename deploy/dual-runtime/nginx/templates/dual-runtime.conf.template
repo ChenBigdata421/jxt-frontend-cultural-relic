@@ -198,7 +198,7 @@ server {
         proxy_pass ${DOLLAR}writ_media_relations_backend;
     }
 
-    location ^~ /api/workflows {
+    location ^~ /api/v1/workflows {
         proxy_set_header Host ${DOLLAR}host;
         proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
         proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
@@ -207,7 +207,7 @@ server {
         proxy_pass ${DOLLAR}process_backend;
     }
 
-    location ^~ /api/instances {
+    location ^~ /api/v1/instances {
         proxy_set_header Host ${DOLLAR}host;
         proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
         proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
@@ -216,7 +216,7 @@ server {
         proxy_pass ${DOLLAR}process_backend;
     }
 
-    location ^~ /api/tasks {
+    location ^~ /api/v1/tasks {
         proxy_set_header Host ${DOLLAR}host;
         proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
         proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;

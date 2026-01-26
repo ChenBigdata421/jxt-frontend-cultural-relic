@@ -52,11 +52,7 @@
               >
             </el-col>
             <el-col :span="1.5">
-              <el-button
-                icon="el-icon-close"
-                type="danger"
-                size="mini"
-                @click="onNoMark"
+              <el-button icon="el-icon-close" type="danger" size="mini" @click="onNoMark"
                 >标注不是执法视频</el-button
               >
             </el-col>
@@ -113,9 +109,7 @@
           </el-form>
           <div slot="footer" class="dialog-footer">
             <el-button @click="downloadDialogVisible = false">取 消</el-button>
-            <el-button type="primary" @click="onSubmitDownload"
-              >确 定</el-button
-            >
+            <el-button type="primary" @click="onSubmitDownload">确 定</el-button>
           </div>
         </el-dialog>
 
@@ -126,10 +120,7 @@
           width="400px"
         >
           <div style="text-align: center; padding: 20px">
-            <i
-              class="el-icon-warning"
-              style="font-size: 48px; color: #e6a23c"
-            ></i>
+            <i class="el-icon-warning" style="font-size: 48px; color: #e6a23c"></i>
             <p style="margin-top: 20px; font-size: 16px">
               确认将选中的媒体标注为非执法视频吗？
             </p>
@@ -188,9 +179,7 @@
                 </el-form-item>
               </el-form>
               <div class="dialog-footer" style="text-align: right">
-                <el-button @click="manualMarkDialogVisible = false"
-                  >关 闭</el-button
-                >
+                <el-button @click="manualMarkDialogVisible = false">关 闭</el-button>
                 <el-button
                   type="primary"
                   :loading="manualMarkSubmitting"
@@ -214,9 +203,7 @@
                 </el-form-item>
               </el-form>
               <div class="dialog-footer" style="text-align: right">
-                <el-button @click="manualMarkDialogVisible = false"
-                  >关 闭</el-button
-                >
+                <el-button @click="manualMarkDialogVisible = false">关 闭</el-button>
                 <el-button
                   type="primary"
                   :loading="manualMarkSubmitting"
@@ -241,9 +228,7 @@
                 </el-form-item>
               </el-form>
               <div class="dialog-footer" style="text-align: right">
-                <el-button @click="manualMarkDialogVisible = false"
-                  >关 闭</el-button
-                >
+                <el-button @click="manualMarkDialogVisible = false">关 闭</el-button>
                 <el-button
                   type="primary"
                   :loading="manualMarkSubmitting"
@@ -289,9 +274,7 @@
                 </el-form-item>
               </el-form>
               <div class="dialog-footer" style="text-align: right">
-                <el-button @click="manualMarkDialogVisible = false"
-                  >关 闭</el-button
-                >
+                <el-button @click="manualMarkDialogVisible = false">关 闭</el-button>
                 <el-button
                   type="primary"
                   :loading="manualMarkSubmitting"
@@ -311,9 +294,7 @@
                 </el-form-item>
               </el-form>
               <div class="dialog-footer" style="text-align: right">
-                <el-button @click="manualMarkDialogVisible = false"
-                  >关 闭</el-button
-                >
+                <el-button @click="manualMarkDialogVisible = false">关 闭</el-button>
                 <el-button
                   type="primary"
                   :loading="manualMarkSubmitting"
@@ -344,10 +325,8 @@
                 </el-descriptions-item>
                 <el-descriptions-item label="媒体类别">
                   {{
-                    selectDictLabel(
-                      mediaCateOptions,
-                      currentArchivingMedia.mediaCate
-                    ) || "-"
+                    selectDictLabel(mediaCateOptions, currentArchivingMedia.mediaCate) ||
+                    "-"
                   }}
                 </el-descriptions-item>
                 <el-descriptions-item label="警员">
@@ -460,7 +439,7 @@
           @close="handleTextViewerClose"
         />
 
-        <!-- 任务处理对话框 -->
+        <!-- 任务处理对话框 v-model="taskProcessOpen"等价于:value="taskProcessOpen" -->
         <TaskProcessDialog
           v-model="taskProcessOpen"
           :task-id="currentTaskId"
@@ -474,10 +453,6 @@
 
 <script>
 import {
-  delMedia,
-  addMedia,
-  updateMedia,
-  batchDelMedia,
   batchMarkMediaNoEnforcementStatus,
   batchUpdateMediaEnforceType,
   batchUpdateMediaIsLocked,
@@ -485,19 +460,12 @@ import {
   batchUpdateMediaComments,
   batchUpdateMediaExpiryTime,
 } from "@/api/evidence/evidence_manage_command_api";
-import {
-  getMedia,
-  getMediaPlayURL,
-  listMedia,
-} from "@/api/evidence/evidence_manage_query_api";
+import { getMediaPlayURL, listMedia } from "@/api/evidence/evidence_manage_query_api";
 import { getEnforceTypeTree } from "@/api/admin/enforcetype";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
 import { getEquipmentBwcList } from "@/api/admin/equipment_manage_api";
-import {
-  addArchive,
-  batchAddArchiveMediaRelations,
-} from "@/api/evidence/archive_api";
+import { addArchive, batchAddArchiveMediaRelations } from "@/api/evidence/archive_api";
 import MediaSelector from "@/components/MediaSelector";
 import ArchiveSelectorDialog from "@/components/ArchiveSelectorDialog";
 import VideoPlayerDialog from "@/components/VideoPlayerDialog";
@@ -600,12 +568,8 @@ export default {
       mediaCateOptions: [],
       // 表单校验
       rules: {
-        mediaName: [
-          { required: true, message: "媒体名称不能为空", trigger: "blur" },
-        ],
-        mediaCate: [
-          { required: true, message: "媒体类型不能为空", trigger: "change" },
-        ],
+        mediaName: [{ required: true, message: "媒体名称不能为空", trigger: "blur" }],
+        mediaCate: [{ required: true, message: "媒体类型不能为空", trigger: "change" }],
       },
       // 工作流相关
       currentDeleteMedia: null, // 当前要删除的媒体
@@ -789,9 +753,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.msgError(
-            "批量更新重要级别失败：" + (error.message || "未知错误")
-          );
+          this.msgError("批量更新重要级别失败：" + (error.message || "未知错误"));
         })
         .finally(() => {
           this.manualMarkSubmitting = false;
@@ -826,9 +788,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.msgError(
-            "批量更新执法类型失败：" + (error.message || "未知错误")
-          );
+          this.msgError("批量更新执法类型失败：" + (error.message || "未知错误"));
         })
         .finally(() => {
           this.manualMarkSubmitting = false;
@@ -860,9 +820,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.msgError(
-            "批量更新标注内容失败：" + (error.message || "未知错误")
-          );
+          this.msgError("批量更新标注内容失败：" + (error.message || "未知错误"));
         })
         .finally(() => {
           this.manualMarkSubmitting = false;
@@ -893,9 +851,7 @@ export default {
           this.msgError("请选择过期时间");
           return;
         }
-        expiryTimeISO = new Date(
-          this.manualMarkForm.customExpiryTime
-        ).toISOString();
+        expiryTimeISO = new Date(this.manualMarkForm.customExpiryTime).toISOString();
       }
 
       this.manualMarkSubmitting = true;
@@ -913,9 +869,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.msgError(
-            "批量更新过期时间失败：" + (error.message || "未知错误")
-          );
+          this.msgError("批量更新过期时间失败：" + (error.message || "未知错误"));
         })
         .finally(() => {
           this.manualMarkSubmitting = false;
@@ -928,10 +882,7 @@ export default {
         this.msgError("请至少选择一条媒体数据");
         return;
       }
-      if (
-        this.manualMarkForm.isLocked !== 0 &&
-        this.manualMarkForm.isLocked !== 1
-      ) {
+      if (this.manualMarkForm.isLocked !== 0 && this.manualMarkForm.isLocked !== 1) {
         this.msgError("请选择锁定状态");
         return;
       }
@@ -950,9 +901,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.msgError(
-            "批量更新锁定状态失败：" + (error.message || "未知错误")
-          );
+          this.msgError("批量更新锁定状态失败：" + (error.message || "未知错误"));
         })
         .finally(() => {
           this.manualMarkSubmitting = false;
@@ -1035,10 +984,7 @@ export default {
         // 对导出字段做必要的格式化（与页面展示保持一致）
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
           const out = { ...row };
-          out.mediaCate = this.selectDictLabel(
-            this.mediaCateOptions,
-            row.mediaCate
-          );
+          out.mediaCate = this.selectDictLabel(this.mediaCateOptions, row.mediaCate);
           out.createdAt = this.parseTime(row.createdAt);
           out.updatedAt = this.parseTime(row.updatedAt);
           return out;
@@ -1406,25 +1352,18 @@ export default {
     startDeleteWorkflow(mediaId) {
       // 构建输入数据
       const inputData = {
-        media_id: mediaId,
-        media_name: this.currentDeleteMedia?.mediaName || "",
-        document_id: this.currentDeleteMedia?.mediaName || "",
-        applicant: this.$store.state.user.userid
-          ? String(this.$store.state.user.userid)
-          : "",
-        _assignee: this.$store.state.user.userid
-          ? String(this.$store.state.user.userid)
-          : "",
-        _priority: "medium",
+        mediaId: mediaId,
+        mediaName: this.currentDeleteMedia?.mediaName || "",
+        documentId: this.currentDeleteMedia?.mediaName || "",
       };
 
       // 使用 mixin 提供的方法启动工作流实例
       this.startWorkflowInstance(
         "文档删除申请流程",
         inputData,
-        (taskId) => {
+        (taskid) => {
           // 成功回调：打开任务处理对话框
-          this.currentTaskId = taskId;
+          this.currentTaskId = taskid;
           this.taskProcessOpen = true;
         },
         (error) => {

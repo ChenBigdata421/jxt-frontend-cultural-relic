@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    :title="'处理任务 - ' + processForm.task_name"
+    :title="'处理任务 - ' + processForm.taskName"
     :visible.sync="visible"
     width="900px"
     append-to-body
@@ -16,22 +16,18 @@
       <el-row :gutter="20">
         <el-col :span="8">
           <el-form-item label="任务名称">
-            <span>{{ processForm.task_name }}</span>
+            <span>{{ processForm.taskName }}</span>
           </el-form-item>
         </el-col>
         <el-col :span="8">
           <el-form-item label="流程名称">
-            <span>{{ processForm.workflow_name }}</span>
+            <span>{{ processForm.workflowName }}</span>
           </el-form-item>
         </el-col>
         <el-col :span="8">
           <el-form-item label="优先级">
-            <el-tag v-if="processForm.priority === 'high'" type="danger"
-              >高</el-tag
-            >
-            <el-tag v-else-if="processForm.priority === 'low'" type="info"
-              >低</el-tag
-            >
+            <el-tag v-if="processForm.priority === 'high'" type="danger">高</el-tag>
+            <el-tag v-else-if="processForm.priority === 'low'" type="info">低</el-tag>
             <el-tag v-else type="warning">中</el-tag>
           </el-form-item>
         </el-col>
@@ -39,7 +35,7 @@
 
       <!-- 驳回信息 -->
       <el-alert
-        v-if="processForm.rejection_info"
+        v-if="processForm.rejectionInfo"
         title="驳回信息"
         type="warning"
         :closable="false"
@@ -48,15 +44,15 @@
         <div>
           <p>
             <strong>驳回人:</strong>
-            {{ processForm.rejection_info.rejected_by }}
+            {{ processForm.rejectionInfo.rejectedBy }}
           </p>
           <p>
             <strong>驳回时间:</strong>
-            {{ processForm.rejection_info.rejected_at }}
+            {{ processForm.rejectionInfo.rejectedAt }}
           </p>
           <p>
             <strong>驳回原因:</strong>
-            {{ processForm.rejection_info.rejection_reason }}
+            {{ processForm.rejectionInfo.rejectionReason }}
           </p>
         </div>
       </el-alert>
@@ -64,30 +60,25 @@
       <!-- 流程处理历史 -->
       <div
         v-if="
-          processForm.previous_tasks_history &&
-          processForm.previous_tasks_history.length > 0
+          processForm.previousTasksHistory && processForm.previousTasksHistory.length > 0
         "
         style="margin-bottom: 20px"
       >
         <el-divider>流程处理历史</el-divider>
         <el-timeline>
           <el-timeline-item
-            v-for="(history, index) in processForm.previous_tasks_history"
+            v-for="(history, index) in processForm.previousTasksHistory"
             :key="index"
-            :timestamp="history.completed_at"
+            :timestamp="history.completedAt"
             placement="top"
           >
             <el-card shadow="hover" style="margin-bottom: 10px">
               <div
                 slot="header"
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                "
+                style="display: flex; justify-content: space-between; align-items: center"
               >
                 <span style="font-weight: bold; font-size: 16px">
-                  {{ index + 1 }}. {{ history.task_name }}
+                  {{ index + 1 }}. {{ history.taskName }}
                 </span>
                 <el-tag
                   :type="
@@ -103,9 +94,7 @@
 
               <!-- 处理意见 -->
               <div v-if="history.comment" style="margin-bottom: 15px">
-                <div
-                  style="color: #909399; font-size: 12px; margin-bottom: 5px"
-                >
+                <div style="color: #909399; font-size: 12px; margin-bottom: 5px">
                   处理意见：
                 </div>
                 <div
@@ -121,12 +110,8 @@
               </div>
 
               <!-- 表单字段数据 -->
-              <div
-                v-if="history.output && Object.keys(history.output).length > 0"
-              >
-                <div
-                  style="color: #909399; font-size: 12px; margin-bottom: 5px"
-                >
+              <div v-if="history.output && Object.keys(history.output).length > 0">
+                <div style="color: #909399; font-size: 12px; margin-bottom: 5px">
                   提交信息：
                 </div>
                 <el-descriptions :column="2" border size="small">
@@ -148,7 +133,10 @@
 
               <!-- 处理人信息 -->
               <div style="margin-top: 10px; color: #909399; font-size: 12px">
-                处理人：{{ history.assignee }}
+                处理人：{{ getUserDisplayName(history.assignee) }}
+                <span style="margin-left: 24px">
+                  部门：{{ getUserOrgName(history.assignee) }}
+                </span>
               </div>
             </el-card>
           </el-timeline-item>
@@ -157,11 +145,9 @@
 
       <!-- 动态表单字段 -->
       <el-divider>填写信息</el-divider>
-      <template
-        v-if="processForm.form_fields && processForm.form_fields.length > 0"
-      >
+      <template v-if="processForm.formFields && processForm.formFields.length > 0">
         <el-form-item
-          v-for="field in processForm.form_fields"
+          v-for="field in processForm.formFields"
           :key="field"
           :label="getFieldLabel(field)"
           :prop="'formData.' + field"
@@ -240,6 +226,14 @@
             :placeholder="getFieldPlaceholder(field)"
             clearable
           />
+          <treeselect
+            v-else-if="getFieldType(field) === 'approver'"
+            :options="orgOptions"
+            placeholder="请选择审批组织"
+            style="width: 100%"
+            clearable
+            @input="handleOrgSelect($event, field)"
+          />
           <!-- 默认文本输入框 -->
           <el-input
             v-else
@@ -283,11 +277,16 @@
 
 <script>
 import workflowMixin from "@/mixins/workflowMixin";
-import { deleteTask } from "@/api/process/task";
-import { deleteInstance } from "@/api/process/instance";
+import { orgTreeSelect, getOrgLeader } from "@/api/admin/sys-org";
+import { getUser } from "@/api/admin/sys-user";
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
   name: "TaskProcessDialog",
+  components: {
+    Treeselect,
+  },
   mixins: [workflowMixin],
   props: {
     value: {
@@ -304,10 +303,16 @@ export default {
       visible: this.value,
       isClosing: false,
       isNormalClose: false, // 标记是否为正常完成（通过/驳回），而非取消
+      orgOptions: [], // 组织树选项
+      userCache: {}, // 用户信息缓存，避免重复请求
     };
+  },
+  created() {
+    this.getOrgTree();
   },
   watch: {
     value(val) {
+      //val：value变化后的新值
       this.visible = val;
       if (val && this.taskId) {
         this.loadTask();
@@ -318,6 +323,71 @@ export default {
     },
   },
   methods: {
+    /**
+     * 获取组织树
+     */
+    getOrgTree() {
+      orgTreeSelect()
+        .then((response) => {
+          this.orgOptions = response.data;
+        })
+        .catch((error) => {
+          console.error("获取组织树失败:", error);
+          this.orgOptions = [];
+        });
+    },
+
+    /**
+     * 获取用户显示名称
+     */
+    getUserDisplayName(userId) {
+      if (!userId) return "未知";
+      if (this.userCache[userId]) {
+        return this.userCache[userId].userName || "未知";
+      }
+      // 异步加载用户信息
+      this.fetchUserInfo(userId);
+      return "加载中...";
+    },
+
+    /**
+     * 获取用户组织名称
+     */
+    getUserOrgName(userId) {
+      if (!userId) return "未知";
+      if (this.userCache[userId]) {
+        return this.userCache[userId].orgFullName || "未知";
+      }
+      return "加载中...";
+    },
+
+    /**
+     * 异步获取用户信息
+     */
+    async fetchUserInfo(userId) {
+      if (!userId || this.userCache[userId]) {
+        return;
+      }
+
+      try {
+        const response = await getUser(userId);
+        if (response && response.code === 200 && response.data) {
+          this.$set(this.userCache, userId, {
+            userName: response.data.userName || "未知",
+            orgFullName: response.data.orgFullName || "未知",
+          });
+          // 触发重新渲染
+          this.$forceUpdate();
+        }
+      } catch (error) {
+        console.error("获取用户信息失败:", error);
+        this.$set(this.userCache, userId, {
+          userName: "获取失败",
+          orgFullName: "获取失败",
+        });
+      }
+    },
+
     /**
      * 加载任务
      */
@@ -350,6 +420,65 @@ export default {
     },
 
     /**
+     * 处理组织选择事件
+     * 当用户从下拉列表中选中一个组织时，获取该组织的名称和负责人
+     */
+    handleOrgSelect(orgId, field) {
+      if (!orgId) {
+        // 如果清空选择，则清空对应的表单字段
+        this.processForm.formData[field] = null;
+        this.processForm.nextTaskApprover = null;
+        return;
+      }
+
+      // 从组织树中查找选中组织的名称
+      const orgName = this.findOrgName(orgId);
+      if (orgName) {
+        this.processForm.formData[field] = orgName;
+      }
+
+      // 调用获取组织负责人的API
+      this.getOrgLeaderInfo(orgId, field);
+    },
+
+    /**
+     * 从组织树中递归查找组织名称
+     */
+    findOrgName(orgId) {
+      const search = (options) => {
+        for (const opt of options) {
+          if (opt.id === orgId) {
+            return opt.label;
+          }
+          if (Array.isArray(opt.children) && opt.children.length > 0) {
+            const found = search(opt.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      return search(this.orgOptions);
+    },
+
+    /**
+     * 获取组织负责人信息
+     */
+    async getOrgLeaderInfo(orgId, field) {
+      try {
+        const response = await getOrgLeader(orgId);
+        if (response && response.code === 200 && response.data) {
+          // 将负责人的ID赋值给 nextTaskApprover
+          this.processForm.nextTaskApprover = response.data.leaderId;
+        } else {
+          this.$message.warning("获取组织负责人失败，请手动选择");
+        }
+      } catch (error) {
+        console.error("获取组织负责人失败:", error);
+        this.$message.error("获取组织负责人失败：" + (error.message || "未知错误"));
+      }
+    },
+
+    /**
      * 关闭对话框
      */
     async handleClose() {
@@ -360,39 +489,14 @@ export default {
       this.isClosing = true;
 
       try {
-        // 如果是正常完成（通过/驳回），不执行删除操作，直接关闭
+        // 如果是正常完成（通过/驳回），关闭对话框
         if (this.isNormalClose) {
           this.visible = false;
           this.$emit("close");
           return;
         }
 
-        // 以下是取消操作的逻辑：删除任务和实例
-        const taskId = this.currentTaskId;
-        const instanceId = this.currentInstanceId;
-
-        // 如果没有任务ID或实例ID，直接关闭
-        if (!taskId && !instanceId) {
-          this.visible = false;
-          this.$emit("close");
-          return;
-        }
-
-        // 删除任务
-        if (taskId) {
-          const taskResponse = await deleteTask(taskId);
-          if (taskResponse.code !== 200) {
-            throw new Error(taskResponse.msg || "删除任务失败");
-          }
-        }
-
-        // 删除实例
-        if (instanceId) {
-          const instanceResponse = await deleteInstance(instanceId);
-          if (instanceResponse.code !== 200) {
-            throw new Error(instanceResponse.msg || "删除实例失败");
-          }
-        }
+        this.$message.info("请在'我的待办'中处理任务！");
         this.$emit("close");
       } catch (error) {
         if (error !== "cancel") {
@@ -417,5 +521,3 @@ export default {
   padding-left: 0;
 }
 </style>
-
-

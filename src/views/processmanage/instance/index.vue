@@ -1,20 +1,21 @@
 <template>
   <div class="app-container">
     <!-- 查询条件 -->
-    <el-form
-      :model="queryParams"
-      ref="queryForm"
-      :inline="true"
-      label-width="80px"
-    >
-      <el-form-item label="工作流ID" prop="workflowId">
-        <el-input
+    <el-form :model="queryParams" ref="queryForm" :inline="true" label-width="80px">
+      <el-form-item label="工作流" prop="workflowId">
+        <el-select
           v-model="queryParams.workflowId"
-          placeholder="请输入工作流ID"
+          placeholder="请选择工作流"
           clearable
-          size="small"
-          style="width: 240px"
-        />
+          style="width: 170px"
+        >
+          <el-option
+            v-for="opt in workflowOptions"
+            :key="opt.workflowId"
+            :label="opt.name"
+            :value="opt.workflowId"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select
@@ -30,60 +31,49 @@
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button
-          type="primary"
-          icon="el-icon-search"
-          size="mini"
-          @click="handleQuery"
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery"
           >查询</el-button
         >
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-          >重置</el-button
-        >
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
     <!-- 数据表格 -->
     <el-table v-loading="loading" :data="instanceList" border>
-      <el-table-column label="实例ID" align="center" prop="id" width="280" />
+      <el-table-column label="实例编号" align="center" prop="instanceNo" width="280" />
+      <el-table-column label="工作流编号" align="center" prop="workflowNo" width="280" />
       <el-table-column
-        label="工作流ID"
+        label="工作流名称"
         align="center"
-        prop="workflow_id"
+        prop="workflowName"
         width="280"
       />
       <el-table-column label="状态" align="center" prop="status" width="100">
         <template slot-scope="scope">
-          <el-tag v-if="scope.row.status === 'running'" type="primary"
-            >运行中</el-tag
-          >
+          <el-tag v-if="scope.row.status === 'running'" type="primary">运行中</el-tag>
           <el-tag v-else-if="scope.row.status === 'completed'" type="success"
             >已完成</el-tag
           >
-          <el-tag v-else-if="scope.row.status === 'failed'" type="danger"
-            >失败</el-tag
-          >
+          <el-tag v-else-if="scope.row.status === 'failed'" type="danger">失败</el-tag>
           <el-tag v-else-if="scope.row.status === 'cancelled'" type="warning"
             >已取消</el-tag
           >
         </template>
       </el-table-column>
-      <el-table-column
-        label="开始时间"
-        align="center"
-        prop="started_at"
-        width="180"
-      />
-      <el-table-column
-        label="完成时间"
-        align="center"
-        prop="completed_at"
-        width="180"
-      />
+      <el-table-column label="开始时间" align="center" prop="startedAt" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.startedAt) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="完成时间" align="center" prop="completedAt" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.completedAt) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column
         label="操作"
         align="center"
-        width="150"
+        width="250"
         class-name="small-padding fixed-width"
       >
         <template slot-scope="scope">
@@ -94,6 +84,13 @@
             @click="handleDetail(scope.row)"
             >详情</el-button
           >
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-cancel"
+            @click="handleCancel(scope.row)"
+            >取消</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -102,7 +99,7 @@
     <pagination
       v-show="total > 0"
       :total="total"
-      :page.sync="queryParams.pageNum"
+      :page.sync="queryParams.pageIndex"
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
     />
@@ -122,12 +119,12 @@
             <h2>工作流实例详情</h2>
             <div class="workflow-meta">
               <div class="meta-item">
-                <label>实例ID:</label>
-                <span>{{ instanceData.id }}</span>
+                <label>实例编号:</label>
+                <span>{{ instanceData.instanceNo }}</span>
               </div>
               <div class="meta-item">
-                <label>工作流ID:</label>
-                <span>{{ instanceData.workflow_id }}</span>
+                <label>工作流编号:</label>
+                <span>{{ instanceData.workflowNo }}</span>
               </div>
               <div class="meta-item">
                 <label>状态:</label>
@@ -137,70 +134,27 @@
               </div>
               <div class="meta-item">
                 <label>创建时间:</label>
-                <span>{{ instanceData.created_at }}</span>
+                <span>{{ parseTime(instanceData.createdAt) }}</span>
               </div>
             </div>
           </div>
 
-          <!-- 活动执行时间线 -->
-          <div class="timeline-section">
-            <div class="section-title">活动执行时间线</div>
-            <div class="timeline">
-              <div
-                v-for="(activity, index) in activities"
-                :key="index"
-                :class="['timeline-item', 'status-' + activity.status]"
-              >
-                <div class="timeline-marker">
-                  <div class="marker-icon">
-                    <span v-if="activity.status === 'completed'">✓</span>
-                    <span v-else-if="activity.status === 'failed'">✗</span>
-                    <span v-else-if="activity.status === 'running'">⟳</span>
-                    <span v-else>○</span>
-                  </div>
-                </div>
-                <div class="timeline-content">
-                  <div class="activity-name">{{ activity.name }}</div>
-                  <div class="activity-status">
-                    {{ getStatusText(activity.status) }}
-                  </div>
-                  <div class="activity-time">
-                    <span v-if="activity.scheduled_at"
-                      >计划: {{ activity.scheduled_at }}</span
-                    >
-                    <span v-if="activity.completed_at">
-                      {{ activity.status === "completed" ? "完成" : "失败" }}:
-                      {{ activity.completed_at }}
-                    </span>
-                  </div>
-                  <div v-if="activity.error_message" class="activity-error">
-                    {{ activity.error_message }}
-                  </div>
-                </div>
-              </div>
-            </div>
+          <!-- 任务处理历史 -->
+          <div v-if="taskHistory && taskHistory.length > 0" class="timeline-section">
+            <div class="section-title">任务处理历史</div>
+            <task-history-list :task-history="taskHistory" />
           </div>
 
           <!-- 操作按钮 -->
           <div class="workflow-actions">
-            <el-button
-              type="primary"
-              icon="el-icon-refresh"
-              @click="refreshDetail"
+            <el-button type="primary" icon="el-icon-refresh" @click="refreshDetail"
               >刷新状态</el-button
-            >
-            <el-button
-              v-if="instanceData.status === 'running'"
-              type="danger"
-              icon="el-icon-close"
-              @click="handleCancel"
-              >取消工作流</el-button
             >
           </div>
 
           <!-- 最后更新时间 -->
           <div class="last-updated">
-            最后更新: <span>{{ instanceData.updated_at }}</span>
+            最后更新: <span>{{ parseTime(instanceData.updatedAt) }}</span>
           </div>
         </div>
       </div>
@@ -213,12 +167,7 @@
       width="600px"
       append-to-body
     >
-      <el-form
-        ref="startForm"
-        :model="startForm"
-        :rules="startRules"
-        label-width="100px"
-      >
+      <el-form ref="startForm" :model="startForm" :rules="startRules" label-width="100px">
         <el-form-item label="输入数据" prop="input">
           <el-input
             v-model="startForm.input"
@@ -241,13 +190,17 @@ import {
   listAllInstances,
   getInstance,
   startInstance,
-  getInstanceTaskHistory,
-  getInstanceTasks,
+  getInstanceDetail,
+  cancelInstance,
 } from "@/api/process/instance";
-import { getWorkflow } from "@/api/process/workflow";
+import { listAllWorkflows } from "@/api/process/workflow";
+import TaskHistoryList from "@/components/TaskHistoryList.vue";
 
 export default {
   name: "WorkflowInstance",
+  components: {
+    TaskHistoryList,
+  },
   data() {
     return {
       // 遮罩层
@@ -268,7 +221,7 @@ export default {
       workflowName: undefined,
       // 查询参数
       queryParams: {
-        pageNum: 1,
+        pageIndex: 1,
         pageSize: 10,
         workflowId: undefined,
         status: undefined,
@@ -277,8 +230,11 @@ export default {
       instanceData: {},
       // 活动列表
       activities: [],
+      workflowOptions: [],
       // 当前查看的实例ID
       currentInstanceId: null,
+      // 任务历史数据
+      taskHistory: [],
       // 自动刷新定时器
       refreshTimer: null,
       // 启动表单参数
@@ -306,13 +262,8 @@ export default {
     };
   },
   created() {
-    // 从路由参数获取工作流ID（可选）
-    this.workflowId = this.$route.query.workflowId;
-    this.workflowName = this.$route.query.workflowName;
-    if (this.workflowId) {
-      this.queryParams.workflowId = this.workflowId;
-    }
     this.getList();
+    this.getAllWorkflow();
   },
   beforeDestroy() {
     // 清除定时器
@@ -322,17 +273,14 @@ export default {
     /** 查询实例列表 */
     getList() {
       this.loading = true;
-      const params = {
-        limit: this.queryParams.pageSize,
-        offset: (this.queryParams.pageNum - 1) * this.queryParams.pageSize,
-        workflow_id: this.queryParams.workflowId,
-        status: this.queryParams.status,
-      };
-      listAllInstances(params)
+      listAllInstances(this.queryParams)
         .then((response) => {
           if (response.code === 200) {
-            this.instanceList = response.data.items || [];
-            this.total = response.data.total || 0;
+            this.instanceList =
+              response.data.list ||
+              response.data.items ||
+              (Array.isArray(response.data) ? response.data : []);
+            this.total = response.data.total || response.data.count || 0;
           } else {
             this.msgError(response.msg || "查询失败");
           }
@@ -343,9 +291,26 @@ export default {
           this.loading = false;
         });
     },
+
+    getAllWorkflow() {
+      listAllWorkflows()
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.workflowOptions = response.data;
+          } else {
+            this.workflowOptions = [];
+            this.msgError(response.msg || "获取工作流失败");
+          }
+        })
+        .catch((error) => {
+          this.msgError("查询工作流失败：" + (error.message || "未知错误"));
+          this.workflowOptions = [];
+        })
+        .finally(() => {});
+    },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageNum = 1;
+      this.queryParams.pageIndex = 1;
       this.getList();
     },
     /** 重置按钮操作 */
@@ -358,308 +323,62 @@ export default {
       // 先清空之前的数据
       this.instanceData = {};
       this.activities = [];
+      this.taskHistory = [];
       this.stopAutoRefresh();
 
       // 设置当前实例ID
-      this.currentInstanceId = row.id;
+      this.currentInstanceId = row.instanceId;
 
       // 打开抽屉
       this.detailDrawerVisible = true;
 
-      // 加载新的实例详情
-      this.getInstanceDetail(row.id);
+      this.getInstance(row.instanceId);
+
+      // 加载实例详情和任务历史
+      this.loadInstanceDetail(row.instanceId);
     },
-    /** 获取实例详情 */
-    getInstanceDetail(instanceId) {
-      console.log("正在加载实例详情，实例ID:", instanceId);
-      this.detailLoading = true;
 
-      // 用于存储工作流定义和任务历史
-      let workflowDefinition = null;
-      let taskHistory = [];
-
-      // 先获取实例详情
-      getInstance(instanceId)
-        .then((instanceResponse) => {
-          console.log("实例详情响应:", instanceResponse);
-
-          if (instanceResponse.code === 200) {
-            this.instanceData = instanceResponse.data;
-            console.log("已设置实例数据:", this.instanceData);
-
-            // 获取工作流定义以提取活动列表
-            if (this.instanceData.workflow_id) {
-              return getWorkflow(this.instanceData.workflow_id);
-            } else {
-              throw new Error("实例缺少工作流ID");
-            }
-          } else {
-            throw new Error(instanceResponse.msg || "获取实例详情失败");
-          }
-        })
-        .then((workflowResponse) => {
-          console.log("工作流定义响应:", workflowResponse);
-
-          if (
-            workflowResponse.code === 200 &&
-            workflowResponse.data.definition
-          ) {
-            workflowDefinition = workflowResponse.data.definition;
-            console.log("已获取工作流定义");
-          } else {
-            console.log("无法获取工作流定义");
-          }
-
-          // 获取实例的所有任务（包含当前状态）
-          return getInstanceTasks(instanceId, { limit: 1000, offset: 0 });
-        })
-        .then((tasksResponse) => {
-          console.log("实例任务响应:", tasksResponse);
-
-          if (tasksResponse.code === 200 && tasksResponse.data) {
-            taskHistory = tasksResponse.data.items || tasksResponse.data || [];
-            console.log("已获取实例任务，共", taskHistory.length, "条记录");
-          } else {
-            console.log("无法获取实例任务");
-          }
-
-          // 从工作流定义中提取活动列表，并结合任务历史设置状态
-          if (workflowDefinition) {
-            this.activities = this.extractActivitiesFromDefinition(
-              workflowDefinition,
-              taskHistory
-            );
-            console.log("从工作流定义提取的活动列表:", this.activities);
-          } else {
-            this.activities = [];
-            console.log("无法获取工作流定义，显示空活动列表");
-          }
-
-          // 如果实例正在运行，启动自动刷新
-          if (this.instanceData.status === "running") {
-            this.startAutoRefresh(instanceId);
-          }
-
-          this.detailLoading = false;
-        })
-        .catch((error) => {
-          console.error("获取详情失败:", error);
-          this.msgError("获取详情失败：" + error.message);
-          this.detailLoading = false;
-        });
-    },
-    /** 从工作流定义中提取活动列表 */
-    extractActivitiesFromDefinition(definition, taskHistory = []) {
+    /** 加载实例详情 */
+    async getInstance(instanceId) {
       try {
-        // 解析工作流定义
-        const def =
-          typeof definition === "string" ? JSON.parse(definition) : definition;
-        console.log("解析的工作流定义:", def);
-        console.log("任务历史记录数:", taskHistory.length);
-
-        // 创建任务历史映射表（按 task_key 分组）
-        const taskHistoryMap = {};
-        taskHistory.forEach((task) => {
-          if (task.task_key) {
-            if (!taskHistoryMap[task.task_key]) {
-              taskHistoryMap[task.task_key] = [];
-            }
-            taskHistoryMap[task.task_key].push(task);
-          }
-        });
-        console.log("任务历史映射表:", taskHistoryMap);
-
-        // 检查是否有steps字段（新格式）
-        if (def.steps && Array.isArray(def.steps)) {
-          console.log("从steps字段提取活动，共", def.steps.length, "个步骤");
-          return def.steps.map((step, index) => {
-            const stepId = step.id || step.key || `step_${index}`;
-            const stepTasks = taskHistoryMap[stepId] || [];
-
-            console.log(`步骤 ${index}: ${step.name}`);
-            console.log(`  - stepId: ${stepId}`);
-            console.log(`  - 找到的任务数: ${stepTasks.length}`);
-            if (stepTasks.length > 0) {
-              console.log(
-                `  - 任务状态:`,
-                stepTasks.map((t) => t.status)
-              );
-            }
-
-            // 根据任务历史确定步骤状态
-            const activityStatus = this.getActivityStatusFromHistory(
-              stepTasks,
-              step,
-              index,
-              def.steps.length
-            );
-            console.log(`  - 活动状态: ${activityStatus.status}`);
-
-            // 获取最新的任务记录
-            const latestTask =
-              stepTasks.length > 0 ? stepTasks[stepTasks.length - 1] : null;
-
-            return {
-              name: step.name || `步骤 ${index + 1}`,
-              status: activityStatus.status,
-              scheduled_at:
-                latestTask?.created_at ||
-                this.instanceData.started_at ||
-                this.instanceData.created_at,
-              completed_at: activityStatus.completed_at,
-              error_message: activityStatus.error_message,
-            };
-          });
-        }
-
-        // 检查是否有activities字段（旧格式）
-        if (def.activities && Array.isArray(def.activities)) {
-          console.log(
-            "从activities字段提取活动，共",
-            def.activities.length,
-            "个活动"
-          );
-          return def.activities.map((activity, index) => {
-            const activityId =
-              activity.id || activity.key || `activity_${index}`;
-            const activityTasks = taskHistoryMap[activityId] || [];
-
-            // 根据任务历史确定活动状态
-            const activityStatus = this.getActivityStatusFromHistory(
-              activityTasks,
-              activity,
-              index,
-              def.activities.length
-            );
-
-            // 获取最新的任务记录
-            const latestTask =
-              activityTasks.length > 0
-                ? activityTasks[activityTasks.length - 1]
-                : null;
-
-            return {
-              name: activity.name || `活动 ${index + 1}`,
-              status: activityStatus.status,
-              scheduled_at:
-                latestTask?.created_at ||
-                this.instanceData.started_at ||
-                this.instanceData.created_at,
-              completed_at: activityStatus.completed_at,
-              error_message: activityStatus.error_message,
-            };
-          });
-        }
-
-        // 如果没有steps或activities字段，返回空数组
-        console.log("工作流定义中没有steps或activities字段");
-        return [];
-      } catch (error) {
-        console.error("解析工作流定义失败:", error);
-        return [];
-      }
-    },
-    /** 根据任务历史获取活动状态 */
-    getActivityStatusFromHistory(stepTasks, step, index, totalSteps) {
-      console.log(
-        `getActivityStatusFromHistory 被调用: 步骤${index}, 任务数${stepTasks.length}`
-      );
-
-      // 如果该步骤有任务记录
-      if (stepTasks && stepTasks.length > 0) {
-        // 获取最新的任务
-        const latestTask = stepTasks[stepTasks.length - 1];
-        console.log(`  最新任务状态: ${latestTask.status}`);
-
-        // 根据任务状态确定活动状态
-        if (latestTask.status === "completed") {
-          console.log(`  返回: completed`);
-          return {
-            status: "completed",
-            completed_at: latestTask.completed_at,
-            error_message: null,
-          };
-        } else if (latestTask.status === "rejected") {
-          console.log(`  返回: failed`);
-          return {
-            status: "failed",
-            completed_at: latestTask.completed_at,
-            error_message: latestTask.comment || "任务被驳回",
-          };
-        } else if (
-          latestTask.status === "pending" ||
-          latestTask.status === "claimed"
-        ) {
-          console.log(`  返回: running`);
-          return {
-            status: "running",
-            completed_at: null,
-            error_message: null,
-          };
+        const response = await getInstance(instanceId);
+        if (response && response.code === 200 && response.data) {
+          // 设置实例基本信息
+          this.instanceData = response.data || {};
         } else {
-          console.log(`  返回: pending (未知状态: ${latestTask.status})`);
-          return {
-            status: "pending",
-            completed_at: null,
-            error_message: null,
-          };
+          this.msgError(response.msg || "获取实例详情失败");
         }
+      } catch (error) {
+        console.error("获取实例详情失败:", error);
+        this.msgError("获取实例详情失败：" + (error.message || "未知错误"));
+      } finally {
       }
+    },
 
-      // 如果没有任务记录，根据实例状态和步骤位置推断
-      console.log(`  没有任务记录，实例状态: ${this.instanceData.status}`);
-      if (this.instanceData.status === "completed") {
-        console.log(`  返回: completed (实例已完成)`);
-        return {
-          status: "completed",
-          completed_at: this.instanceData.completed_at,
-          error_message: null,
-        };
-      } else if (this.instanceData.status === "failed") {
-        // 假设失败发生在最后一个活动
-        const isFailed = index === totalSteps - 1;
-        console.log(`  返回: ${isFailed ? "failed" : "completed"} (实例失败)`);
-        return {
-          status: isFailed ? "failed" : "completed",
-          completed_at: isFailed ? this.instanceData.completed_at : null,
-          error_message: isFailed ? this.instanceData.error_message : null,
-        };
-      } else if (this.instanceData.status === "running") {
-        // 没有任务记录的步骤都是等待中
-        console.log(`  返回: pending (实例运行中，但无任务记录)`);
-        return {
-          status: "pending",
-          completed_at: null,
-          error_message: null,
-        };
-      } else {
-        console.log(`  返回: pending (默认)`);
-        return {
-          status: "pending",
-          completed_at: null,
-          error_message: null,
-        };
+    /** 加载实例任务历史 */
+    async loadInstanceDetail(instanceId) {
+      this.detailLoading = true;
+      try {
+        const response = await getInstanceDetail(instanceId);
+        if (response && response.code === 200 && response.data) {
+          // 设置任务历史
+          this.taskHistory = response.data || [];
+        } else {
+          this.msgError(response.msg || "获取实例任务失败");
+        }
+      } catch (error) {
+        console.error("获取实例任务失败:", error);
+        this.msgError("获取实例任务失败：" + (error.message || "未知错误"));
+      } finally {
+        this.detailLoading = false;
       }
     },
-    /** 获取活动状态（已废弃，保留用于兼容） */
-    getActivityStatus(activity, index, totalSteps) {
-      // 根据实例状态推断活动状态
-      if (this.instanceData.status === "completed") {
-        return "completed";
-      } else if (this.instanceData.status === "failed") {
-        // 假设失败发生在最后一个活动
-        return index === totalSteps - 1 ? "failed" : "completed";
-      } else if (this.instanceData.status === "running") {
-        // 假设正在执行第一个活动
-        return index === 0 ? "running" : "pending";
-      } else {
-        return "pending";
-      }
-    },
+
     /** 刷新详情 */
     refreshDetail() {
       if (this.currentInstanceId) {
-        this.getInstanceDetail(this.currentInstanceId);
+        this.getInstance(this.currentInstanceId);
+        this.loadInstanceDetail(this.currentInstanceId);
       }
     },
     /** 启动自动刷新 */
@@ -667,7 +386,7 @@ export default {
       this.stopAutoRefresh();
       this.refreshTimer = setInterval(() => {
         if (this.instanceData.status === "running") {
-          this.getInstanceDetail(instanceId);
+          this.refreshDetail();
         } else {
           this.stopAutoRefresh();
         }
@@ -689,16 +408,20 @@ export default {
       this.activities = [];
     },
     /** 取消工作流 */
-    handleCancel() {
+    handleCancel(row) {
       this.$confirm("确定要取消该工作流实例吗？", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
       })
-        .then(() => {
-          // TODO: 调用取消工作流API
-          this.msgSuccess("取消成功");
-          this.refreshDetail();
+        .then(async () => {
+          const response = await cancelInstance(row.instanceId);
+          if (response && response.code === 200) {
+            this.msgSuccess("实例取消成功");
+            this.getList();
+          } else {
+            this.msgError(response.msg || "实例取消失败");
+          }
         })
         .catch(() => {});
     },
@@ -778,8 +501,8 @@ export default {
 
 .workflow-header {
   padding: 24px;
-  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-  color: white;
+  background: linear-gradient(135deg, #bfc0bf 0%, #fcfdfd 100%);
+  color: rgb(8, 8, 8);
 }
 
 .workflow-header h2 {

@@ -1,17 +1,7 @@
 <template>
   <div class="app-container">
-    <el-breadcrumb class="mb20" separator="/">
-      <el-breadcrumb-item>流程管理</el-breadcrumb-item>
-      <el-breadcrumb-item>我的待办</el-breadcrumb-item>
-    </el-breadcrumb>
-
     <!-- 查询表单 -->
-    <el-form
-      ref="queryForm"
-      :model="queryParams"
-      :inline="true"
-      label-width="68px"
-    >
+    <el-form ref="queryForm" :model="queryParams" :inline="true" label-width="68px">
       <el-form-item label="任务名称" prop="taskName">
         <el-input
           v-model="queryParams.taskName"
@@ -31,62 +21,27 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button
-          type="primary"
-          icon="el-icon-search"
-          size="mini"
-          @click="handleQuery"
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery"
           >搜索</el-button
         >
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-          >重置</el-button
-        >
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
     <!-- 数据表格 -->
     <el-table v-loading="loading" :data="taskList" border>
-      <el-table-column
-        label="任务ID"
-        align="center"
-        prop="id"
-        width="280"
-        show-overflow-tooltip
-      />
-      <el-table-column
-        label="任务名称"
-        align="center"
-        prop="task_name"
-        width="150"
-      />
-      <el-table-column
-        label="流程名称"
-        align="center"
-        prop="workflow_name"
-        width="150"
-      />
-      <el-table-column
-        label="流程实例ID"
-        align="center"
-        prop="instance_id"
-        width="280"
-        show-overflow-tooltip
-      />
+      <el-table-column label="任务编号" align="center" prop="taskNo" width="150" />
+      <el-table-column label="任务名称" align="center" prop="taskName" width="150" />
+      <el-table-column label="流程名称" align="center" prop="workflowName" width="150" />
+
       <el-table-column label="优先级" align="center" prop="priority" width="80">
         <template slot-scope="scope">
           <el-tag v-if="scope.row.priority === 'high'" type="danger">高</el-tag>
-          <el-tag v-else-if="scope.row.priority === 'medium'" type="warning"
-            >中</el-tag
-          >
+          <el-tag v-else-if="scope.row.priority === 'medium'" type="warning">中</el-tag>
           <el-tag v-else type="info">低</el-tag>
         </template>
       </el-table-column>
-      <el-table-column
-        label="创建时间"
-        align="center"
-        prop="created_at"
-        width="160"
-      />
+      <el-table-column label="创建时间" align="center" prop="createdAt" width="160" />
       <el-table-column
         label="操作"
         align="center"
@@ -129,16 +84,9 @@
     />
 
     <!-- 任务详情对话框 -->
-    <el-dialog
-      :title="dialogTitle"
-      :visible.sync="viewOpen"
-      width="800px"
-      append-to-body
-    >
+    <el-dialog :title="dialogTitle" :visible.sync="viewOpen" width="800px" append-to-body>
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="任务ID">{{
-          taskDetail.id
-        }}</el-descriptions-item>
+        <el-descriptions-item label="任务ID">{{ taskDetail.id }}</el-descriptions-item>
         <el-descriptions-item label="任务名称">{{
           taskDetail.task_name
         }}</el-descriptions-item>
@@ -149,12 +97,8 @@
           taskDetail.instance_id
         }}</el-descriptions-item>
         <el-descriptions-item label="优先级">
-          <el-tag v-if="taskDetail.priority === 'high'" type="danger"
-            >高</el-tag
-          >
-          <el-tag v-else-if="taskDetail.priority === 'medium'" type="warning"
-            >中</el-tag
-          >
+          <el-tag v-if="taskDetail.priority === 'high'" type="danger">高</el-tag>
+          <el-tag v-else-if="taskDetail.priority === 'medium'" type="warning">中</el-tag>
           <el-tag v-else type="info">低</el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{
@@ -181,23 +125,38 @@
     />
 
     <!-- 转办对话框 -->
-    <el-dialog
-      title="转办任务"
-      :visible.sync="delegateOpen"
-      width="500px"
-      append-to-body
-    >
+    <el-dialog title="转办任务" :visible.sync="delegateOpen" width="500px" append-to-body>
       <el-form
         ref="delegateForm"
         :model="delegateForm"
         :rules="delegateRules"
         label-width="100px"
       >
-        <el-form-item label="转办人" prop="assignee">
-          <el-input
-            v-model="delegateForm.assignee"
-            placeholder="请输入用户ID或用户名"
+        <el-form-item label="组织" prop="orgId">
+          <treeselect
+            v-model="orgId"
+            :options="orgOptions"
+            placeholder="请选择组织"
+            style="width: 170px"
+            clearable
+            @select="handleOrgSelect"
           />
+        </el-form-item>
+        <el-form-item label="转办人" prop="assignee">
+          <el-select
+            v-model="delegateForm.targetId"
+            :options="userOptions"
+            placeholder="请选择处警人员"
+            style="width: 170px"
+            clearable
+          >
+            <el-option
+              v-for="item in userOptions"
+              :key="item.userId"
+              :label="item.userName"
+              :value="item.userId"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="转办说明" prop="comment">
           <el-input
@@ -218,12 +177,17 @@
 
 <script>
 import { listMyTodoTasks, getTask, delegateTask } from "@/api/process/task";
+import { orgTreeSelect } from "@/api/admin/sys-org";
+import { listUser } from "@/api/admin/sys-user";
 import TaskProcessDialog from "@/components/TaskProcessDialog";
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
   name: "TodoTask",
   components: {
     TaskProcessDialog,
+    Treeselect,
   },
   data() {
     return {
@@ -251,19 +215,27 @@ export default {
       delegateForm: {},
       // 当前任务ID
       currentTaskId: null,
+      orgOptions: [],
+      userOptions: [],
+      orgId: undefined,
       // 表单校验
       delegateRules: {
-        assignee: [
-          { required: true, message: "转办人不能为空", trigger: "blur" },
-        ],
-        comment: [
-          { required: true, message: "转办说明不能为空", trigger: "blur" },
-        ],
+        targetId: [{ required: true, message: "转办人不能为空", trigger: "blur" }],
+        comment: [{ required: true, message: "转办说明不能为空", trigger: "blur" }],
       },
     };
   },
+  watch: {
+    orgId: function (newVal) {
+      // 当 form.orgId 更新时，调用 getUser
+      if (newVal) {
+        this.getFormUser();
+      }
+    },
+  },
   created() {
     this.getList();
+    this.getTreeselect();
   },
   methods: {
     /** 查询任务列表 */
@@ -278,8 +250,11 @@ export default {
       listMyTodoTasks(params)
         .then((response) => {
           if (response.code === 200) {
-            this.taskList = response.data.items || [];
-            this.total = response.data.total || 0;
+            this.taskList =
+              response.data.list ||
+              response.data.items ||
+              (Array.isArray(response.data) ? response.data : []);
+            this.total = response.data.total || response.data.count || 0;
           } else {
             this.msgError(response.msg || "查询失败");
           }
@@ -300,6 +275,31 @@ export default {
       this.resetForm("queryForm");
       this.handleQuery();
     },
+    /** 查询组织下拉树结构 */
+    getTreeselect() {
+      orgTreeSelect().then((response) => {
+        this.orgOptions = response.data; // 返回数组类型；[id:    label(组织名称):  children []]），
+      });
+    },
+    handleOrgSelect(node) {
+      listUser({ orgId: "/" + node.id + "/" }).then((response) => {
+        this.userOptions = response.data.list;
+      });
+    },
+    getFormUser() {
+      return new Promise((resolve, reject) => {
+        listUser({ orgId: "/" + this.form.orgId + "/" })
+          .then((response) => {
+            this.userOptions = response.data.list;
+            resolve("true");
+          })
+          .catch((error) => {
+            console.error("获取用户失败:", error);
+            this.userOptions = [];
+            reject(error);
+          });
+      });
+    },
     /** 查看按钮操作 */
     handleView(row) {
       const id = row.id;
@@ -319,16 +319,19 @@ export default {
     },
     /** 处理按钮操作 */
     handleProcess(row) {
-      this.currentTaskId = row.id;
+      this.currentTaskId = row.taskId;
       this.processOpen = true;
     },
     /** 转办按钮操作 */
     handleDelegate(row) {
-      this.currentTaskId = row.id;
+      this.currentTaskId = row.taskId;
+      const currentUserId = this.$store?.state?.user?.userid || undefined;
       this.delegateForm = {
-        assignee: "",
+        userId: currentUserId,
+        targetId: undefined,
         comment: "",
       };
+      this.orgId = undefined;
       this.delegateOpen = true;
     },
     /** 任务处理成功回调 */
@@ -389,6 +392,3 @@ pre {
   overflow: auto;
 }
 </style>
-
-
-

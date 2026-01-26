@@ -112,22 +112,14 @@
                   @click="handleQuery"
                   >搜索</el-button
                 >
-                <el-button
-                  icon="el-icon-refresh"
-                  size="mini"
-                  @click="resetQuery"
+                <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
                   >重置</el-button
                 >
               </el-form-item>
             </el-form>
 
             <div
-              style="
-                display: flex;
-                align-items: center;
-                margin-bottom: 8px;
-                gap: 10px;
-              "
+              style="display: flex; align-items: center; margin-bottom: 8px; gap: 10px"
             >
               <el-button
                 v-permisaction="['admin:sysUser:add']"
@@ -391,19 +383,12 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="邮箱" prop="email">
-                <el-input
-                  v-model="form.email"
-                  placeholder="请输入邮箱"
-                  maxlength="50"
-                />
+                <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="50" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="用户名称" prop="userName">
-                <el-input
-                  v-model="form.userName"
-                  placeholder="请输入用户名称"
-                />
+                <el-input v-model="form.userName" placeholder="请输入用户名称" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -519,13 +504,8 @@
             <em>点击上传</em>
           </div>
           <div slot="tip" class="el-upload__tip">
-            <el-checkbox
-              v-model="upload.updateSupport"
-            />是否更新已经存在的用户数据
-            <el-link
-              type="info"
-              style="font-size: 12px"
-              @click="importTemplate0"
+            <el-checkbox v-model="upload.updateSupport" />是否更新已经存在的用户数据
+            <el-link type="info" style="font-size: 12px" @click="importTemplate0"
               >下载模板</el-link
             >
           </div>
@@ -657,18 +637,10 @@ export default {
       visibleColumns: [],
       // 表单校验
       rules: {
-        userName: [
-          { required: true, message: "用户名称不能为空", trigger: "blur" },
-        ],
-        policeNo: [
-          { required: true, message: "警号不能为空", trigger: "blur" },
-        ],
-        orgId: [
-          { required: true, message: "归属单位不能为空", trigger: "blur" },
-        ],
-        password: [
-          { required: true, message: "用户密码不能为空", trigger: "blur" },
-        ],
+        userName: [{ required: true, message: "用户名称不能为空", trigger: "blur" }],
+        policeNo: [{ required: true, message: "警号不能为空", trigger: "blur" }],
+        orgId: [{ required: true, message: "归属单位不能为空", trigger: "blur" }],
+        password: [{ required: true, message: "用户密码不能为空", trigger: "blur" }],
         email: [
           { required: true, message: "邮箱地址不能为空", trigger: "blur" },
           {
@@ -827,15 +799,11 @@ export default {
     async handleStatusChange(row) {
       try {
         const text = this.statusFormat(row);
-        await this.$confirm(
-          '确认要"' + text + '""' + row.userName + '"用户吗?',
-          "警告",
-          {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "warning",
-          }
-        );
+        await this.$confirm('确认要"' + text + '""' + row.userName + '"用户吗?', "警告", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        });
         const response = await changeUserStatus(row);
         if (response.code === 200) {
           this.msgSuccess(text + "成功");
@@ -915,9 +883,7 @@ export default {
           delete this.selectedUserMap[userId];
         }
       });
-      this.selectedUserRecords = Object.values(this.selectedUserMap).filter(
-        Boolean
-      );
+      this.selectedUserRecords = Object.values(this.selectedUserMap).filter(Boolean);
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -936,9 +902,7 @@ export default {
       if (row && row.userId !== undefined) {
         this.form = { ...row };
       } else {
-        this.form = this.selectedUserRecords[0]
-          ? { ...this.selectedUserRecords[0] }
-          : {};
+        this.form = this.selectedUserRecords[0] ? { ...this.selectedUserRecords[0] } : {};
       }
       this.title = "修改用户";
       this.open = true;
@@ -1137,8 +1101,7 @@ export default {
     async handleExport() {
       try {
         const hasSelection =
-          Array.isArray(this.selectedUserRecords) &&
-          this.selectedUserRecords.length > 0;
+          Array.isArray(this.selectedUserRecords) && this.selectedUserRecords.length > 0;
 
         const confirmText = hasSelection
           ? `是否确认导出已勾选的 ${this.selectedUserRecords.length} 条用户数据？`
@@ -1150,9 +1113,7 @@ export default {
           type: "info",
         });
 
-        const columnOptions = Array.isArray(this.columnOptions)
-          ? this.columnOptions
-          : [];
+        const columnOptions = Array.isArray(this.columnOptions) ? this.columnOptions : [];
         const visibleColumns = Array.isArray(this.visibleColumns)
           ? this.visibleColumns
           : [];

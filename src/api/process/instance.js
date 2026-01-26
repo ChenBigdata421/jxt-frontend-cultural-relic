@@ -7,7 +7,7 @@ import request from '@/utils/request'
  */
 export function startInstance(data) {
   return request({
-    url: '/api/instances',
+    url: '/api/v1/instances',
     method: 'post',
     data: data
   })
@@ -20,11 +20,24 @@ export function startInstance(data) {
  */
 export function getInstance(id) {
   return request({
-    url: '/api/instances/' + id,
+    url: '/api/v1/instances/' + id,
     method: 'get'
   })
 }
 
+export function cancelInstance(id) {
+  return request({
+    url: '/api/v1/instances/' + id + '/cancel',
+    method: 'get'
+  })
+}
+
+export function getInstanceDetail(id) {
+  return request({
+    url: '/api/v1/instances/' + id + '/detail',
+    method: 'get'
+  })
+}
 /**
  * 查询指定工作流的实例列表
  * @param {String} workflowId - 工作流ID
@@ -33,7 +46,7 @@ export function getInstance(id) {
  */
 export function listInstances(workflowId, query) {
   return request({
-    url: '/api/instances/workflow/' + workflowId,
+    url: '/api/v1/instances/workflow/' + workflowId,
     method: 'get',
     params: query
   })
@@ -46,7 +59,7 @@ export function listInstances(workflowId, query) {
  */
 export function listAllInstances(query) {
   return request({
-    url: '/api/instances',
+    url: '/api/v1/instances',
     method: 'get',
     params: query
   })
@@ -60,7 +73,7 @@ export function listAllInstances(query) {
  */
 export function getInstanceTaskHistory(instanceId, query) {
   return request({
-    url: '/api/tasks/instance/' + instanceId + '/history',
+    url: '/api/v1/tasks/instance/' + instanceId + '/history',
     method: 'get',
     params: query
   })
@@ -74,9 +87,16 @@ export function getInstanceTaskHistory(instanceId, query) {
  */
 export function getInstanceTasks(instanceId, query) {
   return request({
-    url: '/api/tasks/instance/' + instanceId,
+    url: '/api/v1/tasks/instance/' + instanceId,
     method: 'get',
     params: query
+  })
+}
+
+export function getRecentTaskByInstance(instanceId) {
+  return request({
+    url: '/api/v1/tasks/instance/' + instanceId + '/recent',
+    method: 'get',
   })
 }
 
@@ -87,7 +107,7 @@ export function getInstanceTasks(instanceId, query) {
  */
 export function deleteInstance(id) {
   return request({
-    url: '/api/instances/' + id,
+    url: '/api/v1/instances/' + id,
     method: 'delete'
   })
 }

@@ -7,9 +7,16 @@ import request from '@/utils/request'
  */
 export function listWorkflows(query) {
   return request({
-    url: '/api/workflows',
+    url: '/api/v1/workflows',
     method: 'get',
     params: query
+  })
+}
+
+export function listAllWorkflows() {
+  return request({
+    url: '/api/v1/workflows/all',
+    method: 'get'
   })
 }
 
@@ -20,11 +27,17 @@ export function listWorkflows(query) {
  */
 export function getWorkflow(id) {
   return request({
-    url: '/api/workflows/' + id,
+    url: '/api/v1/workflows/' + id,
     method: 'get'
   })
 }
 
+export function getWorkflowByName(name) {
+  return request({
+    url: '/api/v1/workflows/name/' + name,
+    method: 'get'
+  })
+}
 /**
  * 新增工作流
  * @param {Object} data - 工作流数据 { name, description, definition }
@@ -32,7 +45,7 @@ export function getWorkflow(id) {
  */
 export function createWorkflow(data) {
   return request({
-    url: '/api/workflows',
+    url: '/api/v1/workflows',
     method: 'post',
     data: data
   })
@@ -46,7 +59,7 @@ export function createWorkflow(data) {
  */
 export function updateWorkflow(id, data) {
   return request({
-    url: '/api/workflows/' + id,
+    url: '/api/v1/workflows/' + id,
     method: 'put',
     data: data
   })
@@ -59,7 +72,7 @@ export function updateWorkflow(id, data) {
  */
 export function deleteWorkflow(id) {
   return request({
-    url: '/api/workflows/' + id,
+    url: '/api/v1/workflows/' + id,
     method: 'delete'
   })
 }
@@ -71,7 +84,7 @@ export function deleteWorkflow(id) {
  */
 export function activateWorkflow(id) {
   return request({
-    url: '/api/workflows/' + id + '/activate',
+    url: '/api/v1/workflows/' + id + '/activate',
     method: 'post'
   })
 }
@@ -83,7 +96,7 @@ export function activateWorkflow(id) {
  */
 export function freezeWorkflow(id) {
   return request({
-    url: '/api/workflows/' + id + '/freeze',
+    url: '/api/v1/workflows/' + id + '/freeze',
     method: 'post'
   })
 }
@@ -95,7 +108,7 @@ export function freezeWorkflow(id) {
  */
 export function checkCanFreeze(id) {
   return request({
-    url: '/api/workflows/' + id + '/can-freeze',
+    url: '/api/v1/workflows/' + id + '/can-freeze',
     method: 'get'
   })
 }

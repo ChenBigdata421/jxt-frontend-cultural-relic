@@ -7,7 +7,7 @@ import request from '@/utils/request'
  */
 export function listMyTodoTasks(query) {
   return request({
-    url: '/api/tasks/todo',
+    url: '/api/v1/tasks/todo',
     method: 'get',
     params: query
   })
@@ -20,7 +20,7 @@ export function listMyTodoTasks(query) {
  */
 export function listMyDoneTasks(query) {
   return request({
-    url: '/api/tasks/done',
+    url: '/api/v1/tasks/done',
     method: 'get',
     params: query
   })
@@ -33,7 +33,7 @@ export function listMyDoneTasks(query) {
  */
 export function listClaimableTasks(query) {
   return request({
-    url: '/api/tasks/claimable',
+    url: '/api/v1/tasks/claimable',
     method: 'get',
     params: query
   })
@@ -46,7 +46,7 @@ export function listClaimableTasks(query) {
  */
 export function listAllTasks(query) {
   return request({
-    url: '/api/tasks',
+    url: '/api/v1/tasks',
     method: 'get',
     params: query
   })
@@ -59,7 +59,7 @@ export function listAllTasks(query) {
  */
 export function getTask(id) {
   return request({
-    url: '/api/tasks/' + id,
+    url: '/api/v1/tasks/' + id,
     method: 'get'
   })
 }
@@ -71,7 +71,7 @@ export function getTask(id) {
  */
 export function claimTask(id) {
   return request({
-    url: '/api/tasks/' + id + '/claim',
+    url: '/api/v1/tasks/' + id + '/claim',
     method: 'post'
   })
 }
@@ -84,7 +84,7 @@ export function claimTask(id) {
  */
 export function completeTask(id, data) {
   return request({
-    url: '/api/tasks/' + id + '/complete',
+    url: '/api/v1/tasks/' + id + '/complete',
     method: 'post',
     data: data
   })
@@ -98,7 +98,7 @@ export function completeTask(id, data) {
  */
 export function approveTask(id, data) {
   return request({
-    url: '/api/tasks/' + id + '/approve',
+    url: '/api/v1/tasks/' + id + '/approve',
     method: 'post',
     data: data
   })
@@ -112,7 +112,7 @@ export function approveTask(id, data) {
  */
 export function rejectTask(id, data) {
   return request({
-    url: '/api/tasks/' + id + '/reject',
+    url: '/api/v1/tasks/' + id + '/reject',
     method: 'post',
     data: data
   })
@@ -126,7 +126,7 @@ export function rejectTask(id, data) {
  */
 export function delegateTask(id, data) {
   return request({
-    url: '/api/tasks/' + id + '/delegate',
+    url: '/api/v1/tasks/' + id + '/delegate',
     method: 'post',
     data: data
   })
@@ -140,7 +140,7 @@ export function delegateTask(id, data) {
  */
 export function returnTask(id, data) {
   return request({
-    url: '/api/tasks/' + id + '/return',
+    url: '/api/v1/tasks/' + id + '/return',
     method: 'post',
     data: data
   })
@@ -153,7 +153,7 @@ export function returnTask(id, data) {
  */
 export function getTaskHistory(instanceId) {
   return request({
-    url: '/api/tasks/' + instanceId + '/history',
+    url: '/api/v1/tasks/' + instanceId + '/history',
     method: 'get'
   })
 }
@@ -165,7 +165,7 @@ export function getTaskHistory(instanceId) {
  */
 export function getTaskForm(id) {
   return request({
-    url: '/api/tasks/' + id + '/form',
+    url: '/api/v1/tasks/' + id + '/form',
     method: 'get'
   })
 }
@@ -178,7 +178,7 @@ export function getTaskForm(id) {
  */
 export function createTask(data) {
   return request({
-    url: '/api/tasks',
+    url: '/api/v1/tasks',
     method: 'post',
     data: data
   })
@@ -191,7 +191,7 @@ export function createTask(data) {
  */
 export function deleteTask(id) {
   return request({
-    url: '/api/tasks/' + id,
+    url: '/api/v1/tasks/' + id,
     method: 'delete'
   })
 }

@@ -16,6 +16,14 @@ export function getOrg(orgId) {
   })
 }
 
+// 查询组织负责人
+export function getOrgLeader(orgId) {
+  return request({
+    url: '/api/v1/org/' + orgId + '/leader',
+    method: 'get'
+  })
+}
+
 // 查询组织下拉树结构
 export function orgTreeSelect() {
   return request({
