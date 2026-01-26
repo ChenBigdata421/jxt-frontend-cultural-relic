@@ -1,123 +1,140 @@
-import request from '@/utils/request'
+import request from "@/utils/request";
 
 export function listTenants(query) {
   return request({
-    url: '/api/v1/tenants',
-    method: 'get',
-    params: query
-  })
+    url: "/api/v1/tenants",
+    method: "get",
+    params: query,
+  });
 }
 
 export function getTenant(id) {
   return request({
     url: `/api/v1/tenants/${id}`,
-    method: 'get'
-  })
+    method: "get",
+  });
 }
 
 export function createTenant(data) {
   return request({
-    url: '/api/v1/tenants',
-    method: 'post',
-    data
-  })
+    url: "/api/v1/tenants",
+    method: "post",
+    data,
+  });
 }
 
 export function updateTenant(id, data) {
   return request({
     url: `/api/v1/tenants/${id}`,
-    method: 'put',
-    data
-  })
+    method: "put",
+    data,
+  });
 }
 
 export function deleteTenants(data) {
   return request({
-    url: '/api/v1/tenants',
-    method: 'delete',
-    data
-  })
+    url: "/api/v1/tenants",
+    method: "delete",
+    data,
+  });
 }
 
 export function updateTenantStatus(id, data) {
   return request({
     url: `/api/v1/tenants/${id}/status`,
-    method: 'put',
-    data
-  })
+    method: "put",
+    data,
+  });
 }
 
 export function getTenantByHost(host) {
   return request({
-    url: '/api/v1/tenants/host',
-    method: 'get',
-    params: { host }
-  })
+    url: "/api/v1/tenants/host",
+    method: "get",
+    params: { host },
+  });
 }
 
-export function getTenantHosts(id) {
+export function getTenantDomain(id) {
   return request({
-    url: `/api/v1/tenants/${id}/hosts`,
-    method: 'get'
-  })
+    url: `/api/v1/tenants/${id}/domain`,
+    method: "get",
+  });
 }
 
-export function updateTenantHosts(id, data) {
+export function updateTenantDomain(id, data) {
   return request({
-    url: `/api/v1/tenants/${id}/hosts`,
-    method: 'put',
-    data
-  })
+    url: `/api/v1/tenants/${id}/domain`,
+    method: "put",
+    data,
+  });
 }
 
 export function getTenantDatabase(id) {
   return request({
     url: `/api/v1/tenants/${id}/database`,
-    method: 'get'
-  })
+    method: "get",
+  });
 }
 
 export function updateTenantDatabase(id, data) {
   return request({
     url: `/api/v1/tenants/${id}/database`,
-    method: 'put',
-    data
-  })
+    method: "put",
+    data,
+  });
 }
 
 export function getTenantFtp(id) {
   return request({
     url: `/api/v1/tenants/${id}/ftp`,
-    method: 'get'
-  })
+    method: "get",
+  });
 }
 
 export function updateTenantFtp(id, data) {
   return request({
     url: `/api/v1/tenants/${id}/ftp`,
-    method: 'put',
-    data
-  })
+    method: "put",
+    data,
+  });
 }
 
 export function getTenantStorage(id) {
   return request({
     url: `/api/v1/tenants/${id}/storage`,
-    method: 'get'
-  })
+    method: "get",
+  });
 }
 
 export function updateTenantStorage(id, data) {
   return request({
     url: `/api/v1/tenants/${id}/storage`,
-    method: 'put',
-    data
-  })
+    method: "put",
+    data,
+  });
 }
 
 export function getTenantPrecheck(id) {
   return request({
     url: `/api/v1/tenants/${id}/precheck`,
-    method: 'get'
-  })
+    method: "get",
+  });
+}
+
+// 新增：更新租户编码
+export function updateTenantCode(id, code) {
+  return request({
+    url: `/api/v1/tenants/${id}/code`,
+    method: "put",
+    data: { code },
+  });
+}
+
+// 新增：通过编码获取租户
+export function getTenantByCode(code) {
+  return request({
+    url: `/api/v1/tenants/by-code/${code}`,
+    method: "get",
+  });
 }
