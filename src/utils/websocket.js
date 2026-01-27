@@ -31,7 +31,7 @@ class WebSocketService {
     // 构建WebSocket URL
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
-    const wsUrl = `${protocol}//${host}/ws?user_id=${userID}`
+    const wsUrl = `${protocol}//${host}/api/v1/ws?user_id=${userID}`
 
     console.log('[WebSocket] Connecting to:', wsUrl)
 

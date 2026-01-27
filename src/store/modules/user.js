@@ -2,6 +2,7 @@ import { login, logout, getInfo, refreshtoken } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
 import storage from '@/utils/storage'
+import websocketService from '@/utils/websocket'
 
 const state = {
   token: getToken(),
@@ -71,17 +72,26 @@ const actions = {
           resolve()
         }
 
-        const { roles, name, userId, orgId, introduction, permissions } = response.data
+        const { roles, userName, userId, orgId, introduction, permissions } = response.data
+        const userID = userId
+        const orgID = orgId
+
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {
           reject('getInfo: roles must be a non-null array!')
         }
         commit('SET_PERMISSIONS', permissions)
         commit('SET_ROLES', roles)
-        commit('SET_NAME', name)
-        commit('SET_USERID', userId)
-        commit('SET_ORGID', orgId)
+        commit('SET_NAME', userName)
+        commit('SET_USERID', userID)
+        commit('SET_ORGID', orgID)
         commit('SET_INTRODUCTION', introduction)
+
+        // 初始化 WebSocket 连接
+        if (userID) {
+          websocketService.connect(userID)
+        }
+
         resolve(response) // response作为执行getInfo（是promise实例）之后待处理的结果。从router.beforeEach函数实现来看，这里应该是resolve(response.data)，而不是resolve(response)
       }).catch(error => {
         reject(error)
@@ -97,6 +107,10 @@ const actions = {
         commit('SET_PERMISSIONS', [])
         removeToken()
         storage.clear()
+
+        // 断开 WebSocket 连接
+        websocketService.disconnect()
+
         resolve()
       }).catch(error => {
         reject(error)

@@ -2,18 +2,28 @@
   <div class="task-notification">
     <!-- 通知图标 -->
     <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="notification-badge">
-      <el-button
-        icon="el-icon-bell"
-        circle
-        @click="showNotifications"
-      />
+      <el-button icon="el-icon-bell" circle @click="showNotifications" />
     </el-badge>
+
+    <!-- 用户信息显示 -->
+    <el-tooltip
+      class="user-info"
+      effect="dark"
+      :content="`组织：${orgName || '未知组织'}`"
+      placement="bottom"
+    >
+      <div>
+        <span class="info-label">登录警员：</span>
+        <span class="info-value">{{ userName }}</span>
+      </div>
+    </el-tooltip>
 
     <!-- 通知列表对话框 -->
     <el-dialog
       title="任务通知"
       :visible.sync="dialogVisible"
       width="600px"
+      :modal="false"
       :before-close="handleClose"
     >
       <div class="notification-list">
@@ -27,7 +37,10 @@
           @click="handleNotificationClick(notification)"
         >
           <div class="notification-icon">
-            <i :class="getNotificationIcon(notification.type)" :style="{ color: getNotificationColor(notification.type) }" />
+            <i
+              :class="getNotificationIcon(notification.type)"
+              :style="{ color: getNotificationColor(notification.type) }"
+            />
           </div>
           <div class="notification-content">
             <div class="notification-title">{{ getNotificationTitle(notification) }}</div>
@@ -57,180 +70,199 @@
 </template>
 
 <script>
-import websocketService from '@/utils/websocket'
+import websocketService from "@/utils/websocket";
+import { mapGetters, mapState } from "vuex";
+import { getOrg } from "@/api/admin/sys-org";
 
 export default {
-  name: 'TaskNotification',
+  name: "TaskNotification",
   data() {
     return {
       dialogVisible: false,
       notifications: [],
-      unsubscribe: null
-    }
+      unsubscribe: null,
+      orgName: "",
+    };
   },
   computed: {
+    ...mapGetters(["name"]),
+    ...mapState("user", ["orgid"]),
     unreadCount() {
-      return this.notifications.filter(n => !n.read).length
-    }
+      return this.notifications.filter((n) => !n.read).length;
+    },
+    userName() {
+      return this.name || "未知用户";
+    },
   },
   mounted() {
     // 从localStorage加载通知
-    this.loadNotifications()
+    this.loadNotifications();
 
     // 订阅WebSocket消息
-    this.unsubscribe = websocketService.onMessage(this.handleWebSocketMessage)
+    this.unsubscribe = websocketService.onMessage(this.handleWebSocketMessage);
+
+    // 加载组织信息
+    this.loadOrgInfo();
+
+    // 调试：打印用户信息
+    console.log("[TaskNotification] User info:", {
+      name: this.name,
+      orgid: this.orgid,
+      userName: this.userName,
+      storeState: this.$store.state.user,
+    });
   },
   beforeDestroy() {
     // 取消订阅
     if (this.unsubscribe) {
-      this.unsubscribe()
+      this.unsubscribe();
     }
   },
   methods: {
     handleWebSocketMessage(message) {
-      console.log('[TaskNotification] Received message:', message)
+      console.log("[TaskNotification] Received message:", message);
 
       // 处理不同类型的消息
       switch (message.type) {
-        case 'task_created':
+        case "task_created":
           this.addNotification({
-            type: 'task_created',
+            type: "task_created",
             data: message.data,
             timestamp: message.timestamp,
-            read: false
-          })
-          this.showToast('新任务', `您有新的待办任务：${message.data.task_name}`)
-          break
+            read: false,
+          });
+          this.showToast("新任务", `您有新的待办任务：${message.data.taskName}`);
+          break;
 
-        case 'task_assigned':
+        case "task_assigned":
           this.addNotification({
-            type: 'task_assigned',
+            type: "task_assigned",
             data: message.data,
             timestamp: message.timestamp,
-            read: false
-          })
-          this.showToast('任务分配', `任务已分配给您：${message.data.task_name}`)
-          break
+            read: false,
+          });
+          this.showToast("任务分配", `任务已分配给您：${message.data.taskName}`);
+          break;
 
-        case 'task_completed':
+        case "task_completed":
           this.addNotification({
-            type: 'task_completed',
+            type: "task_completed",
             data: message.data,
             timestamp: message.timestamp,
-            read: false
-          })
-          break
+            read: false,
+          });
+          break;
 
-        case 'workflow_completed':
+        case "workflow_completed":
           this.addNotification({
-            type: 'workflow_completed',
+            type: "workflow_completed",
             data: message.data,
             timestamp: message.timestamp,
-            read: false
-          })
-          this.showToast('流程完成', '工作流已完成')
-          break
+            read: false,
+          });
+          this.showToast("流程完成", "工作流已完成");
+          break;
 
-        case 'connected':
-          console.log('[TaskNotification] WebSocket connected')
-          break
+        case "connected":
+          console.log("[TaskNotification] WebSocket connected");
+          break;
 
-        case 'disconnected':
-          console.log('[TaskNotification] WebSocket disconnected')
-          break
+        case "disconnected":
+          console.log("[TaskNotification] WebSocket disconnected");
+          break;
       }
     },
 
     addNotification(notification) {
-      notification.id = Date.now() + Math.random()
-      this.notifications.unshift(notification)
+      notification.id = Date.now() + Math.random();
+      this.notifications.unshift(notification);
 
       // 限制通知数量
       if (this.notifications.length > 50) {
-        this.notifications = this.notifications.slice(0, 50)
+        this.notifications = this.notifications.slice(0, 50);
       }
 
-      this.saveNotifications()
+      this.saveNotifications();
     },
 
     showNotifications() {
-      this.dialogVisible = true
+      this.dialogVisible = true;
     },
 
     handleClose() {
-      this.dialogVisible = false
+      this.dialogVisible = false;
     },
 
     handleNotificationClick(notification) {
       // 标记为已读
-      this.markAsRead(notification)
+      this.markAsRead(notification);
 
       // 根据通知类型跳转
-      if (notification.type === 'task_created' || notification.type === 'task_assigned') {
-        this.$router.push('/processmanage/tasktodo')
+      if (notification.type === "task_created" || notification.type === "task_assigned") {
+        this.$router.push("/processmanage/tasktodo");
       }
     },
 
     markAsRead(notification) {
-      notification.read = true
-      this.saveNotifications()
+      notification.read = true;
+      this.saveNotifications();
     },
 
     markAllAsRead() {
-      this.notifications.forEach(n => {
-        n.read = true
-      })
-      this.saveNotifications()
+      this.notifications.forEach((n) => {
+        n.read = true;
+      });
+      this.saveNotifications();
     },
 
     clearAll() {
-      this.notifications = []
-      this.saveNotifications()
+      this.notifications = [];
+      this.saveNotifications();
     },
 
     getNotificationIcon(type) {
       const icons = {
-        task_created: 'el-icon-document-add',
-        task_assigned: 'el-icon-user',
-        task_completed: 'el-icon-circle-check',
-        workflow_completed: 'el-icon-success'
-      }
-      return icons[type] || 'el-icon-bell'
+        task_created: "el-icon-document-add",
+        task_assigned: "el-icon-user",
+        task_completed: "el-icon-circle-check",
+        workflow_completed: "el-icon-success",
+      };
+      return icons[type] || "el-icon-bell";
     },
 
     getNotificationColor(type) {
       const colors = {
-        task_created: '#409EFF',
-        task_assigned: '#E6A23C',
-        task_completed: '#67C23A',
-        workflow_completed: '#67C23A'
-      }
-      return colors[type] || '#909399'
+        task_created: "#409EFF",
+        task_assigned: "#E6A23C",
+        task_completed: "#67C23A",
+        workflow_completed: "#67C23A",
+      };
+      return colors[type] || "#909399";
     },
 
     getNotificationTitle(notification) {
       const titles = {
-        task_created: '新任务',
-        task_assigned: '任务分配',
-        task_completed: '任务完成',
-        workflow_completed: '流程完成'
-      }
-      return titles[notification.type] || '通知'
+        task_created: "新任务",
+        task_assigned: "任务分配",
+        task_completed: "任务完成",
+        workflow_completed: "流程完成",
+      };
+      return titles[notification.type] || "通知";
     },
 
     getNotificationDesc(notification) {
-      const { type, data } = notification
+      const { type, data } = notification;
       switch (type) {
-        case 'task_created':
-          return `您有新的待办任务：${data.task_name}`
-        case 'task_assigned':
-          return `任务已分配给您：${data.task_name}`
-        case 'task_completed':
-          return `任务已完成：${data.task_name}`
-        case 'workflow_completed':
-          return '工作流已完成'
+        case "task_created":
+          return `您有新的待办任务：${data.taskName}`;
+        case "task_assigned":
+          return `任务已分配给您：${data.taskName}`;
+        case "task_completed":
+          return `任务已完成：${data.taskName}`;
+        case "workflow_completed":
+          return "工作流已完成";
         default:
-          return '您有新的通知'
+          return "您有新的通知";
       }
     },
 
@@ -238,32 +270,47 @@ export default {
       this.$notify({
         title: title,
         message: message,
-        type: 'info',
+        type: "info",
         duration: 3000,
-        position: 'top-right'
-      })
+        position: "top-right",
+      });
     },
 
     loadNotifications() {
       try {
-        const saved = localStorage.getItem('task_notifications')
+        const saved = localStorage.getItem("task_notifications");
         if (saved) {
-          this.notifications = JSON.parse(saved)
+          this.notifications = JSON.parse(saved);
         }
       } catch (error) {
-        console.error('[TaskNotification] Failed to load notifications:', error)
+        console.error("[TaskNotification] Failed to load notifications:", error);
       }
     },
 
     saveNotifications() {
       try {
-        localStorage.setItem('task_notifications', JSON.stringify(this.notifications))
+        localStorage.setItem("task_notifications", JSON.stringify(this.notifications));
       } catch (error) {
-        console.error('[TaskNotification] Failed to save notifications:', error)
+        console.error("[TaskNotification] Failed to save notifications:", error);
       }
-    }
-  }
-}
+    },
+
+    loadOrgInfo() {
+      if (this.orgid) {
+        getOrg(this.orgid)
+          .then((response) => {
+            if (response && response.code === 200 && response.data) {
+              this.orgName = response.data.orgFullName || "未知组织";
+            }
+          })
+          .catch((error) => {
+            console.error("[TaskNotification] Failed to load org info:", error);
+            this.orgName = "未知组织";
+          });
+      }
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -275,6 +322,30 @@ export default {
   cursor: pointer;
 }
 
+.user-info {
+  display: inline-block;
+  margin-left: 15px;
+  font-size: 13px;
+  color: #606266;
+  line-height: 40px;
+  vertical-align: middle;
+}
+
+.info-label {
+  font-weight: 500;
+  color: #303133;
+}
+
+.info-value {
+  color: #606266;
+  margin-right: 10px;
+}
+
+.info-separator {
+  color: #dcdfe6;
+  margin: 0 8px;
+}
+
 .notification-list {
   max-height: 500px;
   overflow-y: auto;
@@ -284,17 +355,17 @@ export default {
   display: flex;
   align-items: flex-start;
   padding: 15px;
-  border-bottom: 1px solid #EBEEF5;
+  border-bottom: 1px solid #ebeef5;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
 .notification-item:hover {
-  background-color: #F5F7FA;
+  background-color: #f5f7fa;
 }
 
 .notification-item.unread {
-  background-color: #ECF5FF;
+  background-color: #ecf5ff;
 }
 
 .notification-icon {
@@ -334,4 +405,3 @@ export default {
   margin-left: 10px;
 }
 </style>
-

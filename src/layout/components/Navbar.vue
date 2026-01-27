@@ -11,6 +11,8 @@
 
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
 
+        <task-notification id="task-notification" class="right-menu-item" />
+
       </template>
 
       <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="hover">
@@ -38,6 +40,7 @@ import TopNav from '@/components/TopNav'
 import Hamburger from '@/components/Hamburger'
 import Screenfull from '@/components/Screenfull'
 import Search from '@/components/HeaderSearch'
+import TaskNotification from '@/components/TaskNotification'
 
 export default {
   components: {
@@ -45,7 +48,8 @@ export default {
     TopNav,
     Hamburger,
     Screenfull,
-    Search
+    Search,
+    TaskNotification
   },
   computed: {
     ...mapGetters([
