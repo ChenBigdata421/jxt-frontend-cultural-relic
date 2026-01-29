@@ -113,6 +113,45 @@
           </div>
         </el-dialog>
 
+        <!-- 下载申请对话框 -->
+        <el-dialog
+          title="下载申请"
+          :visible.sync="downloadApplyDialogVisible"
+          width="500px"
+          :close-on-click-modal="false"
+        >
+          <el-alert type="info" :closable="false" show-icon style="margin-bottom: 20px">
+            <template slot="title"> 下载媒体文件需要审批，请填写申请原因 </template>
+          </el-alert>
+
+          <el-form ref="downloadApplyForm" :model="downloadApplyForm" label-width="100px">
+            <el-form-item label="媒体名称">
+              <span>{{
+                currentDownloadMedia ? currentDownloadMedia.mediaName : ""
+              }}</span>
+            </el-form-item>
+            <el-form-item
+              label="申请原因"
+              prop="reason"
+              :rules="[{ required: true, message: '请输入申请原因', trigger: 'blur' }]"
+            >
+              <el-input
+                type="textarea"
+                v-model="downloadApplyForm.reason"
+                placeholder="请输入下载原因，如：案件调查需要"
+                :rows="3"
+                maxlength="200"
+                show-word-limit
+              />
+            </el-form-item>
+          </el-form>
+
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="downloadApplyDialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="submitDownloadApply">提交申请</el-button>
+          </div>
+        </el-dialog>
+
         <!-- 标注不是执法视频确认对话框 -->
         <el-dialog
           title="标注不是执法视频"
@@ -461,6 +500,7 @@ import {
   batchUpdateMediaExpiryTime,
 } from "@/api/evidence/evidence_manage_command_api";
 import { getMediaPlayURL, listMedia } from "@/api/evidence/evidence_manage_query_api";
+import { getDownloadApprovalStatus, recordDownload, submitDownloadApplyRecord } from "@/api/evidence/download_approval_api";
 import { getEnforceTypeTree } from "@/api/admin/enforcetype";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
@@ -519,6 +559,13 @@ export default {
       downloadForm: {
         fileType: "",
       },
+      // 下载审批相关
+      downloadApplyDialogVisible: false,
+      downloadApplyForm: {
+        reason: "",
+      },
+      currentDownloadMedia: null,
+      currentDownloadApprovalId: null,
       // 是否显示标注不是执法视频对话框
       noMarkDialogVisible: false,
       showDownload: false,
@@ -721,8 +768,171 @@ export default {
       // 保存列头逻辑
     },
     onSubmitDownload() {
-      // 提交下载逻辑
+      // 提交下载逻辑（审批通过后执行实际下载）
+      if (!this.downloadForm.fileType) {
+        this.$message.warning("请选择文件类型");
+        return;
+      }
+
+      const media = this.currentDownloadMedia;
+      if (!media || !media.filePath) {
+        this.$message.error("无法获取文件路径");
+        return;
+      }
+
+      // 构建下载URL
+      // 后端接口: GET /api/v1/files/{filepath}
+      // filePath 格式: YYYY/MM/DD/filename
+      // 通过 Nginx 代理转发到文件存储服务
+      const downloadUrl = `/api/v1/files/${media.filePath}`;
+
+      // 获取文件名（用于下载时的文件名）
+      const fileName = media.mediaName || media.filePath.split("/").pop();
+
+      // 创建隐藏的 a 标签触发下载
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = fileName;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       this.downloadDialogVisible = false;
+      this.$message.success("下载已开始");
+
+      // 记录下载操作（可选，用于审计）
+      if (this.currentDownloadApprovalId) {
+        recordDownload(media.mediaId, {
+          approvalId: this.currentDownloadApprovalId,
+          fileType: this.downloadForm.fileType,
+        }).catch((err) => {
+          console.error("记录下载操作失败:", err);
+        });
+      }
+    },
+
+    /** 带审批的下载处理 */
+    async handleDownloadWithApproval(row) {
+      if (!row || !row.mediaId) {
+        this.msgWarning("无法获取媒体信息");
+        return;
+      }
+
+      try {
+        // 1. 查询审批状态
+        const response = await getDownloadApprovalStatus(row.mediaId);
+
+        if (response.code === 200 && response.data) {
+          const { canDownload, status, approvalId, rejectReason } = response.data;
+
+          // 2. 根据状态处理
+          if (canDownload) {
+            // 已审批通过，直接弹出下载类型选择
+            this.currentDownloadMedia = row;
+            this.currentDownloadApprovalId = approvalId;
+            this.downloadForm.fileType = "";
+            this.downloadDialogVisible = true;
+          } else if (status === "pending") {
+            // 审批中
+            this.$message.warning("下载申请正在审批中，请等待审批完成");
+          } else if (status === "rejected") {
+            // 已驳回，询问是否重新申请
+            this.$confirm(
+              `下载申请已被驳回${
+                rejectReason ? "，原因：" + rejectReason : ""
+              }，是否重新申请？`,
+              "提示",
+              {
+                confirmButtonText: "重新申请",
+                cancelButtonText: "取消",
+                type: "warning",
+              }
+            )
+              .then(() => {
+                this.showDownloadApplyDialog(row);
+              })
+              .catch(() => {});
+          } else {
+            // 无记录或已过期，需要申请
+            this.showDownloadApplyDialog(row);
+          }
+        } else {
+          // API返回错误或无数据，默认需要申请
+          this.showDownloadApplyDialog(row);
+        }
+      } catch (error) {
+        console.error("查询下载审批状态失败:", error);
+        // 查询失败时，默认需要申请
+        this.showDownloadApplyDialog(row);
+      }
+    },
+
+    /** 显示下载申请对话框 */
+    showDownloadApplyDialog(row) {
+      this.currentDownloadMedia = row;
+      this.downloadApplyForm = {
+        reason: "",
+      };
+      this.downloadApplyDialogVisible = true;
+    },
+
+    /** 提交下载申请 */
+    submitDownloadApply() {
+      this.$refs.downloadApplyForm.validate((valid) => {
+        if (valid) {
+          // 启动下载审批工作流
+          this.startDownloadWorkflow();
+        }
+      });
+    },
+
+    /** 启动下载审批工作流 */
+    startDownloadWorkflow() {
+      if (!this.currentDownloadMedia) {
+        this.msgError("媒体信息丢失");
+        return;
+      }
+
+      // 构建输入数据
+      const inputData = {
+        mediaId: this.currentDownloadMedia.mediaId,
+        mediaName: this.currentDownloadMedia.mediaName || "",
+        documentId: this.currentDownloadMedia.mediaName || "",
+        reason: this.downloadApplyForm.reason,
+      };
+
+      // 使用 mixin 提供的方法启动工作流实例
+      this.startWorkflowInstance(
+        "媒体下载申请流程",
+        inputData,
+        async (taskId) => {
+          // 成功回调：关闭申请对话框，打开任务处理对话框
+          this.downloadApplyDialogVisible = false;
+          this.currentTaskId = taskId;
+          this.taskProcessOpen = true;
+          const data = {
+            instanceId: this.currentInstanceId,
+            taskId: taskId,
+            reason: this.downloadApplyForm.reason,
+          };
+          try {
+            const response = await submitDownloadApplyRecord(inputData.mediaId, data);
+            if (response.code === 200) {
+              this.msgSuccess("下载申请已提交");
+            } else {
+              this.msgError(response.msg || "下载申请提交失败");
+            }
+          } catch (err) {
+            console.error("提交下载申请记录失败:", err);
+            this.msgError("提交下载申请记录失败");
+          }
+        },
+        (error) => {
+          // 失败回调
+          console.error("启动下载审批工作流失败:", error);
+        }
+      );
     },
 
     submitManualMarkImportance() {
@@ -1079,8 +1289,10 @@ export default {
       } else if (action === "play") {
         // 播放视频
         this.handlePlayVideo(row);
-      }
-      if (action === "delete") {
+      } else if (action === "download") {
+        // 下载（需要审批）
+        this.handleDownloadWithApproval(row);
+      } else if (action === "delete") {
         // 删除
         this.handleDelete(row);
       }

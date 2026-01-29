@@ -46,24 +46,9 @@ export default {
      */
     async startWorkflowInstance(workflowName, inputData, onSuccess, onError) {
       try {
-        // 1. 查询工作流列表
-        const workflowsResponse = await getWorkflowByName(workflowName)
-
-        if (workflowsResponse.code !== 200) {
-          throw new Error(workflowsResponse.msg || '查询工作流失败')
-        }
-
-        const workflow = workflowsResponse.data
-
-        if (!workflow) {
-          throw new Error(`未找到"${workflowName}"工作流，请先创建该工作流`)
-        }
-
-        this.currentWorkflowId = workflow.id || workflow.workflowId
-
-        // 2. 创建工作流实例（后端会自动创建第一个任务）
+        //  创建工作流实例（后端会自动创建第一个任务）
         const instanceResponse = await startInstance({
-          id: this.currentWorkflowId,
+          workflowName: workflowName,
           input: inputData
         })
 
@@ -71,14 +56,10 @@ export default {
           throw new Error(instanceResponse.msg || '创建工作流实例失败')
         }
 
-        const instanceId = instanceResponse.data.id || instanceResponse.data
+        const instanceId = instanceResponse.data.id
         this.currentInstanceId = instanceId
-        //this.msgSuccess('工作流实例创建成功，正在查询任务...')
 
-        // 3. 等待500ms确保后端任务创建完成
-        await new Promise(resolve => setTimeout(resolve, 500))
-
-        // 4. 查询该实例的任务列表
+        // 查询该实例的任务列表
         const tasksResponse = await getRecentTaskByInstance(instanceId)
 
         if (tasksResponse.code !== 200) {
@@ -89,9 +70,9 @@ export default {
 
         if (pendingTask) {
           //this.msgSuccess('任务已创建')
-          this.currentTaskId = pendingTask.id || pendingTask.taskId
+          this.currentTaskId = pendingTask.taskId
           if (onSuccess) {
-            onSuccess(pendingTask.id || pendingTask.taskId)
+            onSuccess(pendingTask.taskId)
           }
         } else {
           throw new Error('未找到待办任务，请到"我的待办"中查看')
@@ -125,32 +106,7 @@ export default {
         this.currentTask = task
         this.currentInstanceId = task.instanceId
 
-        // 2. 获取工作流定义
-        const workflowResponse = await getWorkflow(task.workflowId)
-
-        if (workflowResponse.code !== 200) {
-          throw new Error(workflowResponse.msg || '获取工作流定义失败')
-        }
-
-        const workflow = workflowResponse.data
-
-        // 3. 解析工作流定义
-        let definition = {}
-        try {
-          definition = typeof workflow.definition === 'string'
-            ? JSON.parse(workflow.definition)
-            : workflow.definition
-        } catch (e) {
-          console.error('解析工作流定义失败:', e)
-        }
-
-        // 4. 判断是否是第一个任务
-        if (definition.steps && definition.steps.length > 0) {
-          const firstStepId = definition.steps[0].id
-          this.isFirstTask = task.taskKey === firstStepId
-        } else {
-          this.isFirstTask = false
-        }
+        this.isFirstTask = task.isFirstTask
 
         // 5. 解析任务数据（先解析，因为表单数据需要用到）
         const { taskData, rejectionInfo, previousTasksHistory } = this.parseTaskData(task)

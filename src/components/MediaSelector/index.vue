@@ -40,9 +40,7 @@
             clearable
             @select="handleOrgSelect"
           />
-          <el-checkbox v-model="queryParams.includeSubUnits"
-            >包含下级</el-checkbox
-          >
+          <el-checkbox v-model="queryParams.includeSubUnits">包含下级</el-checkbox>
         </div>
       </el-form-item>
 
@@ -64,25 +62,13 @@
       </el-form-item>
 
       <el-form-item>
-        <el-button
-          type="default"
-          icon="el-icon-more"
-          size="mini"
-          @click="toggleMore"
+        <el-button type="default" icon="el-icon-more" size="mini" @click="toggleMore"
           >更多</el-button
         >
-        <el-button
-          type="primary"
-          icon="el-icon-search"
-          size="mini"
-          @click="handleQuery"
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery"
           >查询</el-button
         >
-        <el-button
-          type="default"
-          icon="el-icon-refresh"
-          size="mini"
-          @click="resetQuery"
+        <el-button type="default" icon="el-icon-refresh" size="mini" @click="resetQuery"
           >重置</el-button
         >
       </el-form-item>
@@ -191,19 +177,10 @@
             <div class="column-settings">
               <div class="column-settings-header">
                 <span>列显示设置</span>
-                <el-button type="text" size="mini" @click="resetColumns"
-                  >重置</el-button
-                >
+                <el-button type="text" size="mini" @click="resetColumns">重置</el-button>
               </div>
-              <el-checkbox-group
-                v-model="visibleColumns"
-                @change="handleColumnChange"
-              >
-                <div
-                  v-for="col in columnOptions"
-                  :key="col.prop"
-                  class="column-item"
-                >
+              <el-checkbox-group v-model="visibleColumns" @change="handleColumnChange">
+                <div v-for="col in columnOptions" :key="col.prop" class="column-item">
                   <el-checkbox :label="col.prop" :disabled="col.fixed">
                     {{ col.label }}
                   </el-checkbox>
@@ -244,35 +221,26 @@
         fixed="left"
       >
         <template slot-scope="scope">
-          <el-button
-            size="mini"
-            type="text"
-            @click="handleOperation(scope.row, 'edit')"
+          <el-button size="mini" type="text" @click="handleOperation(scope.row, 'edit')"
             >一键归档</el-button
           >
-          <el-button
-            size="mini"
-            type="text"
-            @click="handleOperation(scope.row, 'view')"
+          <el-button size="mini" type="text" @click="handleOperation(scope.row, 'view')"
             >浏览</el-button
           >
-          <el-button
-            size="mini"
-            type="text"
-            @click="handleOperation(scope.row, 'play')"
+          <el-button size="mini" type="text" @click="handleOperation(scope.row, 'play')"
             >播放</el-button
           >
-          <el-button
-            size="mini"
-            type="text"
-            @click="handleOperation(scope.row, 'copy')"
+          <el-button size="mini" type="text" @click="handleOperation(scope.row, 'copy')"
             >复制地址</el-button
+          >
+          <el-button size="mini" type="text" @click="handleOperation(scope.row, 'delete')"
+            >删除</el-button
           >
           <el-button
             size="mini"
             type="text"
-            @click="handleOperation(scope.row, 'delete')"
-            >删除</el-button
+            @click="handleOperation(scope.row, 'download')"
+            >下载</el-button
           >
           <el-button
             v-if="scope.row.mediaCate === 3"
@@ -391,12 +359,7 @@
             size="small"
             effect="dark"
           >
-            {{
-              selectDictLabel(
-                isNonEnforcementMediaOptions,
-                row.isNonEnforcementMedia
-              )
-            }}
+            {{ selectDictLabel(isNonEnforcementMediaOptions, row.isNonEnforcementMedia) }}
           </el-tag>
         </template>
       </el-table-column>
@@ -522,9 +485,9 @@
         width="120"
       />
       <el-table-column
-        v-if="isColumnVisible('contentType')"
-        prop="contentType"
-        label="MIME类型"
+        v-if="isColumnVisible('filePath')"
+        prop="filePath"
+        label="存储路径"
         min-width="200"
         :show-overflow-tooltip="true"
       />
@@ -540,13 +503,6 @@
         prop="collectSiteName"
         label="采集站名称"
         min-width="180"
-        :show-overflow-tooltip="true"
-      />
-      <el-table-column
-        v-if="isColumnVisible('collectSiteUrl')"
-        prop="collectSiteUrl"
-        label="采集站地址"
-        min-width="200"
         :show-overflow-tooltip="true"
       />
       <el-table-column
@@ -595,11 +551,7 @@
         min-width="160"
         :show-overflow-tooltip="true"
       />
-      <el-table-column
-        v-if="isColumnVisible('policeName')"
-        label="警员姓名"
-        width="120"
-      >
+      <el-table-column v-if="isColumnVisible('policeName')" label="警员姓名" width="120">
         <template slot-scope="{ row }">
           {{ formatPoliceName(row) }}
         </template>
@@ -618,11 +570,7 @@
         min-width="160"
         :show-overflow-tooltip="true"
       />
-      <el-table-column
-        v-if="isColumnVisible('orgName')"
-        label="单位名称"
-        min-width="160"
-      >
+      <el-table-column v-if="isColumnVisible('orgName')" label="单位名称" min-width="160">
         <template slot-scope="{ row }">
           {{ formatOrgName(row) }}
         </template>
@@ -689,9 +637,7 @@
             size="small"
             effect="dark"
           >
-            {{
-              selectDictLabel(relationStatusOptions, row.isIncidentAssociated)
-            }}
+            {{ selectDictLabel(relationStatusOptions, row.isIncidentAssociated) }}
           </el-tag>
         </template>
       </el-table-column>
@@ -769,9 +715,7 @@
           viewMediaData.mediaName || "-"
         }}</el-descriptions-item>
         <el-descriptions-item label="媒体类型">
-          {{
-            selectDictLabel(mediaCateOptions, viewMediaData.mediaCate) || "-"
-          }}
+          {{ selectDictLabel(mediaCateOptions, viewMediaData.mediaCate) || "-" }}
         </el-descriptions-item>
         <el-descriptions-item label="媒体后缀">{{
           viewMediaData.mediaSuffix || "-"
@@ -854,17 +798,11 @@
         <el-descriptions-item label="采集站名称">{{
           viewMediaData.collectSiteName || "-"
         }}</el-descriptions-item>
-        <el-descriptions-item label="采集站地址" :span="2">{{
-          viewMediaData.collectSiteUrl || "-"
-        }}</el-descriptions-item>
         <el-descriptions-item label="存储方式">{{
           selectDictLabel(storageTypeOptions, viewMediaData.storageType) || "-"
         }}</el-descriptions-item>
         <el-descriptions-item label="是否上传至存储">{{
-          selectDictLabel(
-            isSendToStorageOptions,
-            viewMediaData.isSendToStorage
-          ) || "-"
+          selectDictLabel(isSendToStorageOptions, viewMediaData.isSendToStorage) || "-"
         }}</el-descriptions-item>
         <el-descriptions-item label="是否通知发送">{{
           viewMediaData.isNoticeSend || "-"
@@ -891,8 +829,7 @@
           viewMediaData.orgJc || "-"
         }}</el-descriptions-item>
         <el-descriptions-item label="终端类型">{{
-          selectDictLabel(terminalTypeOptions, viewMediaData.terminalType) ||
-          "-"
+          selectDictLabel(terminalTypeOptions, viewMediaData.terminalType) || "-"
         }}</el-descriptions-item>
         <el-descriptions-item label="执法仪编号">{{
           viewMediaData.recorderNo || "-"
@@ -901,10 +838,8 @@
           viewMediaData.incidentCode || "-"
         }}</el-descriptions-item>
         <el-descriptions-item label="是否关联">{{
-          selectDictLabel(
-            relationStatusOptions,
-            viewMediaData.isIncidentAssociated
-          ) || "-"
+          selectDictLabel(relationStatusOptions, viewMediaData.isIncidentAssociated) ||
+          "-"
         }}</el-descriptions-item>
         <el-descriptions-item label="关联时间">{{
           parseTime(viewMediaData.incidentAssociatedAt) || "-"
@@ -1123,12 +1058,12 @@ export default {
         { prop: "fileIdentity", label: "文件标识", defaultVisible: false },
         { prop: "fileName", label: "文件名称", defaultVisible: false },
         { prop: "fileSize", label: "文件大小(KB)", defaultVisible: false },
+        { prop: "filePath", label: "存储路径", defaultVisible: false },
         { prop: "fileMd5", label: "文件MD5", defaultVisible: false },
         { prop: "fileType", label: "文件类型", defaultVisible: false },
         { prop: "contentType", label: "MIME类型", defaultVisible: false },
         { prop: "collectSiteNo", label: "采集站编号", defaultVisible: false },
         { prop: "collectSiteName", label: "采集站名称", defaultVisible: false },
-        { prop: "collectSiteUrl", label: "采集站地址", defaultVisible: false },
         { prop: "storageType", label: "存储方式", defaultVisible: false },
         {
           prop: "isSendToStorage",
