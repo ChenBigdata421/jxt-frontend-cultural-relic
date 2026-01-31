@@ -14,7 +14,7 @@ export default {
       currentInstanceId: null,
       currentTaskId: null,
       currentTask: null,
-      isFirstTask: false,
+      isFirstStep: false,
 
       // 任务处理表单
       processForm: {
@@ -106,7 +106,7 @@ export default {
         this.currentTask = task
         this.currentInstanceId = task.instanceId
 
-        this.isFirstTask = task.isFirstTask
+        this.isFirstStep = task.isFirstStep
 
         // 5. 解析任务数据（先解析，因为表单数据需要用到）
         const { taskData, rejectionInfo, previousTasksHistory } = this.parseTaskData(task)

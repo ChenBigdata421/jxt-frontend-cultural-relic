@@ -66,6 +66,9 @@
         <h4>步骤配置</h4>
         <div v-if="selectedStep" class="config-form">
           <el-form :model="selectedStep" label-width="80px" size="small">
+            <el-form-item label="是否根任务">
+              <el-checkbox v-model="selectedStep.isRoot" />
+            </el-form-item>
             <el-form-item label="步骤ID">
               <el-input v-model="selectedStep.id" placeholder="输入步骤ID" @change="handleSelectedStepIdChange">
                 <el-button slot="append" icon="el-icon-document-copy" @click="copyText(selectedStep.id)" />
@@ -420,6 +423,7 @@ export default {
           try {
             const definition = JSON.parse(val.definition)
             this.steps = (definition.steps || []).map(step => this.normalizeStep(step))
+            this.$nextTick(() => this.markRootTasks())
           } catch (e) {
             console.error('解析工作流定义失败:', e)
           }
@@ -460,6 +464,7 @@ export default {
       this.steps.push(step)
       this.selectStep(step)
       this.draggedType = null
+      this.$nextTick(() => this.markRootTasks())
     },
     dragLeave(event) {
       event.preventDefault()
@@ -495,6 +500,7 @@ export default {
         }
         this.selectedStep = null
         this.$message.success('步骤已删除')
+        this.$nextTick(() => this.markRootTasks())
       } else {
         this.deleteNodeById(this.selectedStep.id)
       }
@@ -507,6 +513,7 @@ export default {
         this.steps.splice(topIndex, 1)
         this.removeStepReferences(id)
         if (this.selectedStep && this.selectedStep.id === id) this.selectedStep = null
+        this.$nextTick(() => this.markRootTasks())
         return
       }
 
@@ -514,6 +521,7 @@ export default {
       if (removed) {
         this.removeStepReferences(id)
         if (this.selectedStep && this.selectedStep.id === id) this.selectedStep = null
+        this.$nextTick(() => this.markRootTasks())
       }
     },
 
@@ -737,7 +745,7 @@ export default {
     createStep(type) {
       const now = Date.now()
       const base = {
-        id: `${type}_${now}`,
+        id: `${type}${now}`,
         type: type,
         name: this.getStepTypeLabel(type),
         description: '',
@@ -746,7 +754,8 @@ export default {
         retries: 0,
         params: '{}',
         nextSteps: [],
-        parallelTasks: []
+        parallelTasks: [],
+        isRoot: false
       }
       return base
     },
@@ -764,7 +773,8 @@ export default {
         retries: step.retries,
         params: JSON.stringify(step.params || {}),
         nextSteps: Array.isArray(nextSteps) ? nextSteps : [],
-        parallelTasks: (Array.isArray(parallelTasks) ? parallelTasks : []).map(t => this.normalizeStep(t))
+        parallelTasks: (Array.isArray(parallelTasks) ? parallelTasks : []).map(t => this.normalizeStep(t)),
+        isRoot: step.isRoot || false
       }
     },
 
@@ -779,7 +789,8 @@ export default {
         retries: step.retries,
         params: this.parseJSON(step.params),
         nextSteps: Array.isArray(step.nextSteps) ? step.nextSteps : [],
-        parallelTasks: Array.isArray(step.parallelTasks) ? step.parallelTasks.map(t => this.toStepDefinition(t)) : []
+        parallelTasks: Array.isArray(step.parallelTasks) ? step.parallelTasks.map(t => this.toStepDefinition(t)) : [],
+        isRoot: step.isRoot || false
       }
     },
 
@@ -835,6 +846,7 @@ export default {
       this.steps.push(child)
       node.nextSteps.push(child.id)
       this.selectStep(child)
+      this.$nextTick(() => this.markRootTasks())
     },
 
     addNextUnder(node) {
@@ -851,6 +863,7 @@ export default {
         this.$set(child, 'nextSteps', oldNext)
       }
       this.selectStep(child)
+      this.$nextTick(() => this.markRootTasks())
     },
 
     addParallelGatewayAfter(node) {
@@ -881,6 +894,7 @@ export default {
       node.nextSteps = [gateway.id]
       this.selectStep(gateway)
       this.addParallelTaskUnder(gateway)
+      this.$nextTick(() => this.markRootTasks())
     },
 
     addParallelTaskUnder(node) {
@@ -892,9 +906,9 @@ export default {
       if (!Array.isArray(node.parallelTasks)) {
         this.$set(node, 'parallelTasks', [])
       }
-      const now = Date.now()
+      const index = node.parallelTasks.length + 1
       node.parallelTasks.push({
-        id: `ptask_${now}`,
+        id: `${node.id}_${index}`,
         type: 'userTask',
         name: '并行任务',
         description: '',
@@ -903,8 +917,10 @@ export default {
         retries: 0,
         params: '{}',
         nextSteps: [],
-        parallelTasks: []
+        parallelTasks: [],
+        isRoot: false
       })
+      this.$nextTick(() => this.markRootTasks())
     },
 
     removeStepReferences(removedId) {
@@ -931,6 +947,34 @@ export default {
     removeParallelTask(index) {
       if (!this.selectedStep || !Array.isArray(this.selectedStep.parallelTasks)) return
       this.selectedStep.parallelTasks.splice(index, 1)
+    },
+
+    // 自动标记根任务
+    markRootTasks() {
+      // 收集所有被引用的任务ID
+      const referencedIds = new Set()
+
+      const collectReferences = (tasks) => {
+        if (!Array.isArray(tasks)) return
+        tasks.forEach(task => {
+          if (task && Array.isArray(task.nextSteps)) {
+            task.nextSteps.forEach(id => referencedIds.add(id))
+          }
+          if (task && Array.isArray(task.parallelTasks)) {
+            collectReferences(task.parallelTasks)
+          }
+        })
+      }
+
+      // 收集主流程中的引用
+      collectReferences(this.steps)
+
+      // 标记根任务：没有被任何任务引用的任务
+      this.steps.forEach(step => {
+        if (step) {
+          step.isRoot = !referencedIds.has(step.id)
+        }
+      })
     },
 
     isParallelTaskNode(node) {

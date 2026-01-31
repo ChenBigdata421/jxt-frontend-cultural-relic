@@ -266,9 +266,11 @@
     </el-form>
 
     <div slot="footer" class="dialog-footer">
-      <el-button type="success" @click="handleApprove">通过</el-button>
-      <el-button type="danger" :disabled="isFirstTask" @click="handleReject">
-        驳回{{ isFirstTask ? "（第一个任务不可驳回）" : "" }}
+      <el-button type="success" @click="handleApprove">{{
+        isFirstStep ? "提交申请" : "通过"
+      }}</el-button>
+      <el-button type="danger" @click="handleReject">
+        {{ isFirstStep ? "撤销" : "驳回" }}
       </el-button>
       <el-button @click="handleClose">取消</el-button>
     </div>
@@ -280,6 +282,8 @@ import workflowMixin from "@/mixins/workflowMixin";
 import { orgTreeSelect, getOrgLeader } from "@/api/admin/sys-org";
 import { getUser } from "@/api/admin/sys-user";
 import Treeselect from "@riophae/vue-treeselect";
+import { cancelTask } from "@/api/process/task";
+import { cancelInstance } from "@/api/process/instance";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
@@ -411,12 +415,27 @@ export default {
     /**
      * 处理驳回
      */
-    handleReject() {
-      this.submitTaskRejection("taskProcessForm", () => {
-        this.isNormalClose = true; // 标记为正常完成
-        this.visible = false;
-        this.$emit("success");
-      });
+    async handleReject() {
+      if (this.isFirstStep) {
+        const response = await cancelTask(this.currentTaskId);
+        if (response.code === 200) {
+          this.msgSuccess("任务已撤销");
+        } else {
+          this.msgError(response.msg || "任务撤销失败");
+        }
+        response = await cancelInstance(this.currentInstanceId);
+        if (response.code === 200) {
+          this.msgSuccess("实例已取消");
+        } else {
+          this.msgError(response.msg || "实例取消失败");
+        }
+      } else {
+        this.submitTaskRejection("taskProcessForm", () => {
+          this.isNormalClose = true; // 标记为正常完成
+          this.visible = false;
+          this.$emit("success");
+        });
+      }
     },
 
     /**

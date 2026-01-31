@@ -1441,11 +1441,12 @@ export default {
         } else {
           this.msgError(response.msg || "删除警情失败");
         }
-        this.stopProcessing();
       } catch (error) {
-        if (error !== "cancel") {
+        if (error.message !== "cancel") {
           this.msgError("删除警情失败：" + (error.message || "未知错误"));
         }
+      } finally {
+        this.stopProcessing();
       }
     },
 

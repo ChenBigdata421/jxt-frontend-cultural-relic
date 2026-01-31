@@ -28,7 +28,7 @@ export function getInstance(id) {
 export function cancelInstance(id) {
   return request({
     url: '/api/v1/instances/' + id + '/cancel',
-    method: 'get'
+    method: 'put'
   })
 }
 

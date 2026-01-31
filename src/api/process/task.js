@@ -195,3 +195,10 @@ export function deleteTask(id) {
     method: 'delete'
   })
 }
+
+export function cancelTask(id) {
+  return request({
+    url: '/api/v1/tasks/' + id + '/cancel',
+    method: 'put'
+  })
+}

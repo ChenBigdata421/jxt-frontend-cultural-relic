@@ -64,10 +64,9 @@ export function updateDownloadApprovalStatus(approvalId, data) {
  * @param {string} data.fileType - 文件类型
  * @returns {Promise} 返回记录结果
  */
-export function recordDownload(mediaId, data) {
+export function recordDownload(mediaId) {
   return request({
     url: `/api/v1/mediadownload/${mediaId}/download-record`,
-    method: 'post',
-    data
+    method: 'post'
   })
 }
