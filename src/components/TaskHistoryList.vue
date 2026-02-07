@@ -1,10 +1,7 @@
 <template>
   <div>
     <!-- 任务处理历史 -->
-    <div
-      v-if="taskHistory && taskHistory.length > 0"
-      style="margin-bottom: 20px"
-    >
+    <div v-if="taskHistory && taskHistory.length > 0" style="margin-bottom: 20px">
       <el-timeline>
         <el-timeline-item
           v-for="(history, index) in taskHistory"
@@ -109,7 +106,7 @@ export default {
      * 获取用户显示名称
      */
     getUserDisplayName(userId) {
-      if (!userId) return "未知";
+      if (!userId) return "自动";
       if (this.userCache[userId]) {
         return this.userCache[userId].userName || "未知";
       }
@@ -122,7 +119,7 @@ export default {
      * 获取用户组织名称
      */
     getUserOrgName(userId) {
-      if (!userId) return "未知";
+      if (!userId) return "自动";
       if (this.userCache[userId]) {
         return this.userCache[userId].orgFullName || "未知";
       }

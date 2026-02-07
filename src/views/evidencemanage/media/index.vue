@@ -29,7 +29,7 @@
                 icon="el-icon-delete"
                 size="mini"
                 :disabled="selectedMediaRecords.length === 0"
-                @click="handleDelete"
+                @click="handleDeleteWithApproval"
                 >删除</el-button
               >
             </el-col>
@@ -450,6 +450,10 @@ import {
   recordDownload,
   submitDownloadApplyRecord,
 } from "@/api/evidence/download_approval_api";
+import {
+  getDeleteApprovalStatus,
+  submitDeleteApplyRecord,
+} from "@/api/evidence/delete_approval_api";
 import { getEnforceTypeTree } from "@/api/admin/enforcetype";
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
@@ -811,6 +815,57 @@ export default {
         }
       } catch (error) {
         this.msgError("查询下载审批状态失败!");
+      }
+    },
+
+    /** 带审批的删除处理 */
+    async handleDeleteWithApproval(row) {
+      // 只支持单个删除
+      var mediaId;
+      var currentDeleteMedia;
+      if (row && row.mediaId !== undefined) {
+        mediaId = row.mediaId;
+        currentDeleteMedia = row;
+      } else {
+        mediaId = this.mediaIds[0];
+        currentDeleteMedia = this.selectedMediaRecords[0];
+      }
+
+      if (this.mediaIds.length > 1) {
+        this.msgError("删除操作需要通过工作流审批，暂不支持批量删除");
+        return;
+      }
+
+      // 保存当前要删除的媒体信息
+      this.currentDeleteMedia = currentDeleteMedia;
+
+      try {
+        // 1. 查询审批状态
+        const response = await getDeleteApprovalStatus(row.mediaId);
+        if (response.code === 200 && response.data) {
+          const { status, rejectReason = "" } = response.data;
+
+          // 2. 根据状态处理
+          if (status === "pending") {
+            // 审批中
+            this.$message.warning("删除申请正在审批中，请等待审批完成");
+          } else if (status === "rejected") {
+            // 已驳回，询问是否重新申请
+            this.$message.warning(
+              `删除申请已被驳回${
+                rejectReason ? "，原因：" + rejectReason : ""
+              }，如需重新申请，请进入“我的待办”`
+            );
+          } else {
+            this.startDeleteWorkflow(mediaId);
+          }
+        } else {
+          console.log("查询删除审批状态失败:", response);
+          this.msgError("查询删除审批状态失败!");
+        }
+      } catch (error) {
+        console.log("查询删除审批状态失败:", error);
+        this.msgError("查询删除审批状态失败!");
       }
     },
 
@@ -1218,7 +1273,7 @@ export default {
         this.handleDownloadWithApproval(row);
       } else if (action === "delete") {
         // 删除
-        this.handleDelete(row);
+        this.handleDeleteWithApproval(row);
       }
     },
 
@@ -1486,25 +1541,40 @@ export default {
 
     /** 启动删除工作流 */
     startDeleteWorkflow(mediaId) {
+      const currentUserId = this.$store?.state?.user?.userid || undefined;
       // 构建输入数据
       const inputData = {
         mediaId: mediaId,
         mediaName: this.currentDeleteMedia?.mediaName || "",
-        documentId: this.currentDeleteMedia?.mediaName || "",
+        firstAssignee: currentUserId,
       };
 
       // 使用 mixin 提供的方法启动工作流实例
       this.startWorkflowInstance(
         "文档删除申请流程",
         inputData,
-        (taskid) => {
-          // 成功回调：打开任务处理对话框
-          this.currentTaskId = taskid;
+        async (taskId) => {
+          this.currentTaskId = taskId;
           this.taskProcessOpen = true;
+          const data = {
+            instanceId: this.currentInstanceId,
+            taskId: taskId,
+          };
+          try {
+            const response = await submitDeleteApplyRecord(inputData.mediaId, data);
+            if (response.code === 200) {
+              this.msgSuccess("删除媒体申请已提交");
+            } else {
+              this.msgError(response.msg || "删除媒体申请提交失败");
+            }
+          } catch (err) {
+            console.error("提交删除媒体申请失败:", err);
+            this.msgError("提交删除媒体申请失败");
+          }
         },
         (error) => {
           // 失败回调
-          console.error("启动删除工作流失败:", error);
+          console.error("启动删除审批工作流失败:", error);
         }
       );
     },
