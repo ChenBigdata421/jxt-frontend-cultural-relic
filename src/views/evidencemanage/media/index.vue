@@ -808,13 +808,24 @@ export default {
               }
             }
           } else {
-            this.showDownloadApplyDialog(row);
+            try {
+              await this.$confirm("下载媒体需要提交申请电子流，是否继续？", "提示", {
+                confirmButtonText: "继续",
+                cancelButtonText: "取消",
+                type: "info",
+              });
+              this.showDownloadApplyDialog(row);
+            } catch (error) {
+              if (error !== "cancel") {
+                this.msgError("下载媒体失败：" + (error || "未知错误"));
+              }
+            }
           }
         } else {
           this.msgError("查询下载审批状态失败!");
         }
       } catch (error) {
-        this.msgError("查询下载审批状态失败!");
+        this.msgError("下载媒体失败!");
       }
     },
 
@@ -857,15 +868,26 @@ export default {
               }，如需重新申请，请进入“我的待办”`
             );
           } else {
-            this.startDeleteWorkflow(mediaId);
+            try {
+              await this.$confirm("删除媒体需要提交申请电子流，是否继续？", "提示", {
+                confirmButtonText: "继续",
+                cancelButtonText: "取消",
+                type: "info",
+              });
+              this.startDeleteWorkflow(mediaId);
+            } catch (error) {
+              if (error !== "cancel") {
+                this.msgError("删除媒体失败：" + (error || "未知错误"));
+              }
+            }
           }
         } else {
           console.log("查询删除审批状态失败:", response);
           this.msgError("查询删除审批状态失败!");
         }
       } catch (error) {
-        console.log("查询删除审批状态失败:", error);
-        this.msgError("查询删除审批状态失败!");
+        console.log("删除媒体失败:", error);
+        this.msgError("删除媒体失败!");
       }
     },
 
