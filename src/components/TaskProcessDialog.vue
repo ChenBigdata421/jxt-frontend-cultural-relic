@@ -120,10 +120,21 @@
                     :key="key"
                     :label="getFieldLabel(key)"
                   >
-                    <template v-if="typeof value === 'boolean'">
+                    <!-- 媒体名称字段：显示为可点击链接 -->
+                    <template v-if="isMediaNameField(key)">
+                      <el-button
+                        type="text"
+                        @click="handleMediaNameClick(value)"
+                      >
+                        {{ value || "-" }}
+                      </el-button>
+                    </template>
+                    <!-- 布尔类型字段 -->
+                    <template v-else-if="typeof value === 'boolean'">
                       <el-tag v-if="value" type="success">是</el-tag>
                       <el-tag v-else type="info">否</el-tag>
                     </template>
+                    <!-- 默认文本显示 -->
                     <template v-else>
                       {{ value }}
                     </template>
@@ -274,6 +285,13 @@
       </el-button>
       <el-button @click="handleClose">取消</el-button>
     </div>
+
+    <!-- 媒体详情对话框 -->
+    <MediaDetailDialog
+      :visible.sync="mediaDetailDialogVisible"
+      :media-data="currentMediaData"
+      @close="handleMediaDetailClose"
+    />
   </el-dialog>
 </template>
 
@@ -284,12 +302,15 @@ import { getUser } from "@/api/admin/sys-user";
 import Treeselect from "@riophae/vue-treeselect";
 import { cancelTask } from "@/api/process/task";
 import { cancelInstance } from "@/api/process/instance";
+import { GetMediaByName } from "@/api/evidence/evidence_manage_query_api";
+import MediaDetailDialog from "@/components/MediaDetailDialog";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
   name: "TaskProcessDialog",
   components: {
     Treeselect,
+    MediaDetailDialog,
   },
   mixins: [workflowMixin],
   props: {
@@ -309,6 +330,9 @@ export default {
       isNormalClose: false, // 标记是否为正常完成（通过/驳回），而非取消
       orgOptions: [], // 组织树选项
       userCache: {}, // 用户信息缓存，避免重复请求
+      // 媒体详情相关
+      mediaDetailDialogVisible: false, // 媒体详情对话框显示状态
+      currentMediaData: {}, // 当前查看的媒体数据
     };
   },
   created() {
@@ -530,6 +554,47 @@ export default {
           this.isNormalClose = false; // 重置标志位
         });
       }
+    },
+
+    /**
+     * 处理媒体名称点击事件
+     * @param {String} mediaName - 媒体名称
+     */
+    async handleMediaNameClick(mediaName) {
+      if (!mediaName) {
+        this.$message.warning("媒体名称不存在");
+        return;
+      }
+
+      try {
+        // 根据媒体名称获取完整媒体数据
+        const response = await GetMediaByName(mediaName);
+
+        if (response.code === 200 && response.data) {
+          this.currentMediaData = response.data;
+          this.mediaDetailDialogVisible = true;
+        } else {
+          this.$message.warning(response.msg || "获取媒体详情失败");
+        }
+      } catch (error) {
+        console.error("获取媒体详情失败:", error);
+        this.$message.error("获取媒体详情失败");
+      }
+    },
+
+    /**
+     * 关闭媒体详情对话框
+     */
+    handleMediaDetailClose() {
+      this.mediaDetailDialogVisible = false;
+      this.currentMediaData = {};
+    },
+
+    /**
+     * 判断是否为媒体名称字段
+     */
+    isMediaNameField(key) {
+      return key === "mediaName" || key === "media_name";
     },
   },
 };

@@ -704,169 +704,10 @@
     />
 
     <!-- 媒体详情对话框 -->
-    <el-dialog
-      title="媒体详情"
+    <MediaDetailDialog
       :visible.sync="viewMediaOpen"
-      width="800px"
-      append-to-body
-    >
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="媒体名称">{{
-          viewMediaData.mediaName || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="媒体类型">
-          {{ selectDictLabel(mediaCateOptions, viewMediaData.mediaCate) || "-" }}
-        </el-descriptions-item>
-        <el-descriptions-item label="媒体后缀">{{
-          viewMediaData.mediaSuffix || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="拍摄时间">{{
-          parseTime(viewMediaData.captureTime) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="拍摄结束时间">{{
-          parseTime(viewMediaData.captureEndTime) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="视频清晰度">{{
-          selectDictLabel(videoClarityOptions, viewMediaData.clarity) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="视频时长(毫秒)">{{
-          viewMediaData.duration || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="重要级别(平台)">{{
-          viewMediaData.importantLevel || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="重要级别(设备)">{{
-          viewMediaData.importantLevelRec || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="图片宽度">{{
-          viewMediaData.width || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="图片高度">{{
-          viewMediaData.height || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="是否执法媒体">{{
-          selectDictLabel(
-            isNonEnforcementMediaOptions,
-            viewMediaData.isNonEnforcementMedia
-          ) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="标注内容" :span="2">{{
-          viewMediaData.comments || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="视频序列标识">{{
-          viewMediaData.sequence || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="执法类型名称">{{
-          viewMediaData.enforceTypeName || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="是否锁定">{{
-          selectDictLabel(isLockedOptions, viewMediaData.isLocked) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="过期时间">{{
-          parseTime(viewMediaData.expiryTime) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="档案编号">{{
-          viewMediaData.archiveCode || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="是否归档">{{
-          selectDictLabel(isArchivedOptions, viewMediaData.isArchived) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="归档时间">{{
-          parseTime(viewMediaData.archivedAt) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="文件标识">{{
-          viewMediaData.fileIdentity || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="文件名称">{{
-          viewMediaData.fileName || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="文件大小">{{
-          viewMediaData.fileSize || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="文件MD5">{{
-          viewMediaData.fileMd5 || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="文件类型">{{
-          viewMediaData.fileType || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="MIME类型">{{
-          viewMediaData.contentType || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="采集站编号">{{
-          viewMediaData.collectSiteNo || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="采集站名称">{{
-          viewMediaData.collectSiteName || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="存储方式">{{
-          selectDictLabel(storageTypeOptions, viewMediaData.storageType) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="是否上传至存储">{{
-          selectDictLabel(isSendToStorageOptions, viewMediaData.isSendToStorage) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="是否通知发送">{{
-          viewMediaData.isNoticeSend || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="警员编号">{{
-          viewMediaData.policeNo || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="警员姓名">{{
-          viewMediaData.policeName || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="警员身份证号">{{
-          viewMediaData.policeIdCard || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="单位编码">{{
-          viewMediaData.orgCode || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="单位名称">{{
-          viewMediaData.orgName || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="单位全称" :span="2">{{
-          viewMediaData.orgFullName || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="单位简称">{{
-          viewMediaData.orgJc || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="终端类型">{{
-          selectDictLabel(terminalTypeOptions, viewMediaData.terminalType) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="执法仪编号">{{
-          viewMediaData.recorderNo || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="警情号">{{
-          viewMediaData.incidentCode || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="是否关联">{{
-          selectDictLabel(relationStatusOptions, viewMediaData.isIncidentAssociated) ||
-          "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="关联时间">{{
-          parseTime(viewMediaData.incidentAssociatedAt) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="请求标识">{{
-          viewMediaData.requestIdentity || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="认证码">{{
-          viewMediaData.authKey || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="追溯码">{{
-          viewMediaData.traceCode || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="上传时间">{{
-          parseTime(viewMediaData.uploadTime) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="接收时间">{{
-          parseTime(viewMediaData.acquisitionTime) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="存储路径" :span="2">{{
-          viewMediaData.filePath || "-"
-        }}</el-descriptions-item>
-      </el-descriptions>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="viewMediaOpen = false">关 闭</el-button>
-      </div>
-    </el-dialog>
+      :media-data="viewMediaData"
+    />
 
     <!-- 警情详情对话框 -->
     <el-dialog
@@ -908,10 +749,11 @@ import { getEquipmentBwcByManagerId } from "@/api/admin/equipment_manage_api";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import { selectDictLabel } from "@/utils/costum";
+import MediaDetailDialog from "@/components/MediaDetailDialog";
 
 export default {
   name: "MediaSelector",
-  components: { Treeselect },
+  components: { Treeselect, MediaDetailDialog },
   props: {
     // 是否为选择模式（用于对话框中的媒体选择）
     selectionMode: {
