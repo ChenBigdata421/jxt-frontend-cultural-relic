@@ -16,7 +16,8 @@ services:
       # 平台站域名（客户可按实际域名修改）
       PLATFORM_SERVER_NAME: platform.jxt.com
       # 业务站域名（客户可按实际域名修改）
-      BUSINESS_SERVER_NAME: app.jxt.com
+      BUSINESS_SERVER_NAME: default.jxt.com
+      # *****常见问题，浏览器的代理设置问题，导致无法访问，将以上域名与地址加入"直连/不走代理"
 
       # ====== 平台站后端（tenant-service）======
       # 必须带协议：http://host:port 或 http://service:port

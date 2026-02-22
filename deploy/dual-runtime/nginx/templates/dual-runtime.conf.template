@@ -69,7 +69,8 @@ map ${DOLLAR}request_method ${DOLLAR}documents_backend {
 server {
     listen       80;
     listen  [::]:80;
-    server_name  ${BUSINESS_SERVER_NAME};
+    # server_name  ${BUSINESS_SERVER_NAME};
+    server_name  ${BUSINESS_SERVER_NAME} *.jxt.com;
 
     # 业务站静态资源
     location / {

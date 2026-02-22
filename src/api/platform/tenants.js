@@ -138,3 +138,96 @@ export function getTenantByCode(code) {
     method: "get",
   });
 }
+
+// ============================================
+// Service-Level Database Configuration APIs
+// 新架构：每个微服务独立配置数据库
+// ============================================
+
+// 获取租户的所有服务数据库配置
+export function getTenantServiceConfigs(id) {
+  return request({
+    url: `/api/v1/tenants/${id}/service-configs`,
+    method: "get",
+  });
+}
+
+// 获取指定服务的数据库配置
+export function getTenantServiceConfig(id, serviceCode) {
+  return request({
+    url: `/api/v1/tenants/${id}/service-configs/${serviceCode}`,
+    method: "get",
+  });
+}
+
+// 更新指定服务的数据库配置
+export function updateTenantServiceConfig(id, serviceCode, data) {
+  return request({
+    url: `/api/v1/tenants/${id}/service-configs/${serviceCode}`,
+    method: "put",
+    data,
+  });
+}
+
+// 删除指定服务的数据库配置
+export function deleteTenantServiceConfig(id, serviceCode) {
+  return request({
+    url: `/api/v1/tenants/${id}/service-configs/${serviceCode}`,
+    method: "delete",
+  });
+}
+
+// ============================================
+// Multi FTP Configuration APIs
+// 每个租户可配置多个 FTP 账号
+// ============================================
+
+// 获取租户的所有 FTP 配置列表
+export function listTenantFtpConfigs(id) {
+  return request({
+    url: `/api/v1/tenants/${id}/ftp`,
+    method: "get",
+  });
+}
+
+// 创建新的 FTP 配置
+export function createTenantFtpConfig(id, data) {
+  return request({
+    url: `/api/v1/tenants/${id}/ftp`,
+    method: "post",
+    data,
+  });
+}
+
+// 获取单个 FTP 配置详情
+export function getTenantFtpConfig(id, ftpId) {
+  return request({
+    url: `/api/v1/tenants/${id}/ftp/${ftpId}`,
+    method: "get",
+  });
+}
+
+// 更新 FTP 配置
+export function updateTenantFtpConfig(id, ftpId, data) {
+  return request({
+    url: `/api/v1/tenants/${id}/ftp/${ftpId}`,
+    method: "put",
+    data,
+  });
+}
+
+// 删除 FTP 配置
+export function deleteTenantFtpConfig(id, ftpId) {
+  return request({
+    url: `/api/v1/tenants/${id}/ftp/${ftpId}`,
+    method: "delete",
+  });
+}
+
+// 测试 FTP 配置连接
+export function testTenantFtpConfig(id, ftpId) {
+  return request({
+    url: `/api/v1/tenants/${id}/ftp/${ftpId}/test`,
+    method: "post",
+  });
+}
