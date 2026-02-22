@@ -998,7 +998,7 @@ export default {
       }
       return {
         id: node.id,
-        label: node.enforceTypeName || node.label || "未知",
+        label: node.enforcementTypeName || node.label || "未知",
         children: node.children,
       };
     },

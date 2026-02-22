@@ -642,7 +642,7 @@ export default {
       }
       return {
         id: node.id, // 将你数据中的 node.id 映射为 vue-treeselect 的id
-        label: node.enforceTypeName || node.label || "未知", // 将你数据中的 node.enforceTypeName 映射为 vue-treeselect 的label
+        label: node.enforcementTypeName || node.label || "未知", // 将你数据中的 node.enforcementTypeName 映射为 vue-treeselect 的label
         children: node.children, // 将你的数据中的 children 映射为 children
       };
     },

@@ -378,8 +378,8 @@
         :show-overflow-tooltip="true"
       />
       <el-table-column
-        v-if="isColumnVisible('enforceTypeName')"
-        prop="enforceTypeName"
+        v-if="isColumnVisible('enforcementTypeName')"
+        prop="enforcementTypeName"
         label="执法类型名称"
         min-width="180"
         :show-overflow-tooltip="true"
@@ -888,7 +888,7 @@ export default {
         { prop: "comments", label: "标注内容", defaultVisible: false },
         { prop: "sequence", label: "视频序列标识", defaultVisible: false },
         {
-          prop: "enforceTypeName",
+          prop: "enforcementTypeName",
           label: "执法类型名称",
           defaultVisible: false,
         },
@@ -1344,7 +1344,7 @@ export default {
       }
       return {
         id: node.id,
-        label: node.enforceTypeName || node.label || "未知",
+        label: node.enforcementTypeName || node.label || "未知",
         children: node.children,
       };
     },

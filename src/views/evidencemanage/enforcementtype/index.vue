@@ -8,7 +8,7 @@
         <el-form :inline="true">
           <el-form-item label="执法类型名称">
             <el-input
-              v-model="queryParams.enforceTypeName"
+              v-model="queryParams.enforcementTypeName"
               placeholder="请输入执法类型名称"
               clearable
               size="small"
@@ -17,7 +17,7 @@
           </el-form-item>
           <el-form-item label="执法类型编码">
             <el-input
-              v-model="queryParams.enforceTypeCode"
+              v-model="queryParams.enforcementTypeCode"
               placeholder="请输入执法类型编码"
               clearable
               size="small"
@@ -63,17 +63,17 @@
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为"v-bind"或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column
-            prop="enforceTypeCode"
+            prop="enforcementTypeCode"
             label="执法类型编码"
             min-width="150"
           />
           <el-table-column
-            prop="enforceTypeName"
+            prop="enforcementTypeName"
             label="执法类型名称"
             min-width="180"
           />
           <el-table-column
-            prop="enforceTypeDesc"
+            prop="enforcementTypeDesc"
             label="执法类型描述"
             min-width="200"
             show-overflow-tooltip
@@ -150,25 +150,25 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="执法类型编码" prop="enforceTypeCode">
+                <el-form-item label="执法类型编码" prop="enforcementTypeCode">
                   <el-input
-                    v-model="form.enforceTypeCode"
+                    v-model="form.enforcementTypeCode"
                     placeholder="请输入执法类型编码"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="执法类型名称" prop="enforceTypeName">
+                <el-form-item label="执法类型名称" prop="enforcementTypeName">
                   <el-input
-                    v-model="form.enforceTypeName"
+                    v-model="form.enforcementTypeName"
                     placeholder="请输入执法类型名称"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="24">
-                <el-form-item label="执法类型描述" prop="enforceTypeDesc">
+                <el-form-item label="执法类型描述" prop="enforcementTypeDesc">
                   <el-input
-                    v-model="form.enforceTypeDesc"
+                    v-model="form.enforcementTypeDesc"
                     type="textarea"
                     placeholder="请输入执法类型描述"
                     :rows="3"
@@ -235,8 +235,8 @@ export default {
       open: false,
       // 查询参数
       queryParams: {
-        enforceTypeName: undefined,
-        enforceTypeCode: undefined,
+        enforcementTypeName: undefined,
+        enforcementTypeCode: undefined,
       },
       // 表单参数
       form: {},
@@ -245,10 +245,10 @@ export default {
         parentId: [
           { required: true, message: "上级执法类型不能为空", trigger: "blur" },
         ],
-        enforceTypeCode: [
+        enforcementTypeCode: [
           { required: true, message: "执法类型编码不能为空", trigger: "blur" },
         ],
-        enforceTypeName: [
+        enforcementTypeName: [
           { required: true, message: "执法类型名称不能为空", trigger: "blur" },
         ],
         sort: [{ required: true, message: "排序不能为空", trigger: "blur" }],
@@ -295,7 +295,7 @@ export default {
       }
       return {
         id: node.id,
-        label: node.enforceTypeName || node.label || "未知",
+        label: node.enforcementTypeName || node.label || "未知",
         children: node.children,
       };
     },
@@ -305,7 +305,7 @@ export default {
         this.enforceTypeLabel = [];
         const enforceType = {
           id: 0,
-          enforceTypeName: "主类目",
+          enforcementTypeName: "主类目",
           children: [],
         };
         enforceType.children = response.data;
@@ -322,9 +322,9 @@ export default {
       this.form = {
         id: undefined,
         parentId: undefined,
-        enforceTypeCode: undefined,
-        enforceTypeName: undefined,
-        enforceTypeDesc: undefined,
+        enforcementTypeCode: undefined,
+        enforcementTypeName: undefined,
+        enforcementTypeDesc: undefined,
         sort: 10,
         source: undefined,
       };
@@ -387,7 +387,7 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       this.$confirm(
-        '是否确认删除名称为"' + row.enforceTypeName + '"的数据项?',
+        '是否确认删除名称为"' + row.enforcementTypeName + '"的数据项?',
         "警告",
         {
           confirmButtonText: "确定",

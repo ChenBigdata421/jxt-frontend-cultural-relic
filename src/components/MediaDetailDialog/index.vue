@@ -110,7 +110,7 @@
           mediaData.sequence || "-"
         }}</el-descriptions-item>
         <el-descriptions-item label="执法类型名称">{{
-          mediaData.enforceTypeName || "-"
+          mediaData.enforcementTypeName || "-"
         }}</el-descriptions-item>
         <el-descriptions-item label="是否锁定">{{
           selectDictLabel(isLockedOptions, mediaData.isLocked) || "-"
