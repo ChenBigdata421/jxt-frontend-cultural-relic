@@ -61,29 +61,30 @@
           :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         >
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
-          <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
+          <!--:formatter 是一个属性绑定（也称为"v-bind"或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column
             prop="enforceTypeCode"
             label="执法类型编码"
-            width="200"
+            min-width="150"
           />
           <el-table-column
             prop="enforceTypeName"
             label="执法类型名称"
-            width="400"
+            min-width="180"
           />
           <el-table-column
             prop="enforceTypeDesc"
             label="执法类型描述"
-            width="500"
+            min-width="200"
+            show-overflow-tooltip
           />
-          <el-table-column prop="sort" label="排序" width="100" />
-          <el-table-column prop="source" label="来源" width="120" />
+          <el-table-column prop="sort" label="排序" width="80" align="center" />
+          <el-table-column prop="source" label="来源" min-width="100" />
           <el-table-column
             label="创建时间"
             align="center"
             prop="createdAt"
-            width="200"
+            width="160"
           >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.createdAt) }}</span>
@@ -93,7 +94,7 @@
             label="操作"
             align="center"
             class-name="small-padding fixed-width"
-            width="200"
+            width="180"
           >
             <template slot-scope="scope">
               <el-button
