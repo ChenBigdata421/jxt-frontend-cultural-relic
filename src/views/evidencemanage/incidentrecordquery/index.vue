@@ -381,19 +381,29 @@
         <el-dialog
           :title="title"
           :visible.sync="open"
-          width="750px"
+          width="800px"
           :close-on-click-modal="false"
         >
-          <div class="form-container">
-            <el-form
-              ref="form"
-              :model="form"
-              :rules="rules"
-              label-width="100px"
-            >
+          <el-form
+            ref="form"
+            :model="form"
+            :rules="rules"
+            label-width="100px"
+          >
+
+            <!-- 使用 el-collapse 实现可折叠分组 -->
+            <el-collapse v-model="activeFormSections" class="form-collapse">
+
               <!-- 基础信息 -->
-              <div class="form-section">
-                <div class="form-section-title">基础信息</div>
+              <el-collapse-item name="basic" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-document section-icon"></i>
+                    <span class="section-title">基础信息</span>
+                    <span class="section-badge">5项</span>
+                  </div>
+                </template>
+
                 <el-row :gutter="20">
                   <el-col :span="12">
                     <el-form-item label="报警人姓名：" prop="name">
@@ -462,6 +472,7 @@
                         multiple
                         collapse-tags
                         collapse-tags-tooltip
+                        class="full-width"
                       >
                         <el-option
                           v-for="item in userOptions"
@@ -473,12 +484,42 @@
                     </el-form-item>
                   </el-col>
                 </el-row>
-              </div>
+              </el-collapse-item>
 
-              <!-- 时间信息 -->
-              <div class="form-section">
-                <div class="form-section-title">时间信息</div>
-                <el-row :gutter="20">
+              <!-- 时间信息 - 带时间线可视化 -->
+              <el-collapse-item name="timeline" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-time section-icon"></i>
+                    <span class="section-title">时间流程</span>
+                    <span class="section-badge">5个节点</span>
+                  </div>
+                </template>
+
+                <!-- 时间线可视化 -->
+                <div class="timeline-preview">
+                  <div class="timeline-item" :class="{ active: form.reportTime }">
+                    <span class="timeline-dot"></span>
+                    <span class="timeline-label">报警</span>
+                  </div>
+                  <div class="timeline-line"></div>
+                  <div class="timeline-item" :class="{ active: form.receiveTime }">
+                    <span class="timeline-dot"></span>
+                    <span class="timeline-label">接警</span>
+                  </div>
+                  <div class="timeline-line"></div>
+                  <div class="timeline-item" :class="{ active: form.processTime }">
+                    <span class="timeline-dot"></span>
+                    <span class="timeline-label">处警</span>
+                  </div>
+                  <div class="timeline-line"></div>
+                  <div class="timeline-item" :class="{ active: form.endTime }">
+                    <span class="timeline-dot"></span>
+                    <span class="timeline-label">结束</span>
+                  </div>
+                </div>
+
+                <el-row :gutter="20" class="time-inputs">
                   <el-col :span="12">
                     <el-form-item label="创建时间：">
                       <el-date-picker
@@ -501,8 +542,6 @@
                       />
                     </el-form-item>
                   </el-col>
-                </el-row>
-                <el-row :gutter="20">
                   <el-col :span="12">
                     <el-form-item label="接警时间：">
                       <el-date-picker
@@ -525,8 +564,6 @@
                       />
                     </el-form-item>
                   </el-col>
-                </el-row>
-                <el-row :gutter="20">
                   <el-col :span="12">
                     <el-form-item label="结束时间：">
                       <el-date-picker
@@ -539,11 +576,18 @@
                     </el-form-item>
                   </el-col>
                 </el-row>
-              </div>
+              </el-collapse-item>
 
-              <!-- 处警信息 -->
-              <div class="form-section">
-                <div class="form-section-title">处警信息</div>
+              <!-- 执法信息 -->
+              <el-collapse-item name="enforcement" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-user section-icon"></i>
+                    <span class="section-title">执法信息</span>
+                    <span class="section-badge">4项</span>
+                  </div>
+                </template>
+
                 <el-row :gutter="20">
                   <el-col :span="12">
                     <el-form-item label="警情监督类型：" prop="superviseType">
@@ -581,9 +625,10 @@
                     </el-form-item>
                   </el-col>
                 </el-row>
-              </div>
-            </el-form>
-          </div>
+              </el-collapse-item>
+
+            </el-collapse>
+          </el-form>
 
           <div slot="footer" class="dialog-footer">
             <el-button @click="cancel">取 消</el-button>
@@ -771,6 +816,8 @@ export default {
       // 是否显示增加警情对话框
       open: false,
       ViewOpen: false,
+      // 表单折叠状态
+      activeFormSections: ['basic'],
       // 当前选中的警情记录
       currentIncidentRecord: null,
       // 详情数据
