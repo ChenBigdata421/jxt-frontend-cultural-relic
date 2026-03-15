@@ -1,0 +1,50 @@
+// src/styles/tokens/colors.scss
+// 执法场景专业配色系统
+
+// 主色 - 权威、专业
+$law-primary: #1A5F7A;
+$law-primary-light: #2E86AB;
+$law-primary-dark: #0D3B4D;
+$law-primary-contrast: #FFFFFF;
+
+// 功能色
+$law-success: #3D8B40;    // 已结案、正常
+$law-warning: #E9A825;    // 待处理
+$law-danger: #C62828;     // 删除、异常
+$law-info: #2E86AB;       // 信息提示
+
+// 中性色
+$law-gray-50: #ECEFF1;
+$law-gray-100: #CFD8DC;
+$law-gray-200: #B0BEC5;
+$law-gray-300: #90A4AE;
+$law-gray-400: #78909C;
+$law-gray-500: #546E7A;  // 正文
+$law-gray-600: #455A64;
+$law-gray-700: #37474F;
+$law-gray-800: #263238;
+$law-gray-900: #1A1A1A;   // 标题
+
+// 背景色
+$law-bg-default: #F5F7FA;
+$law-bg-paper: #FFFFFF;
+$law-bg-overlay: rgba(0, 0, 0, 0.5);
+
+// 状态色 - 用于表格状态列
+$law-status-processing: #FF9800;  // 处理中 - 橙色
+$law-status-completed: #4CAF50;   // 已结案 - 绿色
+$law-status-archived: #607D8B;    // 已归档 - 灰蓝
+$law-status-pending: #2196F3;     // 待处理 - 蓝色
+
+// 导出为 CSS 变量（用于 Vue 组件中）
+:root {
+  --law-primary: #{$law-primary};
+  --law-success: #{$law-success};
+  --law-warning: #{$law-warning};
+  --law-danger: #{$law-danger};
+  --law-info: #{$law-info};
+  --law-status-processing: #{$law-status-processing};
+  --law-status-completed: #{$law-status-completed};
+  --law-status-archived: #{$law-status-archived};
+  --law-status-pending: #{$law-status-pending};
+}
