@@ -2,241 +2,47 @@
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <!--inline 属性被绑定为 true，这意味着该 <el-form> 组件将以内联形式呈现。
-          内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
-          这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
-        <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="警情编号" prop="code">
-            <el-input
-              v-model="queryParams.code"
-              placeholder="请输入警情编号"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="报警人姓名" prop="name">
-            <el-input
-              v-model="queryParams.name"
-              placeholder="请输入报警人姓名"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="警情标题" prop="title">
-            <el-input
-              v-model="queryParams.title"
-              placeholder="请输入警情标题"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="处警组织" prop="orgId">
-            <treeselect
-              v-model="queryParams.orgId"
-              :options="orgOptions"
-              placeholder="请选择处警组织"
-              style="width: 170px"
-              clearable
-              @select="handleOrgSelect"
-            />
-          </el-form-item>
-          <el-form-item label="处警人员" prop="processPoliceIds">
-            <el-select
-              v-model="queryParams.processPoliceIds"
-              :options="userOptions"
-              placeholder="请选择处警人员"
-              multiple
-              style="width: 170px"
-              clearable
-            >
-              <el-option
-                v-for="item in userOptions"
-                :key="item.userId"
-                :label="item.userName"
-                :value="item.userId"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="状态" prop="status">
-            <el-select
-              v-model="queryParams.status"
-              placeholder="状态"
-              clearable
-              style="width: 170px"
-            >
-              <el-option
-                v-for="dict in statusOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-                style="width: 150px"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="是否关联" prop="isRelation">
-            <el-select
-              v-model="queryParams.isRelation"
-              placeholder="是否关联"
-              clearable
-              style="width: 170px"
-            >
-              <el-option
-                v-for="dict in incidentRelationStatusOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-                style="width: 150px"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="报警时间">
-            <el-form-item prop="reportTimeStart">
-              <el-date-picker
-                v-model="queryParams.reportTimeStart"
-                type="datetime"
-                placeholder="请选择开始时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-              >
-              </el-date-picker>
-            </el-form-item>
-            <span>至</span>
-            <el-form-item prop="reportTimeEnd">
-              <el-date-picker
-                v-model="queryParams.reportTimeEnd"
-                type="datetime"
-                placeholder="请选择结束时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-              >
-              </el-date-picker>
-            </el-form-item>
-          </el-form-item>
-          <el-form-item label="接警时间">
-            <el-form-item prop="receiveTimeStart">
-              <el-date-picker
-                v-model="queryParams.receiveTimeStart"
-                type="datetime"
-                placeholder="请选择开始时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-              >
-              </el-date-picker>
-            </el-form-item>
-            <span>至</span>
-            <el-form-item prop="receiveTimeEnd">
-              <el-date-picker
-                v-model="queryParams.receiveTimeEnd"
-                type="datetime"
-                placeholder="请选择结束时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-              >
-              </el-date-picker>
-            </el-form-item>
-          </el-form-item>
-          <el-form-item label="处警时间">
-            <el-form-item prop="processTimeStart">
-              <el-date-picker
-                v-model="queryParams.processTimeStart"
-                type="datetime"
-                placeholder="请选择开始时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-              >
-              </el-date-picker>
-            </el-form-item>
-            <span>至</span>
-            <el-form-item prop="processTimeEnd">
-              <el-date-picker
-                v-model="queryParams.processTimeEnd"
-                type="datetime"
-                placeholder="请选择结束时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-              >
-              </el-date-picker>
-            </el-form-item>
-          </el-form-item>
-          <el-form-item label="结束时间">
-            <el-form-item prop="endTimeStart">
-              <el-date-picker
-                v-model="queryParams.endTimeStart"
-                type="datetime"
-                placeholder="请选择开始时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-              >
-              </el-date-picker>
-            </el-form-item>
-            <span>至</span>
-            <el-form-item prop="endTimeEnd">
-              <el-date-picker
-                v-model="queryParams.endTimeEnd"
-                type="datetime"
-                placeholder="请选择结束时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-              >
-              </el-date-picker>
-            </el-form-item>
-          </el-form-item>
-          <el-form-item>
+        <!-- 新的查询栏组件 -->
+        <div class="query-section">
+          <IncidentQueryBar
+            ref="queryBar"
+            :status-options="statusOptions"
+            @search="handleSearch"
+            @filter-change="handleFilterChange"
+            @filter-reset="handleFilterReset"
+          />
+        </div>
+        <!-- 批量操作栏 -->
+        <BatchActionBar
+          :selected-count="selectedIncidentRecords.length"
+          :is-indeterminate="isSelectionIndeterminate"
+          :all-selected="isAllSelected"
+          @select-all-change="handleSelectAll"
+          @batch-delete="handleBatchDelete"
+          @batch-export="handleBatchExport"
+        />
+
+        <!-- 主操作栏 -->
+        <div class="main-action-bar">
+          <div class="left-actions">
             <el-button
+              v-permisaction="['incidentrecord:bwc:create']"
               type="primary"
-              icon="el-icon-search"
+              icon="el-icon-plus"
               size="mini"
-              @click="handleQuery"
-              >搜索</el-button
+              @click="handleAdd"
             >
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-              >重置</el-button
+              新增警情
+            </el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="mini"
+              @click="handleRefresh"
             >
-          </el-form-item>
-        </el-form>
-        <el-row :gutter="10" class="mb8" type="flex" justify="space-between">
-          <el-col :span="18">
-            <el-row :gutter="10">
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['incidentrecord:bwc:create']"
-                  type="primary"
-                  icon="el-icon-plus"
-                  size="mini"
-                  @click="handleAdd"
-                  >新增</el-button
-                >
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['incidentrecord:bwc:edit']"
-                  type="success"
-                  icon="el-icon-edit"
-                  size="mini"
-                  :disabled="selectedIncidentRecords.length !== 1"
-                  @click="handleUpdate"
-                  >修改</el-button
-                >
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['incidentrecord:bwc:remove']"
-                  type="danger"
-                  icon="el-icon-delete"
-                  size="mini"
-                  :disabled="selectedIncidentRecords.length === 0"
-                  @click="handleDelete"
-                  >删除</el-button
-                >
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['incidentrecord:bwc:export']"
-                  type="warning"
-                  icon="el-icon-download"
-                  size="mini"
-                  @click="handleExport"
-                  >导出</el-button
-                >
-              </el-col>
-            </el-row>
-          </el-col>
-          <el-col :span="6" class="column-settings-trigger">
+              刷新
+            </el-button>
+          </div>
+          <div class="right-actions">
             <el-popover placement="bottom-end" width="300" trigger="click">
               <div class="column-settings">
                 <div class="column-settings-header">
@@ -264,8 +70,8 @@
                 >列设置</el-button
               >
             </el-popover>
-          </el-col>
-        </el-row>
+          </div>
+        </div>
         <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
         <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 id
           作为每行数据的唯一键。这有助于 Vue 跟踪每行数据的变化，提高渲染性能。-->
@@ -288,7 +94,7 @@
           <el-table-column type="selection" width="60" align="center" />
           <el-table-column
             label="操作"
-            align="left"
+            align="center"
             class-name="small-padding fixed-width"
             width="200"
             fixed="left"
@@ -299,25 +105,31 @@
                 size="mini"
                 type="text"
                 icon="el-icon-view"
+                class="action-btn view-btn"
                 @click="handleView(scope.row)"
-                >浏览</el-button
               >
+                浏览
+              </el-button>
               <el-button
                 v-permisaction="['incidentrecord:bwc:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
+                class="action-btn edit-btn"
                 @click="handleUpdate(scope.row)"
-                >修改</el-button
               >
+                修改
+              </el-button>
               <el-button
                 v-permisaction="['incidentrecord:bwc:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
+                class="action-btn delete-btn"
                 @click="handleDelete(scope.row)"
-                >删除</el-button
               >
+                删除
+              </el-button>
             </template>
           </el-table-column>
           <el-table-column
@@ -523,16 +335,16 @@
             v-if="isColumnVisible('status')"
             prop="status"
             label="状态"
-            width="100"
+            width="120"
           >
             <template slot-scope="{ row }">
-              <el-tag
-                :type="row.status === 1 ? 'success' : 'info'"
-                size="small"
-                effect="dark"
-              >
-                {{ statusFormat(row) }}
-              </el-tag>
+              <div class="status-cell">
+                <span
+                  class="status-dot"
+                  :class="getStatusClass(row.status)"
+                ></span>
+                <span class="status-text">{{ statusFormat(row) }}</span>
+              </div>
             </template>
           </el-table-column>
           <el-table-column
@@ -920,11 +732,15 @@ import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import IncidentQueryBar from "@/components/IncidentQueryBar/index.vue";
+import BatchActionBar from "@/components/BatchActionBar/index.vue";
 
 export default {
   name: "LawCarema",
   components: {
     Treeselect,
+    IncidentQueryBar,
+    BatchActionBar
   },
   data() {
     return {
@@ -949,6 +765,9 @@ export default {
       isRestoringSelection: false,
       //所有选中的警情记录
       selectedIncidentRecords: [],
+      // 全选状态
+      isAllSelected: false,
+      isSelectionIndeterminate: false,
       // 是否显示增加警情对话框
       open: false,
       ViewOpen: false,
@@ -1257,6 +1076,12 @@ export default {
       this.selectedIncidentRecords = Object.values(
         this.selectedIncidentRecordMap
       ).filter(Boolean);
+
+      // 更新全选状态
+      const totalCount = this.incidentRecordList.length;
+      const selectedCount = this.selectedIncidentRecords.length;
+      this.isAllSelected = selectedCount === totalCount && totalCount > 0;
+      this.isSelectionIndeterminate = selectedCount > 0 && selectedCount < totalCount;
     },
     /** 新增按钮操作*/
     handleAdd() {
@@ -1278,6 +1103,85 @@ export default {
       }
 
       this.getList();
+    },
+
+    /** 新增查询栏相关方法 */
+    handleSearch(searchData) {
+      // 处理搜索
+      if (searchData.keyword) {
+        this.queryParams.keyword = searchData.keyword;
+      } else {
+        delete this.queryParams.keyword;
+      }
+      this.handleQuery();
+    },
+
+    handleFilterChange(filterData) {
+      // 处理快捷筛选和高级筛选
+      if (filterData.filterType === 'today') {
+        // 今日警情
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        this.queryParams.reportTimeStart = today.toISOString();
+        delete this.queryParams.reportTimeEnd;
+      } else if (filterData.filterType === 'mine') {
+        // 我的警情 - 需要从 store 获取当前用户
+        const currentUser = this.$store.state.user && this.$store.state.user.user;
+        if (currentUser && currentUser.userId) {
+          this.queryParams.createUserId = currentUser.userId;
+        }
+      } else if (filterData.filterType === 'pending') {
+        // 待处理
+        this.queryParams.status = 0;
+      } else if (filterData.filterType === 'archived') {
+        // 已归档
+        this.queryParams.status = 3;
+      } else if (filterData.filterType === 'advanced') {
+        // 高级筛选 - 合并筛选参数
+        Object.assign(this.queryParams, filterData);
+      } else if (filterData.filterType === 'all') {
+        // 全部 - 清除特定筛选条件
+        delete this.queryParams.reportTimeStart;
+        delete this.queryParams.reportTimeEnd;
+        delete this.queryParams.createUserId;
+        delete this.queryParams.status;
+      }
+      this.handleQuery();
+    },
+
+    handleFilterReset() {
+      this.resetQuery();
+    },
+
+    handleSelectAll(val) {
+      this.isAllSelected = val;
+      this.isSelectionIndeterminate = false;
+      this.$refs.incidentRecordTable.toggleAllSelection();
+    },
+
+    handleBatchDelete() {
+      // 复用原有的 handleDelete 方法
+      this.handleDelete();
+    },
+
+    handleBatchExport() {
+      // 复用原有的 handleExport 方法
+      this.handleExport();
+    },
+
+    handleRefresh() {
+      this.getList();
+    },
+
+    // 获取状态对应的样式类名
+    getStatusClass(status) {
+      const statusMap = {
+        0: 'pending',
+        1: 'processing',
+        2: 'completed',
+        3: 'archived'
+      };
+      return statusMap[status] || 'pending';
     },
 
     /** 修改按钮操作 */
@@ -1610,7 +1514,9 @@ export default {
   },
 };
 </script>
-<style>
+<style lang="scss" scoped>
+@import './styles/index.scss';
+</style>
 .form-container {
   padding: 10px 20px;
 }
