@@ -3,11 +3,14 @@
 * So I modified the default color and you can modify it to your liking.
 **/
 
-/* theme color */
-$--color-primary: #1890ff;
-$--color-success: #13ce66;
-$--color-warning: #FFBA00;
-$--color-danger: #ff4949;
+// 导入执法场景配色系统
+@import './tokens/colors.scss';
+
+/* theme color - 使用执法场景配色 */
+$--color-primary: $law-primary;
+$--color-success: $law-success;
+$--color-warning: $law-warning;
+$--color-danger: $law-danger;
 // $--color-info: #1E1E1E;
 
 $--button-font-weight: 400;
