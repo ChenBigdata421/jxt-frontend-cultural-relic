@@ -3,7 +3,7 @@
     <template #wrapper>
       <el-card class="box-card">
         <!-- 查询表单 -->
-        <el-form ref="queryForm" :model="queryParams" :inline="true">
+        <el-form ref="queryForm" :model="queryParams" :inline="true" class="query-form">
           <el-form-item label="文书编号" prop="writCode">
             <el-input
               v-model="queryParams.writCode"
@@ -71,71 +71,81 @@
             <el-button
               type="primary"
               icon="el-icon-search"
-              size="mini"
+              size="small"
               @click="handleQuery"
               >搜索</el-button
             >
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
+            <el-button icon="el-icon-refresh" size="small" class="action-btn tertiary" @click="resetQuery"
               >重置</el-button
             >
           </el-form-item>
         </el-form>
 
-        <!-- 操作按钮 -->
-        <el-row :gutter="10" class="mb8">
-          <el-col :span="18">
-            <el-row :gutter="10">
-              <el-col :span="1.5">
-                <el-button
-                  type="primary"
-                  icon="el-icon-plus"
-                  size="mini"
-                  @click="handleAdd"
-                  >新增</el-button
-                >
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['writ:bwc:edit']"
-                  type="success"
-                  icon="el-icon-edit"
-                  size="mini"
-                  :disabled="selectedWritRecords.length !== 1"
-                  @click="handleUpdate"
-                  >修改</el-button
-                >
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['writ:bwc:remove']"
-                  type="danger"
-                  icon="el-icon-delete"
-                  size="mini"
-                  :disabled="multiple"
-                  @click="handleDelete"
-                  >删除</el-button
-                >
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['writ:bwc:export']"
-                  type="warning"
-                  icon="el-icon-download"
-                  size="mini"
-                  @click="handleExport"
-                  >导出</el-button
-                >
-              </el-col>
-            </el-row>
-          </el-col>
-          <el-col :span="6" class="column-settings-trigger">
-            <el-popover placement="bottom-end" width="300" trigger="click">
-              <div class="column-settings">
+        <!-- 主操作栏 -->
+        <div class="main-action-bar">
+          <div class="left-actions">
+            <el-button
+              v-permisaction="['writ:bwc:create']"
+              type="primary"
+              icon="el-icon-plus"
+              size="small"
+              @click="handleAdd"
+            >
+              新增文书
+            </el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="small"
+              type="text"
+              class="action-btn tertiary"
+              @click="handleRefresh"
+            >
+              刷新
+            </el-button>
+            <el-button
+              v-permisaction="['writ:bwc:export']"
+              icon="el-icon-download"
+              size="small"
+              class="action-btn secondary"
+              @click="handleExport"
+            >
+              导出
+            </el-button>
+            <el-button
+              v-permisaction="['writ:bwc:remove']"
+              icon="el-icon-delete"
+              size="small"
+              class="action-btn tertiary-danger"
+              :disabled="selectedWritRecords.length === 0"
+              @click="handleBatchDelete"
+            >
+              删除
+            </el-button>
+          </div>
+          <div class="right-actions">
+            <el-popover
+              ref="columnSettingsPopover"
+              placement="bottom-end"
+              width="300"
+              trigger="click"
+              popper-class="column-settings-popover"
+              :visible-arrow="true"
+            >
+              <div
+                role="dialog"
+                aria-label="列显示设置"
+                class="column-settings"
+              >
                 <div class="column-settings-header">
-                  <span>列显示设置</span>
-                  <el-button type="text" size="mini" @click="resetColumns"
-                    >重置</el-button
+                  <span class="column-settings-title">列显示设置</span>
+                  <el-button
+                    type="text"
+                    size="small"
+                    class="column-settings-reset"
+                    @click="resetColumns"
                   >
+                    重置
+                  </el-button>
                 </div>
                 <el-checkbox-group
                   v-model="visibleColumns"
@@ -146,71 +156,101 @@
                     :key="col.prop"
                     class="column-item"
                   >
-                    <el-checkbox :label="col.prop" :disabled="col.fixed">
+                    <el-checkbox
+                      :label="col.prop"
+                      :disabled="col.fixed"
+                      :aria-label="col.fixed ? `${col.label}（必须显示）` : col.label"
+                    >
                       {{ col.label }}
+                      <el-tooltip
+                        v-if="col.fixed"
+                        content="此列必须显示，不能隐藏"
+                        placement="top"
+                      >
+                        <i class="el-icon-info column-item-icon"></i>
+                      </el-tooltip>
                     </el-checkbox>
                   </div>
                 </el-checkbox-group>
               </div>
-              <el-button slot="reference" size="mini" icon="el-icon-setting"
-                >列设置</el-button
+              <el-button
+                slot="reference"
+                size="small"
+                icon="el-icon-setting"
+                type="text"
+                class="action-btn tertiary"
+                aria-label="打开列设置"
+                aria-haspopup="dialog"
               >
+                列设置
+              </el-button>
             </el-popover>
-          </el-col>
-        </el-row>
+          </div>
+        </div>
 
         <!-- 文书列表 -->
         <el-table
           ref="writTable"
           v-loading="loading"
           :data="writList"
+          border
           @selection-change="handleSelectionChange"
           @sort-change="handleSortChang"
         >
-          <el-table-column type="selection" width="50" align="center" />
+          <el-table-column type="selection" width="60" align="center" />
           <el-table-column
             label="操作"
             align="center"
             class-name="small-padding fixed-width"
-            width="350"
+            width="280"
             fixed="left"
           >
             <template slot-scope="scope">
               <el-button
-                size="mini"
+                size="small"
                 type="text"
                 icon="el-icon-view"
+                class="action-btn tertiary"
                 @click="handleView(scope.row)"
-                >浏览</el-button
               >
+                浏览
+              </el-button>
               <el-button
-                size="mini"
+                size="small"
                 type="text"
                 icon="el-icon-edit"
+                class="action-btn tertiary"
                 @click="handleUpdate(scope.row)"
-                >修改</el-button
               >
+                修改
+              </el-button>
               <el-button
-                size="mini"
+                size="small"
                 type="text"
                 icon="el-icon-delete"
+                class="action-btn tertiary-danger"
                 @click="handleDelete(scope.row)"
-                >删除</el-button
               >
+                删除
+              </el-button>
               <el-button
-                size="mini"
+                size="small"
                 type="text"
                 icon="el-icon-star-on"
+                class="action-btn tertiary"
                 @click="handleScore(scope.row)"
-                >评分</el-button
               >
+                评分
+              </el-button>
               <el-button
-                size="mini"
+                size="small"
                 type="text"
                 icon="el-icon-link"
+                class="action-btn tertiary"
                 @click="handleShowMedia(scope.row)"
-                >已关联媒体</el-button
               >
+                已关联媒体
+              </el-button>
             </template>
           </el-table-column>
           <el-table-column
@@ -345,63 +385,100 @@
       <el-dialog
         :title="title"
         :visible.sync="open"
-        width="600px"
+        width="700px"
         append-to-body
+        :close-on-click-modal="false"
       >
         <el-form ref="form" :model="form" :rules="rules" label-width="100px">
-          <el-form-item label="文书名称" prop="writName">
-            <el-input v-model="form.writName" placeholder="请输入文书名称" />
-          </el-form-item>
-          <el-form-item label="文书类型" prop="writType">
-            <el-select
-              v-model="form.writType"
-              placeholder="请选择文书类型"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="dict in writTypeOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="parseInt(dict.value)"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="组织部门" prop="orgId">
-            <treeselect
-              v-model="form.orgId"
-              :options="orgOptions"
-              placeholder="请选择组织部门"
-            />
-          </el-form-item>
-          <el-form-item label="警员" prop="writPoliceIds">
-            <el-select
-              v-model="form.writPoliceIds"
-              multiple
-              placeholder="请选择警员"
-              collapse-tags
-              collapse-tags-tooltip
-              style="width: 100%"
-            >
-              <el-option
-                v-for="user in userOptions"
-                :key="user.userId"
-                :label="user.userName"
-                :value="user.userId"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="文书描述" prop="writDesc">
-            <el-input
-              v-model="form.writDesc"
-              type="textarea"
-              :rows="4"
-              placeholder="请输入文书描述"
-            />
-          </el-form-item>
+
+          <!-- 使用 el-collapse 实现可折叠分组 -->
+          <el-collapse v-model="activeFormSections" class="form-collapse">
+
+            <!-- 基础信息 -->
+            <el-collapse-item name="basic" class="form-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-document section-icon"></i>
+                  <span class="section-title">基础信息</span>
+                  <span class="section-badge">5项</span>
+                </div>
+              </template>
+
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="文书名称" prop="writName">
+                    <el-input v-model="form.writName" placeholder="请输入文书名称" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="文书类型" prop="writType">
+                    <el-select
+                      v-model="form.writType"
+                      placeholder="请选择文书类型"
+                      class="full-width"
+                    >
+                      <el-option
+                        v-for="dict in writTypeOptions"
+                        :key="dict.value"
+                        :label="dict.label"
+                        :value="parseInt(dict.value)"
+                      />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="组织部门" prop="orgId">
+                    <treeselect
+                      v-model="form.orgId"
+                      :options="orgOptions"
+                      placeholder="请选择组织部门"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="警员" prop="writPoliceIds">
+                    <el-select
+                      v-model="form.writPoliceIds"
+                      multiple
+                      placeholder="请选择警员"
+                      collapse-tags
+                      collapse-tags-tooltip
+                      class="full-width"
+                    >
+                      <el-option
+                        v-for="user in userOptions"
+                        :key="user.userId"
+                        :label="user.userName"
+                        :value="user.userId"
+                      />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="文书描述" prop="writDesc">
+                    <el-input
+                      v-model="form.writDesc"
+                      type="textarea"
+                      :rows="3"
+                      placeholder="请输入文书描述"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
+
+          </el-collapse>
         </el-form>
+
         <div slot="footer" class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
+          <el-button type="text" class="tertiary" size="small" @click="cancel">取 消</el-button>
+          <el-button type="primary" size="small" @click="submitForm">确 定</el-button>
         </div>
       </el-dialog>
 
@@ -411,6 +488,7 @@
         :visible.sync="scoreOpen"
         width="500px"
         append-to-body
+        :close-on-click-modal="false"
       >
         <el-form
           ref="scoreForm"
@@ -446,8 +524,8 @@
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
-          <el-button type="primary" @click="submitScore">确 定</el-button>
-          <el-button @click="scoreOpen = false">取 消</el-button>
+          <el-button type="text" class="tertiary" size="small" @click="scoreOpen = false">取 消</el-button>
+          <el-button type="primary" size="small" @click="submitScore">确 定</el-button>
         </div>
       </el-dialog>
 
@@ -457,47 +535,102 @@
         :visible.sync="viewOpen"
         width="800px"
         append-to-body
+        :close-on-click-modal="false"
+        custom-class="writ-detail-dialog"
       >
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="文书编号">{{
-            viewData.writCode
-          }}</el-descriptions-item>
-          <el-descriptions-item label="文书名称">{{
-            viewData.writName
-          }}</el-descriptions-item>
-          <el-descriptions-item label="文书类型">{{
-            writTypeFormat(viewData)
-          }}</el-descriptions-item>
-          <el-descriptions-item label="开书时间">{{
-            parseTime(viewData.writTime)
-          }}</el-descriptions-item>
-          <el-descriptions-item label="组织部门">{{
-            viewData.orgPaths || "无"
-          }}</el-descriptions-item>
-          <el-descriptions-item label="警员">{{
-            viewData.writPoliceNames || "无"
-          }}</el-descriptions-item>
-          <el-descriptions-item label="评分">{{
-            viewData.writScore || "未评分"
-          }}</el-descriptions-item>
-          <el-descriptions-item label="是否关联">{{
-            relationStatusFormat(viewData)
-          }}</el-descriptions-item>
-          <el-descriptions-item label="评分说明" :span="2">{{
-            viewData.scoreDesc || "无"
-          }}</el-descriptions-item>
-          <el-descriptions-item label="文书描述" :span="2">{{
-            viewData.writDesc || "无"
-          }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{
-            parseTime(viewData.createdAt)
-          }}</el-descriptions-item>
-          <el-descriptions-item label="更新时间">{{
-            parseTime(viewData.updatedAt)
-          }}</el-descriptions-item>
-        </el-descriptions>
+        <el-collapse v-model="activeDetailSections" class="detail-collapse">
+
+          <!-- 基础信息 -->
+          <el-collapse-item name="basic" class="detail-section">
+            <template slot="title">
+              <div class="section-header">
+                <i class="el-icon-document section-icon"></i>
+                <span class="section-title">基础信息</span>
+                <span class="section-badge">5项</span>
+              </div>
+            </template>
+            <el-descriptions :column="2" border class="section-descriptions">
+              <el-descriptions-item label="文书编号">
+                <span class="nowrap-text">{{ viewData.writCode || "-" }}</span>
+              </el-descriptions-item>
+              <el-descriptions-item label="文书名称">
+                {{ viewData.writName || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="文书类型">
+                {{ writTypeFormat(viewData) || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="开书时间">
+                {{ parseTime(viewData.writTime) || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="组织部门" :span="2">
+                {{ viewData.orgPaths || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="警员" :span="2">
+                {{ viewData.writPoliceNames || "-" }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-collapse-item>
+
+          <!-- 关联与评分 -->
+          <el-collapse-item name="relation" class="detail-section">
+            <template slot="title">
+              <div class="section-header">
+                <i class="el-icon-star-on section-icon"></i>
+                <span class="section-title">关联与评分</span>
+                <span class="section-badge">4项</span>
+              </div>
+            </template>
+            <el-descriptions :column="2" border class="section-descriptions">
+              <el-descriptions-item label="关联状态">
+                <el-tag
+                  :type="viewData.isRelation === 1 ? 'success' : 'info'"
+                  size="small"
+                  effect="dark"
+                >
+                  {{ relationStatusFormat(viewData) || "-" }}
+                </el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="评分">
+                {{ viewData.writScore || "未评分" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="评分说明" :span="2">
+                {{ viewData.scoreDesc || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="文书描述" :span="2">
+                {{ viewData.writDesc || "-" }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-collapse-item>
+
+          <!-- 系统信息 -->
+          <el-collapse-item name="system" class="detail-section">
+            <template slot="title">
+              <div class="section-header">
+                <i class="el-icon-info section-icon"></i>
+                <span class="section-title">系统信息</span>
+                <span class="section-badge">4项</span>
+              </div>
+            </template>
+            <el-descriptions :column="2" border class="section-descriptions">
+              <el-descriptions-item label="文书地址" :span="2">
+                {{ viewData.writAddress || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="文书来源">
+                {{ viewData.writSource || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="创建时间">
+                {{ parseTime(viewData.createdAt) || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="更新时间" :span="2">
+                {{ parseTime(viewData.updatedAt) || "-" }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-collapse-item>
+
+        </el-collapse>
+
         <div slot="footer" class="dialog-footer">
-          <el-button @click="viewOpen = false">关 闭</el-button>
+          <el-button type="text" class="action-btn tertiary" size="small" @click="viewOpen = false">关 闭</el-button>
         </div>
       </el-dialog>
 
@@ -678,6 +811,10 @@ export default {
       scoreOpen: false,
       // 是否显示浏览对话框
       viewOpen: false,
+      // 表单折叠状态
+      activeFormSections: ['basic'],
+      // 详情对话框折叠状态
+      activeDetailSections: ['basic', 'relation'],
       // 是否显示第一层抽屉(已关联媒体)
       showMediaDrawer: false,
       // 是否显示第二层抽屉(未关联媒体选择器)
@@ -910,6 +1047,16 @@ export default {
     resetSelected() {
       this.selectedWritMap = {};
       this.selectedWritRecords = [];
+    },
+
+    /** 刷新列表 */
+    handleRefresh() {
+      this.getList();
+    },
+
+    /** 批量删除 */
+    handleBatchDelete() {
+      this.handleDelete();
     },
 
     //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
@@ -1593,79 +1740,6 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.mb8 {
-  margin-bottom: 8px;
-}
-
-.column-settings-trigger {
-  text-align: right;
-}
-
-.column-settings {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.column-settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ebeef5;
-}
-
-.column-item {
-  padding: 5px 0;
-}
-
-/* 抽屉样式 */
-.drawer-content {
-  padding: 20px;
-  height: calc(100vh - 120px);
-  overflow-y: auto;
-}
-
-.drawer-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20px;
-  border-top: 1px solid #e8e8e8;
-  background: #fff;
-  text-align: right;
-  z-index: 1;
-}
-
-/* 第一层抽屉样式 */
-.media-drawer {
-  z-index: 1000 !important;
-}
-
-/* 第二层抽屉样式 - 更高的z-index */
-.media-selector-drawer {
-  z-index: 2000 !important;
-}
-
-/* 抽屉遮罩层样式 */
-::v-deep .el-drawer__wrapper {
-  transition: all 0.3s ease;
-}
-
-/* 第二层抽屉的遮罩层 */
-::v-deep .media-selector-drawer .el-drawer__wrapper {
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-/* 抽屉滑入滑出动画 */
-::v-deep .el-drawer {
-  transition: transform 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
-}
-
-::v-deep .el-drawer.rtl {
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
-}
+<style lang="scss" scoped>
+@import './styles/index.scss';
 </style>

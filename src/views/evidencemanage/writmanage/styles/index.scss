@@ -1,0 +1,249 @@
+// src/views/evidencemanage/writmanage/styles/index.scss
+// ========== 文书管理页面特有样式 ==========
+
+@import '@/styles/tokens/index.scss';
+
+// ========== 查询表单样式 ==========
+.query-form {
+  margin-bottom: $spacing-4;
+  padding: $spacing-4;
+  background-color: $law-bg-default;
+  border-radius: 4px;
+
+  ::v-deep .el-form-item {
+    margin-bottom: $spacing-3;
+  }
+
+  ::v-deep .el-form-item__label {
+    font-weight: $font-weight-medium;
+    color: $law-gray-700;
+  }
+}
+
+// ========== 列设置对话框规范 ==========
+// 根据设计规范 - 列设置对话框（Popover）
+// 符合无障碍性、触控区域、视觉层次规范
+
+.column-settings {
+  // 头部样式
+  .column-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: $spacing-3;          // 12px
+    margin-bottom: $spacing-3;           // 12px
+    border-bottom: 1px solid $law-gray-200;
+
+    .column-settings-title {
+      font-size: $font-size-base;        // 14px
+      font-weight: $font-weight-semibold; // 600
+      color: $law-gray-900;              // #1A1A1A
+      line-height: $line-height-normal;   // 1.5
+    }
+
+    .column-settings-reset {
+      font-size: $font-size-sm;          // 13px
+      font-weight: $font-weight-normal;   // 400
+      color: $law-primary;               // #1A5F7A
+      padding: 4px 8px;
+      min-height: 32px;
+
+      &:hover {
+        background-color: rgba($law-primary, 0.1);
+      }
+
+      &:focus {
+        outline: 2px solid $law-primary;
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  // 列项样式 - 确保触控区域 ≥44px
+  .column-item {
+    padding: $spacing-2 0;               // 8px 上下间距
+    min-height: 44px;                    // 确保触控区域足够 ✓
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid $law-gray-100;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    ::v-deep .el-checkbox {
+      width: 100%;
+      display: flex;
+      align-items: center;
+
+      // 扩大复选框点击区域
+      .el-checkbox__input {
+        margin-right: $spacing-2;        // 8px
+        // 使用 CSS 扩大触控区域
+        &::after {
+          content: "";
+          position: absolute;
+          top: -6px;
+          left: -6px;
+          right: -6px;
+          bottom: -6px;
+        }
+      }
+
+      .el-checkbox__label {
+        font-size: $font-size-base;      // 14px - 确保可读性 ✓
+        font-weight: $font-weight-normal; // 400
+        color: $law-gray-900;            // #1A1A1A
+        line-height: $line-height-normal; // 1.5
+        display: flex;
+        align-items: center;
+        padding-left: $spacing-2;        // 8px
+      }
+
+      // 禁用状态样式
+      &.is-disabled {
+        .el-checkbox__label {
+          color: $law-gray-400;          // 禁用颜色更明显
+          cursor: not-allowed;
+        }
+
+        .el-checkbox__input.is-disabled {
+          cursor: not-allowed;
+        }
+      }
+
+      // 悬停状态 - 提供视觉反馈
+      &:not(.is-disabled):hover {
+        .el-checkbox__inner {
+          border-color: $law-primary;
+        }
+      }
+
+      // 焦点状态 - 明显焦点边框
+      .el-checkbox__input:focus .el-checkbox__inner {
+        border-color: $law-primary;
+        box-shadow: 0 0 0 2px rgba($law-primary, 0.2);
+      }
+    }
+
+    // 信息图标样式
+    .column-item-icon {
+      margin-left: $spacing-1;           // 4px
+      font-size: $font-size-sm;          // 13px
+      color: $law-gray-500;              // #78909C
+      cursor: help;
+
+      &:hover {
+        color: $law-primary;
+      }
+    }
+  }
+
+  // 复选框组样式
+  .el-checkbox-group {
+    max-height: 400px;
+    overflow-y: auto;
+
+    // 自定义滚动条
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: $law-gray-100;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $law-gray-400;
+      border-radius: 3px;
+
+      &:hover {
+        background: $law-gray-500;
+      }
+    }
+  }
+}
+
+// Popover 容器样式 - 响应式适配
+::v-deep .column-settings-popover {
+  // 桌面端样式
+  max-width: 320px;
+
+  // 移动端适配
+  @media (max-width: 768px) {
+    max-width: calc(100vw - 32px);       // 移动端留出边距
+    left: 16px !important;
+  }
+
+  // 键盘焦点样式
+  .el-checkbox:focus-within {
+    background-color: rgba($law-primary, 0.04);
+    border-radius: 4px;
+  }
+
+  // 动画过渡 - 符合 150-300ms 规范
+  .el-checkbox__inner {
+    transition: all 0.2s ease;
+  }
+}
+
+// ========== 抽屉样式 ==========
+.drawer-content {
+  padding: 20px;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.drawer-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  border-top: 1px solid #e8e8e8;
+  background: #fff;
+  text-align: right;
+  z-index: 1;
+}
+
+// 第一层抽屉样式
+.media-drawer {
+  z-index: 1000 !important;
+}
+
+// 第二层抽屉样式 - 更高的z-index
+.media-selector-drawer {
+  z-index: 2000 !important;
+}
+
+// 抽屉遮罩层样式
+::v-deep .el-drawer__wrapper {
+  transition: all 0.3s ease;
+}
+
+// 第二层抽屉的遮罩层
+::v-deep .media-selector-drawer .el-drawer__wrapper {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+// 抽屉滑入滑出动画
+::v-deep .el-drawer {
+  transition: transform 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
+}
+
+::v-deep .el-drawer.rtl {
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+// ========== 表单全宽样式 ==========
+.full-width {
+  width: 100%;
+}
+
+// ========== 空数据样式 ==========
+.empty-data {
+  text-align: center;
+  padding: 20px;
+  color: #909399;
+}
