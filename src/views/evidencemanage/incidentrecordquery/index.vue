@@ -7,7 +7,10 @@
           <IncidentQueryBar
             ref="queryBar"
             :status-options="statusOptions"
+            :relation-status-options="incidentRelationStatusOptions"
+            :org-options="orgOptions"
             @search="handleSearch"
+            @quick-search-reset="handleQuickSearchReset"
             @filter-change="handleFilterChange"
             @filter-reset="handleFilterReset"
           />
@@ -18,8 +21,6 @@
           :is-indeterminate="isSelectionIndeterminate"
           :all-selected="isAllSelected"
           @select-all-change="handleSelectAll"
-          @batch-delete="handleBatchDelete"
-          @batch-export="handleBatchExport"
         />
 
         <!-- 主操作栏 -->
@@ -29,27 +30,66 @@
               v-permisaction="['incidentrecord:bwc:create']"
               type="primary"
               icon="el-icon-plus"
-              size="mini"
+              size="small"
               @click="handleAdd"
             >
               新增警情
             </el-button>
             <el-button
               icon="el-icon-refresh"
-              size="mini"
+              size="small"
+              type="text"
+              class="action-btn tertiary"
               @click="handleRefresh"
             >
               刷新
             </el-button>
+            <el-button
+              v-permisaction="['incidentrecord:bwc:export']"
+              icon="el-icon-download"
+              size="small"
+              class="action-btn secondary"
+              @click="handleExport"
+            >
+              导出
+            </el-button>
+            <el-button
+              v-permisaction="['incidentrecord:bwc:remove']"
+              icon="el-icon-delete"
+              size="small"
+              class="action-btn tertiary-danger"
+              :disabled="selectedIncidentRecords.length === 0"
+              @click="handleBatchDeleteSelected"
+            >
+              删除
+            </el-button>
           </div>
           <div class="right-actions">
-            <el-popover placement="bottom-end" width="300" trigger="click">
-              <div class="column-settings">
+            <el-popover
+              ref="columnSettingsPopover"
+              placement="bottom-end"
+              width="300"
+              trigger="click"
+              popper-class="column-settings-popover"
+              :visible-arrow="true"
+              @after-enter="handleColumnSettingsOpen"
+              @after-leave="handleColumnSettingsClose"
+            >
+              <div
+                role="dialog"
+                aria-label="列显示设置"
+                class="column-settings"
+              >
                 <div class="column-settings-header">
-                  <span>列显示设置</span>
-                  <el-button type="text" size="mini" @click="resetColumns"
-                    >重置</el-button
+                  <span class="column-settings-title">列显示设置</span>
+                  <el-button
+                    type="text"
+                    size="small"
+                    class="column-settings-reset"
+                    @click="resetColumns"
                   >
+                    重置
+                  </el-button>
                 </div>
                 <el-checkbox-group
                   v-model="visibleColumns"
@@ -60,15 +100,34 @@
                     :key="col.prop"
                     class="column-item"
                   >
-                    <el-checkbox :label="col.prop" :disabled="col.fixed">
+                    <el-checkbox
+                      :label="col.prop"
+                      :disabled="col.fixed"
+                      :aria-label="col.fixed ? `${col.label}（必须显示）` : col.label"
+                    >
                       {{ col.label }}
+                      <el-tooltip
+                        v-if="col.fixed"
+                        content="此列必须显示，不能隐藏"
+                        placement="top"
+                      >
+                        <i class="el-icon-info column-item-icon"></i>
+                      </el-tooltip>
                     </el-checkbox>
                   </div>
                 </el-checkbox-group>
               </div>
-              <el-button slot="reference" size="mini" icon="el-icon-setting"
-                >列设置</el-button
+              <el-button
+                slot="reference"
+                size="small"
+                icon="el-icon-setting"
+                type="text"
+                class="action-btn tertiary"
+                aria-label="打开列设置"
+                aria-haspopup="dialog"
               >
+                列设置
+              </el-button>
             </el-popover>
           </div>
         </div>
@@ -96,40 +155,42 @@
             label="操作"
             align="center"
             class-name="small-padding fixed-width"
-            width="200"
+            width="240"
             fixed="left"
           >
             <template slot-scope="scope">
-              <el-button
-                v-permisaction="['incidentrecord:bwc:browse']"
-                size="mini"
-                type="text"
-                icon="el-icon-view"
-                class="action-btn view-btn"
-                @click="handleView(scope.row)"
-              >
-                浏览
-              </el-button>
-              <el-button
-                v-permisaction="['incidentrecord:bwc:edit']"
-                size="mini"
-                type="text"
-                icon="el-icon-edit"
-                class="action-btn edit-btn"
-                @click="handleUpdate(scope.row)"
-              >
-                修改
-              </el-button>
-              <el-button
-                v-permisaction="['incidentrecord:bwc:remove']"
-                size="mini"
-                type="text"
-                icon="el-icon-delete"
-                class="action-btn delete-btn"
-                @click="handleDelete(scope.row)"
-              >
-                删除
-              </el-button>
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['incidentrecord:bwc:browse']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >
+                  浏览
+                </el-button>
+                <el-button
+                  v-permisaction="['incidentrecord:bwc:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  v-permisaction="['incidentrecord:bwc:remove']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
           <el-table-column
@@ -383,12 +444,13 @@
           :visible.sync="open"
           width="800px"
           :close-on-click-modal="false"
+          append-to-body
+          custom-class="edit-dialog"
         >
           <el-form
             ref="form"
             :model="form"
             :rules="rules"
-            label-width="100px"
           >
 
             <!-- 使用 el-collapse 实现可折叠分组 -->
@@ -400,13 +462,13 @@
                   <div class="section-header">
                     <i class="el-icon-document section-icon"></i>
                     <span class="section-title">基础信息</span>
-                    <span class="section-badge">5项</span>
+                    <span class="section-badge">{{ basicFieldCount }}项</span>
                   </div>
                 </template>
 
                 <el-row :gutter="20">
                   <el-col :span="12">
-                    <el-form-item label="报警人姓名：" prop="name">
+                    <el-form-item label="报警人姓名" prop="name">
                       <el-input
                         v-model="form.name"
                         placeholder="请输入报警人姓名"
@@ -414,7 +476,7 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item label="报警电话：" prop="tel">
+                    <el-form-item label="报警电话" prop="tel">
                       <el-input
                         v-model="form.tel"
                         placeholder="请输入报警电话"
@@ -424,7 +486,7 @@
                 </el-row>
                 <el-row :gutter="20">
                   <el-col :span="24">
-                    <el-form-item label="警情标题：" prop="title">
+                    <el-form-item label="警情标题" prop="title">
                       <el-input
                         v-model="form.title"
                         placeholder="请输入警情标题"
@@ -434,7 +496,7 @@
                 </el-row>
                 <el-row :gutter="20">
                   <el-col :span="24">
-                    <el-form-item label="报警内容：" prop="context">
+                    <el-form-item label="报警内容" prop="context">
                       <el-input
                         v-model="form.context"
                         type="textarea"
@@ -446,7 +508,7 @@
                 </el-row>
                 <el-row :gutter="20">
                   <el-col :span="24">
-                    <el-form-item label="报警地址：" prop="address">
+                    <el-form-item label="报警地址" prop="address">
                       <el-input
                         v-model="form.address"
                         placeholder="请输入报警地址"
@@ -456,16 +518,19 @@
                 </el-row>
                 <el-row :gutter="20">
                   <el-col :span="12">
-                    <el-form-item label="处警组织：" prop="orgId">
+                    <el-form-item label="处警组织" prop="orgId">
                       <treeselect
                         v-model="form.orgId"
                         :options="orgOptions"
                         placeholder="请选择处警组织"
+                        :editable="false"
+                        :append-to-body="true"
+                        :z-index="9999"
                       />
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item label="处警人员：">
+                    <el-form-item label="处警人员">
                       <el-select
                         v-model="form.processPoliceIds"
                         placeholder="请选择处警人员"
@@ -492,7 +557,7 @@
                   <div class="section-header">
                     <i class="el-icon-time section-icon"></i>
                     <span class="section-title">时间流程</span>
-                    <span class="section-badge">5个节点</span>
+                    <span class="section-badge">{{ timelineFieldCount }}项</span>
                   </div>
                 </template>
 
@@ -521,7 +586,7 @@
 
                 <el-row :gutter="20" class="time-inputs">
                   <el-col :span="12">
-                    <el-form-item label="创建时间：">
+                    <el-form-item label="创建时间">
                       <el-date-picker
                         v-model="form.createTime"
                         type="datetime"
@@ -532,7 +597,7 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item label="报警时间：">
+                    <el-form-item label="报警时间">
                       <el-date-picker
                         v-model="form.reportTime"
                         type="datetime"
@@ -543,7 +608,7 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item label="接警时间：">
+                    <el-form-item label="接警时间">
                       <el-date-picker
                         v-model="form.receiveTime"
                         type="datetime"
@@ -554,7 +619,7 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item label="处警时间：">
+                    <el-form-item label="处警时间">
                       <el-date-picker
                         v-model="form.processTime"
                         type="datetime"
@@ -565,7 +630,7 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item label="结束时间：">
+                    <el-form-item label="结束时间">
                       <el-date-picker
                         v-model="form.endTime"
                         type="datetime"
@@ -584,13 +649,13 @@
                   <div class="section-header">
                     <i class="el-icon-user section-icon"></i>
                     <span class="section-title">执法信息</span>
-                    <span class="section-badge">4项</span>
+                    <span class="section-badge">{{ enforcementFieldCount }}项</span>
                   </div>
                 </template>
 
                 <el-row :gutter="20">
                   <el-col :span="12">
-                    <el-form-item label="警情监督类型：" prop="superviseType">
+                    <el-form-item label="警情监督类型" prop="superviseType">
                       <el-select
                         v-model="form.superviseType"
                         placeholder="请选择"
@@ -603,7 +668,7 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item label="处警结果：" prop="result">
+                    <el-form-item label="处警结果" prop="result">
                       <el-input
                         v-model="form.result"
                         placeholder="请输入处警结果"
@@ -613,7 +678,7 @@
                 </el-row>
                 <el-row :gutter="20">
                   <el-col :span="24">
-                    <el-form-item label="状态：">
+                    <el-form-item label="状态">
                       <el-radio-group v-model="form.status">
                         <el-radio
                           v-for="dict in statusOptions"
@@ -631,8 +696,8 @@
           </el-form>
 
           <div slot="footer" class="dialog-footer">
-            <el-button @click="cancel">取 消</el-button>
-            <el-button type="primary" @click="submitForm">确 定</el-button>
+            <el-button type="text" class="tertiary" size="small" @click="cancel">取 消</el-button>
+            <el-button type="primary" size="small" @click="submitForm">确 定</el-button>
           </div>
         </el-dialog>
 
@@ -643,115 +708,202 @@
           width="800px"
           append-to-body
           :close-on-click-modal="false"
+          custom-class="detail-dialog"
         >
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="警情编号">
-              {{ viewData.code || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="警情标题">
-              {{ viewData.title || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="报警人姓名">
-              {{ viewData.name || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="报警电话">
-              {{ viewData.tel || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="处警单编号">
-              {{ viewData.processCode || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="接警单编号">
-              {{ viewData.receiveCode || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="反馈单编号">
-              {{ viewData.feedbackCode || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="警情监督类型">
-              {{ viewData.superviseType || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="案件编号">
-              {{ viewData.caseId || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="归档编号">
-              {{ viewData.archiveCode || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="处警组织路径" :span="2">
-              {{ viewData.orgPaths || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="处警组织名称">
-              {{ viewData.orgName || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="组织编码">
-              {{ viewData.orgCode || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="组织简称">
-              {{ viewData.orgJc || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="处警人员">
-              {{ viewData.processPoliceNames || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="状态">
-              <el-tag
-                :type="viewData.status === 1 ? 'success' : 'info'"
-                size="small"
-                effect="dark"
-              >
-                {{ statusFormat(viewData) || "-" }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="是否关联">
-              <el-tag
-                :type="viewData.isRelation === 1 ? 'success' : 'info'"
-                size="small"
-                effect="dark"
-              >
-                {{
-                  selectDictLabel(
-                    incidentRelationStatusOptions,
-                    viewData.isRelation
-                  ) || "-"
-                }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="报警地址" :span="2">
-              {{ viewData.address || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="报警内容" :span="2">
-              {{ viewData.context || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="处警结果" :span="2">
-              {{ viewData.result || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="报警时间">
-              {{ parseTime(viewData.reportTime) || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="接警时间">
-              {{ parseTime(viewData.receiveTime) || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="处警时间">
-              {{ parseTime(viewData.processTime) || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="结束时间">
-              {{ parseTime(viewData.endTime) || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="创建时间">
-              {{ parseTime(viewData.createTime) || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="创建用户">
-              {{ viewData.createUserName || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="创建用户警号">
-              {{ viewData.createUserNo || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="更新用户">
-              {{ viewData.updateUserName || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="更新用户警号">
-              {{ viewData.updateUserNo || "-" }}
-            </el-descriptions-item>
-          </el-descriptions>
+          <el-collapse v-model="activeDetailSections" class="form-collapse">
+
+            <!-- 基础信息 -->
+            <el-collapse-item name="basic" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-document section-icon"></i>
+                  <span class="section-title">基础信息</span>
+                  <span class="section-badge">{{ detailBasicFieldCount }}项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="警情编号">
+                  <span class="nowrap-text">{{ viewData.code || "-" }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="警情标题" :span="2">
+                  {{ viewData.title || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="报警人姓名">
+                  {{ viewData.name || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="报警电话">
+                  <span class="nowrap-text">{{ viewData.tel || "-" }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="报警地址" :span="2">
+                  {{ viewData.address || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="报警内容" :span="2">
+                  {{ viewData.context || "-" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 时间流程 - 带时间线可视化 -->
+            <el-collapse-item name="timeline" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-time section-icon"></i>
+                  <span class="section-title">时间流程</span>
+                  <span class="section-badge">{{ detailTimelineFieldCount }}项</span>
+                </div>
+              </template>
+
+              <!-- 时间线可视化 -->
+              <div class="timeline-preview">
+                <div class="timeline-item" :class="{ active: viewData.reportTime }">
+                  <span class="timeline-dot"></span>
+                  <span class="timeline-label">报警</span>
+                </div>
+                <div class="timeline-line"></div>
+                <div class="timeline-item" :class="{ active: viewData.receiveTime }">
+                  <span class="timeline-dot"></span>
+                  <span class="timeline-label">接警</span>
+                </div>
+                <div class="timeline-line"></div>
+                <div class="timeline-item" :class="{ active: viewData.processTime }">
+                  <span class="timeline-dot"></span>
+                  <span class="timeline-label">处警</span>
+                </div>
+                <div class="timeline-line"></div>
+                <div class="timeline-item" :class="{ active: viewData.endTime }">
+                  <span class="timeline-dot"></span>
+                  <span class="timeline-label">结束</span>
+                </div>
+              </div>
+
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="报警时间">
+                  {{ parseTime(viewData.reportTime) || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="接警时间">
+                  {{ parseTime(viewData.receiveTime) || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="处警时间">
+                  {{ parseTime(viewData.processTime) || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="结束时间">
+                  {{ parseTime(viewData.endTime) || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="创建时间" :span="2">
+                  {{ parseTime(viewData.createTime) || "-" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 执法信息 -->
+            <el-collapse-item name="enforcement" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-user section-icon"></i>
+                  <span class="section-title">执法信息</span>
+                  <span class="section-badge">{{ detailEnforcementFieldCount }}项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="处警单编号">
+                  <span class="nowrap-text">{{ viewData.processCode || "-" }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="接警单编号">
+                  <span class="nowrap-text">{{ viewData.receiveCode || "-" }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="反馈单编号">
+                  <span class="nowrap-text">{{ viewData.feedbackCode || "-" }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="警情监督类型">
+                  {{ viewData.superviseType || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="案件编号">
+                  <span class="nowrap-text">{{ viewData.caseId || "-" }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="归档编号">
+                  <span class="nowrap-text">{{ viewData.archiveCode || "-" }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="处警结果" :span="2">
+                  {{ viewData.result || "-" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 组织与人员 -->
+            <el-collapse-item name="organization" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-office-building section-icon"></i>
+                  <span class="section-title">组织与人员</span>
+                  <span class="section-badge">{{ detailOrganizationFieldCount }}项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="处警组织路径" :span="2">
+                  {{ viewData.orgPaths || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="处警组织名称">
+                  {{ viewData.orgName || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="组织编码">
+                  <span class="nowrap-text">{{ viewData.orgCode || "-" }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="组织简称">
+                  {{ viewData.orgJc || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="处警人员">
+                  {{ viewData.processPoliceNames || "-" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 状态与操作 -->
+            <el-collapse-item name="status" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-info section-icon"></i>
+                  <span class="section-title">状态与操作</span>
+                  <span class="section-badge">{{ detailStatusFieldCount }}项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="状态">
+                  <el-tag
+                    :type="viewData.status === 1 ? 'success' : 'info'"
+                    size="small"
+                    effect="dark"
+                  >
+                    {{ statusFormat(viewData) || "-" }}
+                  </el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="是否关联">
+                  <el-tag
+                    :type="viewData.isRelation === 1 ? 'success' : 'info'"
+                    size="small"
+                    effect="dark"
+                  >
+                    {{ selectDictLabel(incidentRelationStatusOptions, viewData.isRelation) || "-" }}
+                  </el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="创建用户">
+                  {{ viewData.createUserName || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="创建用户警号">
+                  {{ viewData.createUserNo || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="更新用户">
+                  {{ viewData.updateUserName || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="更新用户警号">
+                  {{ viewData.updateUserNo || "-" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+          </el-collapse>
+
           <div slot="footer" class="dialog-footer">
-            <el-button @click="ViewOpen = false">关 闭</el-button>
+            <el-button type="text" class="action-btn tertiary" size="small" @click="ViewOpen = false">关闭</el-button>
           </div>
         </el-dialog>
       </el-card>
@@ -818,6 +970,8 @@ export default {
       ViewOpen: false,
       // 表单折叠状态
       activeFormSections: ['basic'],
+      // 详情对话框折叠状态 (默认展开: 基础信息、时间流程、状态与操作)
+      activeDetailSections: ['basic', 'timeline', 'status'],
       // 当前选中的警情记录
       currentIncidentRecord: null,
       // 详情数据
@@ -910,6 +1064,48 @@ export default {
       processingInstance: null, //Element UI全局加载动画的实例
       previousCursor: null, //记录鼠标状态
     };
+  },
+  computed: {
+    // 基础信息分组字段数量
+    basicFieldCount() {
+      // 报警人姓名、报警电话、警情标题、报警内容、报警地址、处警组织、处警人员
+      return 7;
+    },
+    // 时间流程分组字段数量
+    timelineFieldCount() {
+      // 创建时间、报警时间、接警时间、处警时间、结束时间
+      return 5;
+    },
+    // 执法信息分组字段数量
+    enforcementFieldCount() {
+      // 警情监督类型、处警结果、状态
+      return 3;
+    },
+    // 详情对话框 - 基础信息字段数量
+    detailBasicFieldCount() {
+      // 警情编号、警情标题、报警人姓名、报警电话、报警地址、报警内容
+      return 6;
+    },
+    // 详情对话框 - 时间流程字段数量
+    detailTimelineFieldCount() {
+      // 报警时间、接警时间、处警时间、结束时间、创建时间
+      return 5;
+    },
+    // 详情对话框 - 执法信息字段数量
+    detailEnforcementFieldCount() {
+      // 处警单编号、接警单编号、反馈单编号、警情监督类型、案件编号、归档编号、处警结果
+      return 7;
+    },
+    // 详情对话框 - 组织与人员字段数量
+    detailOrganizationFieldCount() {
+      // 处警组织路径、处警组织名称、组织编码、组织简称、处警人员
+      return 5;
+    },
+    // 详情对话框 - 状态与操作字段数量
+    detailStatusFieldCount() {
+      // 状态、是否关联、创建用户、创建用户警号、更新用户、更新用户警号
+      return 6;
+    }
   },
   watch: {
     "form.orgId": function (newVal) {
@@ -1063,6 +1259,31 @@ export default {
 
     // 表单重置
     reset() {
+      this.form = {
+        code: undefined,
+        name: undefined,
+        title: undefined,
+        tel: undefined,
+        context: undefined,
+        address: undefined,
+        orgId: undefined,
+        processPoliceIds: [],
+        createTime: undefined,
+        reportTime: undefined,
+        receiveTime: undefined,
+        processTime: undefined,
+        endTime: undefined,
+        result: undefined,
+        feedbackCode: undefined,
+        processCode: undefined,
+        receiveCode: undefined,
+        caseId: undefined,
+        archiveCode: undefined,
+        superviseType: undefined,
+        status: undefined,
+        isRelation: undefined,
+      };
+      this.userOptions = []; // 清空处警人员选项
       this.resetForm("form");
     },
     /** 重置按钮操作 */
@@ -1154,13 +1375,45 @@ export default {
 
     /** 新增查询栏相关方法 */
     handleSearch(searchData) {
-      // 处理搜索
-      if (searchData.keyword) {
-        this.queryParams.keyword = searchData.keyword;
-      } else {
-        delete this.queryParams.keyword;
-      }
+      // 快速搜索字段列表（这些字段可能被用户清空）
+      // 当这些字段不在 searchData 中时，说明已被清空，需要从 queryParams 中删除
+      const quickSearchFields = ['code', 'title', 'name', 'status', 'isRelation'];
+
+      // 高级筛选中的时间范围字段列表
+      // 这些字段由高级筛选面板的条件性添加逻辑生成，当条件不满足时不会出现在 searchData 中
+      // 如果它们不在 searchData 中，说明时间范围已被清空，需要从 queryParams 中删除
+      const timeRangeFields = [
+        'reportTimeStart', 'reportTimeEnd',
+        'receiveTimeStart', 'receiveTimeEnd',
+        'processTimeStart', 'processTimeEnd',
+        'endTimeStart', 'endTimeEnd'
+      ];
+
+      // 合并新的搜索条件
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key];
+      });
+
+      // 删除被清空的快速搜索字段
+      quickSearchFields.forEach(field => {
+        if (!(field in searchData)) {
+          delete this.queryParams[field];
+        }
+      });
+
+      // 删除被清空的时间范围字段
+      timeRangeFields.forEach(field => {
+        if (!(field in searchData)) {
+          delete this.queryParams[field];
+        }
+      });
+
       this.handleQuery();
+    },
+
+    handleQuickSearchReset() {
+      // 重置所有筛选条件（与全局重置保持一致）
+      this.handleFilterReset();
     },
 
     handleFilterChange(filterData) {
@@ -1184,8 +1437,25 @@ export default {
         // 已归档
         this.queryParams.status = 3;
       } else if (filterData.filterType === 'advanced') {
-        // 高级筛选 - 合并筛选参数
-        Object.assign(this.queryParams, filterData);
+        // 高级筛选 - 合并筛选参数（移除 filterType，只保留实际的查询条件）
+        const { filterType, ...actualFilterData } = filterData;
+        Object.assign(this.queryParams, actualFilterData);
+
+        // 删除被清空的时间范围字段
+        // 当时间范围复选框被取消勾选或时间选择器被清空时，
+        // getFilterData() 不会在返回对象中包含这些字段，
+        // 因此需要从 queryParams 中删除旧的时间范围参数
+        const timeRangeFields = [
+          'reportTimeStart', 'reportTimeEnd',
+          'receiveTimeStart', 'receiveTimeEnd',
+          'processTimeStart', 'processTimeEnd',
+          'endTimeStart', 'endTimeEnd'
+        ];
+        timeRangeFields.forEach(field => {
+          if (!(field in actualFilterData)) {
+            delete this.queryParams[field];
+          }
+        });
       } else if (filterData.filterType === 'all') {
         // 全部 - 清除特定筛选条件
         delete this.queryParams.reportTimeStart;
@@ -1197,7 +1467,35 @@ export default {
     },
 
     handleFilterReset() {
-      this.resetQuery();
+      // 重置所有筛选条件到初始值
+      this.queryParams = {
+        pageIndex: 1,
+        pageSize: 10,
+        code: undefined,
+        name: undefined,
+        title: undefined,
+        orgId: undefined,
+        processPoliceIds: undefined,
+        status: undefined,
+        isRelation: undefined,
+        // 清空高级筛选的字段
+        context: undefined,
+        tel: undefined,
+        // 清空时间范围
+        reportTimeRangeStart: undefined,
+        reportTimeRangeEnd: undefined,
+        receiveTimeRangeStart: undefined,
+        receiveTimeRangeEnd: undefined,
+        processTimeRangeStart: undefined,
+        processTimeRangeEnd: undefined,
+        endTimeRangeStart: undefined,
+        endTimeRangeEnd: undefined,
+        // 清空快捷筛选的字段
+        reportTimeStart: undefined,
+        reportTimeEnd: undefined,
+        createUserId: undefined
+      };
+      this.handleQuery();
     },
 
     handleSelectAll(val) {
@@ -1206,14 +1504,9 @@ export default {
       this.$refs.incidentRecordTable.toggleAllSelection();
     },
 
-    handleBatchDelete() {
-      // 复用原有的 handleDelete 方法
+    handleBatchDeleteSelected() {
+      // 删除选中的警情记录
       this.handleDelete();
-    },
-
-    handleBatchExport() {
-      // 复用原有的 handleExport 方法
-      this.handleExport();
     },
 
     handleRefresh() {
@@ -1355,25 +1648,27 @@ export default {
     async handleDelete(row) {
       try {
         var incidentRecordIds;
-        var incidentRecordCodes;
         if (row && row.id !== undefined) {
           incidentRecordIds = row.id;
-          incidentRecordCodes = row.code;
         } else {
           incidentRecordIds = this.selectedIncidentRecords.map(
             (item) => item.id
           );
-          incidentRecordCodes = this.selectedIncidentRecords.map(
-            (item) => item.code
-          );
         }
+
+        // 计算删除数量，优化确认消息
+        const count = Array.isArray(incidentRecordIds) ? incidentRecordIds.length : 1;
+        const confirmMessage = count > 1
+          ? `是否确认删除选中的 ${count} 条警情记录？此操作不可恢复。`
+          : `是否确认删除此条警情记录？此操作不可恢复。`;
+
         await this.$confirm(
-          '是否确认删除警情编号为"' + incidentRecordCodes + '"的数据项?',
-          "信息",
+          confirmMessage,
+          "确认删除",
           {
-            confirmButtonText: "确定",
+            confirmButtonText: "删除",
             cancelButtonText: "取消",
-            type: "info",
+            type: "warning",
           }
         );
         this.startProcessing("正在删除警情...");
@@ -1408,12 +1703,13 @@ export default {
           Array.isArray(this.selectedIncidentRecords) &&
           this.selectedIncidentRecords.length > 0;
 
+        const count = hasSelection ? this.selectedIncidentRecords.length : 0;
         const confirmText = hasSelection
-          ? `是否确认导出已勾选的 ${this.selectedIncidentRecords.length} 条警情数据？`
+          ? `是否确认导出已勾选的 ${count} 条警情数据？`
           : "是否确认导出所有警情数据项？";
 
-        await this.$confirm(confirmText, "提示", {
-          confirmButtonText: "确定",
+        await this.$confirm(confirmText, "导出确认", {
+          confirmButtonText: "导出",
           cancelButtonText: "取消",
           type: "info",
         });
@@ -1558,88 +1854,24 @@ export default {
       );
       this.$message.success("已重置为默认显示");
     },
+
+    /** 列设置对话框打开后的焦点管理 */
+    handleColumnSettingsOpen() {
+      // 等待 DOM 更新后将焦点移到第一个复选框
+      this.$nextTick(() => {
+        const firstCheckbox = document.querySelector(
+          ".column-settings-popover .el-checkbox:first-child .el-checkbox__input"
+        );
+        if (firstCheckbox) {
+          firstCheckbox.focus();
+        }
+      });
+    },
+
+    /** 列设置对话框关闭后的焦点管理 */
+    handleColumnSettingsClose() {
+      // 焦点自动返回触发按钮，无需额外处理
+    },
   },
 };
 </script>
-<style lang="scss" scoped>
-@import './styles/index.scss';
-</style>
-.form-container {
-  padding: 10px 20px;
-}
-.form-section {
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #f9f9f9;
-  border-radius: 4px;
-  border-left: 4px solid #409eff;
-}
-.form-section-title {
-  font-size: 16px;
-  color: #409eff;
-  margin-bottom: 15px;
-  font-weight: bold;
-}
-.el-form-item {
-  margin-bottom: 18px;
-}
-.full-width {
-  width: 100%;
-}
-.dialog-footer {
-  text-align: right;
-  padding: 20px;
-  border-top: 1px solid #e6e6e6;
-}
-.horizontal-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* 媒体关联列表样式 */
-.media-relations-section {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
-}
-
-.empty-data {
-  text-align: center;
-  padding: 20px;
-  color: #909399;
-}
-.column-settings-trigger {
-  text-align: right;
-}
-
-.column-settings {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.column-settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #e4e7ed;
-  font-weight: bold;
-}
-
-.column-item {
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.column-item:last-child {
-  border-bottom: none;
-}
-
-.column-item .el-checkbox {
-  width: 100%;
-}
-</style>

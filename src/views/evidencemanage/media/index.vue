@@ -988,7 +988,7 @@ export default {
       this.startProcessing("正在更新执法类型...");
       batchUpdateMediaEnforceType({
         ids: this.mediaIds,
-        enforceType: this.manualMarkForm.enforceType,
+        enforcementType: this.manualMarkForm.enforceType,
       })
         .then(async (response) => {
           if (response && response.code === 200) {
@@ -1713,7 +1713,10 @@ export default {
 }
 
 .vue-treeselect__placeholder {
-  color: #c0c4cc;
+  font-size: 13px;
+  font-weight: 400;
+  color: #78909C;
+  font-family: inherit;
 }
 
 .vue-treeselect__single-value {

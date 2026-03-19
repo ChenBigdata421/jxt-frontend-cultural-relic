@@ -1,0 +1,38 @@
+@import '@/styles/tokens/index.scss';
+
+// ========== 状态列样式 ==========
+// 用于表格中的状态显示，包含状态圆点和文字
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+
+    &.processing {
+      background-color: $law-status-processing;
+    }
+
+    &.completed {
+      background-color: $law-status-completed;
+    }
+
+    &.archived {
+      background-color: $law-status-archived;
+    }
+
+    &.pending {
+      background-color: $law-status-pending;
+    }
+  }
+
+  .status-text {
+    font-size: $font-size-sm;         // 13px - 辅助信息
+    color: $law-gray-600;             // #455A64 - 辅助文字颜色
+  }
+}

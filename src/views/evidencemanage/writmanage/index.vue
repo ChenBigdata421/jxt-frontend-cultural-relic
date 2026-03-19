@@ -2,84 +2,19 @@
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <!-- 查询表单 -->
-        <el-form ref="queryForm" :model="queryParams" :inline="true" class="query-form">
-          <el-form-item label="文书编号" prop="writCode">
-            <el-input
-              v-model="queryParams.writCode"
-              placeholder="请输入文书编号"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="文书名称" prop="writName">
-            <el-input
-              v-model="queryParams.writName"
-              placeholder="请输入文书名称"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="文书类型" prop="writType">
-            <el-select
-              v-model="queryParams.writType"
-              placeholder="文书类型"
-              clearable
-              style="width: 170px"
-            >
-              <el-option
-                v-for="dict in writTypeOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="组织部门" prop="orgId">
-            <treeselect
-              v-model="queryParams.orgId"
-              :options="orgOptions"
-              placeholder="请选择组织部门"
-              style="width: 170px"
-              clearable
-            />
-          </el-form-item>
-          <el-form-item label="开书时间">
-            <el-form-item prop="writTimeStart">
-              <el-date-picker
-                v-model="queryParams.writTimeStart"
-                type="datetime"
-                placeholder="请选择开始时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-              >
-              </el-date-picker>
-            </el-form-item>
-            <span>至</span>
-            <el-form-item prop="writTimeEnd">
-              <el-date-picker
-                v-model="queryParams.writTimeEnd"
-                type="datetime"
-                placeholder="请选择结束时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-              >
-              </el-date-picker>
-            </el-form-item>
-          </el-form-item>
-          <el-form-item>
-            <el-button
-              type="primary"
-              icon="el-icon-search"
-              size="small"
-              @click="handleQuery"
-              >搜索</el-button
-            >
-            <el-button icon="el-icon-refresh" size="small" class="action-btn tertiary" @click="resetQuery"
-              >重置</el-button
-            >
-          </el-form-item>
-        </el-form>
+        <!-- 新的查询栏组件 -->
+        <div class="query-section">
+          <WritQueryBar
+            ref="queryBar"
+            :writ-type-options="writTypeOptions"
+            :relation-status-options="relationStatusOptions"
+            :org-options="orgOptions"
+            @search="handleSearch"
+            @quick-search-reset="handleQuickSearchReset"
+            @filter-change="handleFilterChange"
+            @filter-reset="handleFilterReset"
+          />
+        </div>
 
         <!-- 主操作栏 -->
         <div class="main-action-bar">
@@ -130,6 +65,8 @@
               trigger="click"
               popper-class="column-settings-popover"
               :visible-arrow="true"
+              @after-enter="handleColumnSettingsOpen"
+              @after-leave="handleColumnSettingsClose"
             >
               <div
                 role="dialog"
@@ -202,55 +139,57 @@
             label="操作"
             align="center"
             class-name="small-padding fixed-width"
-            width="280"
+            width="320"
             fixed="left"
           >
             <template slot-scope="scope">
-              <el-button
-                size="small"
-                type="text"
-                icon="el-icon-view"
-                class="action-btn tertiary"
-                @click="handleView(scope.row)"
-              >
-                浏览
-              </el-button>
-              <el-button
-                size="small"
-                type="text"
-                icon="el-icon-edit"
-                class="action-btn tertiary"
-                @click="handleUpdate(scope.row)"
-              >
-                修改
-              </el-button>
-              <el-button
-                size="small"
-                type="text"
-                icon="el-icon-delete"
-                class="action-btn tertiary-danger"
-                @click="handleDelete(scope.row)"
-              >
-                删除
-              </el-button>
-              <el-button
-                size="small"
-                type="text"
-                icon="el-icon-star-on"
-                class="action-btn tertiary"
-                @click="handleScore(scope.row)"
-              >
-                评分
-              </el-button>
-              <el-button
-                size="small"
-                type="text"
-                icon="el-icon-link"
-                class="action-btn tertiary"
-                @click="handleShowMedia(scope.row)"
-              >
-                已关联媒体
-              </el-button>
+              <div class="action-buttons">
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >
+                  浏览
+                </el-button>
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-star-on"
+                  class="action-btn tertiary"
+                  @click="handleScore(scope.row)"
+                >
+                  评分
+                </el-button>
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-link"
+                  class="action-btn tertiary"
+                  @click="handleShowMedia(scope.row)"
+                >
+                  已关联媒体
+                </el-button>
+              </div>
             </template>
           </el-table-column>
           <el-table-column
@@ -538,7 +477,7 @@
         :close-on-click-modal="false"
         custom-class="writ-detail-dialog"
       >
-        <el-collapse v-model="activeDetailSections" class="detail-collapse">
+        <el-collapse v-model="activeDetailSections" class="form-collapse">
 
           <!-- 基础信息 -->
           <el-collapse-item name="basic" class="detail-section">
@@ -782,6 +721,7 @@ import {
 import { orgTreeSelect } from "@/api/admin/sys-org";
 import { listUser } from "@/api/admin/sys-user";
 import { formatJson } from "@/utils";
+import WritQueryBar from "@/components/WritQueryBar/index.vue";
 
 export default {
   name: "WritManage",
@@ -790,6 +730,7 @@ export default {
     Pagination,
     Treeselect,
     MediaSelector,
+    WritQueryBar,
   },
   data() {
     return {
@@ -852,20 +793,20 @@ export default {
       relationStatusOptions: [],
       // 列配置选项
       columnOptions: [
-        { prop: "writCode", label: "文书编号", fixed: false },
-        { prop: "writName", label: "文书名称", fixed: false },
-        { prop: "writType", label: "文书类型", fixed: false },
-        { prop: "writTime", label: "开书时间", fixed: false },
-        { prop: "orgPaths", label: "组织部门", fixed: false },
-        { prop: "writPoliceNames", label: "警员", fixed: false },
-        { prop: "writScore", label: "评分", fixed: false },
-        { prop: "isRelation", label: "关联状态", fixed: false },
-        { prop: "writAddress", label: "文书地址", fixed: false },
-        { prop: "writSource", label: "文书来源", fixed: false },
-        { prop: "scoreDesc", label: "评分说明", fixed: false },
-        { prop: "writDesc", label: "文书描述", fixed: false },
-        { prop: "createdAt", label: "创建时间", fixed: false },
-        { prop: "updatedAt", label: "更新时间", fixed: false },
+        { prop: "writCode", label: "文书编号", fixed: true, defaultVisible: true },
+        { prop: "writName", label: "文书名称", fixed: false, defaultVisible: true },
+        { prop: "writType", label: "文书类型", fixed: false, defaultVisible: true },
+        { prop: "writTime", label: "开书时间", fixed: false, defaultVisible: true },
+        { prop: "orgPaths", label: "组织部门", fixed: false, defaultVisible: true },
+        { prop: "writPoliceNames", label: "警员", fixed: false, defaultVisible: true },
+        { prop: "writScore", label: "评分", fixed: false, defaultVisible: false },
+        { prop: "isRelation", label: "关联状态", fixed: false, defaultVisible: true },
+        { prop: "writAddress", label: "文书地址", fixed: false, defaultVisible: false },
+        { prop: "writSource", label: "文书来源", fixed: false, defaultVisible: false },
+        { prop: "scoreDesc", label: "评分说明", fixed: false, defaultVisible: false },
+        { prop: "writDesc", label: "文书描述", fixed: false, defaultVisible: false },
+        { prop: "createdAt", label: "创建时间", fixed: false, defaultVisible: false },
+        { prop: "updatedAt", label: "更新时间", fixed: false, defaultVisible: false },
       ],
       // 可见列
       visibleColumns: [],
@@ -1077,6 +1018,119 @@ export default {
       this.handleQuery();
     },
 
+    /** 新增查询栏相关方法 */
+    handleSearch(searchData) {
+      // 快速搜索字段列表
+      const quickSearchFields = ['writCode', 'writName', 'writType', 'isRelation'];
+
+      // 高级筛选中的时间范围字段列表
+      const timeRangeFields = [
+        'writTimeStart', 'writTimeEnd',
+        'createdAtStart', 'createdAtEnd',
+        'updatedAtStart', 'updatedAtEnd'
+      ];
+
+      // 合并新的搜索条件
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key];
+      });
+
+      // 删除被清空的快速搜索字段
+      quickSearchFields.forEach(field => {
+        if (!(field in searchData)) {
+          delete this.queryParams[field];
+        }
+      });
+
+      // 删除被清空的时间范围字段
+      timeRangeFields.forEach(field => {
+        if (!(field in searchData)) {
+          delete this.queryParams[field];
+        }
+      });
+
+      this.handleQuery();
+    },
+
+    handleQuickSearchReset() {
+      // 重置所有筛选条件（与全局重置保持一致）
+      this.handleFilterReset();
+    },
+
+    handleFilterChange(filterData) {
+      // 处理快捷筛选和高级筛选
+      if (filterData.filterType === 'today') {
+        // 今日文书
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        this.queryParams.writTimeStart = today.toISOString();
+        delete this.queryParams.writTimeEnd;
+      } else if (filterData.filterType === 'mine') {
+        // 我的文书 - 需要从 store 获取当前用户
+        const currentUser = this.$store.state.user && this.$store.state.user.user;
+        if (currentUser && currentUser.userId) {
+          this.queryParams.createUserId = currentUser.userId;
+        }
+      } else if (filterData.filterType === 'pending') {
+        // 待处理 - 根据实际业务逻辑调整
+        // 这里假设有一个状态字段表示处理状态
+        // this.queryParams.status = 0;
+      } else if (filterData.filterType === 'related') {
+        // 已关联
+        this.queryParams.isRelation = 1;
+      } else if (filterData.filterType === 'advanced') {
+        // 高级筛选 - 合并筛选参数（移除 filterType，只保留实际的查询条件）
+        const { filterType, ...actualFilterData } = filterData;
+        Object.assign(this.queryParams, actualFilterData);
+
+        // 删除被清空的时间范围字段
+        const timeRangeFields = [
+          'writTimeStart', 'writTimeEnd',
+          'createdAtStart', 'createdAtEnd',
+          'updatedAtStart', 'updatedAtEnd'
+        ];
+        timeRangeFields.forEach(field => {
+          if (!(field in actualFilterData)) {
+            delete this.queryParams[field];
+          }
+        });
+      } else if (filterData.filterType === 'all') {
+        // 全部 - 清除特定筛选条件
+        delete this.queryParams.writTimeStart;
+        delete this.queryParams.writTimeEnd;
+        delete this.queryParams.createUserId;
+        delete this.queryParams.isRelation;
+      }
+      this.handleQuery();
+    },
+
+    handleFilterReset() {
+      // 重置所有筛选条件到初始值
+      this.queryParams = {
+        pageIndex: 1,
+        pageSize: 10,
+        writCode: undefined,
+        writName: undefined,
+        writType: undefined,
+        orgId: undefined,
+        writTimeStart: undefined,
+        writTimeEnd: undefined,
+        // 清空高级筛选的字段
+        writAddress: undefined,
+        writSource: undefined,
+        writPoliceIds: undefined,
+        // 清空时间范围
+        createdAtStart: undefined,
+        createdAtEnd: undefined,
+        updatedAtStart: undefined,
+        updatedAtEnd: undefined,
+        // 清空快捷筛选的字段
+        createUserId: undefined,
+        isRelation: undefined
+      };
+      this.handleQuery();
+    },
+
     normalizeQueryParams(params = {}) {
       const query = { ...params };
       Object.keys(query).forEach((key) => {
@@ -1084,7 +1138,9 @@ export default {
         if (value === "" || value === null || value === undefined) {
           delete query[key];
         } else if (
-          (key === "writTimeStart" || key === "writTimeEnd") &&
+          (key === "writTimeStart" || key === "writTimeEnd" ||
+           key === "createdAtStart" || key === "createdAtEnd" ||
+           key === "updatedAtStart" || key === "updatedAtEnd") &&
           typeof value === "string"
         ) {
           // 将本地时间字符串转换为 ISO 8601 格式（UTC 时间）
@@ -1366,10 +1422,15 @@ export default {
         try {
           this.visibleColumns = JSON.parse(saved);
         } catch (error) {
-          this.visibleColumns = this.columnOptions.map((item) => item.prop);
+          this.visibleColumns = this.columnOptions
+            .filter((item) => item.defaultVisible !== false)
+            .map((item) => item.prop);
         }
       } else {
-        this.visibleColumns = this.columnOptions.map((item) => item.prop);
+        // 根据defaultVisible属性初始化可见列
+        this.visibleColumns = this.columnOptions
+          .filter((item) => item.defaultVisible !== false)
+          .map((item) => item.prop);
       }
     },
     /** 判断列是否显示 */
@@ -1385,12 +1446,33 @@ export default {
     },
     /** 重置列配置 */
     resetColumns() {
-      this.visibleColumns = this.columnOptions.map((item) => item.prop);
+      // 根据defaultVisible属性重置为默认可见列
+      this.visibleColumns = this.columnOptions
+        .filter((item) => item.defaultVisible !== false)
+        .map((item) => item.prop);
       localStorage.setItem(
         "writ_manage_visible_columns",
         JSON.stringify(this.visibleColumns)
       );
       this.$message.success("已重置为默认显示");
+    },
+
+    /** 列设置对话框打开后的焦点管理 */
+    handleColumnSettingsOpen() {
+      // 等待 DOM 更新后将焦点移到第一个复选框
+      this.$nextTick(() => {
+        const firstCheckbox = document.querySelector(
+          ".column-settings-popover .el-checkbox:first-child .el-checkbox__input"
+        );
+        if (firstCheckbox) {
+          firstCheckbox.focus();
+        }
+      });
+    },
+
+    /** 列设置对话框关闭后的焦点管理 */
+    handleColumnSettingsClose() {
+      // 焦点自动返回触发按钮，无需额外处理
     },
     /** 延迟函数 */
     delay(ms) {
@@ -1740,6 +1822,3 @@ export default {
   },
 };
 </script>
-<style lang="scss" scoped>
-@import './styles/index.scss';
-</style>

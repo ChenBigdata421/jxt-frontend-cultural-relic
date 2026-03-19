@@ -10,23 +10,6 @@
           已选择 {{ selectedCount }} 项
         </el-checkbox>
       </div>
-      <div class="batch-actions">
-        <el-button
-          type="danger"
-          size="small"
-          icon="el-icon-delete"
-          @click="handleBatchDelete"
-        >
-          批量删除
-        </el-button>
-        <el-button
-          type="primary"
-          size="small"
-          icon="el-icon-download"
-          @click="handleBatchExport"
-        >
-          批量导出
-        </el-button>
       </div>
     </div>
   </transition>
@@ -52,12 +35,6 @@ export default {
   methods: {
     handleSelectAllChange(val) {
       this.$emit('select-all-change', val);
-    },
-    handleBatchDelete() {
-      this.$emit('batch-delete');
-    },
-    handleBatchExport() {
-      this.$emit('batch-export');
     }
   }
 };
@@ -84,6 +61,33 @@ export default {
   .batch-actions {
     display: flex;
     gap: $spacing-2;
+  }
+}
+
+// ========== Secondary Button 样式 ==========
+.action-btn {
+  &.secondary {
+    background-color: rgba(26, 95, 122, 0.1);
+    color: #1A5F7A;
+    border: none;
+
+    &:hover {
+      background-color: rgba(26, 95, 122, 0.2);
+    }
+
+    &:active {
+      background-color: rgba(26, 95, 122, 0.3);
+    }
+
+    &:focus {
+      outline: 2px solid #1A5F7A;
+      outline-offset: 2px;
+    }
+
+    // 确保图标和文字颜色一致
+    i {
+      color: inherit;
+    }
   }
 }
 

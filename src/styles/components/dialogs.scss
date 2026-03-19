@@ -1,0 +1,545 @@
+@import '@/styles/tokens/index.scss';
+
+// ========== 详情描述列表样式 ==========
+// 用于键值对形式的详情展示
+.section-descriptions {
+  ::v-deep .el-descriptions-item__label {
+    width: 100px;                                 // 减少标签宽度，给内容更多空间 ✅
+    font-size: $font-size-sm;           // 13px ✅
+    font-weight: $font-weight-medium;   // 500 ✅
+    color: $law-gray-700;               // #546E7A ✅
+    line-height: $line-height-normal;   // 1.5 ✅
+  }
+
+  ::v-deep .el-descriptions-item__content {
+    font-size: $font-size-base;         // 14px ✅
+    font-weight: $font-weight-normal;   // 400 ✅
+    color: $law-gray-900;               // #1A1A1A ✅
+    line-height: $line-height-normal;   // 1.5 ✅
+    word-break: break-word;             // 允许长单词换行
+  }
+
+  // 不换行文本样式（用于手机号、编号等）
+  .nowrap-text {
+    white-space: nowrap !important;              // 强制不换行
+    word-break: keep-all !important;             // 保持单词完整
+    overflow: hidden !important;                 // 隐藏溢出
+    text-overflow: ellipsis !important;          // 显示省略号
+    min-width: 150px !important;                 // 增加最小宽度 ✅
+    display: inline-block !important;            // 确保宽度生效
+  }
+}
+
+// ========== 分区头部样式 ==========
+// 用于折叠面板的标题区域
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+
+  .section-icon {
+    font-size: $font-size-lg;  // 18px ✅
+    color: $law-primary;
+  }
+
+  .section-title {
+    font-weight: $font-weight-semibold;  // 600 ✅
+    font-size: $font-size-md;            // 16px - 符合规范要求
+    color: $law-gray-900;                // #1A1A1A ✅
+    line-height: $line-height-normal;    // 1.5 ✅
+  }
+
+  .section-badge {
+    margin-left: auto;
+    padding: 2px 8px;
+    background-color: rgba($law-primary, 0.1);
+    color: $law-primary;
+    font-size: $font-size-xs;            // 12px ✅
+    font-weight: $font-weight-normal;    // 400 ✅
+    line-height: $line-height-normal;    // 1.5 ✅
+    border-radius: 12px;
+  }
+}
+
+// ========== 时间线可视化样式 ==========
+// 用于流程步骤的可视化展示
+.timeline-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-5 0;
+  margin-bottom: $spacing-5;
+
+  .timeline-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-2;
+    position: relative;
+    z-index: 1;
+
+    .timeline-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: $law-gray-300;
+      border: 2px solid $law-bg-paper;
+      box-shadow: 0 0 0 2px $law-gray-300;
+      transition: all 0.3s;
+    }
+
+    .timeline-label {
+      font-size: $font-size-sm;           // 13px ✅
+      color: $law-gray-600;               // #455A64 ✅
+      font-weight: $font-weight-normal;   // 400 ✅
+      line-height: $line-height-normal;   // 1.5 ✅
+    }
+
+    &.active .timeline-dot {
+      background-color: $law-primary;
+      box-shadow: 0 0 0 2px $law-primary;
+    }
+
+    &.active .timeline-label {
+      color: $law-primary;
+      font-weight: $font-weight-medium;   // 500 ✅
+    }
+  }
+
+  .timeline-line {
+    flex: 1;
+    height: 2px;
+    background-color: $law-gray-300;
+    min-width: 40px;
+  }
+}
+
+// ========== 主操作栏样式 ==========
+// 用于页面顶部的主操作区域
+.main-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-4;
+  padding: $spacing-3 $spacing-4;
+  background-color: $law-bg-default;
+  border-radius: 4px;
+
+  .left-actions {
+    display: flex;
+    gap: $spacing-2;
+  }
+
+  .right-actions {
+    display: flex;
+    gap: $spacing-2;
+  }
+}
+
+// ========== 移动端适配 ==========
+@media (max-width: 768px) {
+  .section-descriptions {
+    ::v-deep .el-descriptions-item__label {
+      width: 90px;                             // 移动端进一步减少标签宽度
+    }
+
+    // 移动端不换行文本样式
+    .nowrap-text {
+      min-width: 120px !important;              // 移动端减少最小宽度
+    }
+  }
+}
+
+// ========== 列设置对话框样式 ==========
+// 用于表格列显示/隐藏的 Popover 设置面板
+// 符合无障碍性、触控区域、视觉层次规范
+.column-settings {
+  // 头部样式
+  .column-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: $spacing-3;          // 12px
+    margin-bottom: $spacing-3;           // 12px
+    border-bottom: 1px solid $law-gray-200;
+
+    .column-settings-title {
+      font-size: $font-size-base;        // 14px
+      font-weight: $font-weight-semibold; // 600
+      color: $law-gray-900;              // #1A1A1A
+      line-height: $line-height-normal;   // 1.5
+    }
+
+    .column-settings-reset {
+      font-size: $font-size-sm;          // 13px
+      font-weight: $font-weight-normal;   // 400
+      color: $law-primary;               // #1A5F7A
+      padding: 4px 8px;
+      min-height: 32px;
+
+      &:hover {
+        background-color: rgba($law-primary, 0.1);
+      }
+
+      &:focus {
+        outline: 2px solid $law-primary;
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  // 列项样式 - 确保触控区域 ≥44px
+  .column-item {
+    padding: $spacing-2 0;               // 8px 上下间距
+    min-height: 44px;                    // 确保触控区域足够 ✓
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid $law-gray-100;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    ::v-deep .el-checkbox {
+      width: 100%;
+      display: flex;
+      align-items: center;
+
+      // 扩大复选框点击区域
+      .el-checkbox__input {
+        margin-right: $spacing-2;        // 8px
+        // 使用 CSS 扩大触控区域
+        &::after {
+          content: "";
+          position: absolute;
+          top: -6px;
+          left: -6px;
+          right: -6px;
+          bottom: -6px;
+        }
+      }
+
+      .el-checkbox__label {
+        font-size: $font-size-base;      // 14px - 确保可读性 ✓
+        font-weight: $font-weight-normal; // 400
+        color: $law-gray-900;            // #1A1A1A
+        line-height: $line-height-normal; // 1.5
+        display: flex;
+        align-items: center;
+        padding-left: $spacing-2;        // 8px
+      }
+
+      // 禁用状态样式
+      &.is-disabled {
+        .el-checkbox__label {
+          color: $law-gray-400;          // 禁用颜色更明显
+          cursor: not-allowed;
+        }
+
+        .el-checkbox__input.is-disabled {
+          cursor: not-allowed;
+        }
+      }
+
+      // 悬停状态 - 提供视觉反馈
+      &:not(.is-disabled):hover {
+        .el-checkbox__inner {
+          border-color: $law-primary;
+        }
+      }
+
+      // 焦点状态 - 明显焦点边框
+      .el-checkbox__input:focus .el-checkbox__inner {
+        border-color: $law-primary;
+        box-shadow: 0 0 0 2px rgba($law-primary, 0.2);
+      }
+    }
+
+    // 信息图标样式
+    .column-item-icon {
+      margin-left: $spacing-1;           // 4px
+      font-size: $font-size-sm;          // 13px
+      color: $law-gray-500;              // #78909C
+      cursor: help;
+
+      &:hover {
+        color: $law-primary;
+      }
+    }
+  }
+
+  // 复选框组样式 - 移除内部滚动，让 popover 统一管理
+  .el-checkbox-group {
+    // 不再设置 max-height 和 overflow-y，避免双滚动条
+  }
+}
+
+// 列设置 Popover 容器样式 - 响应式适配
+::v-deep .column-settings-popover {
+  // 桌面端样式
+  max-width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+
+  // 自定义滚动条
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $law-gray-100;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $law-gray-400;
+    border-radius: 3px;
+
+    &:hover {
+      background: $law-gray-500;
+    }
+  }
+
+  // 移动端适配
+  @media (max-width: 768px) {
+    max-width: calc(100vw - 32px);       // 移动端留出边距
+    left: 16px !important;
+  }
+
+  // 键盘焦点样式
+  .el-checkbox:focus-within {
+    background-color: rgba($law-primary, 0.04);
+    border-radius: 4px;
+  }
+
+  // 动画过渡 - 符合 150-300ms 规范
+  .el-checkbox__inner {
+    transition: all 0.2s ease;
+  }
+}
+
+// ========== 对话框底部样式 ==========
+// 用于对话框底部的操作按钮区域
+// 基础样式：多按钮对话框右对齐，有上边框
+// 特殊情况：详情对话框通过 .el-dialog.detail-dialog 选择器覆盖此样式
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end; // 右对齐多按钮
+  padding: $spacing-5; // 20px
+  border-top: 1px solid $law-gray-200; // #e6e6e6
+}
+
+// 详情对话框特殊样式：单按钮居中对齐，有上边框
+// 注意：必须放在 .dialog-footer 基础样式之后，特异性更高才能覆盖
+.el-dialog.detail-dialog .dialog-footer {
+  justify-content: center; // 居中对齐单按钮
+  border-top: 1px solid $law-gray-200; // 添加上边框，与其他对话框保持一致
+  padding: 12px 20px 20px 20px;
+}
+
+// 同时覆盖 Element UI 的 footer 容器样式
+.el-dialog.detail-dialog .el-dialog__footer {
+  border-top: none;
+  padding: 10px 20px 0 20px; // 保留左右边距，让线条与对话框边缘有间距，更美观
+}
+
+// ========== 查询区域样式 ==========
+// 用于页面顶部的查询栏区域
+.query-section {
+  margin-bottom: $spacing-4;
+}
+
+// ========== 时间输入行样式 ==========
+// 用于表单中时间字段的布局
+.time-inputs {
+  margin-top: $spacing-4;
+}
+
+// ========== 抽屉样式 ==========
+// 用于媒体关联等需要抽屉展示的场景
+// 遵循设计令牌系统：2026-03-15-incident-record-query-ux-design.md
+
+// 抽屉内容区域
+.drawer-content {
+  padding: $spacing-5;      // 20px - 符合组件特定间距
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+
+  // 自定义滚动条样式
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $law-gray-100;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $law-gray-400;
+    border-radius: 3px;
+
+    &:hover {
+      background: $law-gray-500;
+    }
+  }
+}
+
+// 抽屉底部操作栏
+.drawer-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-5;      // 20px
+  border-top: 1px solid $law-gray-200;
+  background: $law-bg-paper;
+  text-align: right;
+  z-index: 1;
+
+  // 按钮间距遵循全局按钮规范
+  .el-button + .el-button {
+    margin-left: $spacing-2;  // 8px
+  }
+}
+
+// 第一层抽屉样式
+.media-drawer {
+  z-index: 1000 !important;
+}
+
+// 第二层抽屉样式 - 更高的 z-index
+.media-selector-drawer {
+  z-index: 2000 !important;
+}
+
+// 抽屉遮罩层样式
+::v-deep .el-drawer__wrapper {
+  transition: all 0.3s ease;  // 符合 150-300ms 动画规范
+}
+
+// 第二层抽屉的遮罩层 - 半透明背景
+::v-deep .media-selector-drawer .el-drawer__wrapper {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+// 抽屉滑入滑出动画
+::v-deep .el-drawer {
+  transition: transform 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
+}
+
+// 右侧抽屉的阴影效果
+::v-deep .el-drawer.rtl {
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+// 抽屉标题样式（如果需要自定义）
+::v-deep .el-drawer__header {
+  padding: $spacing-4 $spacing-5;  // 16px 20px
+  margin-bottom: 0;
+  border-bottom: 1px solid $law-gray-200;
+
+  .el-drawer__title {
+    font-size: $font-size-lg;            // 18px
+    font-weight: $font-weight-semibold;  // 600
+    color: $law-gray-900;                // #1A1A1A
+    line-height: $line-height-normal;    // 1.5
+  }
+}
+
+// 抽屉关闭按钮
+::v-deep .el-drawer__close-btn {
+  font-size: $font-size-md;             // 16px
+  color: $law-gray-600;                 // #455A64
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: $law-gray-900;               // #1A1A1A
+  }
+}
+
+// ========== 对话框通用样式 ==========
+// 用于所有对话框的结构样式规范
+// 包括标题、底部操作栏等
+.el-dialog {
+  // 对话框标题
+  .el-dialog__title {
+    font-size: $font-size-lg;            // 18px
+    font-weight: $font-weight-semibold;  // 600
+    color: $law-gray-900;                // #1A1A1A
+    line-height: $line-height-normal;    // 1.5
+  }
+
+  // 对话框底部按钮
+  .el-dialog__footer {
+    .el-button {
+      font-size: $font-size-sm;          // 13px
+      font-weight: $font-weight-normal;  // 400
+      line-height: $line-height-normal;  // 1.5
+    }
+  }
+}
+
+// 注意：对话框内表单元素的字体样式（如 .el-form-item__label、.el-input__inner 等）
+// 已移至 src/styles/components/forms.scss 中统一管理
+
+// ========== 详情对话框样式 ==========
+// 用于只读查看的详情对话框（如警情详情、媒体详情、文书详情等）
+// 滚动由内部的 .form-collapse 统一管理，与修改对话框保持一致
+.detail-dialog {
+  // 对话框标题样式 - 继承全局 .el-dialog .el-dialog__title 样式
+
+  .el-dialog__body {
+    padding: $spacing-5;           // 四周统一 20px，符合规范要求
+    // 不设置 max-height 和 overflow-y，让 .form-collapse 管理滚动
+    font-size: $font-size-base;
+    color: $law-gray-700;
+    line-height: $line-height-normal;
+  }
+
+  // .el-dialog__footer 样式在上方已定义（第334-344行）
+  // 详情对话框使用居中对齐、有上边框的样式
+}
+
+// ========== 编辑对话框样式 ==========
+// 用于表单编辑的对话框（如修改警情、添加警情、修改媒体等）
+// 滚动由内部的 .form-collapse 统一管理，与详情对话框保持一致
+.edit-dialog {
+  // 对话框标题样式 - 继承全局 .el-dialog .el-dialog__title 样式
+
+  .el-dialog__body {
+    padding: $spacing-5;           // 四周统一 20px，与 detail-dialog 保持一致
+    // 不设置 max-height 和 overflow-y，让 .form-collapse 管理滚动
+    font-size: $font-size-base;
+    color: $law-gray-700;
+    line-height: $line-height-normal;
+  }
+
+  // 编辑对话框 footer 样式：右对齐多按钮
+  .dialog-footer {
+    justify-content: flex-end;     // 右对齐多按钮
+    border-top: 1px solid $law-gray-200;
+    padding: $spacing-5;           // 20px
+  }
+
+  // 覆盖 Element UI 的 footer 容器样式
+  .el-dialog__footer {
+    border-top: none;
+    padding: 10px 20px 0 20px;     // 保留左右边距，让线条与对话框边缘有间距
+  }
+}
+
+// ========== 详情对话框移动端适配 ==========
+@media (max-width: 768px) {
+  .detail-dialog {
+    .el-dialog__body {
+      padding: $spacing-3;           // 移动端减少内边距为 12px
+    }
+  }
+
+  .edit-dialog {
+    .el-dialog__body {
+      padding: $spacing-3;           // 移动端减少内边距为 12px
+    }
+  }
+}

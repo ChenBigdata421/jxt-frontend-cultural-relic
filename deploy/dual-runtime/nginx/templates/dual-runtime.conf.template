@@ -69,8 +69,7 @@ map ${DOLLAR}request_method ${DOLLAR}documents_backend {
 server {
     listen       80;
     listen  [::]:80;
-    # server_name  ${BUSINESS_SERVER_NAME};
-    server_name  ${BUSINESS_SERVER_NAME} *.jxt.com;
+    server_name  ${BUSINESS_SERVER_NAME};
 
     # 业务站静态资源
     location / {
@@ -91,13 +90,13 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    location ^~ /api/v1/mediadownload {
+    location ^~ /api/v1/media {
         proxy_set_header Host ${DOLLAR}host;
         proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
         proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
         proxy_set_header Authorization ${DOLLAR}http_authorization;
-        proxy_pass ${DOLLAR}process_backend;
+        proxy_pass ${DOLLAR}media_backend;
     }
 
     location ^~ /api/v1/mediadelete {
@@ -106,16 +105,16 @@ server {
         proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
         proxy_set_header Authorization ${DOLLAR}http_authorization;
-        proxy_pass ${DOLLAR}process_backend;
+        proxy_pass ${PROCESS_MANAGEMENT_UPSTREAM};
     }
 
-    location ^~ /api/v1/media {
+    location ^~ /api/v1/mediadownload {
         proxy_set_header Host ${DOLLAR}host;
         proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
         proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
         proxy_set_header Authorization ${DOLLAR}http_authorization;
-        proxy_pass ${DOLLAR}media_backend;
+        proxy_pass ${PROCESS_MANAGEMENT_UPSTREAM};
     }
 
     location ^~ /api/v1/archives {

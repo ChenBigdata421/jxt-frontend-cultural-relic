@@ -925,14 +925,12 @@ export default {
 </script>
 
 <style scoped>
-.mb8 {
-  margin-bottom: 8px;
-}
+/* 以下样式已移至全局样式：
+   .mb8 → src/styles/components/utilities.scss
+   .drawer-content → src/styles/components/dialogs.scss
+*/
 
-.drawer-content {
-  padding: 20px;
-}
-
+/* 媒体抽屉头部样式 - 页面特定样式 */
 .media-drawer >>> .el-drawer__header {
   margin-bottom: 20px;
   padding-bottom: 20px;

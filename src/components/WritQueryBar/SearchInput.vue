@@ -3,41 +3,32 @@
     <div class="quick-search-form">
       <div class="search-row">
         <div class="search-item">
-          <label>警情编号</label>
+          <label>文书编号</label>
           <el-input
-            v-model="searchForm.code"
-            placeholder="请输入警情编号"
+            v-model="searchForm.writCode"
+            placeholder="请输入文书编号"
             clearable
             @keyup.enter.native="handleSearch"
           />
         </div>
         <div class="search-item">
-          <label>警情标题</label>
+          <label>文书名称</label>
           <el-input
-            v-model="searchForm.title"
-            placeholder="请输入警情标题"
+            v-model="searchForm.writName"
+            placeholder="请输入文书名称"
             clearable
             @keyup.enter.native="handleSearch"
           />
         </div>
         <div class="search-item">
-          <label>报警人姓名</label>
-          <el-input
-            v-model="searchForm.name"
-            placeholder="请输入报警人姓名"
-            clearable
-            @keyup.enter.native="handleSearch"
-          />
-        </div>
-        <div class="search-item">
-          <label>状态</label>
+          <label>文书类型</label>
           <el-select
-            v-model="searchForm.status"
-            placeholder="请选择状态"
+            v-model="searchForm.writType"
+            placeholder="请选择文书类型"
             clearable
           >
             <el-option
-              v-for="dict in statusOptions"
+              v-for="dict in writTypeOptions"
               :key="dict.value"
               :label="dict.label"
               :value="dict.value"
@@ -45,7 +36,7 @@
           </el-select>
         </div>
         <div class="search-item">
-          <label>是否关联</label>
+          <label>关联状态</label>
           <el-select
             v-model="searchForm.isRelation"
             placeholder="请选择是否关联"
@@ -66,9 +57,9 @@
 
 <script>
 export default {
-  name: 'SearchInput',
+  name: 'WritSearchInput',
   props: {
-    statusOptions: {
+    writTypeOptions: {
       type: Array,
       default: () => []
     },
@@ -80,17 +71,16 @@ export default {
   data() {
     return {
       searchForm: {
-        code: undefined,
-        title: undefined,
-        name: undefined,
-        status: undefined,
+        writCode: undefined,
+        writName: undefined,
+        writType: undefined,
         isRelation: undefined
       }
     };
   },
   methods: {
     getSearchParams() {
-      // 获取过滤空值后的搜索参数（不显示警告）
+      // 获取过滤空值后的搜索参数
       const searchParams = {};
       Object.keys(this.searchForm).forEach(key => {
         const value = this.searchForm[key];
@@ -101,16 +91,14 @@ export default {
       return searchParams;
     },
     handleSearch() {
-      // 获取搜索参数（不显示警告，空参数将筛选全部数据）
       const searchParams = this.getSearchParams();
       this.$emit('search', searchParams);
     },
     handleReset() {
       this.searchForm = {
-        code: undefined,
-        title: undefined,
-        name: undefined,
-        status: undefined,
+        writCode: undefined,
+        writName: undefined,
+        writType: undefined,
         isRelation: undefined
       };
       this.$emit('reset');
@@ -145,7 +133,7 @@ export default {
         display: flex;
         align-items: center;
         gap: $spacing-2;
-        min-width: 0; // 允许内容收缩
+        min-width: 0;
 
         label {
           white-space: nowrap;
@@ -164,7 +152,6 @@ export default {
           min-width: 0;
         }
 
-        // 确保输入框的最小宽度
         .el-input {
           min-width: 120px;
         }
@@ -181,6 +168,6 @@ export default {
   // - 输入框内容、Placeholder、焦点状态
   // - 下拉列表选项（悬停、选中、禁用）
   //
-  // 本文件只保留警情页面特有的布局样式。
+  // 本文件只保留文书页面特有的布局样式。
 }
 </style>

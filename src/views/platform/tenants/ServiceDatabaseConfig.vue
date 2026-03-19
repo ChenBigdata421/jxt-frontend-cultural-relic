@@ -512,7 +512,9 @@ import {
   getTenantServiceConfig,
   updateTenantServiceConfig,
   deleteTenantServiceConfig,
+  createTenantServiceConfigs,
 } from "@/api/platform/tenants";
+import { getTenant } from "@/api/platform/tenants";
 
 export default {
   name: "ServiceDatabaseConfig",
@@ -530,10 +532,12 @@ export default {
         { code: "evidence-query", label: "Evidence Query", category: "read", icon: "🔍" },
         { code: "file-storage", label: "File Storage", category: "storage", icon: "📁" },
         { code: "security-management", label: "Security Management", category: "security", icon: "🔒" },
+        { code: "process-management", label: "Process Management", category: "process", icon: "✍️" },
       ],
 
       // Configured services loaded from API
       configuredServices: [],
+      tenantCode: null, // Tenant code for creating new configs
 
       // Current selections
       currentServiceCode: null,
@@ -599,7 +603,7 @@ export default {
   },
   watch: {
     tenantId: {
-      immediate: true,
+      immediate: true,//设为 true 时，组件创建后会立即执行一次 handler
       handler() {
         this.loadAllConfigs();
       },
@@ -611,6 +615,13 @@ export default {
 
       this.configLoading = true;
       try {
+        // Load tenant info to get tenantCode
+        const tenantResp = await getTenant(this.tenantId);
+        if (tenantResp && tenantResp.code === 200 && tenantResp.data) {
+          this.tenantCode = tenantResp.data.code || null;
+        }
+
+        // Load service configurations
         const resp = await getTenantServiceConfigs(this.tenantId);
         if (resp && resp.code === 200 && resp.data) {
           this.configuredServices = resp.data || [];
@@ -645,8 +656,8 @@ export default {
             database: data.database || "",
             username: data.username || "",
             password: "",
-            passwordSet: !!(data.username || data.host),
-            sslMode: data.sslMode || "disable",
+            passwordSet: !!(data.username || data.host),//如果 data.username 存在（truthy），返回 data.username，如果 data.username 不存在，返回 data.host，如果两者都不存在，返回 false；双重非运算将任何值转换为严格的布尔值
+            sslMode: data.sslmode || data.sslMode || "disable",  // Handle both 'sslmode' and 'sslMode'
             maxOpenConns: data.maxOpenConns || 100,
             maxIdleConns: data.maxIdleConns || 20,
             connMaxIdleTime: data.connMaxIdleTime || 300,
@@ -659,8 +670,10 @@ export default {
           };
         }
       } catch (e) {
-        // Service not configured - reset form
-        if (e.response?.status === 404) {
+        // Service not configured - reset form silently (normal for new services)
+        const isNotFound = e.response?.status === 404 ||
+                           e.response?.data?.msg?.toLowerCase().includes('not found');
+        if (isNotFound) {
           this.resetForm();
         } else {
           this.$message.error("Failed to load configuration: " + (e.message || "Unknown error"));
@@ -718,31 +731,68 @@ export default {
         return;
       }
 
+      if (!this.tenantCode) {
+        this.$message.error("Tenant code not found. Please refresh the page.");
+        return;
+      }
+
       this.configSaving = true;
       try {
-        const data = {
-          driver: this.form.driver,
-          host: this.form.host,
-          port: this.form.port,
-          database: this.form.database,
-          username: this.form.username,
-          sslMode: this.form.sslMode,
-          maxOpenConns: this.form.maxOpenConns,
-          maxIdleConns: this.form.maxIdleConns,
-          connMaxIdleTime: this.form.connMaxIdleTime,
-          connMaxLifeTime: this.form.connMaxLifeTime,
-          connectTimeout: this.form.connectTimeout,
-          readTimeout: this.form.readTimeout,
-          writeTimeout: this.form.writeTimeout,
-          enabled: this.form.enabled,
-        };
+        const isConfigured = this.currentService?.isConfigured || false;
+        let resp;
 
-        // Only include password if it's set
-        if (this.form.password) {
-          data.password = this.form.password;
+        if (isConfigured) {
+          // Update existing config with PUT
+          const data = {
+            driver: this.form.driver,
+            host: this.form.host,
+            port: this.form.port,
+            database: this.form.database,
+            username: this.form.username,
+            sslmode: this.form.sslMode,  // Backend expects 'sslmode' (lowercase)
+            maxOpenConns: this.form.maxOpenConns,
+            maxIdleConns: this.form.maxIdleConns,
+            connMaxIdleTime: this.form.connMaxIdleTime,
+            connMaxLifeTime: this.form.connMaxLifeTime,
+            connectTimeout: this.form.connectTimeout,
+            readTimeout: this.form.readTimeout,
+            writeTimeout: this.form.writeTimeout,
+            enabled: this.form.enabled,
+          };
+
+          // Only include password if it's set
+          if (this.form.password) {
+            data.password = this.form.password;
+          }
+
+          resp = await updateTenantServiceConfig(this.tenantId, this.currentServiceCode, data);
+        } else {
+          // Create new config with POST
+          const data = {
+            tenantId: this.tenantId,
+            tenantCode: this.tenantCode,
+            writeServices: [
+              {
+                serviceCode: this.currentServiceCode,
+                driver: this.form.driver,
+                host: this.form.host,
+                port: this.form.port,
+                database: this.form.database,
+                sslmode: this.form.sslMode,
+                maxOpenConns: this.form.maxOpenConns,
+                maxIdleConns: this.form.maxIdleConns,
+                connMaxIdleTime: this.form.connMaxIdleTime,
+                connMaxLifeTime: this.form.connMaxLifeTime,
+                connectTimeout: this.form.connectTimeout,
+                readTimeout: this.form.readTimeout,
+                writeTimeout: this.form.writeTimeout,
+              },
+            ],
+          };
+
+          resp = await createTenantServiceConfigs(data);
         }
 
-        const resp = await updateTenantServiceConfig(this.tenantId, this.currentServiceCode, data);
         if (resp && resp.code === 200) {
           this.$message.success(resp.msg || "Configuration saved successfully");
           this.form.password = "";

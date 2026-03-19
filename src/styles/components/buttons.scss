@@ -1,0 +1,173 @@
+@import '@/styles/tokens/index.scss';
+
+// ========== 操作按钮样式 ==========
+// 用于表格操作列的通用按钮样式
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  min-height: 28px;
+  font-size: $font-size-xs;
+
+  &.view-btn {
+    color: $law-info;
+
+    &:hover {
+      background-color: rgba($law-info, 0.1);
+    }
+  }
+
+  &.edit-btn {
+    color: $law-warning;
+
+    &:hover {
+      background-color: rgba($law-warning, 0.1);
+    }
+  }
+
+  &.delete-btn {
+    color: $law-danger;
+
+    &:hover {
+      background-color: rgba($law-danger, 0.1);
+    }
+  }
+
+  // ========== Secondary Button 样式 ==========
+  &.secondary {
+    background-color: rgba(26, 95, 122, 0.1);
+    color: #1A5F7A;
+    border: none;
+
+    &:hover {
+      background-color: rgba(26, 95, 122, 0.2);
+    }
+
+    &:active {
+      background-color: rgba(26, 95, 122, 0.3);
+    }
+
+    &:focus {
+      outline: 2px solid #1A5F7A;
+      outline-offset: 2px;
+    }
+
+    // 确保图标和文字颜色一致
+    i {
+      color: inherit;
+    }
+  }
+
+  // ========== Tertiary Button 样式 ==========
+  &.tertiary {
+    background-color: transparent;
+    color: #606266;
+    border: none;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+      color: #303133;
+    }
+
+    &:active {
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+
+    &:focus {
+      outline: 2px solid #909399;
+      outline-offset: 2px;
+    }
+
+    // 确保图标和文字颜色一致
+    i {
+      color: inherit;
+    }
+  }
+}
+
+// ========== 独立的 Tertiary 样式（用于对话框按钮等）==========
+.tertiary {
+  background-color: transparent !important;
+  color: #606266 !important;
+  border: none !important;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+    color: #303133 !important;
+  }
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  &:focus {
+    outline: 2px solid #909399;
+    outline-offset: 2px;
+  }
+
+  // 确保图标和文字颜色一致
+  i {
+    color: inherit;
+  }
+}
+
+// ========== Tertiary Danger Button 样式 ==========
+.action-btn.tertiary-danger {
+  background-color: transparent;
+  color: #F56C6C; // 危险色
+  border: none;
+
+  &:hover {
+    background-color: rgba(245, 108, 108, 0.1);
+    color: #F56C6C;
+  }
+
+  &:active {
+    background-color: rgba(245, 108, 108, 0.2);
+  }
+
+  &:focus {
+    outline: 2px solid #F56C6C;
+    outline-offset: 2px;
+  }
+
+  // 确保图标和文字颜色一致
+  i {
+    color: inherit;
+  }
+}
+
+// ========== 搜索按钮组样式 ==========
+// 用于查询栏的搜索/重置按钮组
+.search-action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-2;
+
+  // 搜索按钮样式
+  .search-btn {
+    height: 32px;
+    padding: 8px 16px;
+    font-size: $font-size-xs;
+    border-radius: 4px;
+    min-width: 72px;
+    background-color: #1A5F7A;
+    border-color: #1A5F7A;
+
+    &:hover {
+      background-color: #2E86AB;
+      border-color: #2E86AB;
+    }
+  }
+
+  // 重置按钮样式
+  .reset-btn {
+    height: 32px;
+    padding: 8px 16px;
+    font-size: $font-size-xs;
+    border-radius: 4px;
+    min-width: 72px;
+  }
+}

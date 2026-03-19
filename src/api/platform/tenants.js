@@ -169,6 +169,24 @@ export function updateTenantServiceConfig(id, serviceCode, data) {
   });
 }
 
+// 批量创建服务数据库配置（支持创建多个服务配置）
+export function createTenantServiceConfigs(data) {
+  return request({
+    url: `/api/v1/tenants/${data.tenantId}/service-configs`,
+    method: "post",
+    data,
+  });
+}
+
+// 创建指定服务的数据库配置（单个，已弃用，保留兼容性）
+export function createTenantServiceConfig(id, serviceCode, data) {
+  return request({
+    url: `/api/v1/tenants/${id}/service-configs/${serviceCode}`,
+    method: "post",
+    data,
+  });
+}
+
 // 删除指定服务的数据库配置
 export function deleteTenantServiceConfig(id, serviceCode) {
   return request({

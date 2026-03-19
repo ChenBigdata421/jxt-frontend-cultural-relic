@@ -1404,7 +1404,7 @@ export default {
   gap: 10px;
 }
 
-/* 媒体关联列表样式 */
+/* 媒体关联列表样式 - 页面特有样式 */
 .media-relations-section {
   margin-top: 20px;
   padding: 15px;
@@ -1413,57 +1413,9 @@ export default {
   border: 1px solid #e9ecef;
 }
 
-.empty-data {
-  text-align: center;
-  padding: 20px;
-  color: #909399;
-}
-
-/* 抽屉样式 */
-.drawer-content {
-  padding: 20px;
-  height: calc(100vh - 120px);
-  overflow-y: auto;
-}
-
-.drawer-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20px;
-  border-top: 1px solid #e8e8e8;
-  background: #fff;
-  text-align: right;
-  z-index: 1;
-}
-
-/* 第一层抽屉样式 */
-.media-drawer {
-  z-index: 1000 !important;
-}
-
-/* 第二层抽屉样式 - 更高的z-index */
-.media-selector-drawer {
-  z-index: 2000 !important;
-}
-
-/* 抽屉遮罩层样式 */
-::v-deep .el-drawer__wrapper {
-  transition: all 0.3s ease;
-}
-
-/* 第二层抽屉的遮罩层 */
-::v-deep .media-selector-drawer .el-drawer__wrapper {
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-/* 抽屉滑入滑出动画 */
-::v-deep .el-drawer {
-  transition: transform 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
-}
-
-::v-deep .el-drawer.rtl {
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
-}
+/* 其他样式已移至全局样式：
+   - .horizontal-container → src/styles/components/utilities.scss
+   - .empty-data → src/styles/components/utilities.scss
+   - 抽屉样式 (.drawer-content, .drawer-footer, .media-drawer, .media-selector-drawer) → src/styles/components/dialogs.scss
+*/
 </style>

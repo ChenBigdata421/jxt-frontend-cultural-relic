@@ -78,7 +78,7 @@ export function batchMarkMediaNoEnforcementStatus(data) {
 // 批量更新媒体执法类型
 export function batchUpdateMediaEnforceType(data) {
   return request({
-    url: '/api/v1/media/batch/update-enforce-type',
+    url: '/api/v1/media/batch/update-enforcement-type',
     method: 'post',
     data: data
   })

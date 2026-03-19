@@ -1,0 +1,53 @@
+@import '@/styles/tokens/index.scss';
+
+// ========== 通用工具类 ==========
+// 用于布局、尺寸等通用样式
+
+// 全宽工具类
+.full-width {
+  width: 100%;
+}
+
+// 水平布局容器
+.horizontal-container {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3; // 12px
+}
+
+// 空数据提示样式
+.empty-data {
+  text-align: center;
+  padding: $spacing-5; // 20px
+  color: $law-gray-400; // #909399
+  font-size: $font-size-base; // 14px
+}
+
+// ========== 间距工具类 ==========
+// 基于 8dp 间距系统的 margin 工具类
+@each $size, $value in (0: 0, 1: 4px, 2: 8px, 3: 12px, 4: 16px, 5: 20px, 6: 24px, 8: 32px) {
+  // margin
+  .m#{$size} { margin: #{$value} !important; }
+  .mt#{$size} { margin-top: #{$value} !important; }
+  .mr#{$size} { margin-right: #{$value} !important; }
+  .mb#{$size} { margin-bottom: #{$value} !important; }
+  .ml#{$size} { margin-left: #{$value} !important; }
+  .mx#{$size} { margin-left: #{$value} !important; margin-right: #{$value} !important; }
+  .my#{$size} { margin-top: #{$value} !important; margin-bottom: #{$value} !important; }
+
+  // padding
+  .p#{$size} { padding: #{$value} !important; }
+  .pt#{$size} { padding-top: #{$value} !important; }
+  .pr#{$size} { padding-right: #{$value} !important; }
+  .pb#{$size} { padding-bottom: #{$value} !important; }
+  .pl#{$size} { padding-left: #{$value} !important; }
+  .px#{$size} { padding-left: #{$value} !important; padding-right: #{$value} !important; }
+  .py#{$size} { padding-top: #{$value} !important; padding-bottom: #{$value} !important; }
+}
+
+// ========== 居中通知样式 ==========
+// 用于需要垂直居中的通知组件
+.center-notification {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}

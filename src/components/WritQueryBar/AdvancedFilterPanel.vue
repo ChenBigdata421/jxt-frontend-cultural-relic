@@ -37,49 +37,25 @@
 
         <!-- 其他筛选条件 - 两列布局 -->
         <div class="filter-row">
-          <!-- 警情内容 -->
-          <div class="filter-section">
-            <div class="section-label">警情内容</div>
-            <el-input
-              v-model="filterParams.context"
-              placeholder="报警内容"
-              clearable
-            />
-          </div>
-
-          <!-- 报警电话 -->
-          <div class="filter-section">
-            <div class="section-label">报警电话</div>
-            <el-input
-              v-model="filterParams.tel"
-              placeholder="报警电话"
-              clearable
-            />
-          </div>
-        </div>
-
-        <div class="filter-row">
-          <!-- 处警组织 -->
+          <!-- 组织部门 -->
           <div class="filter-section org-section">
-            <div class="section-label">处警组织</div>
+            <div class="section-label">组织部门</div>
             <treeselect
               v-model="filterParams.orgId"
               :options="orgOptions"
-              placeholder="请选择处警组织"
+              placeholder="请选择组织部门"
               @input="handleOrgChange"
               :append-to-body="true"
               :open-on-focus="false"
-              :editable="false"
-              :disable="false"
             />
           </div>
 
-          <!-- 处警人员 -->
+          <!-- 警员 -->
           <div class="filter-section">
-            <div class="section-label">处警人员</div>
+            <div class="section-label">警员</div>
             <el-select
-              v-model="filterParams.processPoliceIds"
-              placeholder="请选择处警人员"
+              v-model="filterParams.writPoliceIds"
+              placeholder="请选择警员"
               clearable
               multiple
               collapse-tags
@@ -96,6 +72,28 @@
             </el-select>
           </div>
         </div>
+
+        <div class="filter-row">
+          <!-- 文书地址 -->
+          <div class="filter-section">
+            <div class="section-label">文书地址</div>
+            <el-input
+              v-model="filterParams.writAddress"
+              placeholder="文书地址"
+              clearable
+            />
+          </div>
+
+          <!-- 文书来源 -->
+          <div class="filter-section">
+            <div class="section-label">文书来源</div>
+            <el-input
+              v-model="filterParams.writSource"
+              placeholder="文书来源"
+              clearable
+            />
+          </div>
+        </div>
       </el-collapse-item>
     </el-collapse>
   </div>
@@ -107,7 +105,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { listUser } from '@/api/admin/sys-user';
 
 export default {
-  name: 'AdvancedFilterPanel',
+  name: 'WritAdvancedFilterPanel',
   components: {
     Treeselect
   },
@@ -121,35 +119,32 @@ export default {
     return {
       activeNames: [], // 默认折叠
       timeRanges: [
-        { key: 'reportTimeRange', label: '报警时间', enabled: false },
-        { key: 'receiveTimeRange', label: '接警时间', enabled: false },
-        { key: 'processTimeRange', label: '处警时间', enabled: false },
-        { key: 'endTimeRange', label: '结束时间', enabled: false }
+        { key: 'writTimeRange', label: '开书时间', enabled: false },
+        { key: 'createdAtRange', label: '创建时间', enabled: false },
+        { key: 'updatedAtRange', label: '更新时间', enabled: false }
       ],
       timeValues: {},
       userOptions: [],
       filterParams: {
-        context: undefined,
-        tel: undefined,
         orgId: undefined,
-        processPoliceIds: []
+        writPoliceIds: [],
+        writAddress: undefined,
+        writSource: undefined
       }
     };
   },
   methods: {
     handleTimeRangeToggle(range) {
       if (!range.enabled) {
-        // 清空该时间范围的数据
         this.$set(this.timeValues, range.key, null);
       }
-      // 移除立即查询，等待用户点击"搜索"按钮
     },
     handleTimeChange(key) {
-      // 移除立即查询，等待用户点击"搜索"按钮
+      // 等待用户点击"搜索"按钮
     },
     handleOrgChange(orgId) {
-      // 当组织变化时，清空人员选择并加载该组织下的人员
-      this.filterParams.processPoliceIds = [];
+      // 当组织变化时，清空警员选择并加载该组织下的人员
+      this.filterParams.writPoliceIds = [];
       if (orgId) {
         this.loadUserOptions(orgId);
       } else {
@@ -166,32 +161,28 @@ export default {
           this.userOptions = [];
         });
     },
-    handleApply() {
-      this.$emit('apply', this.getFilterData());
-    },
     handleReset() {
-      // 重置所有筛选条件
       this.timeRanges.forEach(range => {
         range.enabled = false;
       });
       this.timeValues = {};
       this.userOptions = [];
       this.filterParams = {
-        context: undefined,
-        tel: undefined,
         orgId: undefined,
-        processPoliceIds: []
+        writPoliceIds: [],
+        writAddress: undefined,
+        writSource: undefined
       };
       this.$emit('reset');
     },
     getFilterData() {
       const data = { ...this.filterParams };
 
-      // 处理时间范围 - 移除字段名中的 'Range' 部分
+      // 处理时间范围
       this.timeRanges.forEach(range => {
         if (range.enabled && this.timeValues[range.key]) {
           const [start, end] = this.timeValues[range.key];
-          // 将 reportTimeRange -> reportTime, receiveTimeRange -> receiveTime 等
+          // 将 writTimeRange -> writTime, createdAtRange -> createdAt 等
           const fieldKey = range.key.replace('Range', '');
           data[fieldKey + 'Start'] = start;
           data[fieldKey + 'End'] = end;
@@ -199,9 +190,6 @@ export default {
       });
 
       return data;
-    },
-    emitFilterChange() {
-      this.$emit('filter-change', this.getFilterData());
     }
   }
 };
@@ -209,6 +197,9 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/tokens/index.scss';
+
+.advanced-filter-wrapper {
+}
 
 .advanced-filter-panel {
   border: none;
@@ -218,7 +209,7 @@ export default {
   ::v-deep .el-collapse-item__header {
     height: 40px;
     background-color: $law-bg-default;
-    border: none; // 移除顶部边框
+    border: none;
     border-radius: 0;
     padding: 0 $spacing-4;
 
@@ -251,7 +242,6 @@ export default {
   }
 }
 
-// 折叠面板展开时旋转图标
 ::v-deep .el-collapse-item.is-active .filter-title .collapse-icon {
   transform: rotate(90deg);
 }
@@ -326,23 +316,19 @@ export default {
   width: 100%;
 }
 
-// Treeselect 样式调整 - 确保下拉菜单向上弹出
 ::v-deep .vue-treeselect {
   .vue-treeselect__control {
     border-radius: 4px;
   }
 
-  // 当下拉菜单向上弹出时
   &.vue-treeselect--open {
     .vue-treeselect__menu {
-      // 让菜单相对于视口定位，避免被父容器裁剪
       position: fixed;
       z-index: 9999;
     }
   }
 }
 
-// 确保treeselect下拉菜单能够正确显示在body上
 ::v-deep .vue-treeselect__menu-container {
   &.vue-treeselect__menu-container--absolute {
     position: fixed !important;
@@ -355,10 +341,7 @@ export default {
 // - 下拉列表选项（悬停、选中、禁用）
 // - 组织树节点（默认、高亮、禁用）
 // - 日期选择器样式
-// - Treeselect 垂直对齐修复
 //
-// 本文件只保留警情页面特有的布局样式。
+// 本文件只保留文书页面特有的布局样式。
 //
-
 </style>
-

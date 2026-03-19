@@ -2141,68 +2141,9 @@ export default {
   margin-left: 16px;
 }
 
-/* 对话框底部按钮样式 */
-.dialog-footer {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-/* 抽屉样式 */
-.drawer-content {
-  padding: 20px;
-  height: calc(100vh - 120px);
-  overflow-y: auto;
-}
-
-.drawer-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20px;
-  border-top: 1px solid #e8e8e8;
-  background: #fff;
-  text-align: right;
-  z-index: 1;
-}
-
-/* 第一层抽屉样式 */
-.media-drawer {
-  z-index: 1000 !important;
-}
-
-/* 第二层抽屉样式 - 更高的z-index */
-.media-selector-drawer {
-  z-index: 2000 !important;
-}
-
-/* 抽屉遮罩层样式 */
-::v-deep .el-drawer__wrapper {
-  transition: all 0.3s ease;
-}
-
-/* 第二层抽屉的遮罩层 */
-::v-deep .media-selector-drawer .el-drawer__wrapper {
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-/* 抽屉滑入滑出动画 */
-::v-deep .el-drawer {
-  transition: transform 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
-}
-
-::v-deep .el-drawer.rtl {
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
-}
-</style>
-
-<style>
-.center-notification {
-  top: 50% !important;
-  left: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  transform: translate(-50%, -50%) !important;
-}
+/* 对话框底部按钮样式已在全局样式中定义：
+   .dialog-footer → src/styles/components/dialogs.scss
+   抽屉样式 (.drawer-content, .drawer-footer, .media-drawer, .media-selector-drawer) → src/styles/components/dialogs.scss
+   居中通知样式 (.center-notification) → src/styles/components/utilities.scss
+*/
 </style>

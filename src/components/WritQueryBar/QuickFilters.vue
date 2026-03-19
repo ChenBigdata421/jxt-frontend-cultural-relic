@@ -7,17 +7,17 @@
       class="filter-group"
     >
       <el-radio-button label="all">全部</el-radio-button>
-      <el-radio-button label="today">今日警情</el-radio-button>
+      <el-radio-button label="today">今日文书</el-radio-button>
       <el-radio-button label="pending">待处理</el-radio-button>
-      <el-radio-button label="mine">我的警情</el-radio-button>
-      <el-radio-button label="archived">已归档</el-radio-button>
+      <el-radio-button label="mine">我的文书</el-radio-button>
+      <el-radio-button label="related">已关联</el-radio-button>
     </el-radio-group>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'QuickFilters',
+  name: 'WritQuickFilters',
   props: {
     value: {
       type: String,

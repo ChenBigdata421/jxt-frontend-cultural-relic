@@ -1,0 +1,533 @@
+@import '@/styles/tokens/index.scss';
+
+// ========== 通用表单字体规范 ==========
+// 规范依据：WCAG AAA 级对比度标准，正文最小字号 14px
+// 更新日期：2026-03-18
+// 适用范围：所有页面的表单组件（输入框、下拉列表、组织树等）
+
+// ========== 0. vue-treeselect 下拉菜单全局样式 ==========
+// 必须在组件样式之前定义，因为 append-to-body 导致菜单挂载到 body 下
+// 这些样式不使用 ::v-deep，直接作用于全局，确保优先级
+
+// 确保 editable="false" 模式下正确工作
+.vue-treeselect.vue-treeselect--single {
+  // 禁止光标显示和编辑
+  input.vue-treeselect__input {
+    pointer-events: none !important;
+    cursor: pointer !important;
+  }
+
+  // 当组件不可编辑时，确保不能通过键盘删除
+  &.vue-treeselect--disabled {
+    input.vue-treeselect__input {
+      pointer-events: none !important;
+      cursor: not-allowed !important;
+    }
+
+    .vue-treeselect__control {
+      cursor: not-allowed !important;
+    }
+  }
+
+  // 即使 editable="false"，也要允许点击打开下拉菜单
+  .vue-treeselect__control {
+    cursor: pointer !important;
+  }
+}
+// 必须在组件样式之前定义，因为 append-to-body 导致菜单挂载到 body 下
+// 这些样式不使用 ::v-deep，直接作用于全局，确保优先级
+
+// 树节点标签文字 - 默认状态
+.vue-treeselect__label {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #1A1A1A !important;
+  line-height: 1.5 !important;
+}
+
+// 树节点高亮/悬停状态 - 保持原样，仅颜色变化
+.vue-treeselect__option--highlight .vue-treeselect__label,
+.vue-treeselect__option--highlight:hover .vue-treeselect__label {
+  font-weight: 400 !important;
+  color: #1A1A1A !important;
+  background-color: rgba(26, 95, 122, 0.08) !important;
+}
+
+// 树节点选中状态
+.vue-treeselect__option--selected .vue-treeselect__label {
+  font-weight: 500 !important;
+  color: #1A5F7A !important;
+}
+
+// 树节点禁用状态
+.vue-treeselect__option--disabled .vue-treeselect__label {
+  color: #78909C !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+// Treeselect placeholder 样式
+.vue-treeselect__placeholder {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #78909C !important;
+}
+
+// 当有选中值时，确保 placeholder 隐藏
+.vue-treeselect--has-value .vue-treeselect__placeholder {
+  display: none !important;
+}
+
+// 已选中的标签显示
+.vue-treeselect__single-value {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #1A1A1A !important;
+  line-height: 1.5 !important;
+}
+
+// 多选标签样式
+.vue-treeselect__multi-value-item {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #1A1A1A !important;
+}
+
+// Treeselect 控制区域（输入框）样式
+.vue-treeselect__control {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #1A1A1A !important;
+  line-height: 1.5 !important;
+}
+
+// ========== Treeselect 垂直对齐修复 ==========
+// 修复选中值显示不垂直居中的问题
+// 确保控制区域高度与 Element UI 输入框一致
+.vue-treeselect__control {
+  height: 32px;
+  min-height: 32px;
+
+  // 修复选中值显示的垂直对齐
+  display: flex;
+  align-items: center;
+}
+
+// 单选值容器 - 垂直居中
+.vue-treeselect__value-container {
+  line-height: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+// 单选值标签 - 垂直居中
+.vue-treeselect__single-value {
+  line-height: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+// Placeholder - 垂直居中
+.vue-treeselect__placeholder {
+  line-height: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+// 箭头图标 - 垂直居中
+.vue-treeselect__control-arrow-container {
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+// ========== 表格操作列按钮横排布局 ==========
+// 适用于所有表格的操作列按钮
+.action-buttons {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+
+  // 清除 Element UI 按钮的默认间距
+  .el-button + .el-button {
+    margin-left: 0 !important;
+  }
+
+  // 缩小操作列按钮的 padding
+  .el-button--small {
+    padding: 4px 6px !important;
+
+    i {
+      margin-right: 2px !important;
+    }
+  }
+
+  // text 类型按钮额外优化
+  .el-button--text.el-button--small {
+    padding: 4px 6px !important;
+  }
+}
+
+// ========== 列设置对话框样式 ==========
+// 适用于所有表格的列设置功能
+.column-settings {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.column-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #e4e7ed;
+  font-weight: bold;
+}
+
+.column-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .el-checkbox {
+    width: 100%;
+  }
+}
+
+// ========== 1. 输入框字体规范 ==========
+
+// ========== 1. 输入框字体规范 ==========
+// 用户输入内容、Placeholder、焦点状态
+
+// 输入框用户输入的内容
+.el-input__inner,
+.el-textarea__inner {
+  font-size: $font-size-base;      // 14px - 正文最小字号
+  font-weight: $font-weight-normal; // 400
+  color: $law-gray-900;            // #1A1A1A - 高对比度（15.2:1 AAA）
+  line-height: $line-height-normal; // 1.5 - 易读行高
+
+  &:focus {
+    color: $law-gray-900;          // 焦点时保持深色
+    border-color: $law-primary;    // 边框变主色 #1A5F7A
+  }
+}
+
+// 输入框 Placeholder 样式规范
+.el-input__inner,
+.el-textarea__inner {
+  &::placeholder {
+    font-size: $font-size-sm;      // 13px
+    font-weight: $font-weight-normal; // 400
+    color: $law-gray-400;          // #78909C - 对比度 4.5:1 (AA)
+    opacity: 1; // Firefox默认opacity较低
+  }
+
+  // 兼容 WebKit, Blink, Edge
+  &::-webkit-input-placeholder {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-normal;
+    color: $law-gray-400;
+  }
+
+  // 兼容 Mozilla Firefox 19+
+  &::-moz-placeholder {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-normal;
+    color: $law-gray-400;
+    opacity: 1;
+  }
+
+  // 兼容 IE 10-11
+  &:-ms-input-placeholder {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-normal;
+    color: $law-gray-400;
+  }
+}
+
+// ========== 2. 下拉列表字体规范 ==========
+// 下拉选项文字、悬停、选中、禁用状态
+
+// ========== 2. 下拉列表字体规范 ==========
+// 下拉选项文字、悬停、选中、禁用状态
+
+.el-select-dropdown__item {
+  font-size: $font-size-base;      // 14px
+  font-weight: $font-weight-normal; // 400
+  color: $law-gray-900;            // #1A1A1A - 高对比度（15.2:1 AAA）
+  line-height: $line-height-normal; // 1.5
+  padding: 10px 16px;              // 触控友好（≥44px 高度）
+
+  &:hover {
+    background-color: rgba($law-primary, 0.08); // 悬停背景
+    color: $law-gray-900;          // 保持高对比
+  }
+
+  &.selected {
+    font-weight: $font-weight-normal; // 400 - 与 vue-treeselect 保持一致
+    color: $law-gray-900;          // #1A1A1A - 保持黑色，与其他下拉列表一致
+    font-weight: 500;
+    background-color: rgba($law-primary, 0.12); // 选中背景更明显
+  }
+
+  &.is-disabled {
+    color: $law-gray-400;          // #78909C - 禁用状态
+    cursor: not-allowed;
+  }
+}
+
+// Select 选中值显示
+.el-select__selected-item {
+  font-size: $font-size-base;      // 14px
+  font-weight: $font-weight-normal; // 400
+  color: $law-gray-900;            // #1A1A1A
+}
+
+// Select 下拉框 placeholder
+.el-select__placeholder {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-normal;
+  color: $law-gray-400;
+}
+
+// ========== 3. 组织树字体规范 ==========
+// vue-treeselect 组件的节点文字样式已在文件开头定义（全局样式，不使用 ::v-deep）
+// 这样可以确保 append-to-body 的下拉菜单也能应用正确的字体规范
+
+// ========== 4. 日期选择器字体规范 ==========
+
+// Date Picker placeholder 样式规范
+.el-range-input {
+  &::placeholder {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-normal;
+    color: $law-gray-400;
+    opacity: 1;
+  }
+
+  &::-webkit-input-placeholder {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-normal;
+    color: $law-gray-400;
+  }
+
+  &::-moz-placeholder {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-normal;
+    color: $law-gray-400;
+    opacity: 1;
+  }
+
+  &:-ms-input-placeholder {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-normal;
+    color: $law-gray-400;
+  }
+}
+
+// Date Picker 分隔符样式
+.el-range-separator {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $law-gray-700;
+}
+
+// ========== 5. Treeselect placeholder 样式规范 ==========
+// 已在文件开头定义（全局样式）
+
+// ========== 6. 表单折叠分组样式 ==========
+// 用于弹窗中的表单分组，实现可折叠的表单面板
+// 同时支持编辑对话框和详情对话框，统一高度、滚动条和内边距
+.form-collapse {
+  border: none;
+  max-height: 70vh;              // 限制最大高度，超出滚动
+  overflow-y: auto;              // 启用垂直滚动条
+  padding-right: 4px;            // 为滚动条留出空间
+
+  // 自定义滚动条样式
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $law-gray-100;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $law-gray-400;
+    border-radius: 3px;
+
+    &:hover {
+      background: $law-gray-500;
+    }
+  }
+
+  // 同时支持 .form-section（编辑对话框）和 .detail-section（详情对话框）
+  .form-section,
+  .detail-section {
+    margin-bottom: $spacing-4;
+    border-radius: 8px;
+    overflow: hidden;
+
+    ::v-deep .el-collapse-item__header {
+      height: 48px;
+      background-color: $law-bg-default;
+      border: none;
+      padding: 0 $spacing-4;
+
+      &:hover {
+        background-color: darken($law-bg-default, 2%);
+      }
+    }
+
+    ::v-deep .el-collapse-item__wrap {
+      border: none;
+      background-color: $law-bg-paper;
+    }
+
+    ::v-deep .el-collapse-item__content {
+      // 详情对话框使用 $spacing-4 (16px)，表单对话框使用 $spacing-5 (20px)
+      // 通过不同类名控制：.form-section 用 $spacing-5，.detail-section 用 $spacing-4
+    }
+  }
+
+  // 表单对话框的内容内边距更大（20px）
+  .form-section ::v-deep .el-collapse-item__content {
+    padding: $spacing-5;
+  }
+
+  // 详情对话框的内容内边距稍小（16px）
+  .detail-section ::v-deep .el-collapse-item__content {
+    padding: $spacing-4;
+  }
+}
+
+// ========== 对话框表单字体规范 ==========
+// 根据设计规范 4.4.9 节 - 对话框表单字体规范
+
+// 对话框表单自定义布局 - 标签左对齐，与文本框垂直居中
+// 使用此样式类可使表单项水平排列
+.dialog-form {
+  // 覆盖 Element UI 默认的表单项布局
+  ::v-deep .el-form-item {
+    display: flex !important;
+    align-items: center !important;
+
+    // 标签样式
+    .el-form-item__label {
+      width: 80px;
+      text-align: left !important;
+      padding-right: $spacing-2;
+      flex-shrink: 0;
+      line-height: 32px !important;
+      height: auto;
+    }
+
+    // 内容区域
+    .el-form-item__content {
+      flex: 1;
+      margin-left: 0 !important;
+      line-height: 32px !important;
+    }
+  }
+
+  // 全宽度输入框
+  .full-width {
+    width: 100%;
+  }
+}
+
+// 对话框内的折叠面板表单样式 - 确保标签与文本框垂直居中
+// 借鉴 SearchInput 组件的样式：display: flex; align-items: center; gap: $spacing-2;
+// 使所有对话框中使用 form-collapse 类的表单标签都能垂直居中对齐
+.el-dialog .form-collapse .el-collapse-item__content .el-form-item,
+.form-collapse .el-collapse-item__content .el-form-item {
+  display: flex !important;
+  align-items: center !important;
+
+  // 标签样式 - 借鉴 SearchInput 的 label 样式
+  .el-form-item__label {
+    width: auto !important;
+    min-width: 80px;
+    white-space: nowrap !important;  // 防止标签文字换行
+    text-align: right !important;
+    padding-right: $spacing-1 !important;  // 4px 右间距
+    flex-shrink: 0;
+    line-height: 32px !important;
+    height: auto;
+  }
+
+  // 内容区域 - 借鉴 SearchInput 的 gap 设置
+  .el-form-item__content {
+    flex: 1;
+    margin-left: $spacing-1 !important;  // 4px 左间距（与标签的 padding-right 对应）
+    line-height: 32px !important;
+  }
+}
+
+// ========== 对话框内表单元素样式 ==========
+// 用于对话框内表单元素的统一样式规范
+// 注意：对话框本身的结构样式（如标题、footer）在 src/styles/components/dialogs.scss 中管理
+.el-dialog {
+  // 表单标签
+  .el-form-item__label {
+    font-size: $font-size-sm;            // 13px
+    font-weight: $font-weight-medium;    // 500
+    color: $law-gray-700;                // #546E7A
+    line-height: $line-height-normal;    // 1.5
+  }
+
+  // 表单输入内容 - 文本输入框
+  .el-input__inner,
+  .el-textarea__inner {
+    font-size: $font-size-base;          // 14px
+    font-weight: $font-weight-normal;    // 400
+    color: $law-gray-900;                // #1A1A1A
+    line-height: $line-height-normal;    // 1.5
+  }
+
+  // 表单输入内容 - 选择器
+  .el-select .el-input__inner {
+    font-size: $font-size-base;          // 14px
+    font-weight: $font-weight-normal;    // 400
+    color: $law-gray-900;                // #1A1A1A
+    line-height: $line-height-normal;    // 1.5
+  }
+
+  // 表单输入内容 - 日期选择器
+  .el-date-editor .el-input__inner {
+    font-size: $font-size-base;          // 14px
+    font-weight: $font-weight-normal;    // 400
+    color: $law-gray-900;                // #1A1A1A
+    line-height: $line-height-normal;    // 1.5
+  }
+
+  // 树形选择器样式已在文件开头定义（全局样式）
+
+  // 表单验证错误提示
+  .el-form-item__error {
+    font-size: $font-size-xs;            // 12px
+    font-weight: $font-weight-normal;    // 400
+    color: $law-danger;                  // #C62828
+    line-height: $line-height-normal;    // 1.5
+  }
+}
+
+// ========== 详情对话框样式说明 ==========
+// 详情对话框（.detail-dialog）的主体样式已移至 src/styles/components/dialogs.scss
+// 包括：
+// - .el-dialog__body 内边距和字体样式
+// - 移动端适配样式
+// - 滚动由 .form-collapse 统一管理（与修改对话框保持一致）
+// 此文件只保留表单相关的样式（如 .form-collapse）

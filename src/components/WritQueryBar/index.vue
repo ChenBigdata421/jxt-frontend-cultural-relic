@@ -1,12 +1,12 @@
 <template>
-  <div class="incident-query-bar">
+  <div class="writ-query-bar">
     <!-- 统一的筛选容器 -->
     <div class="filter-container">
       <!-- 快速搜索区域 -->
       <div class="search-section">
         <SearchInput
           ref="quickSearch"
-          :status-options="statusOptions"
+          :writ-type-options="writTypeOptions"
           :relation-status-options="relationStatusOptions"
           @search="handleQuickSearch"
           @reset="handleQuickSearchReset"
@@ -35,9 +35,8 @@
       </div>
 
       <!-- 操作按钮 -->
-      <div class="search-action-buttons">
+      <div class="action-buttons">
         <el-button
-          class="search-btn"
           type="primary"
           icon="el-icon-search"
           size="small"
@@ -46,7 +45,6 @@
           搜索
         </el-button>
         <el-button
-          class="reset-btn"
           icon="el-icon-refresh-left"
           size="small"
           @click="handleGlobalReset"
@@ -64,14 +62,14 @@ import QuickFilters from './QuickFilters.vue';
 import AdvancedFilterPanel from './AdvancedFilterPanel.vue';
 
 export default {
-  name: 'IncidentQueryBar',
+  name: 'WritQueryBar',
   components: {
     SearchInput,
     QuickFilters,
     AdvancedFilterPanel
   },
   props: {
-    statusOptions: {
+    writTypeOptions: {
       type: Array,
       default: () => []
     },
@@ -91,7 +89,6 @@ export default {
   },
   methods: {
     handleQuickSearch(searchParams) {
-      // 快速搜索：直接传递搜索参数
       this.$emit('search', searchParams);
     },
     handleQuickSearchReset() {
@@ -110,7 +107,7 @@ export default {
       this.$emit('filter-reset');
     },
     handleGlobalSearch() {
-      // 全局搜索：合并快速搜索和高级筛选的条件
+      // 合并快速搜索和高级筛选的条件
       const quickSearchParams = this.$refs.quickSearch.getSearchParams();
       const advancedParams = this.$refs.advancedFilter.getFilterData();
 
@@ -142,7 +139,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/tokens/index.scss';
 
-.incident-query-bar {
+.writ-query-bar {
   .filter-container {
     background-color: $law-bg-paper;
     border-radius: 4px;
@@ -172,6 +169,33 @@ export default {
 
     .advanced-filter-section {
       margin-bottom: $spacing-2;
+    }
+
+    .action-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: $spacing-3;
+      padding-top: 0;
+    }
+  }
+
+  // 按钮样式 - 符合设计规范
+  .el-button {
+    height: 32px;
+    padding: 8px 16px;
+    font-size: $font-size-xs;
+    border-radius: 4px;
+    min-width: 72px;
+
+    &.el-button--primary {
+      background-color: #1A5F7A;
+      border-color: #1A5F7A;
+
+      &:hover {
+        background-color: #2E86AB;
+        border-color: #2E86AB;
+      }
     }
   }
 }
