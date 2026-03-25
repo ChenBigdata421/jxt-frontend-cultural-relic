@@ -16,6 +16,14 @@
           />
         </div>
 
+        <!-- 批量操作栏 -->
+        <BatchActionBar
+          :selected-count="selectedWritRecords.length"
+          :is-indeterminate="isSelectionIndeterminate"
+          :all-selected="isAllSelected"
+          @select-all-change="handleSelectAll"
+        />
+
         <!-- 主操作栏 -->
         <div class="main-action-bar">
           <div class="left-actions">
@@ -104,7 +112,7 @@
                         content="此列必须显示，不能隐藏"
                         placement="top"
                       >
-                        <i class="el-icon-info column-item-icon"></i>
+                        <i class="el-icon-info column-item-icon" />
                       </el-tooltip>
                     </el-checkbox>
                   </div>
@@ -327,6 +335,7 @@
         width="700px"
         append-to-body
         :close-on-click-modal="false"
+        custom-class="edit-dialog"
       >
         <el-form ref="form" :model="form" :rules="rules" label-width="100px">
 
@@ -337,7 +346,7 @@
             <el-collapse-item name="basic" class="form-section">
               <template slot="title">
                 <div class="section-header">
-                  <i class="el-icon-document section-icon"></i>
+                  <i class="el-icon-document section-icon" />
                   <span class="section-title">基础信息</span>
                   <span class="section-badge">5项</span>
                 </div>
@@ -428,6 +437,7 @@
         width="500px"
         append-to-body
         :close-on-click-modal="false"
+        custom-class="edit-dialog"
       >
         <el-form
           ref="scoreForm"
@@ -435,32 +445,68 @@
           :rules="scoreRules"
           label-width="100px"
         >
-          <el-form-item label="文书编号">
-            <el-input v-model="scoreForm.writCode" disabled />
-          </el-form-item>
-          <el-form-item label="开书时间">
-            <el-input v-model="scoreForm.writTime" disabled />
-          </el-form-item>
-          <el-form-item label="文书类型">
-            <el-input v-model="scoreForm.writTypeLabel" disabled />
-          </el-form-item>
-          <el-form-item label="评分" prop="writScore">
-            <el-input-number
-              v-model="scoreForm.writScore"
-              :min="0"
-              :max="100"
-              :precision="2"
-              style="width: 100%"
-            />
-          </el-form-item>
-          <el-form-item label="评分说明" prop="scoreDesc">
-            <el-input
-              v-model="scoreForm.scoreDesc"
-              type="textarea"
-              :rows="4"
-              placeholder="请输入评分说明"
-            />
-          </el-form-item>
+          <!-- 使用 el-collapse 实现可折叠分组 -->
+          <el-collapse v-model="activeScoreSections" class="form-collapse">
+
+            <!-- 评分信息 -->
+            <el-collapse-item name="score" class="form-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-star-on section-icon" />
+                  <span class="section-title">评分信息</span>
+                  <span class="section-badge">5项</span>
+                </div>
+              </template>
+
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="文书编号">
+                    <el-input v-model="scoreForm.writCode" disabled />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="开书时间">
+                    <el-input v-model="scoreForm.writTime" disabled />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="文书类型">
+                    <el-input v-model="scoreForm.writTypeLabel" disabled />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="评分" prop="writScore">
+                    <el-input-number
+                      v-model="scoreForm.writScore"
+                      :min="0"
+                      :max="100"
+                      :precision="2"
+                      class="full-width"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="评分说明" prop="scoreDesc">
+                    <el-input
+                      v-model="scoreForm.scoreDesc"
+                      type="textarea"
+                      :rows="4"
+                      placeholder="请输入评分说明"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
+
+          </el-collapse>
         </el-form>
         <div slot="footer" class="dialog-footer">
           <el-button type="text" class="tertiary" size="small" @click="scoreOpen = false">取 消</el-button>
@@ -475,7 +521,7 @@
         width="800px"
         append-to-body
         :close-on-click-modal="false"
-        custom-class="writ-detail-dialog"
+        custom-class="detail-dialog"
       >
         <el-collapse v-model="activeDetailSections" class="form-collapse">
 
@@ -483,7 +529,7 @@
           <el-collapse-item name="basic" class="detail-section">
             <template slot="title">
               <div class="section-header">
-                <i class="el-icon-document section-icon"></i>
+                <i class="el-icon-document section-icon" />
                 <span class="section-title">基础信息</span>
                 <span class="section-badge">5项</span>
               </div>
@@ -514,7 +560,7 @@
           <el-collapse-item name="relation" class="detail-section">
             <template slot="title">
               <div class="section-header">
-                <i class="el-icon-star-on section-icon"></i>
+                <i class="el-icon-star-on section-icon" />
                 <span class="section-title">关联与评分</span>
                 <span class="section-badge">4项</span>
               </div>
@@ -545,7 +591,7 @@
           <el-collapse-item name="system" class="detail-section">
             <template slot="title">
               <div class="section-header">
-                <i class="el-icon-info section-icon"></i>
+                <i class="el-icon-info section-icon" />
                 <span class="section-title">系统信息</span>
                 <span class="section-badge">4项</span>
               </div>
@@ -594,8 +640,7 @@
                 icon="el-icon-plus"
                 size="mini"
                 @click="handleLinkMedia"
-                >关联新媒体</el-button
-              >
+              >关联新媒体</el-button>
             </el-col>
             <el-col :span="1.5">
               <el-button
@@ -604,8 +649,7 @@
                 size="mini"
                 :disabled="selectedMediaRelations.length === 0"
                 @click="handleBatchUnlinkMedia"
-                >批量取消关联</el-button
-              >
+              >批量取消关联</el-button>
             </el-col>
           </el-row>
 
@@ -644,8 +688,7 @@
                   icon="el-icon-delete"
                   style="color: #f56c6c"
                   @click="handleUnlinkMedia(scope.row)"
-                  >取消关联</el-button
-                >
+                >取消关联</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -660,6 +703,11 @@
             :limit.sync="relationQueryParams.pageSize"
             @pagination="loadWritMediaRelations"
           />
+        </div>
+
+        <!-- 底部操作栏 -->
+        <div class="drawer-footer">
+          <el-button type="text" class="action-btn tertiary" size="small" @click="handleCloseMediaDrawer()">关闭</el-button>
         </div>
       </el-drawer>
 
@@ -687,8 +735,8 @@
 
         <!-- 底部操作按钮 -->
         <div class="drawer-footer">
-          <el-button @click="handleCloseSelectorDrawer">取 消</el-button>
-          <el-button type="primary" @click="confirmLinkMedia">确 定</el-button>
+          <el-button type="text" class="action-btn tertiary" size="small" @click="handleCloseSelectorDrawer">取消</el-button>
+          <el-button type="primary" size="small" @click="confirmLinkMedia">确定</el-button>
         </div>
       </el-drawer>
     </template>
@@ -696,41 +744,41 @@
 </template>
 
 <script>
-import BasicLayout from "@/layout/BasicLayout";
-import Pagination from "@/components/Pagination";
-import Treeselect from "@riophae/vue-treeselect";
-import "@riophae/vue-treeselect/dist/vue-treeselect.css";
-import MediaSelector from "@/components/MediaSelector";
+import BasicLayout from '@/layout/BasicLayout'
+import Pagination from '@/components/Pagination'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import MediaSelector from '@/components/MediaSelector'
 import {
   listWrits,
-  getWrit,
   addWrit,
   updateWrit,
   delWritById,
   batchDelWrit,
-  scoreWrit,
-} from "@/api/evidence/writ_api";
+  scoreWrit
+} from '@/api/evidence/writ_api'
 import {
-  getMediaListByWritId,
   getUnassociatedMediaByWritId,
   batchCreateWritMediaRelation,
   deleteWritMediaRelation,
   batchDeleteWritMediaRelation,
-  getWritMediaRelationListByWritId,
-} from "@/api/evidence/writ_media_relation_api";
-import { orgTreeSelect } from "@/api/admin/sys-org";
-import { listUser } from "@/api/admin/sys-user";
-import { formatJson } from "@/utils";
-import WritQueryBar from "@/components/WritQueryBar/index.vue";
+  getWritMediaRelationListByWritId
+} from '@/api/evidence/writ_media_relation_api'
+import { orgTreeSelect } from '@/api/admin/sys-org'
+import { listUser } from '@/api/admin/sys-user'
+import { formatJson } from '@/utils'
+import WritQueryBar from '@/components/WritQueryBar/index.vue'
+import BatchActionBar from '@/components/BatchActionBar/index.vue'
 
 export default {
-  name: "WritManage",
+  name: 'WritManage',
   components: {
     BasicLayout,
     Pagination,
     Treeselect,
     MediaSelector,
     WritQueryBar,
+    BatchActionBar
   },
   data() {
     return {
@@ -745,7 +793,7 @@ export default {
       // 文书表格数据
       writList: [],
       // 弹出层标题
-      title: "",
+      title: '',
       // 是否显示弹出层
       open: false,
       // 是否显示评分对话框
@@ -754,6 +802,8 @@ export default {
       viewOpen: false,
       // 表单折叠状态
       activeFormSections: ['basic'],
+      // 评分对话框折叠状态
+      activeScoreSections: ['score'],
       // 详情对话框折叠状态
       activeDetailSections: ['basic', 'relation'],
       // 是否显示第一层抽屉(已关联媒体)
@@ -779,8 +829,11 @@ export default {
       selectedWritMap: {},
       // 防止恢复选中时触发事件循环
       isRestoringSelection: false,
-      //所有选中的文书记录
+      // 所有选中的文书记录
       selectedWritRecords: [],
+      // 全选状态
+      isAllSelected: false,
+      isSelectionIndeterminate: false,
       // 使用 Map 存储所有选中的项（跨分页）
       selectedMediaRelationMap: {},
       // 防止恢复选中时触发事件循环
@@ -793,20 +846,20 @@ export default {
       relationStatusOptions: [],
       // 列配置选项
       columnOptions: [
-        { prop: "writCode", label: "文书编号", fixed: true, defaultVisible: true },
-        { prop: "writName", label: "文书名称", fixed: false, defaultVisible: true },
-        { prop: "writType", label: "文书类型", fixed: false, defaultVisible: true },
-        { prop: "writTime", label: "开书时间", fixed: false, defaultVisible: true },
-        { prop: "orgPaths", label: "组织部门", fixed: false, defaultVisible: true },
-        { prop: "writPoliceNames", label: "警员", fixed: false, defaultVisible: true },
-        { prop: "writScore", label: "评分", fixed: false, defaultVisible: false },
-        { prop: "isRelation", label: "关联状态", fixed: false, defaultVisible: true },
-        { prop: "writAddress", label: "文书地址", fixed: false, defaultVisible: false },
-        { prop: "writSource", label: "文书来源", fixed: false, defaultVisible: false },
-        { prop: "scoreDesc", label: "评分说明", fixed: false, defaultVisible: false },
-        { prop: "writDesc", label: "文书描述", fixed: false, defaultVisible: false },
-        { prop: "createdAt", label: "创建时间", fixed: false, defaultVisible: false },
-        { prop: "updatedAt", label: "更新时间", fixed: false, defaultVisible: false },
+        { prop: 'writCode', label: '文书编号', fixed: true, defaultVisible: true },
+        { prop: 'writName', label: '文书名称', fixed: false, defaultVisible: true },
+        { prop: 'writType', label: '文书类型', fixed: false, defaultVisible: true },
+        { prop: 'writTime', label: '开书时间', fixed: false, defaultVisible: true },
+        { prop: 'orgPaths', label: '组织部门', fixed: false, defaultVisible: true },
+        { prop: 'writPoliceNames', label: '警员', fixed: false, defaultVisible: true },
+        { prop: 'writScore', label: '评分', fixed: false, defaultVisible: false },
+        { prop: 'isRelation', label: '关联状态', fixed: false, defaultVisible: true },
+        { prop: 'writAddress', label: '文书地址', fixed: false, defaultVisible: false },
+        { prop: 'writSource', label: '文书来源', fixed: false, defaultVisible: false },
+        { prop: 'scoreDesc', label: '评分说明', fixed: false, defaultVisible: false },
+        { prop: 'writDesc', label: '文书描述', fixed: false, defaultVisible: false },
+        { prop: 'createdAt', label: '创建时间', fixed: false, defaultVisible: false },
+        { prop: 'updatedAt', label: '更新时间', fixed: false, defaultVisible: false }
       ],
       // 可见列
       visibleColumns: [],
@@ -819,12 +872,12 @@ export default {
         writType: undefined,
         orgId: undefined,
         writTimeStart: undefined,
-        writTimeEnd: undefined,
+        writTimeEnd: undefined
       },
       // 媒体查询参数
       relationQueryParams: {
         pageIndex: 1,
-        pageSize: 10,
+        pageSize: 10
       },
       // 表单参数
       form: {},
@@ -833,148 +886,148 @@ export default {
       // 表单校验
       rules: {
         writName: [
-          { required: true, message: "文书名称不能为空", trigger: "blur" },
+          { required: true, message: '文书名称不能为空', trigger: 'blur' }
         ],
         writType: [
-          { required: true, message: "文书类型不能为空", trigger: "change" },
+          { required: true, message: '文书类型不能为空', trigger: 'change' }
         ],
         orgId: [
-          { required: true, message: "组织部门不能为空", trigger: "change" },
+          { required: true, message: '组织部门不能为空', trigger: 'change' }
         ],
         writPoliceIds: [
-          { required: true, message: "至少选择一名警员", trigger: "change" },
-        ],
+          { required: true, message: '至少选择一名警员', trigger: 'change' }
+        ]
       },
       // 评分表单校验
       scoreRules: {
         writScore: [
-          { required: true, message: "评分不能为空", trigger: "blur" },
-        ],
+          { required: true, message: '评分不能为空', trigger: 'blur' }
+        ]
       },
-      processingInstance: null, //Element UI全局加载动画的实例
-      previousCursor: null, //记录鼠标状态
-    };
+      processingInstance: null, // Element UI全局加载动画的实例
+      previousCursor: null // 记录鼠标状态
+    }
   },
   computed: {
     /** 获取未关联媒体列表API(用于媒体选择器) */
     getUnassociatedMediaListApi() {
       if (!this.currentWrit || !this.currentWrit.id) {
         return (query) => {
-          return Promise.resolve({ data: { list: [], count: 0 } });
-        };
+          return Promise.resolve({ data: { list: [], count: 0 }})
+        }
       }
       return (query) => {
-        return getUnassociatedMediaByWritId(this.currentWrit.id, query);
-      };
-    },
+        return getUnassociatedMediaByWritId(this.currentWrit.id, query)
+      }
+    }
   },
   watch: {
-    "form.orgId": function (newVal) {
+    'form.orgId': function(newVal) {
       // 当组织变化时,加载该组织的用户列表
       if (newVal) {
         if (this.firstLoad !== true) {
           // 首次打开对话框,不需要清空警员选择
-          this.form.writPoliceIds = [];
+          this.form.writPoliceIds = []
         }
-        this.firstLoad = false;
-        this.getFormUser();
+        this.firstLoad = false
+        this.getFormUser()
       }
-    },
+    }
   },
   created() {
-    this.initVisibleColumns();
-    this.getList();
-    this.getOrgTree();
-    this.getDicts("writ_type").then((response) => {
-      this.writTypeOptions = response.data;
-    });
-    this.getDicts("evidence_media_type").then((response) => {
-      this.mediaCateOptions = response.data;
-    });
-    this.getDicts("relation_status").then((response) => {
-      this.relationStatusOptions = response.data;
-    });
+    this.initVisibleColumns()
+    this.getList()
+    this.getOrgTree()
+    this.getDicts('writ_type').then((response) => {
+      this.writTypeOptions = response.data
+    })
+    this.getDicts('evidence_media_type').then((response) => {
+      this.mediaCateOptions = response.data
+    })
+    this.getDicts('relation_status').then((response) => {
+      this.relationStatusOptions = response.data
+    })
   },
   methods: {
     writTypeFormat(row) {
-      return this.selectDictLabel(this.writTypeOptions, row.writType);
+      return this.selectDictLabel(this.writTypeOptions, row.writType)
     },
     relationStatusFormat(row) {
-      return this.selectDictLabel(this.relationStatusOptions, row.isRelation);
+      return this.selectDictLabel(this.relationStatusOptions, row.isRelation)
     },
     mediaCateFormat(row) {
-      return this.selectDictLabel(this.mediaCateOptions, row.mediaCate);
+      return this.selectDictLabel(this.mediaCateOptions, row.mediaCate)
     },
 
     /** -----------主界面 --------------*/
     /** 查询文书列表 */
     getList() {
-      this.loading = true;
-      const query = this.normalizeQueryParams(this.queryParams);
+      this.loading = true
+      const query = this.normalizeQueryParams(this.queryParams)
       listWrits(query)
         .then((response) => {
           if (response.code === 200 && response.data) {
-            this.writList = response.data.list || [];
-            this.total = response.data.count || 0;
+            this.writList = response.data.list || []
+            this.total = response.data.count || 0
             // 分页/查询后回显跨分页选择
-            this.restoreSelection();
+            this.restoreSelection()
           } else {
-            this.writList = [];
-            this.total = 0;
-            this.msgError(response.msg || "获取文书列表失败");
+            this.writList = []
+            this.total = 0
+            this.msgError(response.msg || '获取文书列表失败')
           }
         })
         .catch((error) => {
-          this.msgError("查询文书列表失败：" + (error.message || "未知错误"));
-          this.writList = [];
-          this.total = 0;
+          this.msgError('查询文书列表失败：' + (error.message || '未知错误'))
+          this.writList = []
+          this.total = 0
         })
         .finally(() => {
-          this.loading = false;
-        });
+          this.loading = false
+        })
     },
     /** 获取组织树 */
     getOrgTree() {
       orgTreeSelect()
         .then((response) => {
-          this.orgOptions = response.data;
+          this.orgOptions = response.data
         })
         .catch((error) => {
-          this.msgError("获取组织树失败：" + (error.message || "未知错误"));
-          this.orgOptions = [];
-        });
+          this.msgError('获取组织树失败：' + (error.message || '未知错误'))
+          this.orgOptions = []
+        })
     },
     /** 获取用户列表 */
     getUserList(orgId) {
-      listUser({ orgId: "/" + orgId + "/" })
+      listUser({ orgId: '/' + orgId + '/' })
         .then((response) => {
-          this.userOptions = response.data.list || [];
+          this.userOptions = response.data.list || []
         })
         .catch((error) => {
-          this.msgError("获取用户列表失败：" + (error.message || "未知错误"));
-          this.userOptions = [];
-        });
+          this.msgError('获取用户列表失败：' + (error.message || '未知错误'))
+          this.userOptions = []
+        })
     },
     /** 获取表单组织的用户列表 */
     getFormUser() {
       return new Promise((resolve, reject) => {
-        listUser({ orgId: "/" + this.form.orgId + "/" })
+        listUser({ orgId: '/' + this.form.orgId + '/' })
           .then((response) => {
-            this.userOptions = response.data.list;
-            resolve("true");
+            this.userOptions = response.data.list
+            resolve('true')
           })
           .catch((error) => {
-            console.error("获取用户失败:", error);
-            this.userOptions = [];
-            reject(error);
-          });
-      });
+            console.error('获取用户失败:', error)
+            this.userOptions = []
+            reject(error)
+          })
+      })
     },
     /** 组织变更时加载用户 */
     handleOrgChange(value) {
       if (value) {
-        this.getUserList(value);
-        this.form.writPoliceIds = [];
+        this.getUserList(value)
+        this.form.writPoliceIds = []
       }
     },
 
@@ -986,90 +1039,90 @@ export default {
      * 其他场景下，不需要清空记录选中状态
      */
     resetSelected() {
-      this.selectedWritMap = {};
-      this.selectedWritRecords = [];
+      this.selectedWritMap = {}
+      this.selectedWritRecords = []
     },
 
     /** 刷新列表 */
     handleRefresh() {
-      this.getList();
+      this.getList()
     },
 
     /** 批量删除 */
     handleBatchDelete() {
-      this.handleDelete();
+      this.handleDelete()
     },
 
-    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
-    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    // pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    // 每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
     resetPage() {
-      this.queryParams.pageIndex = 1;
-      this.queryParams.pageSize = 10;
+      this.queryParams.pageIndex = 1
+      this.queryParams.pageSize = 10
     },
 
     handleQuery() {
-      this.resetPage();
-      this.resetSelected();
-      this.getList();
+      this.resetPage()
+      this.resetSelected()
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
 
     /** 新增查询栏相关方法 */
     handleSearch(searchData) {
       // 快速搜索字段列表
-      const quickSearchFields = ['writCode', 'writName', 'writType', 'isRelation'];
+      const quickSearchFields = ['writCode', 'writName', 'writType', 'isRelation']
 
       // 高级筛选中的时间范围字段列表
       const timeRangeFields = [
         'writTimeStart', 'writTimeEnd',
         'createdAtStart', 'createdAtEnd',
         'updatedAtStart', 'updatedAtEnd'
-      ];
+      ]
 
       // 合并新的搜索条件
       Object.keys(searchData).forEach(key => {
-        this.queryParams[key] = searchData[key];
-      });
+        this.queryParams[key] = searchData[key]
+      })
 
       // 删除被清空的快速搜索字段
       quickSearchFields.forEach(field => {
         if (!(field in searchData)) {
-          delete this.queryParams[field];
+          delete this.queryParams[field]
         }
-      });
+      })
 
       // 删除被清空的时间范围字段
       timeRangeFields.forEach(field => {
         if (!(field in searchData)) {
-          delete this.queryParams[field];
+          delete this.queryParams[field]
         }
-      });
+      })
 
-      this.handleQuery();
+      this.handleQuery()
     },
 
     handleQuickSearchReset() {
       // 重置所有筛选条件（与全局重置保持一致）
-      this.handleFilterReset();
+      this.handleFilterReset()
     },
 
     handleFilterChange(filterData) {
       // 处理快捷筛选和高级筛选
       if (filterData.filterType === 'today') {
         // 今日文书
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        this.queryParams.writTimeStart = today.toISOString();
-        delete this.queryParams.writTimeEnd;
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        this.queryParams.writTimeStart = today.toISOString()
+        delete this.queryParams.writTimeEnd
       } else if (filterData.filterType === 'mine') {
         // 我的文书 - 需要从 store 获取当前用户
-        const currentUser = this.$store.state.user && this.$store.state.user.user;
+        const currentUser = this.$store.state.user && this.$store.state.user.user
         if (currentUser && currentUser.userId) {
-          this.queryParams.createUserId = currentUser.userId;
+          this.queryParams.createUserId = currentUser.userId
         }
       } else if (filterData.filterType === 'pending') {
         // 待处理 - 根据实际业务逻辑调整
@@ -1077,31 +1130,34 @@ export default {
         // this.queryParams.status = 0;
       } else if (filterData.filterType === 'related') {
         // 已关联
-        this.queryParams.isRelation = 1;
+        this.queryParams.isRelation = 1
       } else if (filterData.filterType === 'advanced') {
         // 高级筛选 - 合并筛选参数（移除 filterType，只保留实际的查询条件）
-        const { filterType, ...actualFilterData } = filterData;
-        Object.assign(this.queryParams, actualFilterData);
+        Object.keys(filterData).forEach(key => {
+          if (key !== 'filterType') {
+            this.queryParams[key] = filterData[key]
+          }
+        })
 
         // 删除被清空的时间范围字段
         const timeRangeFields = [
           'writTimeStart', 'writTimeEnd',
           'createdAtStart', 'createdAtEnd',
           'updatedAtStart', 'updatedAtEnd'
-        ];
+        ]
         timeRangeFields.forEach(field => {
-          if (!(field in actualFilterData)) {
-            delete this.queryParams[field];
+          if (!(field in filterData)) {
+            delete this.queryParams[field]
           }
-        });
+        })
       } else if (filterData.filterType === 'all') {
         // 全部 - 清除特定筛选条件
-        delete this.queryParams.writTimeStart;
-        delete this.queryParams.writTimeEnd;
-        delete this.queryParams.createUserId;
-        delete this.queryParams.isRelation;
+        delete this.queryParams.writTimeStart
+        delete this.queryParams.writTimeEnd
+        delete this.queryParams.createUserId
+        delete this.queryParams.isRelation
       }
-      this.handleQuery();
+      this.handleQuery()
     },
 
     handleFilterReset() {
@@ -1127,53 +1183,53 @@ export default {
         // 清空快捷筛选的字段
         createUserId: undefined,
         isRelation: undefined
-      };
-      this.handleQuery();
+      }
+      this.handleQuery()
     },
 
     normalizeQueryParams(params = {}) {
-      const query = { ...params };
+      const query = { ...params }
       Object.keys(query).forEach((key) => {
-        const value = query[key];
-        if (value === "" || value === null || value === undefined) {
-          delete query[key];
+        const value = query[key]
+        if (value === '' || value === null || value === undefined) {
+          delete query[key]
         } else if (
-          (key === "writTimeStart" || key === "writTimeEnd" ||
-           key === "createdAtStart" || key === "createdAtEnd" ||
-           key === "updatedAtStart" || key === "updatedAtEnd") &&
-          typeof value === "string"
+          (key === 'writTimeStart' || key === 'writTimeEnd' ||
+           key === 'createdAtStart' || key === 'createdAtEnd' ||
+           key === 'updatedAtStart' || key === 'updatedAtEnd') &&
+          typeof value === 'string'
         ) {
           // 将本地时间字符串转换为 ISO 8601 格式（UTC 时间）
           // 例如: "2024-01-04 08:30:00" -> "2024-01-04T00:30:00.000Z"
-          const date = new Date(value);
+          const date = new Date(value)
           if (!isNaN(date.getTime())) {
-            query[key] = date.toISOString();
+            query[key] = date.toISOString()
           }
         }
-      });
-      return query;
+      })
+      return query
     },
 
     /** 恢复选中状态 */
     restoreSelection() {
-      if (this.isRestoringSelection) return;
-      if (!this.$refs.writTable) return;
-      if (!this.writList || !this.writList.length) return;
+      if (this.isRestoringSelection) return
+      if (!this.$refs.writTable) return
+      if (!this.writList || !this.writList.length) return
 
-      this.isRestoringSelection = true;
+      this.isRestoringSelection = true
       this.$nextTick(() => {
         try {
           this.writList.forEach((row) => {
-            const id = row && row.id;
-            if (!id) return;
+            const id = row && row.id
+            if (!id) return
             if (this.selectedWritMap[id]) {
-              this.$refs.writTable.toggleRowSelection(row, true);
+              this.$refs.writTable.toggleRowSelection(row, true)
             }
-          });
+          })
         } finally {
-          this.isRestoringSelection = false;
+          this.isRestoringSelection = false
         }
-      });
+      })
     },
 
     /** 开始执行操作 */
@@ -1181,42 +1237,42 @@ export default {
       this.processingInstance = this.$loading({
         lock: true,
         text: text,
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.3)",
-      });
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.3)'
+      })
       // 鼠标切换为等待状态
-      this.previousCursor = document.body.style.cursor;
-      document.body.style.cursor = "wait";
+      this.previousCursor = document.body.style.cursor
+      document.body.style.cursor = 'wait'
     },
 
     /** 停止执行操作 */
     stopProcessing() {
       if (this.processingInstance) {
-        this.processingInstance.close();
-        this.processingInstance = null;
+        this.processingInstance.close()
+        this.processingInstance = null
       }
       // 恢复鼠标状态
-      document.body.style.cursor = this.previousCursor;
+      document.body.style.cursor = this.previousCursor
     },
 
     handleSortChang(column, prop, order) {
-      prop = column.prop;
-      order = column.order;
-      if (order === "descending") {
-        this.queryParams[prop + "Order"] = "desc";
-      } else if (order === "ascending") {
-        this.queryParams[prop + "Order"] = "asc";
+      prop = column.prop
+      order = column.order
+      if (order === 'descending') {
+        this.queryParams[prop + 'Order'] = 'desc'
+      } else if (order === 'ascending') {
+        this.queryParams[prop + 'Order'] = 'asc'
       } else {
-        this.queryParams[prop + "Order"] = undefined;
+        this.queryParams[prop + 'Order'] = undefined
       }
 
-      this.getList();
+      this.getList()
     },
 
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
       if (this.isRestoringSelection) {
-        return;
+        return
       }
       // 以当前页为准增删选中项（实现跨分页记忆）
       const selectedIdSet = new Set(
@@ -1224,142 +1280,159 @@ export default {
       );
 
       (this.writList || []).forEach((row) => {
-        const id = row && row.id;
-        if (!id) return;
+        const id = row && row.id
+        if (!id) return
         if (selectedIdSet.has(id)) {
-          this.selectedWritMap[id] = row;
+          this.selectedWritMap[id] = row
         } else {
-          delete this.selectedWritMap[id];
+          delete this.selectedWritMap[id]
         }
-      });
+      })
       this.selectedWritRecords = Object.values(this.selectedWritMap).filter(
         Boolean
-      );
+      )
+
+      // 更新全选状态
+      const totalCount = this.writList.length
+      const selectedCount = this.selectedWritRecords.length
+      this.isAllSelected = selectedCount === totalCount && totalCount > 0
+      this.isSelectionIndeterminate = selectedCount > 0 && selectedCount < totalCount
     },
+
+    /** 批量全选/取消全选 */
+    handleSelectAll(val) {
+      this.isAllSelected = val
+      this.isSelectionIndeterminate = false
+      this.$refs.writTable.toggleAllSelection()
+    },
+
     /** 新增按钮操作 */
     handleAdd() {
-      this.reset();
-      this.firstLoad = null;
-      this.userOptions = [];
-      this.open = true;
-      this.title = "添加文书";
+      this.reset()
+      this.firstLoad = null
+      this.userOptions = []
+      this.open = true
+      this.title = '添加文书'
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset();
-      this.firstLoad = true;
+      this.reset()
+      this.firstLoad = true
       // 使用对象展开运算符创建新对象
       if (row && row.id !== undefined) {
-        this.form = { ...row };
+        this.form = { ...row }
       } else {
         this.form = this.selectedWritRecords[0]
           ? { ...this.selectedWritRecords[0] }
-          : {};
+          : {}
       }
       // 加载对应的用户列表
       if (this.form.orgId) {
-        this.getFormUser();
+        this.getFormUser()
       }
-      this.title = "修改文书";
-      this.open = true;
+      this.title = '修改文书'
+      this.open = true
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      this.viewData = row;
-      this.viewOpen = true;
+      this.viewData = row
+      this.viewOpen = true
     },
     /** 提交按钮 */
     submitForm() {
-      this.$refs["form"].validate((valid) => {
+      this.$refs['form'].validate((valid) => {
         if (valid) {
           if (this.form.id != null) {
-            this.startProcessing("正在修改文书...");
+            this.startProcessing('正在修改文书...')
             updateWrit(this.form.id, this.form)
-              .then(async (response) => {
+              .then(async(response) => {
                 if (response.code === 200) {
                   // 延迟2秒后刷新媒体列表
-                  await this.delay(2000);
-                  this.resetSelected();
-                  this.getList();
-                  this.msgSuccess(response.msg || "修改文书成功");
-                  this.open = false;
+                  await this.delay(2000)
+                  this.resetSelected()
+                  this.getList()
+                  this.msgSuccess(response.msg || '修改文书成功')
+                  this.open = false
                 } else {
-                  this.msgError(response.msg || "修改文书失败");
+                  this.msgError(response.msg || '修改文书失败')
                 }
               })
               .catch((error) => {
-                this.msgError("修改文书失败：" + (error.message || "未知错误"));
+                this.msgError('修改文书失败：' + (error.message || '未知错误'))
               })
               .finally(() => {
-                this.stopProcessing();
-              });
+                this.stopProcessing()
+              })
           } else {
-            this.startProcessing("正在创建文书...");
+            this.startProcessing('正在创建文书...')
             addWrit(this.form)
-              .then(async (response) => {
+              .then(async(response) => {
                 if (response.code === 200) {
                   // 延迟2秒后刷新媒体列表
-                  await this.delay(2000);
-                  this.getList();
-                  this.msgSuccess(response.msg || "新增文书成功");
-                  this.open = false;
+                  await this.delay(2000)
+                  this.getList()
+                  this.msgSuccess(response.msg || '新增文书成功')
+                  this.open = false
                 } else {
-                  this.msgError(response.msg || "新增文书失败");
+                  this.msgError(response.msg || '新增文书失败')
                 }
               })
               .catch((error) => {
-                this.msgError("新增文书失败：" + (error.message || "未知错误"));
+                this.msgError('新增文书失败：' + (error.message || '未知错误'))
               })
               .finally(() => {
-                this.stopProcessing();
-              });
+                this.stopProcessing()
+              })
           }
         }
-      });
+      })
     },
     /** 删除按钮操作 */
     async handleDelete(row) {
       try {
-        var writIds;
-        var writCodes;
+        var writIds
         if (row && row.id !== undefined) {
-          writIds = row.id;
-          writCodes = row.writCode;
+          writIds = row.id
         } else {
-          writIds = this.selectedWritRecords.map((item) => item.id);
-          writCodes = this.selectedWritRecords.map((item) => item.writCode);
+          writIds = this.selectedWritRecords.map((item) => item.id)
         }
 
+        // 计算删除数量，优化确认消息
+        const count = Array.isArray(writIds) ? writIds.length : 1
+        const confirmMessage = count > 1
+          ? `是否确认删除选中的 ${count} 条文书记录？此操作不可恢复。`
+          : `是否确认删除此条文书记录？此操作不可恢复。`
+
         await this.$confirm(
-          '是否确认删除文书编号为"' + writCodes + '"的数据项?',
-          "信息",
+          confirmMessage,
+          '确认删除',
           {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "info",
+            confirmButtonText: '删除',
+            cancelButtonText: '取消',
+            type: 'warning'
           }
-        );
-        this.startProcessing("正在删除文书...");
-        var response = null;
+        )
+        this.startProcessing('正在删除文书...')
+        var response = null
         if (Array.isArray(writIds)) {
-          response = await batchDelWrit({ ids: writIds });
+          response = await batchDelWrit({ ids: writIds })
         } else {
-          response = await delWritById(writIds);
+          response = await delWritById(writIds)
         }
         if (response.code === 200) {
           // 延迟2秒后刷新媒体列表
-          await this.delay(2000);
-          this.resetPage();
-          this.resetSelected();
-          this.getList();
-          this.msgSuccess(response.msg || "删除成功");
+          await this.delay(2000)
+          this.resetPage()
+          this.resetSelected()
+          this.getList()
+          this.msgSuccess(response.msg || '删除成功')
         } else {
-          this.msgError(response.msg || "删除失败");
+          this.msgError(response.msg || '删除失败')
         }
-        this.stopProcessing();
+        this.stopProcessing()
       } catch (error) {
-        if (error !== "cancel") {
-          this.msgError("删除失败：" + (error.message || "未知错误"));
+        if (error !== 'cancel') {
+          this.msgError('删除失败：' + (error.message || '未知错误'))
         }
       }
     },
@@ -1371,32 +1444,32 @@ export default {
         writTime: this.parseTime(row.writTime),
         writTypeLabel: this.writTypeFormat(row),
         writScore: row.writScore || 0,
-        scoreDesc: row.scoreDesc || "",
-      };
-      this.scoreOpen = true;
+        scoreDesc: row.scoreDesc || ''
+      }
+      this.scoreOpen = true
     },
     /** 提交评分 */
     submitScore() {
-      this.$refs["scoreForm"].validate((valid) => {
+      this.$refs['scoreForm'].validate((valid) => {
         if (valid) {
           scoreWrit(this.scoreForm.id, {
             writScore: this.scoreForm.writScore,
-            scoreDesc: this.scoreForm.scoreDesc,
+            scoreDesc: this.scoreForm.scoreDesc
           })
             .then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg || "评分成功");
-                this.scoreOpen = false;
-                this.getList();
+                this.msgSuccess(response.msg || '评分成功')
+                this.scoreOpen = false
+                this.getList()
               } else {
-                this.msgError(response.msg || "评分失败");
+                this.msgError(response.msg || '评分失败')
               }
             })
             .catch((error) => {
-              this.msgError("评分失败：" + (error.message || "未知错误"));
-            });
+              this.msgError('评分失败：' + (error.message || '未知错误'))
+            })
         }
-      });
+      })
     },
     /** 表单重置 */
     reset() {
@@ -1406,55 +1479,55 @@ export default {
         writType: null,
         orgId: null,
         writPoliceIds: [],
-        writDesc: null,
-      };
-      this.resetForm("form");
+        writDesc: null
+      }
+      this.resetForm('form')
     },
     /** 取消按钮 */
     cancel() {
-      this.open = false;
-      this.reset();
+      this.open = false
+      this.reset()
     },
     /** 初始化可见列 */
     initVisibleColumns() {
-      const saved = localStorage.getItem("writ_manage_visible_columns");
+      const saved = localStorage.getItem('writ_manage_visible_columns')
       if (saved) {
         try {
-          this.visibleColumns = JSON.parse(saved);
+          this.visibleColumns = JSON.parse(saved)
         } catch (error) {
           this.visibleColumns = this.columnOptions
             .filter((item) => item.defaultVisible !== false)
-            .map((item) => item.prop);
+            .map((item) => item.prop)
         }
       } else {
         // 根据defaultVisible属性初始化可见列
         this.visibleColumns = this.columnOptions
           .filter((item) => item.defaultVisible !== false)
-          .map((item) => item.prop);
+          .map((item) => item.prop)
       }
     },
     /** 判断列是否显示 */
     isColumnVisible(prop) {
-      return this.visibleColumns.includes(prop);
+      return this.visibleColumns.includes(prop)
     },
     /** 列显示变更 */
     handleColumnChange(value) {
       localStorage.setItem(
-        "writ_manage_visible_columns",
+        'writ_manage_visible_columns',
         JSON.stringify(value)
-      );
+      )
     },
     /** 重置列配置 */
     resetColumns() {
       // 根据defaultVisible属性重置为默认可见列
       this.visibleColumns = this.columnOptions
         .filter((item) => item.defaultVisible !== false)
-        .map((item) => item.prop);
+        .map((item) => item.prop)
       localStorage.setItem(
-        "writ_manage_visible_columns",
+        'writ_manage_visible_columns',
         JSON.stringify(this.visibleColumns)
-      );
-      this.$message.success("已重置为默认显示");
+      )
+      this.$message.success('已重置为默认显示')
     },
 
     /** 列设置对话框打开后的焦点管理 */
@@ -1462,12 +1535,12 @@ export default {
       // 等待 DOM 更新后将焦点移到第一个复选框
       this.$nextTick(() => {
         const firstCheckbox = document.querySelector(
-          ".column-settings-popover .el-checkbox:first-child .el-checkbox__input"
-        );
+          '.column-settings-popover .el-checkbox:first-child .el-checkbox__input'
+        )
         if (firstCheckbox) {
-          firstCheckbox.focus();
+          firstCheckbox.focus()
         }
-      });
+      })
     },
 
     /** 列设置对话框关闭后的焦点管理 */
@@ -1476,7 +1549,7 @@ export default {
     },
     /** 延迟函数 */
     delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
+      return new Promise((resolve) => setTimeout(resolve, ms))
     },
 
     /** 导出按钮操作 */
@@ -1484,119 +1557,119 @@ export default {
       try {
         const hasSelection =
           Array.isArray(this.selectedWritRecords) &&
-          this.selectedWritRecords.length > 0;
+          this.selectedWritRecords.length > 0
 
+        const count = hasSelection ? this.selectedWritRecords.length : 0
         const confirmText = hasSelection
-          ? `是否确认导出已勾选的 ${this.selectedWritRecords.length} 条文书数据？`
-          : "是否确认导出所有文书数据项？";
+          ? `是否确认导出已勾选的 ${count} 条文书数据？`
+          : '是否确认导出所有文书数据项？'
 
-        await this.$confirm(confirmText, "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "info",
-        });
+        await this.$confirm(confirmText, '导出确认', {
+          confirmButtonText: '导出',
+          cancelButtonText: '取消',
+          type: 'info'
+        })
 
         const columnOptions = Array.isArray(this.columnOptions)
           ? this.columnOptions
-          : [];
+          : []
         const visibleColumns = Array.isArray(this.visibleColumns)
           ? this.visibleColumns
-          : [];
+          : []
         const exportColumns = columnOptions.filter((c) =>
           visibleColumns.includes(c.prop)
-        );
+        )
 
         if (!exportColumns.length) {
-          this.msgError("当前未选择任何可导出的列");
-          return;
+          this.msgError('当前未选择任何可导出的列')
+          return
         }
 
-        const tHeader = exportColumns.map((c) => c.label);
-        const filterVal = exportColumns.map((c) => c.prop);
+        const tHeader = exportColumns.map((c) => c.label)
+        const filterVal = exportColumns.map((c) => c.prop)
 
-        let list = [];
+        let list = []
         if (hasSelection) {
-          list = this.selectedWritRecords;
+          list = this.selectedWritRecords
         } else {
-          const baseQueryParams = { ...(this.queryParams || {}) };
+          const baseQueryParams = { ...(this.queryParams || {}) }
 
-          const pageSize = 1000;
-          let pageIndex = 1;
-          let total = Infinity;
+          const pageSize = 1000
+          let pageIndex = 1
+          let total = Infinity
 
           while (list.length < total) {
             const query = {
               ...baseQueryParams,
               pageIndex,
-              pageSize,
-            };
-            const resp = await listWrits(query);
+              pageSize
+            }
+            const resp = await listWrits(query)
             if (!resp || resp.code !== 200) {
-              throw new Error((resp && resp.msg) || "查询文书列表失败");
+              throw new Error((resp && resp.msg) || '查询文书列表失败')
             }
 
-            const pageList = (resp.data && resp.data.list) || [];
-            total = (resp.data && resp.data.count) || 0;
-            list = list.concat(pageList);
+            const pageList = (resp.data && resp.data.list) || []
+            total = (resp.data && resp.data.count) || 0
+            list = list.concat(pageList)
 
             if (!pageList.length) {
-              break;
+              break
             }
-            pageIndex += 1;
+            pageIndex += 1
           }
         }
 
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
-          const output = { ...row };
-          output.writType = this.writTypeFormat(row);
-          output.isRelation = this.relationStatusFormat(row);
-          output.writTime = this.parseTime(row.writTime);
-          output.createdAt = this.parseTime(row.createdAt);
-          output.updatedAt = this.parseTime(row.updatedAt);
-          return output;
-        });
+          const output = { ...row }
+          output.writType = this.writTypeFormat(row)
+          output.isRelation = this.relationStatusFormat(row)
+          output.writTime = this.parseTime(row.writTime)
+          output.createdAt = this.parseTime(row.createdAt)
+          output.updatedAt = this.parseTime(row.updatedAt)
+          return output
+        })
 
-        const data = formatJson(filterVal, normalizeList);
+        const data = formatJson(filterVal, normalizeList)
 
         // 触发导出（会弹出另存为对话框）
-        const excel = await import("@/vendor/Export2Excel");
+        const excel = await import('@/vendor/Export2Excel')
         excel.export_json_to_excel({
           header: tHeader,
           data,
-          filename: "文书列表",
+          filename: '文书列表',
           autoWidth: true,
-          bookType: "xlsx",
-        });
+          bookType: 'xlsx'
+        })
       } catch (error) {
-        if (error !== "cancel") {
-          this.msgError("导出失败：" + (error.message || "未知错误"));
+        if (error !== 'cancel') {
+          this.msgError('导出失败：' + (error.message || '未知错误'))
         }
-      } finally {
       }
     },
 
     /** ------------第一层抽屉 -----------------*/
     /** 显示已关联媒体 - 打开第一层抽屉 */
     handleShowMedia(row) {
-      this.currentWrit = row;
-      this.showMediaDrawer = true;
-      this.loadWritMediaRelations();
+      this.currentWrit = row
+      this.showMediaDrawer = true
+      this.loadWritMediaRelations()
     },
     /** 关闭第一层抽屉 */
     handleCloseMediaDrawer(done) {
-      this.showMediaDrawer = false;
-      this.currentWrit = {};
-      this.mediaRelationsList = [];
-      this.relationTotal = 0;
-      this.selectedMediaRelationMap = {};
-      this.selectedMediaRelations = [];
+      this.showMediaDrawer = false
+      this.currentWrit = {}
+      this.mediaRelationsList = []
+      this.relationTotal = 0
+      this.selectedMediaRelationMap = {}
+      this.selectedMediaRelations = []
       if (done) {
-        done();
+        done()
       }
     },
     /** 查询关联媒体列表 */
     loadWritMediaRelations() {
-      this.relationLoading = true;
+      this.relationLoading = true
       getWritMediaRelationListByWritId(
         this.currentWrit.id,
         this.relationQueryParams
@@ -1604,53 +1677,53 @@ export default {
         .then((response) => {
           // 必须检查response.code是否为200
           if (response.code === 200) {
-            this.mediaRelationsList = response.data.list || [];
-            this.relationTotal = response.data.count || 0;
+            this.mediaRelationsList = response.data.list || []
+            this.relationTotal = response.data.count || 0
             // 分页/查询后回显跨分页选择
-            this.restoreMediaRelationSelection();
+            this.restoreMediaRelationSelection()
           } else {
-            this.msgError(response.msg || "加载媒体关联列表失败");
-            this.mediaRelationsList = [];
-            this.relationTotal = 0;
+            this.msgError(response.msg || '加载媒体关联列表失败')
+            this.mediaRelationsList = []
+            this.relationTotal = 0
           }
         })
         .catch((error) => {
-          console.error("加载媒体关联列表失败:", error);
+          console.error('加载媒体关联列表失败:', error)
           this.msgError(
-            "加载媒体关联列表失败：" + (error.message || "未知错误")
-          );
-          this.mediaRelationsList = [];
-          this.relationTotal = 0;
+            '加载媒体关联列表失败：' + (error.message || '未知错误')
+          )
+          this.mediaRelationsList = []
+          this.relationTotal = 0
         })
         .finally(() => {
-          this.relationLoading = false;
-        });
+          this.relationLoading = false
+        })
     },
-    /**恢复已关联媒体的选中状态 */
+    /** 恢复已关联媒体的选中状态 */
     restoreMediaRelationSelection() {
-      if (this.isRestoringMediaRelationSelection) return;
-      if (!this.$refs.mediaRelationsTable) return;
-      if (!this.mediaRelationsList || !this.mediaRelationsList.length) return;
+      if (this.isRestoringMediaRelationSelection) return
+      if (!this.$refs.mediaRelationsTable) return
+      if (!this.mediaRelationsList || !this.mediaRelationsList.length) return
 
-      this.isRestoringMediaRelationSelection = true;
+      this.isRestoringMediaRelationSelection = true
       this.$nextTick(() => {
         try {
           this.mediaRelationsList.forEach((row) => {
-            const id = row && row.id;
-            if (!id) return;
+            const id = row && row.id
+            if (!id) return
             if (this.selectedMediaRelationMap[id]) {
-              this.$refs.mediaRelationsTable.toggleRowSelection(row, true);
+              this.$refs.mediaRelationsTable.toggleRowSelection(row, true)
             }
-          });
+          })
         } finally {
-          this.isRestoringMediaRelationSelection = false;
+          this.isRestoringMediaRelationSelection = false
         }
-      });
+      })
     },
     /** 已关联媒体选择变化 */
     handleMediaRelationsSelectionChange(selection) {
       if (this.isRestoringMediaRelationSelection) {
-        return;
+        return
       }
       // 以当前页为准增删选中项（实现跨分页记忆）
       const selectedIdSet = new Set(
@@ -1658,101 +1731,101 @@ export default {
       );
 
       (this.mediaRelationsList || []).forEach((row) => {
-        const id = row && row.id;
-        if (!id) return;
+        const id = row && row.id
+        if (!id) return
         if (selectedIdSet.has(id)) {
-          this.selectedMediaRelationMap[id] = row;
+          this.selectedMediaRelationMap[id] = row
         } else {
-          delete this.selectedMediaRelationMap[id];
+          delete this.selectedMediaRelationMap[id]
         }
-      });
+      })
       this.selectedMediaRelations = Object.values(
         this.selectedMediaRelationMap
-      ).filter(Boolean);
+      ).filter(Boolean)
     },
     /** 取消关联媒体 */
     async handleUnlinkMedia(row) {
       try {
-        await this.$confirm("是否确认取消关联该媒体?", "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "info",
-        });
+        await this.$confirm('是否确认取消关联该媒体?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'info'
+        })
 
-        this.startProcessing("正在取消关联...");
+        this.startProcessing('正在取消关联...')
 
         try {
-          const response = await deleteWritMediaRelation(row.id);
+          const response = await deleteWritMediaRelation(row.id)
 
           if (response.code === 200) {
             // 延迟2秒后刷新媒体列表
-            await this.delay(2000);
-            this.loadWritMediaRelations();
-            this.getList(); // 刷新文书列表以更新关联状态
+            await this.delay(2000)
+            this.loadWritMediaRelations()
+            this.getList() // 刷新文书列表以更新关联状态
 
-            this.msgSuccess(response.msg || "取消关联成功");
+            this.msgSuccess(response.msg || '取消关联成功')
           } else {
-            this.msgError(response.msg || "取消关联失败");
+            this.msgError(response.msg || '取消关联失败')
           }
         } finally {
-          this.stopProcessing();
+          this.stopProcessing()
         }
       } catch (error) {
         // 用户取消操作或发生错误
-        if (error !== "cancel") {
-          this.msgError("取消关联失败：" + (error.message || "未知错误"));
+        if (error !== 'cancel') {
+          this.msgError('取消关联失败：' + (error.message || '未知错误'))
         }
       }
     },
     /** 批量取消关联媒体 */
     async handleBatchUnlinkMedia() {
       if (this.selectedMediaRelations.length === 0) {
-        this.msgError("请选择要取消关联的媒体");
-        return;
+        this.msgError('请选择要取消关联的媒体')
+        return
       }
 
       try {
         await this.$confirm(
           `确认取消关联选中的 ${this.selectedMediaRelations.length} 个媒体吗？`,
-          "提示",
+          '提示',
           {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "info",
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'info'
           }
-        );
+        )
 
-        this.startProcessing("正在批量取消关联...");
+        this.startProcessing('正在批量取消关联...')
 
         try {
           // 提取选中的关联ID列表
-          const ids = this.selectedMediaRelations.map((item) => item.id);
+          const ids = this.selectedMediaRelations.map((item) => item.id)
 
-          const response = await batchDeleteWritMediaRelation({ ids: ids });
+          const response = await batchDeleteWritMediaRelation({ ids: ids })
 
           if (response.code === 200) {
             // 延迟2秒后刷新媒体列表
-            await this.delay(2000);
-            this.selectedMediaRelationMap = {};
-            this.selectedMediaRelations = [];
-            this.loadWritMediaRelations();
-            this.getList(); // 刷新文书列表以更新关联状态
+            await this.delay(2000)
+            this.selectedMediaRelationMap = {}
+            this.selectedMediaRelations = []
+            this.loadWritMediaRelations()
+            this.getList() // 刷新文书列表以更新关联状态
 
             this.msgSuccess(
               response.msg ||
                 `成功取消关联 ${
                   response.data?.deletedCount || ids.length
                 } 个媒体`
-            );
+            )
           } else {
-            this.msgError(response.msg || "批量取消关联失败");
+            this.msgError(response.msg || '批量取消关联失败')
           }
         } finally {
-          this.stopProcessing();
+          this.stopProcessing()
         }
       } catch (error) {
-        if (error !== "cancel") {
-          this.msgError("批量取消关联失败：" + (error.message || "未知错误"));
+        if (error !== 'cancel') {
+          this.msgError('批量取消关联失败：' + (error.message || '未知错误'))
         }
       }
     },
@@ -1760,65 +1833,74 @@ export default {
     /** ------------第二层抽屉 -----------------*/
     /** 关联新媒体 - 打开第二层抽屉 */
     handleLinkMedia() {
-      this.selectedMediaList = [];
-      this.mediaSelectorDrawerOpen = true;
+      this.selectedMediaList = []
+      this.mediaSelectorDrawerOpen = true
       // 等待抽屉打开后刷新媒体选择器
       this.$nextTick(() => {
         if (this.$refs.mediaSelector) {
-          this.$refs.mediaSelector.clearSelection();
-          this.$refs.mediaSelector.refreshList();
+          this.$refs.mediaSelector.clearSelection()
+          this.$refs.mediaSelector.refreshList()
         }
-      });
+      })
     },
     /** 关闭第二层抽屉 */
     handleCloseSelectorDrawer(done) {
-      this.mediaSelectorDrawerOpen = false;
-      this.selectedMediaList = [];
+      this.mediaSelectorDrawerOpen = false
+      this.selectedMediaList = []
       if (done) {
-        done();
+        done()
       }
     },
     /** 媒体选择变化 */
     handleMediaSelectionChange(selection) {
-      this.selectedMediaList = selection;
+      this.selectedMediaList = selection
     },
     /** 确认关联媒体 */
     async confirmLinkMedia() {
       // 使用selectedMediaList而不是参数
       if (!this.selectedMediaList || this.selectedMediaList.length === 0) {
-        this.msgError("请选择要关联的媒体");
-        return;
+        this.msgError('请选择要关联的媒体')
+        return
       }
 
-      this.startProcessing("正在关联媒体...");
+      this.startProcessing('正在关联媒体...')
 
       try {
         const data = {
           writId: this.currentWrit.id,
-          mediaIds: this.selectedMediaList.map((item) => item.mediaId),
-        };
+          mediaIds: this.selectedMediaList.map((item) => item.mediaId)
+        }
 
-        const response = await batchCreateWritMediaRelation(data);
+        const response = await batchCreateWritMediaRelation(data)
 
         if (response.code === 200) {
           // 关闭第二层抽屉
-          this.mediaSelectorDrawerOpen = false;
+          this.mediaSelectorDrawerOpen = false
 
           // 延迟2秒后刷新第一层抽屉的媒体列表
-          await this.delay(2000);
-          this.loadWritMediaRelations();
-          this.getList(); // 刷新文书列表以更新关联状态
+          await this.delay(2000)
+          this.loadWritMediaRelations()
+          this.getList() // 刷新文书列表以更新关联状态
 
-          this.msgSuccess(response.msg || "关联成功");
+          this.msgSuccess(response.msg || '关联成功')
         } else {
-          this.msgError(response.msg || "关联失败");
+          this.msgError(response.msg || '关联失败')
         }
       } catch (error) {
-        this.msgError("关联失败：" + (error.message || "未知错误"));
+        this.msgError('关联失败：' + (error.message || '未知错误'))
       } finally {
-        this.stopProcessing();
+        this.stopProcessing()
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>
+
+<!--
+  样式说明：本页面全部使用全局样式
+  全局样式位置：
+  - src/styles/components/dialogs.scss: .main-action-bar
+  - src/styles/components/forms.scss: .filter-row, .section-label
+  - src/styles/components/table.scss: .action-buttons
+  - src/styles/components/buttons.scss: .search-action-buttons
+-->

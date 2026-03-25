@@ -1,198 +1,89 @@
 <template>
   <div class="media-selector">
-    <!-- 查询条件 -->
-    <el-form
-      ref="queryForm"
-      :inline="true"
-      :model="queryParams"
-      class="demo-form-inline"
-      size="small"
-    >
-      <el-form-item label="拍摄时间">
-        <el-form-item prop="captureTimeStart">
-          <el-date-picker
-            v-model="queryParams.captureTimeStart"
-            type="datetime"
-            placeholder="请选择开始时间"
-            value-format="yyyy-MM-dd HH:mm:ss"
+    <!-- 新的查询栏组件 -->
+    <div class="query-section">
+      <MediaQueryBar
+        ref="queryBar"
+        :media-cate-options="mediaCateOptions"
+        :is-archived-options="isArchivedOptions"
+        :org-options="orgOptions"
+        :storage-type-options="storageTypeOptions"
+        :enforce-type-options="enforceTypeOptions"
+        :terminal-type-options="terminalTypeOptions"
+        @search="handleSearch"
+        @quick-search-reset="handleQuickSearchReset"
+        @filter-change="handleFilterChange"
+        @filter-reset="handleFilterReset"
+      />
+    </div>
+
+    <!-- 批量操作栏插槽 -->
+    <slot name="batch-actions" />
+
+    <!-- 工具栏插槽 -->
+    <div class="main-action-bar">
+      <div class="left-actions">
+        <slot name="toolbar" />
+      </div>
+      <div class="right-actions">
+        <el-popover
+          ref="columnSettingsPopover"
+          placement="bottom-end"
+          width="300"
+          trigger="click"
+          popper-class="column-settings-popover"
+          :visible-arrow="true"
+          @after-enter="handleColumnSettingsOpen"
+          @after-leave="handleColumnSettingsClose"
+        >
+          <div
+            role="dialog"
+            aria-label="列显示设置"
+            class="column-settings"
           >
-          </el-date-picker>
-        </el-form-item>
-        <span>至</span>
-        <el-form-item prop="captureTimeEnd">
-          <el-date-picker
-            v-model="queryParams.captureTimeEnd"
-            type="datetime"
-            placeholder="请选择结束时间"
-            value-format="yyyy-MM-dd HH:mm:ss"
-          >
-          </el-date-picker>
-        </el-form-item>
-      </el-form-item>
-
-      <el-form-item label="单位组织" prop="orgId">
-        <div class="horizontal-container">
-          <treeselect
-            v-model="queryParams.orgId"
-            :options="orgOptions"
-            placeholder="请选择单位组织"
-            style="width: 200px"
-            clearable
-            @select="handleOrgSelect"
-          />
-          <el-checkbox v-model="queryParams.includeSubUnits">包含下级</el-checkbox>
-        </div>
-      </el-form-item>
-
-      <el-form-item label="拍摄警员" prop="policeId">
-        <el-select
-          v-model="queryParams.policeId"
-          placeholder="请选择拍摄警员"
-          clearable
-          style="width: 200px"
-          @change="handlePoliceSelect"
-        >
-          <el-option
-            v-for="item in userOptions"
-            :key="item.userId"
-            :label="item.userName"
-            :value="item.userId"
-          />
-        </el-select>
-      </el-form-item>
-
-      <el-form-item>
-        <el-button type="default" icon="el-icon-more" size="mini" @click="toggleMore"
-          >更多</el-button
-        >
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery"
-          >查询</el-button
-        >
-        <el-button type="default" icon="el-icon-refresh" size="mini" @click="resetQuery"
-          >重置</el-button
-        >
-      </el-form-item>
-
-      <!-- 更多查询条件 -->
-      <el-form-item label="媒体类型" prop="mediaCate">
-        <el-select
-          v-model="queryParams.mediaCate"
-          placeholder="媒体类型"
-          clearable
-          size="small"
-          style="width: 160px"
-        >
-          <el-option
-            v-for="dict in mediaCateOptions"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-
-      <el-form-item label="导入时间">
-        <el-form-item prop="uploadTimeStart">
-          <el-date-picker
-            v-model="queryParams.uploadTimeStart"
-            type="datetime"
-            placeholder="请选择开始时间"
-            value-format="yyyy-MM-dd HH:mm:ss"
-          >
-          </el-date-picker>
-        </el-form-item>
-        <span>至</span>
-        <el-form-item prop="uploadTimeEnd">
-          <el-date-picker
-            v-model="queryParams.uploadTimeEnd"
-            type="datetime"
-            placeholder="请选择结束时间"
-            value-format="yyyy-MM-dd HH:mm:ss"
-          >
-          </el-date-picker>
-        </el-form-item>
-      </el-form-item>
-
-      <el-form-item v-if="showMore" label="执法仪" prop="recorderId">
-        <el-select
-          v-model="queryParams.recorderId"
-          placeholder="请选择执法仪"
-          clearable
-          style="width: 200px"
-        >
-          <el-option
-            v-for="item in bwcOptions"
-            :key="item.id"
-            :label="item.bwcNo"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-
-      <el-form-item v-if="showMore" label="存储方式" prop="storageType">
-        <el-select
-          v-model="queryParams.storageType"
-          placeholder="存储方式"
-          clearable
-          size="small"
-          style="width: 160px"
-        >
-          <el-option
-            v-for="dict in storageTypeOptions"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-
-      <el-form-item v-if="showMore" label="执法类型" prop="enforceType">
-        <treeselect
-          v-model="queryParams.enforceType"
-          :options="enforceTypeOptions"
-          :normalizer="normalizeEnforceType"
-          placeholder="请选择执法类型"
-          style="width: 200px"
-          clearable
-        />
-      </el-form-item>
-
-      <el-form-item v-if="showMore" label="媒体名称" prop="mediaName">
-        <el-input
-          v-model="queryParams.mediaName"
-          placeholder="请输入媒体名称"
-          clearable
-        />
-      </el-form-item>
-    </el-form>
-
-    <!-- 自定义工具栏插槽 -->
-    <div class="toolbar-container">
-      <el-row :gutter="10" type="flex" justify="space-between">
-        <el-col :span="20">
-          <slot name="toolbar"></slot>
-        </el-col>
-        <el-col :span="4" class="column-settings-trigger">
-          <el-popover placement="bottom-end" width="300" trigger="click">
-            <div class="column-settings">
-              <div class="column-settings-header">
-                <span>列显示设置</span>
-                <el-button type="text" size="mini" @click="resetColumns">重置</el-button>
-              </div>
-              <el-checkbox-group v-model="visibleColumns" @change="handleColumnChange">
-                <div v-for="col in columnOptions" :key="col.prop" class="column-item">
-                  <el-checkbox :label="col.prop" :disabled="col.fixed">
-                    {{ col.label }}
-                  </el-checkbox>
-                </div>
-              </el-checkbox-group>
+            <div class="column-settings-header">
+              <span class="column-settings-title">列显示设置</span>
+              <el-button
+                type="text"
+                size="small"
+                class="column-settings-reset"
+                @click="resetColumns"
+              >
+                重置
+              </el-button>
             </div>
-            <el-button slot="reference" size="mini" icon="el-icon-setting"
-              >列设置</el-button
-            >
-          </el-popover>
-        </el-col>
-      </el-row>
+            <el-checkbox-group v-model="visibleColumns" @change="handleColumnChange">
+              <div v-for="col in columnOptions" :key="col.prop" class="column-item">
+                <el-checkbox
+                  :label="col.prop"
+                  :disabled="col.fixed"
+                  :aria-label="col.fixed ? `${col.label}（必须显示）` : col.label"
+                >
+                  {{ col.label }}
+                  <el-tooltip
+                    v-if="col.fixed"
+                    content="此列必须显示，不能隐藏"
+                    placement="top"
+                  >
+                    <i class="el-icon-info column-item-icon" />
+                  </el-tooltip>
+                </el-checkbox>
+              </div>
+            </el-checkbox-group>
+          </div>
+          <el-button
+            slot="reference"
+            size="small"
+            icon="el-icon-setting"
+            type="text"
+            class="action-btn tertiary"
+            aria-label="打开列设置"
+            aria-haspopup="dialog"
+          >
+            列设置
+          </el-button>
+        </el-popover>
+      </div>
     </div>
 
     <!-- 媒体列表 -->
@@ -208,7 +99,7 @@
     >
       <el-table-column
         type="selection"
-        width="55"
+        width="60"
         align="center"
         :reserve-selection="true"
       />
@@ -216,39 +107,64 @@
       <el-table-column
         v-if="!selectionMode"
         label="操作"
-        width="260"
+        width="350"
         align="center"
+        class-name="small-padding fixed-width"
         fixed="left"
       >
         <template slot-scope="scope">
-          <el-button size="mini" type="text" @click="handleOperation(scope.row, 'edit')"
-            >一键归档</el-button
-          >
-          <el-button size="mini" type="text" @click="handleOperation(scope.row, 'view')"
-            >浏览</el-button
-          >
-          <el-button size="mini" type="text" @click="handleOperation(scope.row, 'play')"
-            >播放</el-button
-          >
-          <el-button size="mini" type="text" @click="handleOperation(scope.row, 'copy')"
-            >复制地址</el-button
-          >
-          <el-button size="mini" type="text" @click="handleOperation(scope.row, 'delete')"
-            >删除</el-button
-          >
-          <el-button
-            size="mini"
-            type="text"
-            @click="handleOperation(scope.row, 'download')"
-            >下载</el-button
-          >
-          <el-button
-            v-if="scope.row.mediaCate === 3"
-            size="mini"
-            type="text"
-            @click="handleOperation(scope.row, 'track')"
-            >视频轨迹</el-button
-          >
+          <div class="action-buttons">
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-folder-add"
+              class="action-btn tertiary"
+              @click="handleOperation(scope.row, 'edit')"
+            >一键归档</el-button>
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-view"
+              class="action-btn tertiary"
+              @click="handleOperation(scope.row, 'view')"
+            >浏览</el-button>
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-video-play"
+              class="action-btn tertiary"
+              @click="handleOperation(scope.row, 'play')"
+            >播放</el-button>
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-document-copy"
+              class="action-btn tertiary"
+              @click="handleOperation(scope.row, 'copy')"
+            >复制地址</el-button>
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-delete"
+              class="action-btn tertiary-danger"
+              @click="handleOperation(scope.row, 'delete')"
+            >删除</el-button>
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-download"
+              class="action-btn secondary"
+              @click="handleOperation(scope.row, 'download')"
+            >下载</el-button>
+            <el-button
+              v-if="scope.row.mediaCate === 3"
+              size="small"
+              type="text"
+              icon="el-icon-location"
+              class="action-btn tertiary"
+              @click="handleOperation(scope.row, 'track')"
+            >视频轨迹</el-button>
+          </div>
         </template>
       </el-table-column>
       <el-table-column
@@ -619,8 +535,7 @@
             type="text"
             size="mini"
             @click="handleViewIncident(row)"
-            >{{ row.incidentCode }}</el-button
-          >
+          >{{ row.incidentCode }}</el-button>
           <span v-else>-</span>
         </template>
       </el-table-column>
@@ -715,8 +630,10 @@
       :visible.sync="viewIncidentOpen"
       width="800px"
       append-to-body
+      :close-on-click-modal="false"
+      custom-class="detail-dialog"
     >
-      <el-descriptions :column="2" border>
+      <el-descriptions :column="2" border class="section-descriptions">
         <el-descriptions-item label="警情编号">{{
           viewIncidentData.incidentCode || "-"
         }}</el-descriptions-item>
@@ -734,47 +651,46 @@
         }}</el-descriptions-item>
       </el-descriptions>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="viewIncidentOpen = false">关 闭</el-button>
+        <el-button type="text" class="action-btn tertiary" size="small" @click="viewIncidentOpen = false">关闭</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { listMedia } from "@/api/evidence/evidence_manage_query_api";
-import { getEnforceTypeTree } from "@/api/admin/enforcetype";
-import { orgTreeSelect } from "@/api/admin/sys-org";
-import { listUser } from "@/api/admin/sys-user";
-import { getEquipmentBwcByManagerId } from "@/api/admin/equipment_manage_api";
-import Treeselect from "@riophae/vue-treeselect";
-import "@riophae/vue-treeselect/dist/vue-treeselect.css";
-import { selectDictLabel } from "@/utils/costum";
-import MediaDetailDialog from "@/components/MediaDetailDialog";
+import { listMedia } from '@/api/evidence/evidence_manage_query_api'
+import { getEnforceTypeTree } from '@/api/admin/enforcetype'
+import { orgTreeSelect } from '@/api/admin/sys-org'
+import { listUser } from '@/api/admin/sys-user'
+import { getEquipmentBwcByManagerId } from '@/api/admin/equipment_manage_api'
+import { selectDictLabel } from '@/utils/costum'
+import MediaDetailDialog from '@/components/MediaDetailDialog'
+import MediaQueryBar from '@/components/MediaQueryBar/index.vue'
 
 export default {
-  name: "MediaSelector",
-  components: { Treeselect, MediaDetailDialog },
+  name: 'MediaSelector',
+  components: { MediaDetailDialog, MediaQueryBar },
   props: {
     // 是否为选择模式（用于对话框中的媒体选择）
     selectionMode: {
       type: Boolean,
-      default: false,
+      default: false
     },
     // 是否支持多选
     multiple: {
       type: Boolean,
-      default: true,
+      default: true
     },
     // 初始查询参数
     initialQuery: {
       type: Object,
-      default: () => ({}),
+      default: () => ({})
     },
     // 自定义媒体列表API函数
     customListApi: {
       type: Function,
-      default: null,
-    },
+      default: null
+    }
   },
   data() {
     return {
@@ -785,13 +701,11 @@ export default {
       // 非单个禁用
       single: true,
       // 非多个禁用
-      multiple: true,
+      multipleDisabled: true,
       // 总条数
       total: 0,
       // 媒体数据
       mediaList: [],
-      // 是否显示更多查询条件
-      showMore: false,
       // 查询参数
       queryParams: {
         pageIndex: 1,
@@ -801,7 +715,6 @@ export default {
         orgId: undefined,
         policeId: undefined,
         includeSubUnits: true,
-        policeId: undefined,
         mediaCate: undefined,
         uploadTimeStart: undefined,
         uploadTimeEnd: undefined,
@@ -810,6 +723,12 @@ export default {
         storageType: undefined,
         enforceType: undefined,
         mediaName: undefined,
+        isArchived: undefined,
+        isNonEnforcementMedia: undefined,
+        isLocked: undefined,
+        terminalType: undefined,
+        incidentCode: undefined,
+        recorderNo: undefined
       },
       // 组织树选项
       orgOptions: undefined,
@@ -849,146 +768,146 @@ export default {
       // 列配置选项
       columnOptions: [
         {
-          prop: "mediaName",
-          label: "媒体名称",
+          prop: 'mediaName',
+          label: '媒体名称',
           fixed: true,
-          defaultVisible: true,
+          defaultVisible: true
         },
-        { prop: "mediaCate", label: "媒体类型", defaultVisible: true },
-        { prop: "mediaSuffix", label: "媒体后缀", defaultVisible: false },
-        { prop: "captureTime", label: "拍摄时间", defaultVisible: true },
+        { prop: 'mediaCate', label: '媒体类型', defaultVisible: true },
+        { prop: 'mediaSuffix', label: '媒体后缀', defaultVisible: false },
+        { prop: 'captureTime', label: '拍摄时间', defaultVisible: true },
         {
-          prop: "captureEndTime",
-          label: "拍摄结束时间",
-          defaultVisible: false,
+          prop: 'captureEndTime',
+          label: '拍摄结束时间',
+          defaultVisible: false
         },
-        { prop: "clarity", label: "视频清晰度", defaultVisible: false },
+        { prop: 'clarity', label: '视频清晰度', defaultVisible: false },
         {
-          prop: "duration",
-          label: "视频时长(毫秒)",
-          defaultVisible: false,
-        },
-        {
-          prop: "importantLevel",
-          label: "重要级别(平台)",
-          defaultVisible: false,
+          prop: 'duration',
+          label: '视频时长(毫秒)',
+          defaultVisible: false
         },
         {
-          prop: "importantLevelRec",
-          label: "重要级别(设备)",
-          defaultVisible: false,
+          prop: 'importantLevel',
+          label: '重要级别(平台)',
+          defaultVisible: false
         },
-        { prop: "width", label: "图片宽度", defaultVisible: false },
-        { prop: "height", label: "图片高度", defaultVisible: false },
         {
-          prop: "isNonEnforcementMedia",
-          label: "是否执法媒体",
-          defaultVisible: true,
+          prop: 'importantLevelRec',
+          label: '重要级别(设备)',
+          defaultVisible: false
         },
-        { prop: "comments", label: "标注内容", defaultVisible: false },
-        { prop: "sequence", label: "视频序列标识", defaultVisible: false },
+        { prop: 'width', label: '图片宽度', defaultVisible: false },
+        { prop: 'height', label: '图片高度', defaultVisible: false },
         {
-          prop: "enforcementTypeName",
-          label: "执法类型名称",
-          defaultVisible: false,
+          prop: 'isNonEnforcementMedia',
+          label: '是否执法媒体',
+          defaultVisible: true
         },
-        { prop: "isLocked", label: "是否锁定", defaultVisible: false },
-        { prop: "expiryTime", label: "过期时间", defaultVisible: false },
-        { prop: "archiveCode", label: "档案编号", defaultVisible: false },
-        { prop: "isArchive", label: "是否归档", defaultVisible: false },
-        { prop: "archiveDate", label: "归档时间", defaultVisible: false },
-        { prop: "fileIdentity", label: "文件标识", defaultVisible: false },
-        { prop: "fileName", label: "文件名称", defaultVisible: false },
-        { prop: "fileSize", label: "文件大小(KB)", defaultVisible: false },
-        { prop: "filePath", label: "存储路径", defaultVisible: false },
-        { prop: "fileMd5", label: "文件MD5", defaultVisible: false },
-        { prop: "fileType", label: "文件类型", defaultVisible: false },
-        { prop: "contentType", label: "MIME类型", defaultVisible: false },
-        { prop: "collectSiteNo", label: "采集站编号", defaultVisible: false },
-        { prop: "collectSiteName", label: "采集站名称", defaultVisible: false },
-        { prop: "storageType", label: "存储方式", defaultVisible: false },
+        { prop: 'comments', label: '标注内容', defaultVisible: false },
+        { prop: 'sequence', label: '视频序列标识', defaultVisible: false },
         {
-          prop: "isSendToStorage",
-          label: "是否上传至存储",
-          defaultVisible: false,
+          prop: 'enforcementTypeName',
+          label: '执法类型名称',
+          defaultVisible: false
         },
-        { prop: "isNoticeSend", label: "是否通知发送", defaultVisible: false },
-        { prop: "policeNo", label: "警员编号", defaultVisible: false },
-        { prop: "policeName", label: "警员姓名", defaultVisible: true },
-        { prop: "policeIdCard", label: "警员身份证号", defaultVisible: false },
-        { prop: "orgCode", label: "单位编码", defaultVisible: false },
-        { prop: "orgName", label: "单位名称", defaultVisible: true },
-        { prop: "orgFullName", label: "单位全称", defaultVisible: false },
-        { prop: "orgJc", label: "单位简称", defaultVisible: false },
-        { prop: "terminalType", label: "终端类型", defaultVisible: false },
-        { prop: "recorderNo", label: "执法仪编号", defaultVisible: false },
-        { prop: "incidentCode", label: "警情号", defaultVisible: false },
+        { prop: 'isLocked', label: '是否锁定', defaultVisible: false },
+        { prop: 'expiryTime', label: '过期时间', defaultVisible: false },
+        { prop: 'archiveCode', label: '档案编号', defaultVisible: false },
+        { prop: 'isArchive', label: '是否归档', defaultVisible: false },
+        { prop: 'archiveDate', label: '归档时间', defaultVisible: false },
+        { prop: 'fileIdentity', label: '文件标识', defaultVisible: false },
+        { prop: 'fileName', label: '文件名称', defaultVisible: false },
+        { prop: 'fileSize', label: '文件大小(KB)', defaultVisible: false },
+        { prop: 'filePath', label: '存储路径', defaultVisible: false },
+        { prop: 'fileMd5', label: '文件MD5', defaultVisible: false },
+        { prop: 'fileType', label: '文件类型', defaultVisible: false },
+        { prop: 'contentType', label: 'MIME类型', defaultVisible: false },
+        { prop: 'collectSiteNo', label: '采集站编号', defaultVisible: false },
+        { prop: 'collectSiteName', label: '采集站名称', defaultVisible: false },
+        { prop: 'storageType', label: '存储方式', defaultVisible: false },
         {
-          prop: "isAssociated",
-          label: "是否关联",
+          prop: 'isSendToStorage',
+          label: '是否上传至存储',
+          defaultVisible: false
+        },
+        { prop: 'isNoticeSend', label: '是否通知发送', defaultVisible: false },
+        { prop: 'policeNo', label: '警员编号', defaultVisible: false },
+        { prop: 'policeName', label: '警员姓名', defaultVisible: true },
+        { prop: 'policeIdCard', label: '警员身份证号', defaultVisible: false },
+        { prop: 'orgCode', label: '单位编码', defaultVisible: false },
+        { prop: 'orgName', label: '单位名称', defaultVisible: true },
+        { prop: 'orgFullName', label: '单位全称', defaultVisible: false },
+        { prop: 'orgJc', label: '单位简称', defaultVisible: false },
+        { prop: 'terminalType', label: '终端类型', defaultVisible: false },
+        { prop: 'recorderNo', label: '执法仪编号', defaultVisible: false },
+        { prop: 'incidentCode', label: '警情号', defaultVisible: false },
+        {
+          prop: 'isAssociated',
+          label: '是否关联',
           fixed: true,
-          defaultVisible: true,
+          defaultVisible: true
         },
-        { prop: "associateTime", label: "关联时间", defaultVisible: false },
-        { prop: "requestIdentity", label: "请求标识", defaultVisible: false },
-        { prop: "authKey", label: "认证码", defaultVisible: false },
-        { prop: "traceCode", label: "追溯码", defaultVisible: false },
-        { prop: "uploadTime", label: "上传时间", defaultVisible: true },
-        { prop: "acquisitionTime", label: "接收时间", defaultVisible: false },
+        { prop: 'associateTime', label: '关联时间', defaultVisible: false },
+        { prop: 'requestIdentity', label: '请求标识', defaultVisible: false },
+        { prop: 'authKey', label: '认证码', defaultVisible: false },
+        { prop: 'traceCode', label: '追溯码', defaultVisible: false },
+        { prop: 'uploadTime', label: '上传时间', defaultVisible: true },
+        { prop: 'acquisitionTime', label: '接收时间', defaultVisible: false }
       ],
       // 可见列
       visibleColumns: [],
 
       selectedMediaMap: {},
       isRestoringSelection: false,
-      order: "", // 当前排序字段，用于追踪排序状态
-    };
+      order: '' // 当前排序字段，用于追踪排序状态
+    }
   },
   watch: {
-    "queryParams.orgId": function (newVal) {
+    'queryParams.orgId': function(newVal) {
       // 当组织选择变化时，清空人员选择并重新加载该组织的人员列表
       if (newVal) {
-        this.queryParams.policeId = undefined;
-        this.getUserListByOrgId(newVal);
+        this.queryParams.policeId = undefined
+        this.getUserListByOrgId(newVal)
       } else {
         // 如果清空组织选择，则清空人员列表
-        this.userOptions = [];
-        this.queryParams.policeId = undefined;
+        this.userOptions = []
+        this.queryParams.policeId = undefined
       }
     },
-    "queryParams.policeId": function (newVal) {
+    'queryParams.policeId': function(newVal) {
       // 当警员选择变化时，清空执法仪选择并重新加载该警员管理的执法仪列表
       if (newVal) {
-        this.queryParams.recorderId = undefined;
-        this.getBwcListByPoliceId(newVal);
+        this.queryParams.recorderId = undefined
+        this.getBwcListByPoliceId(newVal)
       } else {
         // 如果清空警员选择，则清空执法仪列表
-        this.bwcOptions = [];
-        this.queryParams.recorderId = undefined;
+        this.bwcOptions = []
+        this.queryParams.recorderId = undefined
       }
-    },
+    }
   },
   created() {
     // 合并初始查询参数
-    this.queryParams = { ...this.queryParams, ...this.initialQuery };
-    this.initVisibleColumns();
-    this.getOrgTreeSelect();
-    this.getUserList();
-    this.getBwcList();
-    this.getEnforceTypeTree();
+    this.queryParams = { ...this.queryParams, ...this.initialQuery }
+    this.initVisibleColumns()
+    this.getOrgTreeSelect()
+    this.getUserList()
+    this.getBwcList()
+    this.getEnforceTypeTree()
 
     // 使用Promise.all等待所有字典加载完成
     Promise.all([
-      this.getDicts("evidence_media_type"),
-      this.getDicts("evidence_storage_type"),
-      this.getDicts("is_archived"),
-      this.getDicts("relation_status"),
-      this.getDicts("is_send_to_storage"),
-      this.getDicts("is_locked"),
-      this.getDicts("terminal_type"),
-      this.getDicts("is_non_enforcement_media"),
-      this.getDicts("video_clarity"),
-      this.getDicts("media_importance"),
+      this.getDicts('evidence_media_type'),
+      this.getDicts('evidence_storage_type'),
+      this.getDicts('is_archived'),
+      this.getDicts('relation_status'),
+      this.getDicts('is_send_to_storage'),
+      this.getDicts('is_locked'),
+      this.getDicts('terminal_type'),
+      this.getDicts('is_non_enforcement_media'),
+      this.getDicts('video_clarity'),
+      this.getDicts('media_importance')
     ])
       .then(
         ([
@@ -1001,37 +920,39 @@ export default {
           terminalTypeRes,
           isNonEnforcementMediaRes,
           videoClarityRes,
-          mediaImportanceRes,
+          mediaImportanceRes
         ]) => {
-          this.mediaCateOptions = mediaCateRes.data;
-          this.storageTypeOptions = storageTypeRes.data;
-          this.isArchivedOptions = isArchivedRes.data;
-          this.relationStatusOptions = relationStatusRes.data;
-          this.isSendToStorageOptions = isSendToStorageRes.data;
-          this.isLockedOptions = isLockedRes.data;
-          this.terminalTypeOptions = terminalTypeRes.data;
-          this.isNonEnforcementMediaOptions = isNonEnforcementMediaRes.data;
-          this.videoClarityOptions = videoClarityRes.data;
-          this.mediaImportanceOptions = mediaImportanceRes.data;
+          this.mediaCateOptions = mediaCateRes.data
+          this.storageTypeOptions = storageTypeRes.data
+          this.isArchivedOptions = isArchivedRes.data
+          this.relationStatusOptions = relationStatusRes.data
+          this.isSendToStorageOptions = isSendToStorageRes.data
+          this.isLockedOptions = isLockedRes.data
+          this.terminalTypeOptions = terminalTypeRes.data
+          this.isNonEnforcementMediaOptions = isNonEnforcementMediaRes.data
+          this.videoClarityOptions = videoClarityRes.data
+          this.mediaImportanceOptions = mediaImportanceRes.data
 
-          console.log("[MediaSelector] 字典加载完成");
+          console.log('[MediaSelector] 字典加载完成')
           // 字典加载完成后再加载列表
-          this.getList();
+          this.getList()
         }
       )
       .catch((error) => {
-        console.error("[MediaSelector] 字典加载失败:", error);
+        console.error('[MediaSelector] 字典加载失败:', error)
         // 即使字典加载失败,也要加载列表
-        this.getList();
-      });
+        this.getList()
+      })
   },
   methods: {
+    selectDictLabel,
+
     getRowKey(row) {
-      return row && row.mediaId;
+      return row && row.mediaId
     },
 
     /** 组织选择事件 */
-    /*handleOrgSelect(node) {
+    /* handleOrgSelect(node) {
       if (node) {
         listUser({ orgId: "/" + node.id + "/" }).then((response) => {
           this.userOptions = response.data.list || [];
@@ -1040,171 +961,171 @@ export default {
     },*/
 
     restoreSelection() {
-      if (this.isRestoringSelection) return;
-      if (!this.$refs.mediaTable) return;
-      if (!this.mediaList || !this.mediaList.length) return;
+      if (this.isRestoringSelection) return
+      if (!this.$refs.mediaTable) return
+      if (!this.mediaList || !this.mediaList.length) return
 
-      this.isRestoringSelection = true;
+      this.isRestoringSelection = true
       this.$nextTick(() => {
         try {
           this.mediaList.forEach((row) => {
-            const id = row && row.mediaId;
-            if (!id) return;
+            const id = row && row.mediaId
+            if (!id) return
             if (this.selectedMediaMap[id]) {
-              this.$refs.mediaTable.toggleRowSelection(row, true);
+              this.$refs.mediaTable.toggleRowSelection(row, true)
             }
-          });
+          })
         } finally {
-          this.isRestoringSelection = false;
+          this.isRestoringSelection = false
         }
-      });
+      })
     },
     /** 默认可见列 */
     getDefaultVisibleColumns() {
       return this.columnOptions
         .filter((item) => item.defaultVisible !== false)
-        .map((item) => item.prop);
+        .map((item) => item.prop)
     },
 
     /** 初始化列显示配置 */
     initVisibleColumns() {
-      const saved = localStorage.getItem("media_selector_visible_columns");
+      const saved = localStorage.getItem('media_selector_visible_columns')
       if (saved) {
         try {
-          this.visibleColumns = JSON.parse(saved);
-          return;
+          this.visibleColumns = JSON.parse(saved)
+          return
         } catch (error) {
-          console.warn("解析列显示配置失败，使用默认列", error);
+          console.warn('解析列显示配置失败，使用默认列', error)
         }
       }
-      this.visibleColumns = this.getDefaultVisibleColumns();
+      this.visibleColumns = this.getDefaultVisibleColumns()
     },
 
     /** 判断列是否显示 */
     isColumnVisible(prop) {
-      return this.visibleColumns.includes(prop);
+      return this.visibleColumns.includes(prop)
     },
 
     /** 列显示变更 */
     handleColumnChange(value) {
-      this.visibleColumns = value;
+      this.visibleColumns = value
       localStorage.setItem(
-        "media_selector_visible_columns",
+        'media_selector_visible_columns',
         JSON.stringify(this.visibleColumns)
-      );
+      )
     },
 
     /** 重置列显示 */
     resetColumns() {
-      this.visibleColumns = this.getDefaultVisibleColumns();
+      this.visibleColumns = this.getDefaultVisibleColumns()
       localStorage.setItem(
-        "media_selector_visible_columns",
+        'media_selector_visible_columns',
         JSON.stringify(this.visibleColumns)
-      );
-      this.$message.success("已重置为默认显示");
+      )
+      this.$message.success('已重置为默认显示')
     },
 
     normalizeQueryParams(params = {}) {
-      const query = { ...params };
+      const query = { ...params }
       Object.keys(query).forEach((key) => {
-        const value = query[key];
-        if (value === "" || value === null || value === undefined) {
-          delete query[key];
+        const value = query[key]
+        if (value === '' || value === null || value === undefined) {
+          delete query[key]
         } else if (
-          (key === "captureTimeStart" ||
-            key === "captureTimeEnd" ||
-            key === "uploadTimeStart" ||
-            key === "uploadTimeEnd") &&
-          typeof value === "string"
+          (key === 'captureTimeStart' ||
+            key === 'captureTimeEnd' ||
+            key === 'uploadTimeStart' ||
+            key === 'uploadTimeEnd') &&
+          typeof value === 'string'
         ) {
           // 将本地时间字符串转换为 ISO 8601 格式（UTC 时间）
           // 例如: "2024-01-04 08:30:00" -> "2024-01-04T00:30:00.000Z"
-          const date = new Date(value);
+          const date = new Date(value)
           if (!isNaN(date.getTime())) {
-            query[key] = date.toISOString();
+            query[key] = date.toISOString()
           }
         }
-      });
-      return query;
+      })
+      return query
     },
 
     /** 查询媒体列表 */
     getList() {
-      this.loading = true;
+      this.loading = true
       // 如果提供了自定义API函数,使用自定义API,否则使用默认的listMedia
-      const apiFunc = this.customListApi || listMedia;
-      const query = this.normalizeQueryParams(this.queryParams);
+      const apiFunc = this.customListApi || listMedia
+      const query = this.normalizeQueryParams(this.queryParams)
       apiFunc(query)
         .then((response) => {
           if (response.code === 200 && response.data) {
-            this.mediaList = response.data.list || [];
-            this.total = response.data.count || 0;
+            this.mediaList = response.data.list || []
+            this.total = response.data.count || 0
             // 分页/查询后回显跨分页选择
-            this.restoreSelection();
+            this.restoreSelection()
           } else {
-            this.mediaList = [];
-            this.total = 0;
-            this.msgError(response.msg || "查询媒体失败");
+            this.mediaList = []
+            this.total = 0
+            this.msgError(response.msg || '查询媒体失败')
           }
         })
         .catch((error) => {
-          this.mediaList = [];
-          this.total = 0;
-          this.msgError("查询媒体失败：" + (error.message || "未知错误"));
+          this.mediaList = []
+          this.total = 0
+          this.msgError('查询媒体失败：' + (error.message || '未知错误'))
         })
         .finally(() => {
-          this.loading = false;
-        });
+          this.loading = false
+        })
     },
 
     /** 获取组织树 */
     getOrgTreeSelect() {
       orgTreeSelect().then((response) => {
-        this.orgOptions = response.data;
-      });
+        this.orgOptions = response.data
+      })
     },
 
     /** 获取用户列表 */
     getUserList() {
-      /*listUser().then((response) => {
+      /* listUser().then((response) => {
         this.userOptions = response.data || [];
       });*/
-      this.userOptions = [];
+      this.userOptions = []
     },
 
     /** 获取执法仪列表（根据警员ID） */
     getBwcListByPoliceId(policeId) {
       if (!policeId) {
-        this.bwcOptions = [];
-        return;
+        this.bwcOptions = []
+        return
       }
-      console.log("policeId:", policeId);
+      console.log('policeId:', policeId)
       getEquipmentBwcByManagerId(policeId).then((response) => {
         // 判断返回数据的结构
         if (Array.isArray(response.data)) {
           // 如果 response.data 是数组，直接使用
-          this.bwcOptions = response.data;
+          this.bwcOptions = response.data
         } else if (response.data && Array.isArray(response.data.list)) {
           // 如果 response.data.list 是数组，使用 list
-          this.bwcOptions = response.data.list;
+          this.bwcOptions = response.data.list
         } else {
           // 其他情况，设置为空数组
-          this.bwcOptions = [];
+          this.bwcOptions = []
         }
-      });
+      })
     },
 
     /** 获取执法仪列表（全部） */
     getBwcList() {
       // 初始化时不加载执法仪列表，等待用户选择警员后再加载
-      this.bwcOptions = [];
+      this.bwcOptions = []
     },
 
     /** 获取执法类型树 */
     getEnforceTypeTree() {
       getEnforceTypeTree().then((response) => {
-        this.enforceTypeOptions = response.data || [];
-      });
+        this.enforceTypeOptions = response.data || []
+      })
     },
 
     /**
@@ -1215,291 +1136,367 @@ export default {
      * 其他场景下，不需要清空记录选中状态
      */
     resetSelected() {
-      this.selectedMediaMap = {};
+      this.selectedMediaMap = {}
       // 向父组件发送数据变化事件
       this.$emit(
-        "selection-change",
+        'selection-change',
         Object.values(this.selectedMediaMap).filter(Boolean)
-      );
+      )
       this.$nextTick(() => {
         if (this.$refs.mediaTable) {
-          this.$refs.mediaTable.clearSelection();
+          this.$refs.mediaTable.clearSelection()
         }
-      });
+      })
     },
 
-    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
-    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    // pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    // 每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
     resetPage() {
-      this.queryParams.pageIndex = 1;
+      this.queryParams.pageIndex = 1
     },
 
     handleQuery() {
-      this.resetPage();
-      this.resetSelected();
-      this.getList();
+      this.resetPage()
+      this.resetSelected()
+      this.getList()
     },
 
     /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
-    },
-
-    /** 切换更多查询条件 */
-    toggleMore() {
-      this.showMore = !this.showMore;
-    },
-
     // 单个选择框点击事件,selection表示所有被选中的行，row表示当前点击的行
     handleSelect(selection, row) {
-      const isSelected = selection.some((item) => item.mediaId === row.mediaId);
+      const isSelected = selection.some((item) => item.mediaId === row.mediaId)
       if (isSelected) {
         // 向父组件发送被选中的行
-        this.$emit("select", row);
+        this.$emit('select', row)
       }
     },
     /** 多选框选中数据 */
     handleSelectionChange(selection) {
       if (this.isRestoringSelection) {
-        return;
+        return
       }
-      //Boolean 是 JavaScript 内置函数，它会过滤掉数组中的假值（false、0、""、null、undefined、NaN）
+      // Boolean 是 JavaScript 内置函数，它会过滤掉数组中的假值（false、0、""、null、undefined、NaN）
       // 以当前页为准增删选中项（实现跨分页记忆）
       const selectedIdSet = new Set(
         (selection || []).map((item) => item && item.mediaId).filter(Boolean)
       );
 
       (this.mediaList || []).forEach((row) => {
-        const id = row && row.mediaId;
-        if (!id) return;
+        const id = row && row.mediaId
+        if (!id) return
         if (selectedIdSet.has(id)) {
-          this.selectedMediaMap[id] = row;
+          this.selectedMediaMap[id] = row
         } else {
-          delete this.selectedMediaMap[id];
+          delete this.selectedMediaMap[id]
         }
-      });
+      })
 
       // 向父组件发送“全量已选”的数据变化事件
       this.$emit(
-        "selection-change",
+        'selection-change',
         Object.values(this.selectedMediaMap).filter(Boolean)
-      );
+      )
     },
 
     /** 排序回调函数 */
     handleSortChange(column, prop, order) {
-      prop = column.prop;
-      order = column.order;
-      if (this.order !== "" && this.order !== prop + "Order") {
-        this.queryParams[this.order] = undefined;
+      prop = column.prop
+      order = column.order
+      if (this.order !== '' && this.order !== prop + 'Order') {
+        this.queryParams[this.order] = undefined
       }
-      if (order === "descending") {
-        this.queryParams[prop + "Order"] = "desc";
-        this.order = prop + "Order";
-      } else if (order === "ascending") {
-        this.queryParams[prop + "Order"] = "asc";
-        this.order = prop + "Order";
+      if (order === 'descending') {
+        this.queryParams[prop + 'Order'] = 'desc'
+        this.order = prop + 'Order'
+      } else if (order === 'ascending') {
+        this.queryParams[prop + 'Order'] = 'asc'
+        this.order = prop + 'Order'
       } else {
-        this.queryParams[prop + "Order"] = undefined;
+        this.queryParams[prop + 'Order'] = undefined
       }
-      this.getList();
+      this.getList()
     },
 
     /** 组织选择事件 */
-    /*handleOrgSelect(node) {
+    /* handleOrgSelect(node) {
       if (node) {
         this.getUserListByOrgId(node.id);
       }
     },*/
 
-    /** 警员选择事件 */
-    handlePoliceSelect(policeId) {
-      // 当警员选择变化时，通过 watch 自动触发获取执法仪列表
-      // 这里可以添加其他需要的逻辑
-    },
-
     /** 根据组织获取用户列表 */
     getUserListByOrgId(orgId) {
-      const params = { orgId: "/" + orgId + "/" };
+      const params = { orgId: '/' + orgId + '/' }
       listUser(params).then((response) => {
-        this.userOptions = response.data.list || [];
-      });
+        this.userOptions = response.data.list || []
+      })
     },
 
     /** 格式化警员名称 */
     formatPoliceName(row) {
-      return row.policeName || row.userName || "-";
+      return row.policeName || row.userName || '-'
     },
 
     /** 格式化组织名称 */
     formatOrgName(row) {
-      return row.orgFullName || row.orgName || "-";
+      return row.orgFullName || row.orgName || '-'
     },
 
     /** 执法类型数据格式化 */
     normalizeEnforceType(node) {
       if (node.children && !node.children.length) {
-        delete node.children;
+        delete node.children
       }
       return {
         id: node.id,
-        label: node.enforcementTypeName || node.label || "未知",
-        children: node.children,
-      };
+        label: node.enforcementTypeName || node.label || '未知',
+        children: node.children
+      }
     },
 
     /** 视频时长（毫秒）格式化为 HH:MM:SS */
     formatVideoDuration(value) {
       if (value === null || value === undefined) {
-        return "-";
+        return '-'
       }
-      const totalSeconds = Math.floor(Number(value) / 1000);
+      const totalSeconds = Math.floor(Number(value) / 1000)
       const hours = Math.floor(totalSeconds / 3600)
         .toString()
-        .padStart(2, "0");
+        .padStart(2, '0')
       const minutes = Math.floor((totalSeconds % 3600) / 60)
         .toString()
-        .padStart(2, "0");
+        .padStart(2, '0')
       const seconds = Math.floor(totalSeconds % 60)
         .toString()
-        .padStart(2, "0");
-      return `${hours}:${minutes}:${seconds}`;
+        .padStart(2, '0')
+      return `${hours}:${minutes}:${seconds}`
     },
 
     /** 通用 是/否 */
     formatYesNo(value) {
-      if (value === 1) return "是";
-      if (value === 0) return "否";
-      return "-";
+      if (value === 1) return '是'
+      if (value === 0) return '否'
+      return '-'
     },
 
     /** 文件大小（KB）转换 */
     formatFileSize(value) {
       if (value === null || value === undefined) {
-        return "-";
+        return '-'
       }
-      const size = Number(value) * 1024; // 转换为字节
-      if (!size) return "-";
-      const units = ["B", "KB", "MB", "GB", "TB"];
-      let index = 0;
-      let current = size;
+      const size = Number(value) * 1024 // 转换为字节
+      if (!size) return '-'
+      const units = ['B', 'KB', 'MB', 'GB', 'TB']
+      let index = 0
+      let current = size
       while (current >= 1024 && index < units.length - 1) {
-        current /= 1024;
-        index++;
+        current /= 1024
+        index++
       }
-      return `${current.toFixed(2)} ${units[index]}`;
+      return `${current.toFixed(2)} ${units[index]}`
     },
 
     /** 删除按钮操作 */
     handleDelete() {
-      this.$emit("delete", this.selectedMedia);
+      this.$emit('delete', this.selectedMedia)
     },
 
     /** 浏览媒体详情 */
     handleViewMedia(row) {
-      this.viewMediaData = row;
-      this.viewMediaOpen = true;
+      this.viewMediaData = row
+      this.viewMediaOpen = true
     },
 
     /** 浏览警情详情 */
     handleViewIncident(row) {
-      this.viewIncidentData = row;
-      this.viewIncidentOpen = true;
+      this.viewIncidentData = row
+      this.viewIncidentOpen = true
     },
 
     /** 操作按钮 */
     handleOperation(row, action) {
       // 添加安全检查,防止row为空
       if (!row) {
-        return;
+        return
       }
 
       // 处理浏览操作
-      if (action === "view") {
-        this.handleViewMedia(row);
-        return;
+      if (action === 'view') {
+        this.handleViewMedia(row)
+        return
       }
-      this.$emit("operation", row, action);
+      this.$emit('operation', row, action)
     },
 
     /** 获取选中的媒体数据 */
     getSelectedMedia() {
-      return this.selectedMedia;
+      return this.selectedMedia
     },
 
     /** 刷新列表 */
     refreshList() {
-      this.getList();
+      this.getList()
     },
 
     /** 清空跨分页选中（供父组件调用） */
     clearSelection() {
-      this.selectedMediaMap = {};
-      this.$emit("selection-change", []);
+      this.selectedMediaMap = {}
+      this.$emit('selection-change', [])
       this.$nextTick(() => {
         if (this.$refs.mediaTable) {
-          this.$refs.mediaTable.clearSelection();
+          this.$refs.mediaTable.clearSelection()
         }
-      });
+      })
     },
-  },
-};
+
+    /** 全选/取消全选（供父组件调用） */
+    toggleAllSelection() {
+      if (this.$refs.mediaTable) {
+        this.$refs.mediaTable.toggleAllSelection()
+      }
+    },
+
+    /** 新增查询栏相关方法 */
+    handleSearch(searchData) {
+      // 快速搜索字段列表（这些字段可能被用户清空）
+      const quickSearchFields = [
+        'mediaName',
+        'captureTimeStart',
+        'captureTimeEnd',
+        'mediaCate',
+        'isArchived',
+        'incidentCode'
+      ]
+
+      // 高级筛选中的时间范围字段列表
+      const timeRangeFields = [
+        'captureTimeStart', 'captureTimeEnd',
+        'uploadTimeStart', 'uploadTimeEnd'
+      ]
+
+      // 合并新的搜索条件
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key]
+      })
+
+      // 删除被清空的快速搜索字段
+      quickSearchFields.forEach(field => {
+        if (!(field in searchData)) {
+          delete this.queryParams[field]
+        }
+      })
+
+      // 删除被清空的时间范围字段
+      timeRangeFields.forEach(field => {
+        if (!(field in searchData)) {
+          delete this.queryParams[field]
+        }
+      })
+
+      this.handleQuery()
+    },
+
+    handleQuickSearchReset() {
+      // 重置所有筛选条件（与全局重置保持一致）
+      this.handleFilterReset()
+    },
+
+    handleFilterChange(filterData) {
+      // 处理快捷筛选和高级筛选
+      if (filterData.filterType === 'today') {
+        // 今日媒体
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        this.queryParams.captureTimeStart = today.toISOString()
+        delete this.queryParams.captureTimeEnd
+      } else if (filterData.filterType === 'archived') {
+        // 已归档
+        this.queryParams.isArchived = 1
+      } else if (filterData.filterType === 'nonEnforcement') {
+        // 非执法视频
+        this.queryParams.isNonEnforcementMedia = 1
+      } else if (filterData.filterType === 'locked') {
+        // 已锁定
+        this.queryParams.isLocked = 1
+      } else if (filterData.filterType === 'advanced') {
+        // 高级筛选 - 合并筛选参数（移除 filterType，只保留实际的查询条件）
+        Object.keys(filterData).forEach(key => {
+          if (key !== 'filterType') {
+            this.queryParams[key] = filterData[key]
+          }
+        })
+
+        // 删除被清空的时间范围字段
+        const timeRangeFields = [
+          'captureTimeStart', 'captureTimeEnd',
+          'uploadTimeStart', 'uploadTimeEnd'
+        ]
+        timeRangeFields.forEach(field => {
+          if (!(field in filterData)) {
+            delete this.queryParams[field]
+          }
+        })
+      } else if (filterData.filterType === 'all') {
+        // 全部 - 清除特定筛选条件
+        delete this.queryParams.captureTimeStart
+        delete this.queryParams.captureTimeEnd
+        delete this.queryParams.isArchived
+        delete this.queryParams.isNonEnforcementMedia
+        delete this.queryParams.isLocked
+      }
+      this.handleQuery()
+    },
+
+    handleFilterReset() {
+      // 重置所有筛选条件到初始值
+      this.queryParams = {
+        pageIndex: 1,
+        pageSize: 10,
+        captureTimeStart: undefined,
+        captureTimeEnd: undefined,
+        orgId: undefined,
+        policeId: undefined,
+        includeSubUnits: true,
+        mediaCate: undefined,
+        uploadTimeStart: undefined,
+        uploadTimeEnd: undefined,
+        recorderId: undefined,
+        storageType: undefined,
+        enforceType: undefined,
+        mediaName: undefined,
+        isArchived: undefined,
+        isNonEnforcementMedia: undefined,
+        isLocked: undefined,
+        terminalType: undefined,
+        incidentCode: undefined,
+        recorderNo: undefined
+      }
+      this.handleQuery()
+    },
+
+    /** 列设置对话框打开后的焦点管理 */
+    handleColumnSettingsOpen() {
+      // 等待 DOM 更新后将焦点移到第一个复选框
+      this.$nextTick(() => {
+        const firstCheckbox = document.querySelector(
+          '.column-settings-popover .el-checkbox:first-child .el-checkbox__input'
+        )
+        if (firstCheckbox) {
+          firstCheckbox.focus()
+        }
+      })
+    },
+
+    /** 列设置对话框关闭后的焦点管理 */
+    handleColumnSettingsClose() {
+      // 焦点自动返回触发按钮，无需额外处理
+    }
+  }
+}
 </script>
 
 <style scoped>
-.toolbar-container {
-  margin-bottom: 10px;
-  padding: 10px 0;
-}
-
-.toolbar-container .el-row {
-  flex-wrap: wrap;
-}
-
-.toolbar-container .el-col {
-  margin-bottom: 5px;
-}
-
-.column-settings-trigger {
-  text-align: right;
-}
-
-.column-settings {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.column-settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #e4e7ed;
-  font-weight: bold;
-}
-
-.column-item {
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.column-item:last-child {
-  border-bottom: none;
-}
-
-.column-item .el-checkbox {
-  width: 100%;
-}
-
-.horizontal-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.mb8 {
-  margin-bottom: 8px;
+.query-section {
+  margin-bottom: 16px;
 }
 </style>

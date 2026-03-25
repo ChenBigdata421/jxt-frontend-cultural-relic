@@ -23,6 +23,25 @@
   font-size: $font-size-base; // 14px
 }
 
+// ========== 媒体关联列表区域样式 ==========
+// 用于媒体关联、档案关联等需要展示关联列表的场景
+.media-relations-section {
+  margin-top: $spacing-5;
+  padding: $spacing-4;
+  background-color: $law-gray-50;
+  border-radius: 6px;
+  border: 1px solid $law-gray-200;
+}
+
+// ========== 归档信息展示区域样式 ==========
+// 用于归档对话框中展示归档对象信息的场景
+.archive-info-section {
+  margin-bottom: $spacing-5;  // 20px
+  padding: $spacing-4;        // 16px
+  background-color: $law-gray-50;  // #f5f7fa
+  border-radius: 4px;
+}
+
 // ========== 间距工具类 ==========
 // 基于 8dp 间距系统的 margin 工具类
 @each $size, $value in (0: 0, 1: 4px, 2: 8px, 3: 12px, 4: 16px, 5: 20px, 6: 24px, 8: 32px) {

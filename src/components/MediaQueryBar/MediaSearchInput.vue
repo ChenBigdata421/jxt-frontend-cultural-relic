@@ -3,32 +3,23 @@
     <div class="quick-search-form">
       <div class="search-row">
         <div class="search-item">
-          <label>文书编号</label>
+          <label>媒体名称</label>
           <el-input
-            v-model="searchForm.writCode"
-            placeholder="请输入文书编号"
+            v-model="searchForm.mediaName"
+            placeholder="请输入媒体名称"
             clearable
             @keyup.enter.native="handleSearch"
           />
         </div>
         <div class="search-item">
-          <label>文书名称</label>
-          <el-input
-            v-model="searchForm.writName"
-            placeholder="请输入文书名称"
-            clearable
-            @keyup.enter.native="handleSearch"
-          />
-        </div>
-        <div class="search-item">
-          <label>文书类型</label>
+          <label>媒体类型</label>
           <el-select
-            v-model="searchForm.writType"
-            placeholder="请选择文书类型"
+            v-model="searchForm.mediaCate"
+            placeholder="请选择媒体类型"
             clearable
           >
             <el-option
-              v-for="dict in writTypeOptions"
+              v-for="dict in mediaCateOptions"
               :key="dict.value"
               :label="dict.label"
               :value="dict.value"
@@ -36,19 +27,28 @@
           </el-select>
         </div>
         <div class="search-item">
-          <label>关联状态</label>
+          <label>是否归档</label>
           <el-select
-            v-model="searchForm.isRelation"
-            placeholder="请选择是否关联"
+            v-model="searchForm.isArchived"
+            placeholder="请选择是否归档"
             clearable
           >
             <el-option
-              v-for="dict in relationStatusOptions"
+              v-for="dict in isArchivedOptions"
               :key="dict.value"
               :label="dict.label"
               :value="dict.value"
             />
           </el-select>
+        </div>
+        <div class="search-item">
+          <label>警情号</label>
+          <el-input
+            v-model="searchForm.incidentCode"
+            placeholder="请输入警情号"
+            clearable
+            @keyup.enter.native="handleSearch"
+          />
         </div>
       </div>
     </div>
@@ -57,13 +57,13 @@
 
 <script>
 export default {
-  name: 'WritSearchInput',
+  name: 'MediaSearchInput',
   props: {
-    writTypeOptions: {
+    mediaCateOptions: {
       type: Array,
       default: () => []
     },
-    relationStatusOptions: {
+    isArchivedOptions: {
       type: Array,
       default: () => []
     }
@@ -71,16 +71,16 @@ export default {
   data() {
     return {
       searchForm: {
-        writCode: undefined,
-        writName: undefined,
-        writType: undefined,
-        isRelation: undefined
+        mediaName: undefined,
+        mediaCate: undefined,
+        isArchived: undefined,
+        incidentCode: undefined
       }
     }
   },
   methods: {
     getSearchParams() {
-      // 获取过滤空值后的搜索参数
+      // 获取过滤空值后的搜索参数（不显示警告）
       const searchParams = {}
       Object.keys(this.searchForm).forEach(key => {
         const value = this.searchForm[key]
@@ -91,15 +91,16 @@ export default {
       return searchParams
     },
     handleSearch() {
+      // 获取搜索参数（不显示警告，空参数将筛选全部数据）
       const searchParams = this.getSearchParams()
       this.$emit('search', searchParams)
     },
     handleReset() {
       this.searchForm = {
-        writCode: undefined,
-        writName: undefined,
-        writType: undefined,
-        isRelation: undefined
+        mediaName: undefined,
+        mediaCate: undefined,
+        isArchived: undefined,
+        incidentCode: undefined
       }
       this.$emit('reset')
     }
@@ -146,6 +147,11 @@ export default {
           flex-shrink: 0;
           text-align: right;
         }
+
+        .time-range-picker {
+          flex: 1;
+          min-width: 300px;
+        }
       }
 
       // 使用 ::v-deep 确保样式正确应用到 Element UI 组件
@@ -156,12 +162,5 @@ export default {
       }
     }
   }
-
-  // ========== 注意：通用字体规范已移至全局样式 ==========
-  // 以下字体规范现已定义在 src/styles/components/forms.scss 中：
-  // - 输入框内容、Placeholder、焦点状态
-  // - 下拉列表选项（悬停、选中、禁用）
-  //
-  // 本文件只保留文书页面特有的布局样式。
 }
 </style>

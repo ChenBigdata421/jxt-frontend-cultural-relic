@@ -2,107 +2,254 @@
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <!-- 查询表单 -->
-        <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="案件编号" prop="caseCode">
-            <el-input
-              v-model="queryParams.caseCode"
-              placeholder="请输入案件编号"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="案件名称" prop="caseName">
-            <el-input
-              v-model="queryParams.caseName"
-              placeholder="请输入案件名称"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="案件类型" prop="caseType">
-            <el-select
-              v-model="queryParams.caseType"
-              placeholder="案件类型"
-              clearable
-              style="width: 170px"
-            >
-              <el-option
-                v-for="dict in caseTypeOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="parseInt(dict.value)"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="案件流程" prop="caseFlow">
-            <el-select
-              v-model="queryParams.caseFlow"
-              placeholder="案件流程"
-              clearable
-              style="width: 170px"
-            >
-              <el-option
-                v-for="dict in caseFlowOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="parseInt(dict.value)"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
+        <!-- 新的查询栏组件 -->
+        <div class="query-section">
+          <CaseQueryBar
+            ref="queryBar"
+            :case-type-options="caseTypeOptions"
+            :relation-status-options="caseRelationStatusOptions"
+            :org-options="orgOptions"
+            @search="handleSearch"
+            @quick-search-reset="handleQuickSearchReset"
+            @filter-change="handleFilterChange"
+            @filter-reset="handleFilterReset"
+          />
+        </div>
+        <!-- 主操作栏 -->
+        <div class="main-action-bar">
+          <div class="left-actions">
             <el-button
-              type="primary"
-              icon="el-icon-search"
-              size="mini"
-              @click="handleQuery"
-              >搜索</el-button
+              icon="el-icon-refresh"
+              size="small"
+              type="text"
+              class="action-btn tertiary"
+              @click="handleRefresh"
             >
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-              >重置</el-button
+              刷新
+            </el-button>
+          </div>
+          <div class="right-actions">
+            <el-popover
+              ref="columnSettingsPopover"
+              placement="bottom-end"
+              width="300"
+              trigger="click"
+              popper-class="column-settings-popover"
+              :visible-arrow="true"
+              @after-enter="handleColumnSettingsOpen"
+              @after-leave="handleColumnSettingsClose"
             >
-          </el-form-item>
-        </el-form>
+              <div
+                role="dialog"
+                aria-label="列显示设置"
+                class="column-settings"
+              >
+                <div class="column-settings-header">
+                  <span class="column-settings-title">列显示设置</span>
+                  <el-button
+                    type="text"
+                    size="small"
+                    class="column-settings-reset tertiary"
+                    @click="resetColumns"
+                  >
+                    重置
+                  </el-button>
+                </div>
+                <el-checkbox-group
+                  v-model="visibleColumns"
+                  @change="handleColumnChange"
+                >
+                  <div
+                    v-for="col in columnOptions"
+                    :key="col.prop"
+                    class="column-item"
+                  >
+                    <el-checkbox
+                      :label="col.prop"
+                      :disabled="col.fixed"
+                      :aria-label="col.fixed ? `${col.label}（必须显示）` : col.label"
+                    >
+                      {{ col.label }}
+                      <el-tooltip
+                        v-if="col.fixed"
+                        content="此列必须显示，不能隐藏"
+                        placement="top"
+                      >
+                        <i class="el-icon-info column-item-icon" />
+                      </el-tooltip>
+                    </el-checkbox>
+                  </div>
+                </el-checkbox-group>
+              </div>
+              <el-button
+                slot="reference"
+                size="small"
+                icon="el-icon-setting"
+                type="text"
+                class="action-btn tertiary"
+                aria-label="打开列设置"
+                aria-haspopup="dialog"
+              >
+                列设置
+              </el-button>
+            </el-popover>
+          </div>
+        </div>
 
         <!-- 案件列表 -->
-        <el-table ref="caseTable" v-loading="loading" :data="caseList" border>
+        <el-table
+          ref="caseTable"
+          v-loading="loading"
+          :data="caseList"
+          border
+        >
           <el-table-column
             label="操作"
-            align="left"
+            align="center"
             class-name="small-padding fixed-width"
             width="300"
+            fixed="left"
           >
             <template slot-scope="scope">
-              <el-button
-                size="mini"
-                type="text"
-                icon="el-icon-link"
-                @click="handleLinkMedia(scope.row)"
-                >已关联媒体</el-button
-              >
-              <el-button
-                size="mini"
-                type="text"
-                icon="el-icon-edit"
-                @click="handleEditEvidence(scope.row)"
-                >编辑证据</el-button
-              >
+              <div class="action-buttons">
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-link"
+                  class="action-btn tertiary"
+                  @click="handleLinkMedia(scope.row)"
+                >
+                  已关联媒体
+                </el-button>
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleEditEvidence(scope.row)"
+                >
+                  编辑证据
+                </el-button>
+              </div>
             </template>
           </el-table-column>
-          <el-table-column prop="caseCode" label="案件编号" width="120" />
-          <el-table-column prop="caseName" label="案件名称" width="200" />
-          <el-table-column prop="caseType" label="案件类型" width="100">
+          <el-table-column
+            v-if="isColumnVisible('caseCode')"
+            label="案件编号"
+            align="center"
+            prop="caseCode"
+            width="150"
+          />
+          <el-table-column
+            v-if="isColumnVisible('caseName')"
+            label="案件名称"
+            align="center"
+            prop="caseName"
+            width="200"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('caseType')"
+            label="案件类型"
+            align="center"
+            prop="caseType"
+            width="120"
+          >
             <template slot-scope="scope">
               {{ caseTypeFormat(scope.row) }}
             </template>
           </el-table-column>
-          <el-table-column prop="caseTime" label="案发时间" width="170" />
-          <el-table-column prop="caseAddress" label="案发地址" width="200" />
-          <el-table-column prop="caseFlow" label="案件流程" width="100">
+          <el-table-column
+            v-if="isColumnVisible('caseFlow')"
+            label="案件流程"
+            align="center"
+            prop="caseFlow"
+            width="120"
+          >
             <template slot-scope="scope">
               {{ caseFlowFormat(scope.row) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('caseTime')"
+            label="案发时间"
+            align="center"
+            prop="caseTime"
+            width="160"
+          >
+            <template slot-scope="scope">
+              <span>{{ parseTime(scope.row.caseTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('caseAddress')"
+            label="案发地址"
+            align="center"
+            prop="caseAddress"
+            width="200"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('caseOrgName')"
+            label="办案单位"
+            align="center"
+            prop="caseOrgName"
+            width="150"
+          />
+          <el-table-column
+            v-if="isColumnVisible('procOrgPaths')"
+            label="处警单位"
+            align="center"
+            prop="procOrgPaths"
+            width="150"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('processPoliceNames')"
+            label="处警人员"
+            align="center"
+            prop="processPoliceNames"
+            width="150"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('procTime')"
+            label="处警时间"
+            align="center"
+            prop="procTime"
+            width="150"
+            :show-overflow-tooltip="true"
+          >
+            <template slot-scope="scope">
+              <span>{{ parseTime(scope.row.procTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('isRelation')"
+            label="是否关联"
+            align="center"
+            prop="isRelation"
+            width="100"
+          >
+            <template slot-scope="scope">
+              <el-tag
+                :type="scope.row.isRelation === 1 ? 'success' : 'info'"
+                size="small"
+                effect="dark"
+              >
+                {{ relationStatusFormatter(scope.row) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('createdAt')"
+            label="创建时间"
+            align="center"
+            prop="createdAt"
+            width="160"
+          >
+            <template slot-scope="scope">
+              <span>{{ parseTime(scope.row.createdAt) }}</span>
             </template>
           </el-table-column>
         </el-table>
@@ -136,8 +283,7 @@
                 icon="el-icon-plus"
                 size="mini"
                 @click="handleOpenMediaSelector"
-                >关联新媒体</el-button
-              >
+              >关联新媒体</el-button>
             </el-col>
             <el-col :span="1.5">
               <el-button
@@ -146,8 +292,7 @@
                 size="mini"
                 :disabled="selectedMediaRelations.length === 0"
                 @click="handleBatchUnlinkMedia"
-                >批量取消关联</el-button
-              >
+              >批量取消关联</el-button>
             </el-col>
           </el-row>
 
@@ -161,7 +306,7 @@
           >
             <el-table-column type="selection" width="55" align="center" />
             <el-table-column prop="caseCode" label="案件编号" align="center" />
-            <el-table-column prop="mediaName" label="媒体名称" />
+            <el-table-column prop="mediaName" label="媒体名称" align="center" :show-overflow-tooltip="true" />
             <el-table-column prop="mediaCate" label="媒体种类" align="center">
               <template slot-scope="{ row }">
                 {{ selectDictLabel(mediaCateOptions, row.mediaCate) }}
@@ -172,6 +317,7 @@
               prop="orgFullName"
               label="关联人组织"
               align="center"
+              :show-overflow-tooltip="true"
             />
             <el-table-column prop="createdAt" label="关联时间" align="center">
               <template slot-scope="scope">
@@ -180,14 +326,17 @@
             </el-table-column>
             <el-table-column label="操作" width="100" align="center">
               <template slot-scope="scope">
-                <el-button
-                  size="mini"
-                  type="text"
-                  icon="el-icon-delete"
-                  style="color: #f56c6c"
-                  @click="handleUnlinkMedia(scope.row)"
-                  >取消关联</el-button
-                >
+                <div class="action-buttons">
+                  <el-button
+                    size="small"
+                    type="text"
+                    icon="el-icon-delete"
+                    class="action-btn tertiary-danger"
+                    @click="handleUnlinkMedia(scope.row)"
+                  >
+                    取消关联
+                  </el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -202,6 +351,11 @@
             :limit.sync="relationQueryParams.pageSize"
             @pagination="loadCaseMediaRelations"
           />
+        </div>
+
+        <!-- 底部操作栏 -->
+        <div class="drawer-footer">
+          <el-button type="text" class="action-btn tertiary" size="small" @click="handleCloseMediaDrawer()">关闭</el-button>
         </div>
       </el-drawer>
 
@@ -229,8 +383,8 @@
 
         <!-- 底部操作按钮 -->
         <div class="drawer-footer">
-          <el-button @click="handleCloseSelectorDrawer">取 消</el-button>
-          <el-button type="primary" @click="confirmLinkMedia">确 定</el-button>
+          <el-button type="text" class="action-btn tertiary" size="small" @click="handleCloseSelectorDrawer">取消</el-button>
+          <el-button type="primary" size="small" @click="confirmLinkMedia">确定</el-button>
         </div>
       </el-drawer>
 
@@ -338,9 +492,11 @@
               />
               <div class="upload-text">点击选择文件或拖拽文件到此处</div>
               <div class="upload-hint">支持多选，自动上传已禁用</div>
-              <el-button type="primary" size="small" style="margin-top: 15px"
-                >选择文件</el-button
-              >
+              <el-button
+                type="primary"
+                size="small"
+                style="margin-top: 15px"
+              >选择文件</el-button>
             </div>
           </el-upload>
           <div class="upload-tip">可多选，大小限制自行判断</div>
@@ -366,11 +522,12 @@
                 type="primary"
                 size="mini"
                 @click="submitUploadForm(index, true)"
-                >上传</el-button
-              >
-              <el-button type="danger" size="mini" @click="removeFile(index)"
-                >删除</el-button
-              >
+              >上传</el-button>
+              <el-button
+                type="danger"
+                size="mini"
+                @click="removeFile(index)"
+              >删除</el-button>
             </div>
           </div>
         </div>
@@ -382,12 +539,12 @@
             type="success"
             :loading="upload.isUploading"
             @click="submitUploadForm(null, false)"
-            >上传全部文件</el-button
-          >
+          >上传全部文件</el-button>
           <el-button type="danger" @click="clearAllFiles">清空列表</el-button>
-          <el-button type="danger" @click="handleUploadDialogClose"
-            >关闭</el-button
-          >
+          <el-button
+            type="danger"
+            @click="handleUploadDialogClose"
+          >关闭</el-button>
         </div>
       </el-dialog>
 
@@ -433,7 +590,7 @@
             border
             max-height="300"
           >
-            <el-table-column prop="mediaName" label="媒体名称" width="180" />
+            <el-table-column prop="mediaName" label="媒体名称" width="180" align="center" :show-overflow-tooltip="true" />
             <el-table-column
               prop="mediaCate"
               label="媒体种类"
@@ -482,21 +639,26 @@
             </el-table-column>
             <el-table-column label="操作" width="200" align="center">
               <template slot-scope="scope">
-                <el-button
-                  size="mini"
-                  type="primary"
-                  icon="el-icon-upload"
-                  :disabled="isMediaSourceEvidence(scope.row)"
-                  @click="handleSetAsSourceEvidence(scope.row)"
-                  >设为源证据</el-button
-                >
-                <el-button
-                  size="mini"
-                  type="text"
-                  icon="el-icon-view"
-                  @click="handleViewMedia(scope.row)"
-                  >浏览</el-button
-                >
+                <div class="action-buttons">
+                  <el-button
+                    size="small"
+                    type="primary"
+                    icon="el-icon-upload"
+                    :disabled="isMediaSourceEvidence(scope.row)"
+                    @click="handleSetAsSourceEvidence(scope.row)"
+                  >
+                    设为源证据
+                  </el-button>
+                  <el-button
+                    size="small"
+                    type="text"
+                    icon="el-icon-view"
+                    class="action-btn tertiary"
+                    @click="handleViewMedia(scope.row)"
+                  >
+                    浏览
+                  </el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -510,24 +672,21 @@
               <div slot="header" class="clearfix">
                 <span
                   style="font-weight: bold; color: #67c23a; margin-right: 400px"
-                  >证据媒体</span
-                >
+                >证据媒体</span>
                 <el-button
                   v-permisaction="['admin:sysUser:import']"
                   type="warning"
                   icon="el-icon-upload"
                   size="mini"
                   @click="handleImportEvidence"
-                  >导入证据</el-button
-                >
+                >导入证据</el-button>
                 <el-button
                   v-permisaction="['admin:sysUser:refresh']"
                   type="warning"
                   icon="el-icon-refresh"
                   size="mini"
                   @click="handleRefreshEvidenceMediaList"
-                  >刷新</el-button
-                >
+                >刷新</el-button>
               </div>
               <el-table
                 v-loading="evidenceMediaListLoading"
@@ -539,6 +698,8 @@
                   prop="mediaName"
                   label="媒体名称"
                   width="150"
+                  align="center"
+                  :show-overflow-tooltip="true"
                 />
                 <el-table-column
                   prop="mediaCate"
@@ -569,21 +730,26 @@
                 </el-table-column>
                 <el-table-column label="操作" width="150" align="center">
                   <template slot-scope="scope">
-                    <el-button
-                      size="mini"
-                      type="text"
-                      icon="el-icon-view"
-                      @click="handleViewMedia(scope.row)"
-                      >浏览</el-button
-                    >
-                    <el-button
-                      size="mini"
-                      type="text"
-                      icon="el-icon-delete"
-                      style="color: #f56c6c"
-                      @click="handleRemoveEvidenceMedia(scope.row)"
-                      >移除</el-button
-                    >
+                    <div class="action-buttons">
+                      <el-button
+                        size="small"
+                        type="text"
+                        icon="el-icon-view"
+                        class="action-btn tertiary"
+                        @click="handleViewMedia(scope.row)"
+                      >
+                        浏览
+                      </el-button>
+                      <el-button
+                        size="small"
+                        type="text"
+                        icon="el-icon-delete"
+                        class="action-btn tertiary-danger"
+                        @click="handleRemoveEvidenceMedia(scope.row)"
+                      >
+                        移除
+                      </el-button>
+                    </div>
                   </template>
                 </el-table-column>
               </el-table>
@@ -599,16 +765,14 @@
               <div slot="header" class="clearfix">
                 <span
                   style="font-weight: bold; color: #e6a23c; margin-right: 500px"
-                  >证据源媒体</span
-                >
+                >证据源媒体</span>
                 <el-button
                   v-permisaction="['admin:sysUser:refresh']"
                   type="warning"
                   icon="el-icon-refresh"
                   size="mini"
                   @click="handleRefreshEvidenceMediaSourceList"
-                  >刷新</el-button
-                >
+                >刷新</el-button>
               </div>
               <el-table
                 v-loading="sourceEvidenceMediaListLoading"
@@ -620,6 +784,8 @@
                   prop="mediaName"
                   label="媒体名称"
                   width="150"
+                  align="center"
+                  :show-overflow-tooltip="true"
                 />
                 <el-table-column
                   prop="mediaCate"
@@ -650,28 +816,35 @@
                 </el-table-column>
                 <el-table-column label="操作" width="200" align="center">
                   <template slot-scope="scope">
-                    <el-button
-                      size="mini"
-                      type="text"
-                      icon="el-icon-view"
-                      @click="handleViewMedia(scope.row)"
-                      >浏览</el-button
-                    >
-                    <el-button
-                      size="mini"
-                      type="text"
-                      icon="el-icon-delete"
-                      style="color: #f56c6c"
-                      @click="handleRemoveSourceEvidence(scope.row)"
-                      >移除</el-button
-                    >
-                    <el-button
-                      size="mini"
-                      type="text"
-                      icon="el-icon-download"
-                      @click="handleDownloadMedia(scope.row)"
-                      >下载</el-button
-                    >
+                    <div class="action-buttons">
+                      <el-button
+                        size="small"
+                        type="text"
+                        icon="el-icon-view"
+                        class="action-btn tertiary"
+                        @click="handleViewMedia(scope.row)"
+                      >
+                        浏览
+                      </el-button>
+                      <el-button
+                        size="small"
+                        type="text"
+                        icon="el-icon-delete"
+                        class="action-btn tertiary-danger"
+                        @click="handleRemoveSourceEvidence(scope.row)"
+                      >
+                        移除
+                      </el-button>
+                      <el-button
+                        size="small"
+                        type="text"
+                        icon="el-icon-download"
+                        class="action-btn tertiary"
+                        @click="handleDownloadMedia(scope.row)"
+                      >
+                        下载
+                      </el-button>
+                    </div>
                   </template>
                 </el-table-column>
               </el-table>
@@ -686,7 +859,7 @@
         </el-row>
 
         <div slot="footer" class="dialog-footer">
-          <el-button @click="editEvidenceOpen = false">关 闭</el-button>
+          <el-button type="text" class="action-btn tertiary" size="small" @click="editEvidenceOpen = false">关闭</el-button>
         </div>
       </el-dialog>
 
@@ -733,7 +906,7 @@
           </el-button>
         </div>
         <div slot="footer" class="dialog-footer">
-          <el-button @click="viewMediaOpen = false">关 闭</el-button>
+          <el-button type="text" class="action-btn tertiary" size="small" @click="viewMediaOpen = false">关闭</el-button>
         </div>
       </el-dialog>
     </template>
@@ -741,35 +914,42 @@
 </template>
 
 <script>
-import { listCases } from "@/api/evidence/case_api";
+import { listCases } from '@/api/evidence/case_api'
+import { orgTreeselect } from '@/api/admin/sys-organization'
+import BasicLayout from '@/layout/BasicLayout'
+import Pagination from '@/components/Pagination'
+import CaseQueryBar from '@/components/CaseQueryBar/index.vue'
 import {
   batchCreateCaseMediaRelations,
   deleteCaseMediaRelation,
   batchDeleteCaseMediaRelations,
   getCaseMediaRelationsByCaseId,
-  getUnassociatedMediaByCaseId,
-} from "@/api/evidence/case_media_relation_api";
+  getUnassociatedMediaByCaseId
+} from '@/api/evidence/case_media_relation_api'
 import {
   batchAddEvidenceSourceMedia,
-  removeEvidenceSourceMedia,
-} from "@/api/evidence/evidence_media_source_api";
+  removeEvidenceSourceMedia
+} from '@/api/evidence/evidence_media_source_api'
 import {
   getMediaByCaseId,
   getSourceMediaByCaseId,
   getEvidenceMediaByCaseId,
-  listMedia,
-} from "@/api/evidence/evidence_manage_query_api";
-import { uploadDocuments } from "@/api/evidence/file_storage_service_api";
+  listMedia
+} from '@/api/evidence/evidence_manage_query_api'
+import { uploadDocuments } from '@/api/evidence/file_storage_service_api'
 import {
   batchAddEvidenceMedia,
-  removeEvidenceMedia,
-} from "@/api/evidence/evidence_media_api";
-import MediaSelector from "@/components/MediaSelector";
+  removeEvidenceMedia
+} from '@/api/evidence/evidence_media_api'
+import MediaSelector from '@/components/MediaSelector'
 
 export default {
-  name: "CaseMediaRelation",
+  name: 'CaseMediaRelation',
   components: {
     MediaSelector,
+    CaseQueryBar,
+    BasicLayout,
+    Pagination
   },
   data() {
     return {
@@ -789,6 +969,27 @@ export default {
       adminCaseProcessOptions: [],
       // 案件流程选项 - 刑事案件流程
       criminalCaseProcessOptions: [],
+      // 关联状态字典
+      caseRelationStatusOptions: [],
+      // 组织树选项
+      orgOptions: [],
+      // 列配置选项
+      columnOptions: [
+        { prop: 'caseCode', label: '案件编号', fixed: true, defaultVisible: true },
+        { prop: 'caseName', label: '案件名称', defaultVisible: true },
+        { prop: 'caseType', label: '案件类型', defaultVisible: true },
+        { prop: 'caseFlow', label: '案件流程', defaultVisible: true },
+        { prop: 'caseTime', label: '案发时间', defaultVisible: true },
+        { prop: 'caseAddress', label: '案发地址', defaultVisible: true },
+        { prop: 'caseOrgName', label: '办案单位', defaultVisible: true },
+        { prop: 'procOrgPaths', label: '处警单位', defaultVisible: false },
+        { prop: 'processPoliceNames', label: '处警人员', defaultVisible: true },
+        { prop: 'procTime', label: '处警时间', defaultVisible: true },
+        { prop: 'isRelation', label: '是否关联', defaultVisible: true },
+        { prop: 'createdAt', label: '创建时间', defaultVisible: false }
+      ],
+      // 可见列
+      visibleColumns: [],
       // 是否显示第一层抽屉(已关联媒体)
       showMediaDrawer: false,
       // 是否显示第二层抽屉(未关联媒体选择器)
@@ -818,11 +1019,24 @@ export default {
         caseName: undefined,
         caseType: undefined,
         caseFlow: undefined,
+        isRelation: undefined,
+        // 高级筛选字段
+        caseAddress: undefined,
+        processPoliceIds: undefined,
+        // 时间范围字段
+        caseTimeStart: undefined,
+        caseTimeEnd: undefined,
+        procTimeStart: undefined,
+        procTimeEnd: undefined,
+        // 快捷筛选字段
+        caseTimeRangeStart: undefined,
+        caseTimeRangeEnd: undefined,
+        createUserId: undefined
       },
       // 关联查询参数
       relationQueryParams: {
         pageIndex: 1,
-        pageSize: 10,
+        pageSize: 10
       },
       // ========== 编辑证据相关 ==========
       // 是否显示编辑证据对话框
@@ -847,64 +1061,96 @@ export default {
         // 是否显示弹出层
         open: false,
         // 弹出层标题
-        title: "",
+        title: '',
         // 是否禁用上传
-        isUploading: false,
+        isUploading: false
       },
       // 上传表单数据
       uploadForm: {
-        deviceCode: "",
-        policeCode: "",
+        deviceCode: '',
+        policeCode: '',
         importantLevel: 1,
         storageType: 1,
-        tags: "",
-        comments: "",
+        tags: '',
+        comments: ''
       },
       // 上传表单验证规则
       uploadRules: {
         deviceCode: [
-          { required: true, message: "请输入设备编号", trigger: "blur" },
+          { required: true, message: '请输入设备编号', trigger: 'blur' }
         ],
         policeCode: [
-          { required: true, message: "请输入警察编号", trigger: "blur" },
-        ],
+          { required: true, message: '请输入警察编号', trigger: 'blur' }
+        ]
       },
       // 文件列表
       fileList: [],
       // 文件上传状态映射
-      fileUploadStatus: {},
-    };
-  },
-  created() {
-    this.getList();
-    this.getDicts("case_type").then((response) => {
-      this.caseTypeOptions = response.data;
-    });
-    this.getDicts("admin_case_process").then((response) => {
-      this.adminCaseProcessOptions = response.data;
-    });
-    this.getDicts("criminal_case_process").then((response) => {
-      this.criminalCaseProcessOptions = response.data;
-    });
-    this.getDicts("evidence_media_type").then((response) => {
-      this.mediaCateOptions = response.data;
-    });
-    this.getDicts("evidence_storage_type").then((response) => {
-      this.storageTypeOptions = response.data;
-    });
+      fileUploadStatus: {}
+    }
   },
   computed: {
-    /** 获取未关联媒体列表API(用于媒体选择器) */
+    /** 获取案件流程选项 - 根据查询条件中的案件类型动态返回 */
+    caseFlowOptions() {
+      if (this.queryParams.caseType) {
+        const caseTypeDict = this.caseTypeOptions.find(
+          (item) => item.value === this.queryParams.caseType || item.value === String(this.queryParams.caseType)
+        )
+        if (caseTypeDict) {
+          if (caseTypeDict.label.includes('行政')) {
+            return this.adminCaseProcessOptions
+          } else if (caseTypeDict.label.includes('刑事')) {
+            return this.criminalCaseProcessOptions
+          }
+        }
+      }
+      // 默认返回行政案件流程
+      return this.adminCaseProcessOptions
+    },
     getUnassociatedMediaListApi() {
       if (!this.currentCase || !this.currentCase.id) {
         return (query) => {
-          return Promise.resolve({ data: { list: [], count: 0 } });
-        };
+          return Promise.resolve({ data: { list: [], count: 0 }})
+        }
       }
       return (query) => {
-        return getUnassociatedMediaByCaseId(this.currentCase.id, query);
-      };
-    },
+        return getUnassociatedMediaByCaseId(this.currentCase.id, query)
+      }
+    }
+  },
+  created() {
+    this.initVisibleColumns()
+    this.getOrgTree()
+    Promise.all([
+      this.getDicts('case_type'),
+      this.getDicts('admin_case_process'),
+      this.getDicts('criminal_case_process'),
+      this.getDicts('relation_status'),
+      this.getDicts('evidence_media_type'),
+      this.getDicts('evidence_storage_type')
+    ])
+      .then(
+        ([
+          caseTypeRes,
+          adminCaseProcessRes,
+          criminalCaseProcessRes,
+          relationStatusRes,
+          mediaCateRes,
+          storageTypeRes
+        ]) => {
+          this.caseTypeOptions = caseTypeRes.data
+          this.adminCaseProcessOptions = adminCaseProcessRes.data
+          this.criminalCaseProcessOptions = criminalCaseProcessRes.data
+          this.caseRelationStatusOptions = relationStatusRes.data
+          this.mediaCateOptions = mediaCateRes.data
+          this.storageTypeOptions = storageTypeRes.data
+          this.getList()
+        }
+      )
+      .catch((error) => {
+        console.error('[EvidenceManage] 字典加载失败:', error)
+        this.getList()
+      })
   },
   methods: {
     /* ========== 基本功能相关方法 ========== */
@@ -912,73 +1158,56 @@ export default {
     /** 格式化日期时间 */
     formatDateTime(dateTime) {
       if (!dateTime) {
-        return "-";
+        return '-'
       }
       // 如果是字符串,转换为Date对象
-      const date = typeof dateTime === "string" ? new Date(dateTime) : dateTime;
+      const date = typeof dateTime === 'string' ? new Date(dateTime) : dateTime
       // 格式化为 YYYY-MM-DD HH:mm:ss
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const seconds = String(date.getSeconds()).padStart(2, "0");
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    },
-
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
-    },
-
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageIndex = 1;
-      this.getList();
-    },
-
-    // 延迟函数
-    delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
     },
 
     // 显示通知
     showNotification(response) {
-      const isSuccess = response?.code === 200;
+      const isSuccess = response?.code === 200
       this.$notify({
-        title: "通知",
-        message: response?.msg || (isSuccess ? "操作成功" : "操作失败"),
-        type: isSuccess ? "success" : "error",
+        title: '通知',
+        message: response?.msg || (isSuccess ? '操作成功' : '操作失败'),
+        type: isSuccess ? 'success' : 'error',
         duration: 3000,
-        customClass: "center-notification",
-      });
+        customClass: 'center-notification'
+      })
     },
 
     // 处理错误
     handleError(error, defaultMessage) {
       const errorMsg =
-        error?.response?.data?.msg || error?.message || "未知错误";
-      this.msgError(`${defaultMessage}：${errorMsg}`);
+        error?.response?.data?.msg || error?.message || '未知错误'
+      this.msgError(`${defaultMessage}：${errorMsg}`)
     },
 
     // 恢复UI状态
     restoreUIState(previousCursor, loadingInstance) {
-      document.body.style.cursor = previousCursor || "auto";
-      loadingInstance?.close();
+      document.body.style.cursor = previousCursor || 'auto'
+      loadingInstance?.close()
     },
 
     // 确认操作
     async confirmOperation(message) {
       try {
-        await this.$confirm(message, "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
-        });
-        return true;
+        await this.$confirm(message, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        return true
       } catch {
-        return false;
+        return false
       }
     },
 
@@ -986,95 +1215,106 @@ export default {
 
     /** 查询案件列表 */
     getList() {
-      this.loading = true;
-      const query = { ...this.queryParams };
-      Object.keys(query).forEach((key) => {
-        if (query[key] === "" || query[key] === null) {
-          delete query[key];
-        }
-      });
-      listCases(query).then((response) => {
-        this.caseList = response.data.list;
-        this.total = response.data.count;
-        this.loading = false;
-      });
+      this.loading = true
+
+      const query = this.normalizeQueryParams(this.queryParams)
+
+      listCases(query)
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.caseList = response.data.list || []
+            this.total = response.data.count || 0
+          } else {
+            this.caseList = []
+            this.total = 0
+            this.msgError(response.msg || '获取案件列表失败')
+          }
+        })
+        .catch((error) => {
+          this.caseList = []
+          this.total = 0
+          this.msgError('获取案件列表失败:' + (error.message || '未知错误'))
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
 
     /** 加载当前案件已关联的媒体列表 */
     async loadCaseMediaList(caseId) {
-      this.caseMediaListLoading = true;
+      this.caseMediaListLoading = true
       getMediaByCaseId(caseId, { pageIndex: 1, pageSize: 1000 })
         .then((response) => {
-          this.caseMediaList = response.data ? response.data.list : [];
-          this.caseMediaListLoading = false;
+          this.caseMediaList = response.data ? response.data.list : []
+          this.caseMediaListLoading = false
         })
         .catch((error) => {
           this.msgError(
-            "加载案件媒体列表失败：" + (error.message || "未知错误")
-          );
-          this.caseMediaListLoading = false;
-        });
+            '加载案件媒体列表失败：' + (error.message || '未知错误')
+          )
+          this.caseMediaListLoading = false
+        })
     },
 
     /** 加载源证据媒体列表 */
     async loadSourceEvidenceMediaList(caseId) {
-      this.sourceEvidenceMediaListLoading = true;
+      this.sourceEvidenceMediaListLoading = true
       getSourceMediaByCaseId(caseId, { pageIndex: 1, pageSize: 1000 })
         .then((response) => {
-          this.sourceEvidenceMediaList = response.data.list || [];
-          this.sourceEvidenceMediaListLoading = false;
+          this.sourceEvidenceMediaList = response.data.list || []
+          this.sourceEvidenceMediaListLoading = false
         })
         .catch((error) => {
           this.msgError(
-            "加载源证据媒体列表失败：" + (error.message || "未知错误")
-          );
-          this.sourceEvidenceMediaListLoading = false;
-        });
+            '加载源证据媒体列表失败：' + (error.message || '未知错误')
+          )
+          this.sourceEvidenceMediaListLoading = false
+        })
     },
 
     /** 加载证据媒体列表 */
     async loadEvidenceMediaList(caseId) {
-      this.evidenceMediaListLoading = true;
+      this.evidenceMediaListLoading = true
       try {
         const response = await getEvidenceMediaByCaseId(caseId, {
           pageIndex: 1,
-          pageSize: 1000,
-        });
+          pageSize: 1000
+        })
 
-        this.evidenceMediaList = response.data ? response.data.list : [];
+        this.evidenceMediaList = response.data ? response.data.list : []
       } catch (error) {
-        this.msgError("加载证据媒体列表失败：" + (error.message || "未知错误"));
+        this.msgError('加载证据媒体列表失败：' + (error.message || '未知错误'))
       } finally {
-        this.evidenceMediaListLoading = false;
+        this.evidenceMediaListLoading = false
       }
     },
 
     /** 浏览媒体详情 */
     handleViewMedia(row) {
       // 导入getMedia API
-      const { getMedia } = require("@/api/evidence/evidence_manage_query_api");
+      const { getMedia } = require('@/api/evidence/evidence_manage_query_api')
 
       // 根据媒体ID获取媒体详细信息
       getMedia(row.mediaId)
         .then((response) => {
-          this.viewMediaData = response.data;
-          this.viewMediaOpen = true;
+          this.viewMediaData = response.data
+          this.viewMediaOpen = true
         })
         .catch((error) => {
-          this.msgError("获取媒体详情失败：" + (error.message || "未知错误"));
-        });
+          this.msgError('获取媒体详情失败：' + (error.message || '未知错误'))
+        })
     },
 
     /** 刷新证据媒体列表 */
     handleRefreshEvidenceMediaList() {
       // 刷新证据列表
-      this.loadEvidenceMediaList(this.currentEditCase.id);
+      this.loadEvidenceMediaList(this.currentEditCase.id)
     },
 
     /** 刷新源证据媒体列表 */
     handleRefreshEvidenceMediaSourceList() {
       // 刷新源证据列表
-      this.loadSourceEvidenceMediaList(this.currentEditCase.id);
+      this.loadSourceEvidenceMediaList(this.currentEditCase.id)
     },
 
     /** 刷新案件和证据源媒体列表 */
@@ -1082,23 +1322,246 @@ export default {
       try {
         await Promise.all([
           this.loadSourceEvidenceMediaList(caseId),
-          this.loadCaseMediaList(caseId),
-        ]);
+          this.loadCaseMediaList(caseId)
+        ])
       } catch (error) {
-        this.handleError(error, "刷新案件和证据源媒体列表失败！");
+        this.handleError(error, '刷新案件和证据源媒体列表失败！')
       }
+    },
+
+    /** 获取组织树 */
+    getOrgTree() {
+      orgTreeselect().then((response) => {
+        this.orgOptions = response.data
+      })
+    },
+
+    /** 关联状态字典翻译 */
+    relationStatusFormatter(row) {
+      return this.selectDictLabel(
+        this.caseRelationStatusOptions,
+        row.isRelation
+      )
+    },
+
+    // pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    // 每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    resetPage() {
+      this.queryParams.pageIndex = 1
+    },
+
+    handleQuery() {
+      this.resetPage()
+      this.getList()
+    },
+
+    /** 刷新按钮操作 */
+    handleRefresh() {
+      this.getList()
+    },
+
+    /** 新增查询栏相关方法 */
+    handleSearch(searchData) {
+      // 快速搜索字段列表（这些字段可能被用户清空）
+      const quickSearchFields = ['caseCode', 'caseName', 'caseType', 'isRelation']
+
+      // 高级筛选中的时间范围字段列表
+      const timeRangeFields = [
+        'caseTimeStart', 'caseTimeEnd',
+        'procTimeStart', 'procTimeEnd'
+      ]
+
+      // 合并新的搜索条件
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key]
+      })
+
+      // 删除被清空的快速搜索字段
+      quickSearchFields.forEach(field => {
+        if (!(field in searchData)) {
+          delete this.queryParams[field]
+        }
+      })
+
+      // 删除被清空的时间范围字段
+      timeRangeFields.forEach(field => {
+        if (!(field in searchData)) {
+          delete this.queryParams[field]
+        }
+      })
+
+      this.handleQuery()
+    },
+
+    handleQuickSearchReset() {
+      // 重置所有筛选条件（与全局重置保持一致）
+      this.handleFilterReset()
+    },
+
+    handleFilterChange(filterData) {
+      // 处理快捷筛选和高级筛选
+      if (filterData.filterType === 'today') {
+        // 今日案件
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        this.queryParams.caseTimeStart = today.toISOString()
+        delete this.queryParams.caseTimeEnd
+      } else if (filterData.filterType === 'mine') {
+        // 我的案件 - 需要从 store 获取当前用户
+        const currentUser = this.$store.state.user && this.$store.state.user.user
+        if (currentUser && currentUser.userId) {
+          this.queryParams.createUserId = currentUser.userId
+        }
+      } else if (filterData.filterType === 'pending') {
+        // 待处理
+        this.queryParams.caseFlow = 0
+      } else if (filterData.filterType === 'archived') {
+        // 已归档
+        this.queryParams.caseFlow = 3
+      } else if (filterData.filterType === 'advanced') {
+        // 高级筛选 - 合并筛选参数（移除 filterType，只保留实际的查询条件）
+        Object.keys(filterData).forEach(key => {
+          if (key !== 'filterType') {
+            this.queryParams[key] = filterData[key]
+          }
+        })
+
+        // 删除被清空的时间范围字段
+        const timeRangeFields = [
+          'caseTimeStart', 'caseTimeEnd',
+          'procTimeStart', 'procTimeEnd'
+        ]
+        timeRangeFields.forEach(field => {
+          if (!(field in filterData)) {
+            delete this.queryParams[field]
+          }
+        })
+      } else if (filterData.filterType === 'all') {
+        // 全部 - 清除特定筛选条件
+        delete this.queryParams.caseTimeStart
+        delete this.queryParams.caseTimeEnd
+        delete this.queryParams.createUserId
+        delete this.queryParams.caseFlow
+      }
+      this.handleQuery()
+    },
+
+    handleFilterReset() {
+      // 重置所有筛选条件到初始值
+      this.queryParams = {
+        pageIndex: 1,
+        pageSize: 10,
+        caseCode: undefined,
+        caseName: undefined,
+        caseType: undefined,
+        caseOrgId: undefined,
+        caseFlow: undefined,
+        isRelation: undefined,
+        // 清空高级筛选的字段
+        caseAddress: undefined,
+        processPoliceIds: undefined,
+        // 清空时间范围
+        caseTimeStart: undefined,
+        caseTimeEnd: undefined,
+        procTimeStart: undefined,
+        procTimeEnd: undefined,
+        // 清空快捷筛选的字段
+        createUserId: undefined
+      }
+      this.handleQuery()
+    },
+
+    /** 列设置对话框打开后的焦点管理 */
+    handleColumnSettingsOpen() {
+      // 等待 DOM 更新后将焦点移到第一个复选框
+      this.$nextTick(() => {
+        const firstCheckbox = document.querySelector(
+          '.column-settings-popover .el-checkbox:first-child .el-checkbox__input'
+        )
+        if (firstCheckbox) {
+          firstCheckbox.focus()
+        }
+      })
+    },
+
+    /** 列设置对话框关闭后的焦点管理 */
+    handleColumnSettingsClose() {
+      // 焦点自动返回触发按钮，无需额外处理
+    },
+
+    /** 初始化可见列 */
+    initVisibleColumns() {
+      const saved = localStorage.getItem('evidence_manage_visible_columns')
+      if (saved) {
+        try {
+          this.visibleColumns = JSON.parse(saved)
+        } catch (error) {
+          this.visibleColumns = this.columnOptions
+            .filter(item => item.defaultVisible !== false)
+            .map((item) => item.prop)
+        }
+      } else {
+        this.visibleColumns = this.columnOptions
+          .filter(item => item.defaultVisible !== false)
+          .map((item) => item.prop)
+      }
+    },
+
+    /** 判断列是否显示 */
+    isColumnVisible(prop) {
+      return this.visibleColumns.includes(prop)
+    },
+
+    /** 列显示变更 */
+    handleColumnChange(value) {
+      localStorage.setItem('evidence_manage_visible_columns', JSON.stringify(value))
+    },
+
+    /** 重置列配置 */
+    resetColumns() {
+      this.visibleColumns = this.columnOptions
+        .filter(item => item.defaultVisible !== false)
+        .map((item) => item.prop)
+      localStorage.setItem(
+        'evidence_manage_visible_columns',
+        JSON.stringify(this.visibleColumns)
+      )
+      this.$message.success('已重置为默认显示')
+    },
+
+    normalizeQueryParams(params = {}) {
+      const query = { ...params }
+      Object.keys(query).forEach((key) => {
+        const value = query[key]
+        if (value === '' || value === null || value === undefined) {
+          delete query[key]
+        } else if (
+          (key === 'caseTimeStart' ||
+            key === 'caseTimeEnd' ||
+            key === 'procTimeStart' ||
+            key === 'procTimeEnd') &&
+          typeof value === 'string'
+        ) {
+          // 将本地时间字符串转换为 ISO 8601 格式（UTC 时间）
+          const date = new Date(value)
+          if (!isNaN(date.getTime())) {
+            query[key] = date.toISOString()
+          }
+        }
+      })
+      return query
     },
 
     /* ========== 字典相关方法 ========== */
 
     // 案件类型字典翻译
     caseTypeFormat(row) {
-      return this.selectDictLabel(this.caseTypeOptions, parseInt(row.caseType));
+      return this.selectDictLabel(this.caseTypeOptions, parseInt(row.caseType))
     },
 
     // 案件流程字典翻译 - 根据案件类型选择对应的流程字典
     caseFlowFormat(row) {
-      return this.getCaseFlowLabel(row.caseFlow, row.caseType);
+      return this.getCaseFlowLabel(row.caseFlow, row.caseType)
     },
 
     /** 获取案件流程标签 - 根据案件类型确定字典类型 */
@@ -1107,16 +1570,16 @@ export default {
       if (this.caseTypeOptions && this.caseTypeOptions.length > 0) {
         const caseTypeDict = this.caseTypeOptions.find(
           (item) => item.value === caseType || item.value === String(caseType)
-        );
+        )
         if (caseTypeDict) {
-          if (caseTypeDict.label.includes("行政")) {
-            return this.selectDictLabel(this.adminCaseProcessOptions, value);
-          } else if (caseTypeDict.label.includes("刑事")) {
-            return this.selectDictLabel(this.criminalCaseProcessOptions, value);
+          if (caseTypeDict.label.includes('行政')) {
+            return this.selectDictLabel(this.adminCaseProcessOptions, value)
+          } else if (caseTypeDict.label.includes('刑事')) {
+            return this.selectDictLabel(this.criminalCaseProcessOptions, value)
           }
         }
       }
-      return value;
+      return value
     },
 
     /* ========== 文件上传相关方法 ========== */
@@ -1130,203 +1593,200 @@ export default {
         raw: file.raw,
         uploaded: false,
         uploading: false,
-        error: null,
-      };
-      this.fileList.push(newFile);
+        error: null
+      }
+      this.fileList.push(newFile)
     },
 
     /** 移除单个文件 */
     removeFile(index) {
-      this.fileList.splice(index, 1);
+      this.fileList.splice(index, 1)
     },
 
     /** 清空所有文件 */
     clearAllFiles() {
-      this.$confirm("确认清空所有文件吗？", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('确认清空所有文件吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
         .then(() => {
-          this.fileList = [];
+          this.fileList = []
           if (this.$refs.uploadComponent) {
-            this.$refs.uploadComponent.clearFiles();
+            this.$refs.uploadComponent.clearFiles()
           }
         })
-        .catch(() => {});
+        .catch(() => {})
     },
 
     /** 获取文件图标 */
     getFileIcon(fileName) {
-      const ext = fileName.split(".").pop().toLowerCase();
+      const ext = fileName.split('.').pop().toLowerCase()
       const iconMap = {
-        pdf: "el-icon-document",
-        doc: "el-icon-document",
-        docx: "el-icon-document",
-        xls: "el-icon-tickets",
-        xlsx: "el-icon-tickets",
-        ppt: "el-icon-data-analysis",
-        pptx: "el-icon-data-analysis",
-        jpg: "el-icon-picture",
-        jpeg: "el-icon-picture",
-        png: "el-icon-picture",
-        gif: "el-icon-picture",
-        mp4: "el-icon-video-camera",
-        avi: "el-icon-video-camera",
-        mp3: "el-icon-headset",
-        wav: "el-icon-headset",
-      };
-      return iconMap[ext] || "el-icon-document";
+        pdf: 'el-icon-document',
+        doc: 'el-icon-document',
+        docx: 'el-icon-document',
+        xls: 'el-icon-tickets',
+        xlsx: 'el-icon-tickets',
+        ppt: 'el-icon-data-analysis',
+        pptx: 'el-icon-data-analysis',
+        jpg: 'el-icon-picture',
+        jpeg: 'el-icon-picture',
+        png: 'el-icon-picture',
+        gif: 'el-icon-picture',
+        mp4: 'el-icon-video-camera',
+        avi: 'el-icon-video-camera',
+        mp3: 'el-icon-headset',
+        wav: 'el-icon-headset'
+      }
+      return iconMap[ext] || 'el-icon-document'
     },
 
     /** 格式化文件大小 */
     formatFileSize(bytes) {
-      if (bytes === 0) return "0 B";
-      const k = 1024;
-      const sizes = ["B", "KB", "MB", "GB", "TB"];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      if (bytes === 0) return '0 B'
+      const k = 1024
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+      const i = Math.floor(Math.log(bytes) / Math.log(k))
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
     },
 
     /** 获取文件状态类名 */
     getFileStatusClass(file) {
-      if (file.uploaded) return "status-success";
-      if (file.uploading) return "status-uploading";
-      if (file.error) return "status-error";
-      return "status-waiting";
+      if (file.uploaded) return 'status-success'
+      if (file.uploading) return 'status-uploading'
+      if (file.error) return 'status-error'
+      return 'status-waiting'
     },
 
     /** 获取文件状态图标 */
     getFileStatusIcon(file) {
-      if (file.uploaded) return "el-icon-success";
-      if (file.uploading) return "el-icon-loading";
-      if (file.error) return "el-icon-error";
-      return "el-icon-time";
+      if (file.uploaded) return 'el-icon-success'
+      if (file.uploading) return 'el-icon-loading'
+      if (file.error) return 'el-icon-error'
+      return 'el-icon-time'
     },
 
     /** 获取文件状态文本 */
     getFileStatusText(file) {
-      if (file.uploaded) return "上传成功";
-      if (file.uploading) return "上传中...";
-      if (file.error) return file.error;
-      return "等待上传";
+      if (file.uploaded) return '上传成功'
+      if (file.uploading) return '上传中...'
+      if (file.error) return file.error
+      return '等待上传'
     },
 
     /* ========== 关联媒体相关方法 ========== */
 
     /** 关联媒体按钮操作 - 打开第一层抽屉 */
     handleLinkMedia(row) {
-      this.currentCase = row;
-      this.showMediaDrawer = true;
-      this.loadCaseMediaRelations();
+      this.currentCase = row
+      this.showMediaDrawer = true
+      this.loadCaseMediaRelations()
     },
 
     /** 关闭第一层抽屉 */
     handleCloseMediaDrawer(done) {
-      this.showMediaDrawer = false;
-      this.currentCase = null;
-      this.mediaRelationsList = [];
-      this.relationTotal = 0;
-      this.selectedMediaRelations = [];
+      this.showMediaDrawer = false
+      this.currentCase = null
+      this.mediaRelationsList = []
+      this.relationTotal = 0
+      this.selectedMediaRelations = []
       if (done) {
-        done();
+        done()
       }
     },
 
     /** 打开第二层抽屉 - 关联新媒体 */
     handleOpenMediaSelector() {
-      this.selectedMediaList = [];
-      this.mediaSelectorDrawerOpen = true;
+      this.selectedMediaList = []
+      this.mediaSelectorDrawerOpen = true
       this.$nextTick(() => {
         if (this.$refs.mediaSelector) {
-          this.$refs.mediaSelector.clearSelection();
-          this.$refs.mediaSelector.refreshList();
+          this.$refs.mediaSelector.clearSelection()
+          this.$refs.mediaSelector.refreshList()
         }
-      });
+      })
     },
 
     /** 关闭第二层抽屉 */
     handleCloseSelectorDrawer(done) {
-      this.mediaSelectorDrawerOpen = false;
-      this.selectedMediaList = [];
+      this.mediaSelectorDrawerOpen = false
+      this.selectedMediaList = []
       if (done) {
-        done();
+        done()
       }
     },
 
     /** 媒体选择变化 */
     handleMediaSelectionChange(selection) {
-      this.selectedMediaList = selection;
+      this.selectedMediaList = selection
     },
 
     /** 确认关联媒体 */
     async confirmLinkMedia() {
       // 检查是否选中了媒体
       if (!this.selectedMediaList || this.selectedMediaList.length === 0) {
-        this.msgError("请选择要关联的媒体");
-        return;
+        this.msgError('请选择要关联的媒体')
+        return
       }
 
       // 鼠标切换为等待状态
-      const previousCursor = document.body.style.cursor;
-      document.body.style.cursor = "wait";
+      const previousCursor = document.body.style.cursor
+      document.body.style.cursor = 'wait'
 
       const loadingInstance = this.$loading({
         lock: true,
-        text: "正在关联媒体...",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.3)",
-      });
+        text: '正在关联媒体...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.3)'
+      })
 
       try {
         // 调用关联媒体的API
         const data = {
           caseId: this.currentCase.id,
-          mediaIds: this.selectedMediaList.map((item) => item.mediaId),
-        };
+          mediaIds: this.selectedMediaList.map((item) => item.mediaId)
+        }
 
-        const response = await batchCreateCaseMediaRelations(data);
+        const response = await batchCreateCaseMediaRelations(data)
 
         if (response.code === 200) {
-          // 保存当前案件ID,避免getList()改变选中状态后丢失
-          const currentCaseId = this.currentCase.id;
-
           // 关闭第二层抽屉
-          this.mediaSelectorDrawerOpen = false;
+          this.mediaSelectorDrawerOpen = false
           // 延迟2秒后刷新媒体关联列表和案件列表
-          await this.delay(2000);
+          await this.delay(2000)
           // 先刷新当前案件的媒体关联列表(参考警情页面的实现)
-          this.loadCaseMediaRelations();
+          this.loadCaseMediaRelations()
           // 再刷新案件列表以更新关联状态
-          this.getList();
+          this.getList()
 
-          this.msgSuccess(response.msg || "关联成功");
+          this.msgSuccess(response.msg || '关联成功')
         } else {
-          this.msgError(response.msg || "关联失败");
+          this.msgError(response.msg || '关联失败')
         }
       } catch (error) {
-        this.msgError("关联失败：" + (error.message || "未知错误"));
+        this.msgError('关联失败：' + (error.message || '未知错误'))
       } finally {
         // 恢复鼠标状态
-        document.body.style.cursor = previousCursor;
-        loadingInstance.close();
+        document.body.style.cursor = previousCursor
+        loadingInstance.close()
       }
     },
 
     /** 延迟函数 */
     delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
+      return new Promise((resolve) => setTimeout(resolve, ms))
     },
 
     /** 加载案件媒体关联列表 */
     loadCaseMediaRelations() {
       if (!this.currentCase || !this.currentCase.id) {
-        this.mediaRelationsList = [];
-        this.relationTotal = 0;
-        this.relationsLoading = false;
-        return;
+        this.mediaRelationsList = []
+        this.relationTotal = 0
+        this.relationsLoading = false
+        return
       }
-      this.relationsLoading = true;
+      this.relationsLoading = true
       getCaseMediaRelationsByCaseId(
         this.currentCase.id,
         this.relationQueryParams
@@ -1334,33 +1794,33 @@ export default {
         .then((response) => {
           // 必须检查response.code是否为200
           if (response.code === 200) {
-            this.mediaRelationsList = response.data.list || [];
-            this.relationTotal = response.data.count || 0;
+            this.mediaRelationsList = response.data.list || []
+            this.relationTotal = response.data.count || 0
             // 分页/查询后回显跨分页选择
-            this.restoreMediaRelationSelection();
+            this.restoreMediaRelationSelection()
           } else {
-            this.msgError(response.msg || "加载媒体关联列表失败");
-            this.mediaRelationsList = [];
-            this.relationTotal = 0;
+            this.msgError(response.msg || '加载媒体关联列表失败')
+            this.mediaRelationsList = []
+            this.relationTotal = 0
           }
         })
         .catch((error) => {
-          console.error("加载媒体关联列表失败:", error);
+          console.error('加载媒体关联列表失败:', error)
           this.msgError(
-            "加载媒体关联列表失败：" + (error.message || "未知错误")
-          );
-          this.mediaRelationsList = [];
-          this.relationTotal = 0;
+            '加载媒体关联列表失败：' + (error.message || '未知错误')
+          )
+          this.mediaRelationsList = []
+          this.relationTotal = 0
         })
         .finally(() => {
-          this.relationsLoading = false;
-        });
+          this.relationsLoading = false
+        })
     },
 
     /** 已关联媒体选择变化 */
     handleMediaRelationsSelectionChange(selection) {
       if (this.isRestoringMediaRelationSelection) {
-        return;
+        return
       }
       // 以当前页为准增删选中项（实现跨分页记忆）
       const selectedIdSet = new Set(
@@ -1368,87 +1828,84 @@ export default {
       );
 
       (this.mediaRelationsList || []).forEach((row) => {
-        const id = row && row.id;
-        if (!id) return;
+        const id = row && row.id
+        if (!id) return
         if (selectedIdSet.has(id)) {
-          this.selectedMediaRelationMap[id] = row;
+          this.selectedMediaRelationMap[id] = row
         } else {
-          delete this.selectedMediaRelationMap[id];
+          delete this.selectedMediaRelationMap[id]
         }
-      });
+      })
       this.selectedMediaRelations = Object.values(
         this.selectedMediaRelationMap
-      ).filter(Boolean);
+      ).filter(Boolean)
     },
 
-    /**恢复已关联媒体的选中状态 */
+    /** 恢复已关联媒体的选中状态 */
     restoreMediaRelationSelection() {
-      if (this.isRestoringMediaRelationSelection) return;
-      if (!this.$refs.mediaRelationsTable) return;
-      if (!this.mediaRelationsList || !this.mediaRelationsList.length) return;
+      if (this.isRestoringMediaRelationSelection) return
+      if (!this.$refs.mediaRelationsTable) return
+      if (!this.mediaRelationsList || !this.mediaRelationsList.length) return
 
-      this.isRestoringMediaRelationSelection = true;
+      this.isRestoringMediaRelationSelection = true
       this.$nextTick(() => {
         try {
           this.mediaRelationsList.forEach((row) => {
-            const id = row && row.id;
-            if (!id) return;
+            const id = row && row.id
+            if (!id) return
             if (this.selectedMediaRelationMap[id]) {
-              this.$refs.mediaRelationsTable.toggleRowSelection(row, true);
+              this.$refs.mediaRelationsTable.toggleRowSelection(row, true)
             }
-          });
+          })
         } finally {
-          this.isRestoringMediaRelationSelection = false;
+          this.isRestoringMediaRelationSelection = false
         }
-      });
+      })
     },
 
     /** 取消关联媒体 */
     async handleUnlinkMedia(row) {
       try {
-        await this.$confirm("确认取消关联该媒体吗？", "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
-        });
+        await this.$confirm('确认取消关联该媒体吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
 
         // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
+        const previousCursor = document.body.style.cursor
+        document.body.style.cursor = 'wait'
 
         const loadingInstance = this.$loading({
           lock: true,
-          text: "正在取消关联...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+          text: '正在取消关联...',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.3)'
+        })
 
         try {
-          const response = await deleteCaseMediaRelation(row.id);
+          const response = await deleteCaseMediaRelation(row.id)
 
           if (response.code === 200) {
-            // 保存当前案件ID,避免getList()改变选中状态后丢失
-            const currentCaseId = this.currentCase.id;
-
             // 延迟2秒后刷新媒体关联列表和案件列表
-            await this.delay(2000);
+            await this.delay(2000)
             // 先刷新当前案件的媒体关联列表(参考警情页面的实现)
-            this.loadCaseMediaRelations();
+            this.loadCaseMediaRelations()
             // 再刷新案件列表以更新关联状态
-            this.getList();
+            this.getList()
 
-            this.msgSuccess(response.msg || "取消关联成功");
+            this.msgSuccess(response.msg || '取消关联成功')
           } else {
-            this.msgError(response.msg || "取消关联失败");
+            this.msgError(response.msg || '取消关联失败')
           }
         } finally {
           // 恢复鼠标状态
-          document.body.style.cursor = previousCursor;
-          loadingInstance.close();
+          document.body.style.cursor = previousCursor
+          loadingInstance.close()
         }
       } catch (error) {
-        if (error !== "cancel") {
-          this.msgError("取消关联失败：" + (error.message || "未知错误"));
+        if (error !== 'cancel') {
+          this.msgError('取消关联失败：' + (error.message || '未知错误'))
         }
       }
     },
@@ -1456,66 +1913,63 @@ export default {
     /** 批量取消关联媒体 */
     async handleBatchUnlinkMedia() {
       if (this.selectedMediaRelations.length === 0) {
-        this.msgError("请选择要取消关联的媒体");
-        return;
+        this.msgError('请选择要取消关联的媒体')
+        return
       }
 
       try {
         await this.$confirm(
           `确认取消关联选中的 ${this.selectedMediaRelations.length} 个媒体吗？`,
-          "提示",
+          '提示',
           {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "warning",
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
           }
-        );
+        )
 
         // 鼠标切换为等待状态
-        const previousCursor = document.body.style.cursor;
-        document.body.style.cursor = "wait";
+        const previousCursor = document.body.style.cursor
+        document.body.style.cursor = 'wait'
 
         const loadingInstance = this.$loading({
           lock: true,
-          text: "正在批量取消关联...",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.3)",
-        });
+          text: '正在批量取消关联...',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.3)'
+        })
 
         try {
           // 提取选中的关联ID列表
-          const ids = this.selectedMediaRelations.map((item) => item.id);
+          const ids = this.selectedMediaRelations.map((item) => item.id)
 
-          const response = await batchDeleteCaseMediaRelations({ ids: ids });
+          const response = await batchDeleteCaseMediaRelations({ ids: ids })
 
           if (response.code === 200) {
-            // 保存当前案件ID,避免getList()改变选中状态后丢失
-            const currentCaseId = this.currentCase.id;
-
             // 延迟2秒后刷新媒体关联列表和案件列表
-            await this.delay(2000);
-            this.selectedMediaRelationMap = {};
-            this.selectedMediaRelations = [];
-            this.loadCaseMediaRelations();
-            this.getList();
+            await this.delay(2000)
+            this.selectedMediaRelationMap = {}
+            this.selectedMediaRelations = []
+            this.loadCaseMediaRelations()
+            this.getList()
 
             this.msgSuccess(
               response.msg ||
                 `成功取消关联 ${
                   response.data?.deletedCount || ids.length
                 } 个媒体`
-            );
+            )
           } else {
-            this.msgError(response.msg || "批量取消关联失败");
+            this.msgError(response.msg || '批量取消关联失败')
           }
         } finally {
           // 恢复鼠标状态
-          document.body.style.cursor = previousCursor;
-          loadingInstance.close();
+          document.body.style.cursor = previousCursor
+          loadingInstance.close()
         }
       } catch (error) {
-        if (error !== "cancel") {
-          this.msgError("批量取消关联失败：" + (error.message || "未知错误"));
+        if (error !== 'cancel') {
+          this.msgError('批量取消关联失败：' + (error.message || '未知错误'))
         }
       }
     },
@@ -1524,64 +1978,64 @@ export default {
 
     /** 编辑证据 */
     handleEditEvidence(row) {
-      this.currentEditCase = { ...row };
-      this.editEvidenceOpen = true;
+      this.currentEditCase = { ...row }
+      this.editEvidenceOpen = true
 
       // 加载当前案件已关联的媒体列表
-      this.loadCaseMediaList(row.id);
+      this.loadCaseMediaList(row.id)
 
       // 加载源证据媒体列表
-      this.loadSourceEvidenceMediaList(row.id);
+      this.loadSourceEvidenceMediaList(row.id)
 
       // 加载证据媒体列表
-      this.loadEvidenceMediaList(row.id);
+      this.loadEvidenceMediaList(row.id)
     },
 
     /** 导入按钮操作 */
     handleImportEvidence() {
-      this.upload.title = "导入证据";
-      this.upload.open = true;
+      this.upload.title = '导入证据'
+      this.upload.open = true
       // 重置表单
       this.uploadForm = {
-        deviceCode: "",
-        policeCode: "",
+        deviceCode: '',
+        policeCode: '',
         importantLevel: 1,
         storageType: 1,
-        tags: "",
-        comments: "",
-      };
-      this.fileList = [];
+        tags: '',
+        comments: ''
+      }
+      this.fileList = []
     },
 
     /** 设为源证据 */
-    /*Element UI 的 this.$loading({ lock: true, … }) 会在页面上渲染一个全屏遮罩层，并把遮罩层的 z-index 设得比通知更高。
+    /* Element UI 的 this.$loading({ lock: true, … }) 会在页面上渲染一个全屏遮罩层，并把遮罩层的 z-index 设得比通知更高。
     当 batchAddEvidenceSourceMedia 的请求完成时，this.$notify 其实已经执行并创建了通知组件，但通知被遮罩层盖住了，视觉上就像没有弹出。
     只有在 finally 里调用 loadingInstance.close() 移除遮罩层后，通知才从遮罩层下方显现出来，看起来好像是“关闭 loading 后才弹出”。 这符合 Element UI 的实现逻辑，也符合我们的预期*/
     async handleSetAsSourceEvidence(row) {
-      const previousCursor = document.body.style.cursor;
-      document.body.style.cursor = "wait";
+      const previousCursor = document.body.style.cursor
+      document.body.style.cursor = 'wait'
 
       const loadingInstance = this.$loading({
         lock: true,
-        text: "正在设为源证据...",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.3)",
-      });
+        text: '正在设为源证据...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.3)'
+      })
 
       try {
         const response = await batchAddEvidenceSourceMedia({
           caseId: this.currentEditCase.id,
           mediaIds: [row.mediaId],
-          operatorId: this.$store.state.user.userId,
-        });
+          operatorId: this.$store.state.user.userId
+        })
 
-        await this.delay(2000);
-        await this.refreshCaseAndSourceMediaLists(this.currentEditCase.id);
-        this.showNotification(response);
+        await this.delay(2000)
+        await this.refreshCaseAndSourceMediaLists(this.currentEditCase.id)
+        this.showNotification(response)
       } catch (error) {
-        this.handleError(error, "设为源证据失败");
+        this.handleError(error, '设为源证据失败')
       } finally {
-        this.restoreUIState(previousCursor, loadingInstance);
+        this.restoreUIState(previousCursor, loadingInstance)
       }
     },
 
@@ -1590,34 +2044,34 @@ export default {
 
     /** 移除源证据 */
     async handleRemoveSourceEvidence(row) {
-      if (!(await this.confirmOperation("确认要移除该证据源媒体吗？"))) {
-        return;
+      if (!(await this.confirmOperation('确认要移除该证据源媒体吗？'))) {
+        return
       }
 
       // 等待确认对话框完全关闭
-      await this.delay(100);
+      await this.delay(100)
 
       // 鼠标切换为等待状态
-      const previousCursor = document.body.style.cursor;
-      document.body.style.cursor = "wait";
+      const previousCursor = document.body.style.cursor
+      document.body.style.cursor = 'wait'
       const loadingInstance = this.$loading({
         lock: true,
-        text: "正在移除源证据...",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.3)",
-      });
+        text: '正在移除源证据...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.3)'
+      })
       try {
         const response = await removeEvidenceSourceMedia(
           this.currentEditCase.id,
           row.mediaId
-        );
-        await this.delay(2000);
-        await this.refreshCaseAndSourceMediaLists(this.currentEditCase.id);
-        this.showNotification(response);
+        )
+        await this.delay(2000)
+        await this.refreshCaseAndSourceMediaLists(this.currentEditCase.id)
+        this.showNotification(response)
       } catch (error) {
-        this.handleError(error, "移除源证据失败");
+        this.handleError(error, '移除源证据失败')
       } finally {
-        this.restoreUIState(previousCursor, loadingInstance);
+        this.restoreUIState(previousCursor, loadingInstance)
       }
     },
 
@@ -1625,14 +2079,14 @@ export default {
     handleUploadDialogClose() {
       // 清空文件列表
       if (this.$refs.uploadComponent) {
-        this.$refs.uploadComponent.clearFiles();
+        this.$refs.uploadComponent.clearFiles()
       }
-      this.fileList = [];
+      this.fileList = []
       // 重置表单验证
       if (this.$refs.uploadForm) {
-        this.$refs.uploadForm.resetFields();
+        this.$refs.uploadForm.resetFields()
       }
-      this.upload.open = false;
+      this.upload.open = false
     },
 
     /** 上传单个文件 */
@@ -1640,141 +2094,141 @@ export default {
       // 验证表单
       this.$refs.uploadForm.validate((valid) => {
         if (!valid) {
-          this.msgError("请先填写必填项");
-          return;
+          this.msgError('请先填写必填项')
+          return
         }
 
         // 设置文件状态为上传中
-        /*this.$set() 确保了数据变化与界面更新的同步性，这是 Vue 响应式系统的核心特性之一。
+        /* this.$set() 确保了数据变化与界面更新的同步性，这是 Vue 响应式系统的核心特性之一。
         一旦执行，相关的界面部分会立即重新渲染以反映最新的数据状态。*/
-        this.$set(this.fileList[index], "uploading", true);
-        this.$set(this.fileList[index], "error", null);
+        this.$set(this.fileList[index], 'uploading', true)
+        this.$set(this.fileList[index], 'error', null)
 
         // 构建 FormData
-        const formData = new FormData();
-        formData.append("file", file.raw);
-        formData.append("deviceCode", this.uploadForm.deviceCode);
-        formData.append("policeCode", this.uploadForm.policeCode);
-        formData.append("importantLevel", this.uploadForm.importantLevel);
-        formData.append("storageType", this.uploadForm.storageType);
+        const formData = new FormData()
+        formData.append('file', file.raw)
+        formData.append('deviceCode', this.uploadForm.deviceCode)
+        formData.append('policeCode', this.uploadForm.policeCode)
+        formData.append('importantLevel', this.uploadForm.importantLevel)
+        formData.append('storageType', this.uploadForm.storageType)
 
         if (this.uploadForm.tags) {
-          formData.append("tags", this.uploadForm.tags);
+          formData.append('tags', this.uploadForm.tags)
         }
         if (this.uploadForm.comments) {
-          formData.append("comments", this.uploadForm.comments);
+          formData.append('comments', this.uploadForm.comments)
         }
 
         // 调用上传API
         uploadDocuments(formData)
           .then((response) => {
-            this.$set(this.fileList[index], "uploading", false);
-            this.$set(this.fileList[index], "uploaded", true);
-            this.msgSuccess(`${file.name} 上传成功`);
+            this.$set(this.fileList[index], 'uploading', false)
+            this.$set(this.fileList[index], 'uploaded', true)
+            this.msgSuccess(`${file.name} 上传成功`)
           })
           .catch((error) => {
-            this.$set(this.fileList[index], "uploading", false);
+            this.$set(this.fileList[index], 'uploading', false)
             this.$set(
               this.fileList[index],
-              "error",
-              error.message || "上传失败"
-            );
+              'error',
+              error.message || '上传失败'
+            )
             this.msgError(
-              `${file.name} 上传失败：` + (error.message || "未知错误")
-            );
-          });
-      });
+              `${file.name} 上传失败：` + (error.message || '未知错误')
+            )
+          })
+      })
     },
 
     /** 提交上传表单 - 批量上传所有文件 */
     async submitUploadForm(index, isSingleFile) {
       this.$refs.uploadForm.validate((valid) => {
         if (!valid) {
-          return;
+          return
         }
-      });
+      })
       if (
-        this.uploadForm.deviceCode === "" ||
-        this.uploadForm.policeCode === ""
+        this.uploadForm.deviceCode === '' ||
+        this.uploadForm.policeCode === ''
       ) {
-        this.msgError("请输入设备编号和警员编号、存储服务器编号");
-        return;
+        this.msgError('请输入设备编号和警员编号、存储服务器编号')
+        return
       }
       // 检查是否选择了文件
       if (!this.fileList || this.fileList.length === 0) {
-        this.msgError("请选择要上传的文件");
-        return;
+        this.msgError('请选择要上传的文件')
+        return
       }
 
-      var pendingFiles = [];
+      var pendingFiles = []
       if (isSingleFile) {
-        pendingFiles = [this.fileList[index]];
+        pendingFiles = [this.fileList[index]]
       } else {
-        pendingFiles = this.fileList.filter((f) => !f.uploaded && !f.uploading);
+        pendingFiles = this.fileList.filter((f) => !f.uploaded && !f.uploading)
       }
 
       if (pendingFiles.length === 0) {
-        this.msgWarning("所有文件已上传");
-        return;
+        this.msgWarning('所有文件已上传')
+        return
       }
 
       // 设置文件状态为上传中
-      /*this.$set() 确保了数据变化与界面更新的同步性，这是 Vue 响应式系统的核心特性之一。
+      /* this.$set() 确保了数据变化与界面更新的同步性，这是 Vue 响应式系统的核心特性之一。
         一旦执行，相关的界面部分会立即重新渲染以反映最新的数据状态。*/
       pendingFiles.forEach((fileItem) => {
-        this.$set(fileItem, "uploading", true);
-        this.$set(fileItem, "error", null);
-      });
+        this.$set(fileItem, 'uploading', true)
+        this.$set(fileItem, 'error', null)
+      })
 
       // 设置上传状态
-      this.upload.isUploading = true;
+      this.upload.isUploading = true
 
       // 构建 FormData
-      const formData = new FormData();
+      const formData = new FormData()
 
       // 添加所有未上传的文件
       pendingFiles.forEach((fileItem) => {
-        formData.append("file", fileItem.raw);
-      });
+        formData.append('file', fileItem.raw)
+      })
 
       // 添加表单字段
-      formData.append("deviceCode", this.uploadForm.deviceCode);
-      formData.append("policeCode", this.uploadForm.policeCode);
-      formData.append("importantLevel", this.uploadForm.importantLevel);
-      formData.append("storageType", this.uploadForm.storageType);
+      formData.append('deviceCode', this.uploadForm.deviceCode)
+      formData.append('policeCode', this.uploadForm.policeCode)
+      formData.append('importantLevel', this.uploadForm.importantLevel)
+      formData.append('storageType', this.uploadForm.storageType)
 
       if (this.uploadForm.tags) {
-        formData.append("tags", this.uploadForm.tags);
+        formData.append('tags', this.uploadForm.tags)
       }
       if (this.uploadForm.comments) {
-        formData.append("comments", this.uploadForm.comments);
+        formData.append('comments', this.uploadForm.comments)
       }
 
       // 调用上传API
       // 鼠标切换为等待状态
-      const previousCursor = document.body.style.cursor;
-      document.body.style.cursor = "wait";
+      const previousCursor = document.body.style.cursor
+      document.body.style.cursor = 'wait'
       const loadingInstance = this.$loading({
         lock: true,
-        text: "正在上传证据并关联到案件...",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.3)",
-      });
+        text: '正在上传证据并关联到案件...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.3)'
+      })
 
       try {
-        const response = await uploadDocuments(formData);
-        this.uploadDocumentsDisplayResult(response);
+        const response = await uploadDocuments(formData)
+        this.uploadDocumentsDisplayResult(response)
         // 处理成功上传的证据：查询媒体ID并关联到案件
         if (response.data.results && response.data.results.length > 0) {
-          await this.processUploadedEvidences(response.data.results);
-          await this.delay(2000);
-          await this.loadEvidenceMediaList(this.currentEditCase.id);
+          await this.processUploadedEvidences(response.data.results)
+          await this.delay(2000)
+          await this.loadEvidenceMediaList(this.currentEditCase.id)
         }
       } catch (error) {
-        this.handleError(error, "上传证据并关联到案件失败");
+        this.handleError(error, '上传证据并关联到案件失败')
       } finally {
-        this.upload.isUploading = false;
-        this.restoreUIState(previousCursor, loadingInstance);
+        this.upload.isUploading = false
+        this.restoreUIState(previousCursor, loadingInstance)
       }
     },
 
@@ -1783,22 +2237,22 @@ export default {
       try {
         // 过滤出成功上传的证据
         const successResults = uploadResults.filter(
-          (item) => item.status === "success"
-        );
+          (item) => item.status === 'success'
+        )
 
         if (successResults.length === 0) {
-          this.upload.isUploading = false;
-          return;
+          this.upload.isUploading = false
+          return
         }
 
         // 收集所有成功上传的媒体ID
-        var mediaIds = [];
+        var mediaIds = []
 
         // 遍历每个成功上传的证据，根据返回的信息查询媒体
         var mediaPromises = successResults.map((item) =>
           this.queryMediaWithRetry(item.fileName)
-        );
-        mediaIds = (await Promise.all(mediaPromises)).filter((id) => id);
+        )
+        mediaIds = (await Promise.all(mediaPromises)).filter((id) => id)
         // 如果找到了媒体ID，则关联到当前案件
         if (
           mediaIds.length > 0 &&
@@ -1808,16 +2262,16 @@ export default {
           const data = {
             caseId: this.currentEditCase.id,
             mediaIds: mediaIds,
-            operatorId: this.$store.state.user.userId,
-          };
-          const response = await batchAddEvidenceMedia(data);
-          if (response.msg.includes("成功")) {
-            response.msg = `成功将 ${mediaIds.length} 个证据关联到案件`;
+            operatorId: this.$store.state.user.userId
           }
-          this.showNotification(response);
+          const response = await batchAddEvidenceMedia(data)
+          if (response.msg.includes('成功')) {
+            response.msg = `成功将 ${mediaIds.length} 个证据关联到案件`
+          }
+          this.showNotification(response)
         }
       } catch (error) {
-        this.handleError(error, "关联证据到案件失败");
+        this.handleError(error, '关联证据到案件失败')
       }
     },
 
@@ -1826,9 +2280,9 @@ export default {
       try {
         const queryParams = {
           // 你的查询参数
-          mediaName: mediaName,
-        };
-        const mediaResponse = await listMedia(queryParams);
+          mediaName: mediaName
+        }
+        const mediaResponse = await listMedia(queryParams)
 
         if (
           mediaResponse.data &&
@@ -1836,26 +2290,26 @@ export default {
           mediaResponse.data.list.length > 0
         ) {
           // 取第一个匹配的媒体
-          const media = mediaResponse.data.list[0];
-          return media.mediaId;
+          const media = mediaResponse.data.list[0]
+          return media.mediaId
         } else {
           if (retryCount < maxRetries) {
             console.warn(
               `未找到证据 ${mediaName} 对应的媒体，第${retryCount + 1}次重试...`
-            );
+            )
 
             // 等待500ms后重试
-            await this.delay(500);
+            await this.delay(500)
             return this.queryMediaWithRetry(
               mediaName,
               retryCount + 1,
               maxRetries
-            );
+            )
           } else {
             console.error(
               `未找到证据 ${mediaName} 对应的媒体，已重试${maxRetries}次`
-            );
-            return null;
+            )
+            return null
           }
         }
       } catch (error) {
@@ -1863,110 +2317,119 @@ export default {
           console.warn(
             `查询证据 ${mediaName} 失败，第${retryCount + 1}次重试...`,
             error
-          );
+          )
 
           // 等待500ms后重试
-          await this.delay(500);
+          await this.delay(500)
           return this.queryMediaWithRetry(
             mediaName,
             retryCount + 1,
             maxRetries
-          );
+          )
         } else {
           console.error(
             `查询证据 ${mediaName} 失败，已重试${maxRetries}次`,
             error
-          );
-          return null;
+          )
+          return null
         }
       }
     },
 
     uploadDocumentsDisplayResult(response) {
       // 显示上传结果
-      const result = response.data;
-      let message = `上传完成！成功：${result.successCount}个，失败：${result.failureCount}个`;
+      const result = response.data
+      let message = `上传完成！成功：${result.successCount}个，失败：${result.failureCount}个`
 
       if (result.results && result.results.length > 0) {
-        message += "<br/><br/>详细结果：<br/>";
+        message += '<br/><br/>详细结果：<br/>'
         result.results.forEach((item) => {
-          const status = item.status === "success" ? "✓" : "✗";
+          const status = item.status === 'success' ? '✓' : '✗'
           message += `${status} ${item.originalName} - ${
-            item.status === "success" ? "成功" : item.error
-          }<br/>`;
-        });
+            item.status === 'success' ? '成功' : item.error
+          }<br/>`
+        })
       }
 
-      this.$alert(message, "上传结果", {
+      this.$alert(message, '上传结果', {
         dangerouslyUseHTMLString: true,
-        type: result.failureCount === 0 ? "success" : "warning",
-      });
+        type: result.failureCount === 0 ? 'success' : 'warning'
+      })
 
       // 更新文件状态
       if (result.results) {
         result.results.forEach((item, idx) => {
           const fileIndex = this.fileList.findIndex(
             (f) => f.name === item.originalName
-          );
+          )
           if (fileIndex !== -1) {
-            if (item.status === "success") {
-              this.$set(this.fileList[fileIndex], "uploaded", true);
-              this.$set(this.fileList[fileIndex], "uploading", false);
+            if (item.status === 'success') {
+              this.$set(this.fileList[fileIndex], 'uploaded', true)
+              this.$set(this.fileList[fileIndex], 'uploading', false)
             } else {
-              this.$set(this.fileList[fileIndex], "error", item.error);
-              this.$set(this.fileList[fileIndex], "uploading", false);
+              this.$set(this.fileList[fileIndex], 'error', item.error)
+              this.$set(this.fileList[fileIndex], 'uploading', false)
             }
           }
-        });
+        })
       }
     },
 
     /** 移除证据媒体 */
     async handleRemoveEvidenceMedia(row) {
-      if (!(await this.confirmOperation("确认要移除该证据媒体吗？"))) {
-        return;
+      if (!(await this.confirmOperation('确认要移除该证据媒体吗？'))) {
+        return
       }
       // 等待确认对话框完全关闭
-      await this.delay(100);
+      await this.delay(100)
       // 鼠标切换为等待状态
-      const previousCursor = document.body.style.cursor;
-      document.body.style.cursor = "wait";
+      const previousCursor = document.body.style.cursor
+      document.body.style.cursor = 'wait'
       const loadingInstance = this.$loading({
         lock: true,
-        text: "正在移除证据媒体...",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.3)",
-      });
+        text: '正在移除证据媒体...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.3)'
+      })
       try {
         // 暂时与移除源证据功能相同
         const response = await removeEvidenceMedia(
           this.currentEditCase.id,
           row.mediaId
-        );
-        await this.delay(2000);
-        await this.loadEvidenceMediaList(this.currentEditCase.id);
-        this.showNotification(response);
+        )
+        await this.delay(2000)
+        await this.loadEvidenceMediaList(this.currentEditCase.id)
+        this.showNotification(response)
       } catch (error) {
-        this.handleError(error, "移除证据媒体失败");
+        this.handleError(error, '移除证据媒体失败')
       } finally {
-        this.restoreUIState(previousCursor, loadingInstance);
+        this.restoreUIState(previousCursor, loadingInstance)
       }
     },
 
     /** 检查媒体是否已经是源证据 */
     isMediaSourceEvidence(row) {
       if (!row || !row.mediaId || !this.sourceEvidenceMediaList) {
-        return false;
+        return false
       }
       return this.sourceEvidenceMediaList.some(
         (item) => item.mediaId === row.mediaId
-      );
-    },
-  },
-};
+      )
+    }
+  }
+}
 </script>
 
 <style scoped>
+/* 操作按钮容器 */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .media-relations-section {
   margin-top: 20px;
 }

@@ -4,7 +4,7 @@
       <el-collapse-item name="filters">
         <template slot="title">
           <span class="filter-title">
-            <i class="el-icon-arrow-right collapse-icon"></i>
+            <i class="el-icon-arrow-right collapse-icon" />
             高级筛选
           </span>
         </template>
@@ -39,7 +39,7 @@
         <div class="filter-row">
           <!-- 警情内容 -->
           <div class="filter-section">
-            <div class="section-label">警情内容</div>
+            <label class="section-label-inline">警情内容</label>
             <el-input
               v-model="filterParams.context"
               placeholder="报警内容"
@@ -49,7 +49,7 @@
 
           <!-- 报警电话 -->
           <div class="filter-section">
-            <div class="section-label">报警电话</div>
+            <label class="section-label-inline">报警电话</label>
             <el-input
               v-model="filterParams.tel"
               placeholder="报警电话"
@@ -61,22 +61,22 @@
         <div class="filter-row">
           <!-- 处警组织 -->
           <div class="filter-section org-section">
-            <div class="section-label">处警组织</div>
+            <label class="section-label-inline">处警组织</label>
             <treeselect
               v-model="filterParams.orgId"
               :options="orgOptions"
               placeholder="请选择处警组织"
-              @input="handleOrgChange"
               :append-to-body="true"
               :open-on-focus="false"
               :editable="false"
               :disable="false"
+              @input="handleOrgChange"
             />
           </div>
 
           <!-- 处警人员 -->
           <div class="filter-section">
-            <div class="section-label">处警人员</div>
+            <label class="section-label-inline">处警人员</label>
             <el-select
               v-model="filterParams.processPoliceIds"
               placeholder="请选择处警人员"
@@ -102,9 +102,9 @@
 </template>
 
 <script>
-import Treeselect from '@riophae/vue-treeselect';
-import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import { listUser } from '@/api/admin/sys-user';
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import { listUser } from '@/api/admin/sys-user'
 
 export default {
   name: 'AdvancedFilterPanel',
@@ -134,13 +134,13 @@ export default {
         orgId: undefined,
         processPoliceIds: []
       }
-    };
+    }
   },
   methods: {
     handleTimeRangeToggle(range) {
       if (!range.enabled) {
         // 清空该时间范围的数据
-        this.$set(this.timeValues, range.key, null);
+        this.$set(this.timeValues, range.key, null)
       }
       // 移除立即查询，等待用户点击"搜索"按钮
     },
@@ -149,216 +149,92 @@ export default {
     },
     handleOrgChange(orgId) {
       // 当组织变化时，清空人员选择并加载该组织下的人员
-      this.filterParams.processPoliceIds = [];
+      this.filterParams.processPoliceIds = []
       if (orgId) {
-        this.loadUserOptions(orgId);
+        this.loadUserOptions(orgId)
       } else {
-        this.userOptions = [];
+        this.userOptions = []
       }
     },
     loadUserOptions(orgId) {
       listUser({ orgId: '/' + orgId + '/' })
         .then(response => {
-          this.userOptions = response.data.list || [];
+          this.userOptions = response.data.list || []
         })
         .catch(error => {
-          console.error('获取用户列表失败:', error);
-          this.userOptions = [];
-        });
+          console.error('获取用户列表失败:', error)
+          this.userOptions = []
+        })
     },
     handleApply() {
-      this.$emit('apply', this.getFilterData());
+      this.$emit('apply', this.getFilterData())
     },
     handleReset() {
       // 重置所有筛选条件
       this.timeRanges.forEach(range => {
-        range.enabled = false;
-      });
-      this.timeValues = {};
-      this.userOptions = [];
+        range.enabled = false
+      })
+      this.timeValues = {}
+      this.userOptions = []
       this.filterParams = {
         context: undefined,
         tel: undefined,
         orgId: undefined,
         processPoliceIds: []
-      };
-      this.$emit('reset');
+      }
+      this.$emit('reset')
     },
     getFilterData() {
-      const data = { ...this.filterParams };
+      const data = { ...this.filterParams }
 
       // 处理时间范围 - 移除字段名中的 'Range' 部分
       this.timeRanges.forEach(range => {
         if (range.enabled && this.timeValues[range.key]) {
-          const [start, end] = this.timeValues[range.key];
+          const [start, end] = this.timeValues[range.key]
           // 将 reportTimeRange -> reportTime, receiveTimeRange -> receiveTime 等
-          const fieldKey = range.key.replace('Range', '');
-          data[fieldKey + 'Start'] = start;
-          data[fieldKey + 'End'] = end;
+          const fieldKey = range.key.replace('Range', '')
+          data[fieldKey + 'Start'] = start
+          data[fieldKey + 'End'] = end
         }
-      });
+      })
 
-      return data;
+      return data
     },
     emitFilterChange() {
-      this.$emit('filter-change', this.getFilterData());
+      this.$emit('filter-change', this.getFilterData())
     }
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/tokens/index.scss';
+// ========== 本组件样式说明 ==========
+// 以下样式已在全局样式中定义，供所有页面共享使用：
+// 全局样式位置: src/styles/components/forms.scss
+//
+// 高级筛选面板样式：
+// - .advanced-filter-panel (折叠面板基础样式)
+// - .filter-title (筛选标题样式)
+// - .filter-section-full (全宽筛选区块)
+// - .section-label (独立区块标签)
+// - .section-label-inline (行内标签样式)
+// - .time-range-group (时间范围选择组)
+// - .time-range-item (时间范围选择项)
+//
+// 表单行内布局工具类：
+// - .filter-row (表单行容器 - 多列布局)
+// - .filter-section (表单区块 - 标签和输入框在同一行)
+// - 输入组件的 flex 布局样式
+//
+// Treeselect 下拉菜单样式已在 forms.scss 文件开头定义
+// ========== 本组件保留的特定样式 ==========
 
-.advanced-filter-panel {
-  border: none;
-  border-radius: 0;
-  overflow: hidden;
-
-  ::v-deep .el-collapse-item__header {
-    height: 40px;
-    background-color: $law-bg-default;
-    border: none; // 移除顶部边框
-    border-radius: 0;
-    padding: 0 $spacing-4;
-
-    &:hover {
-      background-color: darken($law-bg-default, 2%);
-    }
-  }
-
-  ::v-deep .el-collapse-item__wrap {
-    border: none;
-    background-color: transparent;
-  }
-
-  ::v-deep .el-collapse-item__content {
-    padding: $spacing-4;
-  }
-}
-
-.filter-title {
-  display: flex;
-  align-items: center;
-  gap: $spacing-2;
-  font-weight: $font-weight-medium;
-  color: $law-gray-700;
-
-  .collapse-icon {
-    color: $law-gray-500;
-    transition: transform 0.3s;
-    font-size: 12px;
-  }
-}
-
-// 折叠面板展开时旋转图标
-::v-deep .el-collapse-item.is-active .filter-title .collapse-icon {
-  transform: rotate(90deg);
-}
-
-.filter-section {
-  margin-bottom: $spacing-5;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
-.filter-section-full {
-  width: 100%;
-}
-
-.filter-row {
-  display: flex;
-  gap: $spacing-5;
-  margin-bottom: $spacing-5;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  .filter-section {
-    flex: 1;
-    margin-bottom: 0;
-    min-width: 0;
-  }
-}
-
-.section-label {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $law-gray-700;
-  margin-bottom: $spacing-3;
-}
-
-.time-range-group {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-3;
-}
-
-.time-range-item {
-  display: flex;
-  align-items: center;
-  gap: $spacing-3;
-
-  ::v-deep .el-checkbox__label {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    color: $law-gray-700;
-  }
-
-  .time-range-picker {
-    flex: 1;
-    min-width: 250px;
-  }
-}
-
-.filter-row {
-  ::v-deep .el-input,
-  ::v-deep .el-select,
-  ::v-deep .vue-treeselect {
-    width: 100%;
-  }
-}
-
+// 全宽度工具类
 .full-width {
   width: 100%;
 }
 
-// Treeselect 样式调整 - 确保下拉菜单向上弹出
-::v-deep .vue-treeselect {
-  .vue-treeselect__control {
-    border-radius: 4px;
-  }
-
-  // 当下拉菜单向上弹出时
-  &.vue-treeselect--open {
-    .vue-treeselect__menu {
-      // 让菜单相对于视口定位，避免被父容器裁剪
-      position: fixed;
-      z-index: 9999;
-    }
-  }
-}
-
-// 确保treeselect下拉菜单能够正确显示在body上
-::v-deep .vue-treeselect__menu-container {
-  &.vue-treeselect__menu-container--absolute {
-    position: fixed !important;
-  }
-}
-
-// ========== 注意：通用字体规范已移至全局样式 ==========
-// 以下字体规范现已定义在 src/styles/components/forms.scss 中：
-// - 输入框内容、Placeholder、焦点状态
-// - 下拉列表选项（悬停、选中、禁用）
-// - 组织树节点（默认、高亮、禁用）
-// - 日期选择器样式
-// - Treeselect 垂直对齐修复
-//
-// 本文件只保留警情页面特有的布局样式。
-//
-
+// 组件特定的类名（如需自定义样式可在此添加）
+// .org-section {}
 </style>
 

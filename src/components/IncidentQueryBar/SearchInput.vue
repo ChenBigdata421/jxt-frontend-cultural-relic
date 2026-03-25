@@ -1,5 +1,5 @@
 <template>
-  <div class="search-input-wrapper">
+  <div class="search-section">
     <div class="quick-search-form">
       <div class="search-row">
         <div class="search-item">
@@ -86,24 +86,24 @@ export default {
         status: undefined,
         isRelation: undefined
       }
-    };
+    }
   },
   methods: {
     getSearchParams() {
       // 获取过滤空值后的搜索参数（不显示警告）
-      const searchParams = {};
+      const searchParams = {}
       Object.keys(this.searchForm).forEach(key => {
-        const value = this.searchForm[key];
+        const value = this.searchForm[key]
         if (value !== undefined && value !== null && value !== '') {
-          searchParams[key] = value;
+          searchParams[key] = value
         }
-      });
-      return searchParams;
+      })
+      return searchParams
     },
     handleSearch() {
       // 获取搜索参数（不显示警告，空参数将筛选全部数据）
-      const searchParams = this.getSearchParams();
-      this.$emit('search', searchParams);
+      const searchParams = this.getSearchParams()
+      this.$emit('search', searchParams)
     },
     handleReset() {
       this.searchForm = {
@@ -112,75 +112,9 @@ export default {
         name: undefined,
         status: undefined,
         isRelation: undefined
-      };
-      this.$emit('reset');
+      }
+      this.$emit('reset')
     }
   }
-};
-</script>
-
-<style lang="scss" scoped>
-@import '@/styles/tokens/index.scss';
-
-.search-input-wrapper {
-  width: 100%;
-
-  .quick-search-form {
-    background-color: transparent;
-    padding: 0;
-    border-radius: 0;
-    border: none;
-
-    .search-row {
-      display: flex;
-      gap: $spacing-4;
-      margin-bottom: $spacing-3;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-
-      .search-item {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        gap: $spacing-2;
-        min-width: 0; // 允许内容收缩
-
-        label {
-          white-space: nowrap;
-          font-size: $font-size-sm;
-          font-weight: $font-weight-medium;
-          color: $law-gray-700;
-          width: 80px;
-          flex-shrink: 0;
-          text-align: right;
-          padding-right: $spacing-1;
-        }
-
-        .el-input,
-        .el-select {
-          flex: 1;
-          min-width: 0;
-        }
-
-        // 确保输入框的最小宽度
-        .el-input {
-          min-width: 120px;
-        }
-
-        .el-select {
-          min-width: 140px;
-        }
-      }
-    }
-  }
-
-  // ========== 注意：通用字体规范已移至全局样式 ==========
-  // 以下字体规范现已定义在 src/styles/components/forms.scss 中：
-  // - 输入框内容、Placeholder、焦点状态
-  // - 下拉列表选项（悬停、选中、禁用）
-  //
-  // 本文件只保留警情页面特有的布局样式。
 }
-</style>
+</script>

@@ -37,59 +37,22 @@
 
         <!-- 其他筛选条件 - 两列布局 -->
         <div class="filter-row">
-          <!-- 组织部门 -->
-          <div class="filter-section org-section">
-            <label class="section-label-inline">组织部门</label>
-            <treeselect
-              v-model="filterParams.orgId"
-              :options="orgOptions"
-              placeholder="请选择组织部门"
-              :append-to-body="true"
-              :open-on-focus="false"
-              @input="handleOrgChange"
-            />
-          </div>
-
-          <!-- 警员 -->
+          <!-- 档案描述 -->
           <div class="filter-section">
-            <label class="section-label-inline">警员</label>
-            <el-select
-              v-model="filterParams.writPoliceIds"
-              placeholder="请选择警员"
-              clearable
-              multiple
-              collapse-tags
-              filterable
-              class="full-width"
-              :popper-append-to-body="true"
-            >
-              <el-option
-                v-for="item in userOptions"
-                :key="item.userId"
-                :label="item.userName"
-                :value="item.userId"
-              />
-            </el-select>
-          </div>
-        </div>
-
-        <div class="filter-row">
-          <!-- 文书地址 -->
-          <div class="filter-section">
-            <label class="section-label-inline">文书地址</label>
+            <label class="section-label-inline">档案描述</label>
             <el-input
-              v-model="filterParams.writAddress"
-              placeholder="文书地址"
+              v-model="filterParams.description"
+              placeholder="档案描述"
               clearable
             />
           </div>
 
-          <!-- 文书来源 -->
+          <!-- 备注信息 -->
           <div class="filter-section">
-            <label class="section-label-inline">文书来源</label>
+            <label class="section-label-inline">备注信息</label>
             <el-input
-              v-model="filterParams.writSource"
-              placeholder="文书来源"
+              v-model="filterParams.remarks"
+              placeholder="备注信息"
               clearable
             />
           </div>
@@ -100,89 +63,56 @@
 </template>
 
 <script>
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import { listUser } from '@/api/admin/sys-user'
-
 export default {
-  name: 'WritAdvancedFilterPanel',
-  components: {
-    Treeselect
-  },
-  props: {
-    orgOptions: {
-      type: Array,
-      default: () => []
-    }
-  },
+  name: 'AdvancedFilterPanel',
   data() {
     return {
       activeNames: [], // 默认折叠
       timeRanges: [
-        { key: 'writTimeRange', label: '开书时间', enabled: false },
         { key: 'createdAtRange', label: '创建时间', enabled: false },
-        { key: 'updatedAtRange', label: '更新时间', enabled: false }
+        { key: 'expirationTimeRange', label: '过期时间', enabled: false }
       ],
       timeValues: {},
-      userOptions: [],
       filterParams: {
-        orgId: undefined,
-        writPoliceIds: [],
-        writAddress: undefined,
-        writSource: undefined
+        description: undefined,
+        remarks: undefined
       }
     }
   },
   methods: {
     handleTimeRangeToggle(range) {
       if (!range.enabled) {
+        // 清空该时间范围的数据
         this.$set(this.timeValues, range.key, null)
       }
+      // 移除立即查询，等待用户点击"搜索"按钮
     },
     handleTimeChange(key) {
-      // 等待用户点击"搜索"按钮
+      // 移除立即查询，等待用户点击"搜索"按钮
     },
-    handleOrgChange(orgId) {
-      // 当组织变化时，清空警员选择并加载该组织下的人员
-      this.filterParams.writPoliceIds = []
-      if (orgId) {
-        this.loadUserOptions(orgId)
-      } else {
-        this.userOptions = []
-      }
-    },
-    loadUserOptions(orgId) {
-      listUser({ orgId: '/' + orgId + '/' })
-        .then(response => {
-          this.userOptions = response.data.list || []
-        })
-        .catch(error => {
-          console.error('获取用户列表失败:', error)
-          this.userOptions = []
-        })
+    handleApply() {
+      this.$emit('apply', this.getFilterData())
     },
     handleReset() {
+      // 重置所有筛选条件
       this.timeRanges.forEach(range => {
         range.enabled = false
       })
       this.timeValues = {}
-      this.userOptions = []
       this.filterParams = {
-        orgId: undefined,
-        writPoliceIds: [],
-        writAddress: undefined,
-        writSource: undefined
+        description: undefined,
+        remarks: undefined
       }
       this.$emit('reset')
     },
     getFilterData() {
       const data = { ...this.filterParams }
 
-      // 处理时间范围
+      // 处理时间范围 - 移除字段名中的 'Range' 部分
       this.timeRanges.forEach(range => {
         if (range.enabled && this.timeValues[range.key]) {
           const [start, end] = this.timeValues[range.key]
-          // 将 writTimeRange -> writTime, createdAtRange -> createdAt 等
+          // 将 createdAtRange -> createdAt, expirationTimeRange -> expirationTime 等
           const fieldKey = range.key.replace('Range', '')
           data[fieldKey + 'Start'] = start
           data[fieldKey + 'End'] = end
@@ -190,6 +120,9 @@ export default {
       })
 
       return data
+    },
+    emitFilterChange() {
+      this.$emit('filter-change', this.getFilterData())
     }
   }
 }
@@ -204,8 +137,8 @@ export default {
 // - .advanced-filter-panel (折叠面板基础样式)
 // - .filter-title (筛选标题样式)
 // - .filter-section-full (全宽筛选区块)
-// - .section-label (独立区块标签 - 用于时间范围等)
-// - .section-label-inline (行内标签 - 用于两列布局)
+// - .section-label (独立区块标签)
+// - .section-label-inline (行内标签样式)
 // - .time-range-group (时间范围选择组)
 // - .time-range-item (时间范围选择项)
 //
@@ -214,6 +147,7 @@ export default {
 // - .filter-section (表单区块 - 标签和输入框在同一行)
 // - 输入组件的 flex 布局样式
 //
-// Treeselect 下拉菜单样式已在 forms.scss 文件开头定义
-// ========== 本组件暂无特定样式 ==========
+// ========== 本组件保留的特定样式 ==========
+
+// 组件特定的类名（如需自定义样式可在此添加）
 </style>

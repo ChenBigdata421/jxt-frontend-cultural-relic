@@ -37,28 +37,28 @@
 
         <!-- 其他筛选条件 - 两列布局 -->
         <div class="filter-row">
-          <!-- 组织部门 -->
+          <!-- 单位组织 -->
           <div class="filter-section org-section">
-            <label class="section-label-inline">组织部门</label>
+            <label class="section-label-inline">单位组织</label>
             <treeselect
               v-model="filterParams.orgId"
               :options="orgOptions"
-              placeholder="请选择组织部门"
+              placeholder="请选择单位组织"
               :append-to-body="true"
               :open-on-focus="false"
+              :editable="false"
+              :disable="false"
               @input="handleOrgChange"
             />
           </div>
 
-          <!-- 警员 -->
+          <!-- 拍摄警员 -->
           <div class="filter-section">
-            <label class="section-label-inline">警员</label>
+            <label class="section-label-inline">拍摄警员</label>
             <el-select
-              v-model="filterParams.writPoliceIds"
-              placeholder="请选择警员"
+              v-model="filterParams.policeId"
+              placeholder="请选择拍摄警员"
               clearable
-              multiple
-              collapse-tags
               filterable
               class="full-width"
               :popper-append-to-body="true"
@@ -74,22 +74,64 @@
         </div>
 
         <div class="filter-row">
-          <!-- 文书地址 -->
+          <!-- 存储方式 -->
           <div class="filter-section">
-            <label class="section-label-inline">文书地址</label>
-            <el-input
-              v-model="filterParams.writAddress"
-              placeholder="文书地址"
+            <label class="section-label-inline">存储方式</label>
+            <el-select
+              v-model="filterParams.storageType"
+              placeholder="请选择存储方式"
               clearable
+              class="full-width"
+            >
+              <el-option
+                v-for="dict in storageTypeOptions"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+              />
+            </el-select>
+          </div>
+
+          <!-- 终端类型 -->
+          <div class="filter-section">
+            <label class="section-label-inline">终端类型</label>
+            <el-select
+              v-model="filterParams.terminalType"
+              placeholder="请选择终端类型"
+              clearable
+              class="full-width"
+            >
+              <el-option
+                v-for="dict in terminalTypeOptions"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+              />
+            </el-select>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <!-- 执法类型 -->
+          <div class="filter-section enforce-type-section">
+            <label class="section-label-inline">执法类型</label>
+            <treeselect
+              v-model="filterParams.enforceType"
+              :options="enforceTypeOptions"
+              :normalizer="normalizeEnforceType"
+              placeholder="请选择执法类型"
+              :append-to-body="true"
+              :open-on-focus="false"
+              :editable="false"
             />
           </div>
 
-          <!-- 文书来源 -->
+          <!-- 执法仪编号 -->
           <div class="filter-section">
-            <label class="section-label-inline">文书来源</label>
+            <label class="section-label-inline">执法仪编号</label>
             <el-input
-              v-model="filterParams.writSource"
-              placeholder="文书来源"
+              v-model="filterParams.recorderNo"
+              placeholder="请输入执法仪编号"
               clearable
             />
           </div>
@@ -105,12 +147,24 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { listUser } from '@/api/admin/sys-user'
 
 export default {
-  name: 'WritAdvancedFilterPanel',
+  name: 'MediaAdvancedFilterPanel',
   components: {
     Treeselect
   },
   props: {
     orgOptions: {
+      type: Array,
+      default: () => []
+    },
+    storageTypeOptions: {
+      type: Array,
+      default: () => []
+    },
+    enforceTypeOptions: {
+      type: Array,
+      default: () => []
+    },
+    terminalTypeOptions: {
       type: Array,
       default: () => []
     }
@@ -119,32 +173,35 @@ export default {
     return {
       activeNames: [], // 默认折叠
       timeRanges: [
-        { key: 'writTimeRange', label: '开书时间', enabled: false },
-        { key: 'createdAtRange', label: '创建时间', enabled: false },
-        { key: 'updatedAtRange', label: '更新时间', enabled: false }
+        { key: 'captureTimeRange', label: '拍摄时间', enabled: false },
+        { key: 'uploadTimeRange', label: '导入时间', enabled: false }
       ],
       timeValues: {},
       userOptions: [],
       filterParams: {
         orgId: undefined,
-        writPoliceIds: [],
-        writAddress: undefined,
-        writSource: undefined
+        policeId: undefined,
+        storageType: undefined,
+        terminalType: undefined,
+        enforceType: undefined,
+        recorderNo: undefined
       }
     }
   },
   methods: {
     handleTimeRangeToggle(range) {
       if (!range.enabled) {
+        // 清空该时间范围的数据
         this.$set(this.timeValues, range.key, null)
       }
+      // 移除立即查询，等待用户点击"搜索"按钮
     },
     handleTimeChange(key) {
-      // 等待用户点击"搜索"按钮
+      // 移除立即查询，等待用户点击"搜索"按钮
     },
     handleOrgChange(orgId) {
-      // 当组织变化时，清空警员选择并加载该组织下的人员
-      this.filterParams.writPoliceIds = []
+      // 当组织变化时，清空人员选择并加载该组织下的人员
+      this.filterParams.policeId = undefined
       if (orgId) {
         this.loadUserOptions(orgId)
       } else {
@@ -161,7 +218,21 @@ export default {
           this.userOptions = []
         })
     },
+    normalizeEnforceType(node) {
+      if (node.children && !node.children.length) {
+        delete node.children
+      }
+      return {
+        id: node.id,
+        label: node.enforcementTypeName || node.label || '未知',
+        children: node.children
+      }
+    },
+    handleApply() {
+      this.$emit('apply', this.getFilterData())
+    },
     handleReset() {
+      // 重置所有筛选条件
       this.timeRanges.forEach(range => {
         range.enabled = false
       })
@@ -169,20 +240,22 @@ export default {
       this.userOptions = []
       this.filterParams = {
         orgId: undefined,
-        writPoliceIds: [],
-        writAddress: undefined,
-        writSource: undefined
+        policeId: undefined,
+        storageType: undefined,
+        terminalType: undefined,
+        enforceType: undefined,
+        recorderNo: undefined
       }
       this.$emit('reset')
     },
     getFilterData() {
       const data = { ...this.filterParams }
 
-      // 处理时间范围
+      // 处理时间范围 - 移除字段名中的 'Range' 部分
       this.timeRanges.forEach(range => {
         if (range.enabled && this.timeValues[range.key]) {
           const [start, end] = this.timeValues[range.key]
-          // 将 writTimeRange -> writTime, createdAtRange -> createdAt 等
+          // 将 captureTimeRange -> captureTime, uploadTimeRange -> uploadTime 等
           const fieldKey = range.key.replace('Range', '')
           data[fieldKey + 'Start'] = start
           data[fieldKey + 'End'] = end
@@ -190,6 +263,9 @@ export default {
       })
 
       return data
+    },
+    emitFilterChange() {
+      this.$emit('filter-change', this.getFilterData())
     }
   }
 }
@@ -204,16 +280,20 @@ export default {
 // - .advanced-filter-panel (折叠面板基础样式)
 // - .filter-title (筛选标题样式)
 // - .filter-section-full (全宽筛选区块)
-// - .section-label (独立区块标签 - 用于时间范围等)
-// - .section-label-inline (行内标签 - 用于两列布局)
+// - .section-label (独立区块标签)
 // - .time-range-group (时间范围选择组)
 // - .time-range-item (时间范围选择项)
 //
 // 表单行内布局工具类：
 // - .filter-row (表单行容器 - 多列布局)
 // - .filter-section (表单区块 - 标签和输入框在同一行)
+// - .section-label-inline (行内标签样式)
 // - 输入组件的 flex 布局样式
 //
 // Treeselect 下拉菜单样式已在 forms.scss 文件开头定义
-// ========== 本组件暂无特定样式 ==========
+// ========== 本组件保留的特定样式 ==========
+
+// 组件特定的类名（如需自定义样式可在此添加）
+// .org-section {}
+// .enforce-type-section {}
 </style>

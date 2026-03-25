@@ -3,13 +3,12 @@
     <div v-if="selectedCount > 0" class="batch-action-bar">
       <div class="selection-info">
         <el-checkbox
-          :indeterminate="isIndeterminate"
           v-model="allSelected"
+          :indeterminate="isIndeterminate"
           @change="handleSelectAllChange"
         >
           已选择 {{ selectedCount }} 项
         </el-checkbox>
-      </div>
       </div>
     </div>
   </transition>
@@ -34,10 +33,10 @@ export default {
   },
   methods: {
     handleSelectAllChange(val) {
-      this.$emit('select-all-change', val);
+      this.$emit('select-all-change', val)
     }
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>
@@ -48,8 +47,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: $spacing-3 $spacing-4;
-  background-color: rgba($law-primary, 0.08);
-  border: 1px solid rgba($law-primary, 0.2);
+  background-color: $law-gray-50;
+  border: 1px solid $law-gray-200;
   border-radius: 4px;
   margin-bottom: $spacing-4;
 

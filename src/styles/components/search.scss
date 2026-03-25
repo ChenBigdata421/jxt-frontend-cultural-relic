@@ -1,0 +1,52 @@
+// ========== 搜索区域通用样式 ==========
+// 用于页面顶部的快速搜索区域
+// 更新日期：2026-03-24
+
+// 搜索区域容器
+.search-section {
+  margin-bottom: $spacing-4;
+
+  .quick-search-form {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: $spacing-3;
+      margin-bottom: $spacing-3;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .search-item {
+        flex: 1;
+        min-width: 180px;
+        display: flex;
+        align-items: center;
+        gap: $spacing-3;
+
+        label {
+          white-space: nowrap;
+          font-size: $font-size-sm;
+          font-weight: $font-weight-medium;
+          color: $law-gray-700;
+          width: 80px;
+          flex-shrink: 0;
+          text-align: right;
+        }
+      }
+
+      // 使用 ::v-deep 确保样式正确应用到 Element UI 组件
+      ::v-deep .el-input,
+      ::v-deep .el-select {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+  }
+}

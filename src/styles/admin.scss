@@ -78,7 +78,7 @@
   .el-table__fixed-header-wrapper {
     th {
       word-break: break-word;
-      background-color: #f8f8f9;
+      background-color: #ffffff;
       color: #515a6e;
       height: 40px;
       font-size: 13px;
@@ -288,8 +288,13 @@
 // Drawer 抽屉增加滚动条
 .el-drawer {
   overflow-y: scroll;
-  
 }
+
+// 抽屉头部样式 - 覆盖 Element UI 默认的灰色 #72767b
+.el-drawer__header {
+  color: #1A1A1A !important;  // 深黑色，与对话框标题一致
+}
+
 .delete-popconfirm{
 margin-left: 10px;
 }

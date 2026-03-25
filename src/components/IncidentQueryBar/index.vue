@@ -16,7 +16,7 @@
       <!-- 快捷筛选 -->
       <div class="quick-filter-section">
         <div class="filter-row">
-          <span class="section-label">快捷筛选</span>
+          <span class="section-label-inline">快捷筛选</span>
           <QuickFilters
             v-model="quickFilter"
             @change="handleQuickFilterChange"
@@ -59,9 +59,9 @@
 </template>
 
 <script>
-import SearchInput from './SearchInput.vue';
-import QuickFilters from './QuickFilters.vue';
-import AdvancedFilterPanel from './AdvancedFilterPanel.vue';
+import SearchInput from './SearchInput.vue'
+import QuickFilters from './QuickFilters.vue'
+import AdvancedFilterPanel from './AdvancedFilterPanel.vue'
 
 export default {
   name: 'IncidentQueryBar',
@@ -87,56 +87,56 @@ export default {
   data() {
     return {
       quickFilter: 'all'
-    };
+    }
   },
   methods: {
     handleQuickSearch(searchParams) {
       // 快速搜索：直接传递搜索参数
-      this.$emit('search', searchParams);
+      this.$emit('search', searchParams)
     },
     handleQuickSearchReset() {
-      this.$emit('quick-search-reset');
+      this.$emit('quick-search-reset')
     },
     handleQuickFilterChange(filterType) {
-      this.$emit('filter-change', { filterType });
+      this.$emit('filter-change', { filterType })
     },
     handleAdvancedFilterChange(filterData) {
       this.$emit('filter-change', {
         filterType: 'advanced',
         ...filterData
-      });
+      })
     },
     handleAdvancedFilterReset() {
-      this.$emit('filter-reset');
+      this.$emit('filter-reset')
     },
     handleGlobalSearch() {
       // 全局搜索：合并快速搜索和高级筛选的条件
-      const quickSearchParams = this.$refs.quickSearch.getSearchParams();
-      const advancedParams = this.$refs.advancedFilter.getFilterData();
+      const quickSearchParams = this.$refs.quickSearch.getSearchParams()
+      const advancedParams = this.$refs.advancedFilter.getFilterData()
 
       // 合并所有搜索条件并触发搜索
       const allParams = {
         ...quickSearchParams,
         ...advancedParams
-      };
+      }
 
-      this.$emit('search', allParams);
+      this.$emit('search', allParams)
     },
     handleGlobalReset() {
       // 全局重置：重置所有筛选条件
-      this.quickFilter = 'all';
+      this.quickFilter = 'all'
       if (this.$refs.advancedFilter) {
-        this.$refs.advancedFilter.handleReset();
+        this.$refs.advancedFilter.handleReset()
       }
       if (this.$refs.quickSearch) {
-        this.$refs.quickSearch.handleReset();
+        this.$refs.quickSearch.handleReset()
       }
     },
     reset() {
-      this.handleGlobalReset();
+      this.handleGlobalReset()
     }
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>
@@ -144,23 +144,8 @@ export default {
 
 .incident-query-bar {
   .filter-container {
-    background-color: $law-bg-paper;
-    border-radius: 4px;
-    border: 1px solid $law-gray-200;
-    padding: $spacing-4;
-
-    .search-section {
-      margin-bottom: $spacing-4;
-    }
-
     .quick-filter-section {
       margin-bottom: $spacing-4;
-
-      .filter-row {
-        display: flex;
-        align-items: center;
-        gap: $spacing-3;
-      }
 
       .section-label {
         white-space: nowrap;

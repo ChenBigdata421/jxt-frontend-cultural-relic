@@ -36,6 +36,18 @@
   display: flex;
   align-items: center;
   gap: $spacing-2;
+  flex: 1;
+  height: 100%; // 填满父容器高度（48px）
+  margin: 0 !important; // 清除可能的默认 margin
+  transform: translateY(1px) !important; // 微调：整体向下移动 1px，补偿中文字体视觉偏上
+
+  // 使用最小 line-height，让 flex 的 align-items: center 来控制垂直居中
+  // 这样可以实现真正的视觉居中，而不是基线居中
+  .section-icon,
+  .section-title,
+  .section-badge {
+    line-height: 1 !important;
+  }
 
   .section-icon {
     font-size: $font-size-lg;  // 18px ✅
@@ -46,18 +58,19 @@
     font-weight: $font-weight-semibold;  // 600 ✅
     font-size: $font-size-md;            // 16px - 符合规范要求
     color: $law-gray-900;                // #1A1A1A ✅
-    line-height: $line-height-normal;    // 1.5 ✅
   }
 
   .section-badge {
-    margin-left: auto;
-    padding: 2px 8px;
+    margin-left: $spacing-3; // 固定间距，不是 auto
+    padding: 4px 8px;
     background-color: rgba($law-primary, 0.1);
     color: $law-primary;
     font-size: $font-size-xs;            // 12px ✅
     font-weight: $font-weight-normal;    // 400 ✅
-    line-height: $line-height-normal;    // 1.5 ✅
     border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -122,7 +135,7 @@
   align-items: center;
   margin-bottom: $spacing-4;
   padding: $spacing-3 $spacing-4;
-  background-color: $law-bg-default;
+  background-color: $law-gray-50;
   border-radius: 4px;
 
   .left-actions {
@@ -268,10 +281,7 @@
     }
   }
 
-  // 复选框组样式 - 移除内部滚动，让 popover 统一管理
-  .el-checkbox-group {
-    // 不再设置 max-height 和 overflow-y，避免双滚动条
-  }
+  // 复选框组样式 - 不再设置 max-height 和 overflow-y，让 popover 统一管理滚动
 }
 
 // 列设置 Popover 容器样式 - 响应式适配
@@ -362,7 +372,7 @@
 // 抽屉内容区域
 .drawer-content {
   padding: $spacing-5;      // 20px - 符合组件特定间距
-  height: calc(100vh - 120px);
+  height: calc(100vh - 180px);  // 减少高度，为底部操作栏预留空间（约60px）
   overflow-y: auto;
 
   // 自定义滚动条样式
@@ -389,28 +399,57 @@
 .drawer-footer {
   position: absolute;
   bottom: 0;
-  left: 0;
-  right: 0;
-  padding: $spacing-5;      // 20px
+  left: 20px;              // 左边距，让线条不紧贴左边缘
+  right: 20px;             // 右边距，让线条不紧贴右边缘
+  padding: 12px 0 20px 0;  // 上下内边距
   border-top: 1px solid $law-gray-200;
   background: $law-bg-paper;
-  text-align: right;
+  display: flex;
+  justify-content: center;  // 第一层抽屉默认居中对齐（单按钮）
+  align-items: center;
+  gap: $spacing-2;          // 8px - 统一按钮间距
   z-index: 1;
+}
 
-  // 按钮间距遵循全局按钮规范
-  .el-button + .el-button {
-    margin-left: $spacing-2;  // 8px
-  }
+// 第二层抽屉（媒体选择器）的底部操作栏：多按钮右对齐
+.media-selector-drawer .drawer-footer {
+  justify-content: flex-end;  // 第二层抽屉右对齐多按钮
 }
 
 // 第一层抽屉样式
 .media-drawer {
   z-index: 1000 !important;
+
+  // 抽屉主体容器 - 为绝对定位的 footer 提供定位上下文
+  ::v-deep .el-drawer__body {
+    position: relative;
+    height: 100%;
+  }
+
+  // 标题样式 - 与对话框标题保持一致，使用深黑色
+  ::v-deep .el-drawer__header {
+    .el-drawer__title {
+      color: #1A1A1A !important;  // 强制使用深黑色，与对话框标题一致
+    }
+  }
 }
 
 // 第二层抽屉样式 - 更高的 z-index
 .media-selector-drawer {
   z-index: 2000 !important;
+
+  // 抽屉主体容器 - 为绝对定位的 footer 提供定位上下文
+  ::v-deep .el-drawer__body {
+    position: relative;
+    height: 100%;
+  }
+
+  // 标题样式 - 与对话框标题保持一致，使用深黑色
+  ::v-deep .el-drawer__header {
+    .el-drawer__title {
+      color: #1A1A1A !important;  // 强制使用深黑色，与对话框标题一致
+    }
+  }
 }
 
 // 抽屉遮罩层样式
@@ -442,7 +481,7 @@
   .el-drawer__title {
     font-size: $font-size-lg;            // 18px
     font-weight: $font-weight-semibold;  // 600
-    color: $law-gray-900;                // #1A1A1A
+    color: $law-gray-900 !important;     // #1A1A1A - 强制使用深黑色，与对话框标题一致
     line-height: $line-height-normal;    // 1.5
   }
 }

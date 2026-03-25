@@ -37,25 +37,39 @@
 
         <!-- 其他筛选条件 - 两列布局 -->
         <div class="filter-row">
-          <!-- 组织部门 -->
-          <div class="filter-section org-section">
-            <label class="section-label-inline">组织部门</label>
-            <treeselect
-              v-model="filterParams.orgId"
-              :options="orgOptions"
-              placeholder="请选择组织部门"
-              :append-to-body="true"
-              :open-on-focus="false"
-              @input="handleOrgChange"
+          <!-- 案发地址 -->
+          <div class="filter-section">
+            <label class="section-label-inline">案发地址</label>
+            <el-input
+              v-model="filterParams.caseAddress"
+              placeholder="案发地址"
+              clearable
             />
           </div>
 
-          <!-- 警员 -->
+          <!-- 办案单位 -->
+          <div class="filter-section org-section">
+            <label class="section-label-inline">办案单位</label>
+            <treeselect
+              v-model="filterParams.caseOrgId"
+              :options="orgOptions"
+              placeholder="请选择办案单位"
+              :append-to-body="true"
+              :open-on-focus="false"
+              :editable="false"
+              :disable="false"
+              @input="handleOrgChange"
+            />
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <!-- 处警人员 -->
           <div class="filter-section">
-            <label class="section-label-inline">警员</label>
+            <label class="section-label-inline">处警人员</label>
             <el-select
-              v-model="filterParams.writPoliceIds"
-              placeholder="请选择警员"
+              v-model="filterParams.processPoliceIds"
+              placeholder="请选择处警人员"
               clearable
               multiple
               collapse-tags
@@ -72,28 +86,6 @@
             </el-select>
           </div>
         </div>
-
-        <div class="filter-row">
-          <!-- 文书地址 -->
-          <div class="filter-section">
-            <label class="section-label-inline">文书地址</label>
-            <el-input
-              v-model="filterParams.writAddress"
-              placeholder="文书地址"
-              clearable
-            />
-          </div>
-
-          <!-- 文书来源 -->
-          <div class="filter-section">
-            <label class="section-label-inline">文书来源</label>
-            <el-input
-              v-model="filterParams.writSource"
-              placeholder="文书来源"
-              clearable
-            />
-          </div>
-        </div>
       </el-collapse-item>
     </el-collapse>
   </div>
@@ -105,7 +97,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { listUser } from '@/api/admin/sys-user'
 
 export default {
-  name: 'WritAdvancedFilterPanel',
+  name: 'AdvancedFilterPanel',
   components: {
     Treeselect
   },
@@ -119,32 +111,32 @@ export default {
     return {
       activeNames: [], // 默认折叠
       timeRanges: [
-        { key: 'writTimeRange', label: '开书时间', enabled: false },
-        { key: 'createdAtRange', label: '创建时间', enabled: false },
-        { key: 'updatedAtRange', label: '更新时间', enabled: false }
+        { key: 'caseTimeRange', label: '案发时间', enabled: false },
+        { key: 'procTimeRange', label: '处警时间', enabled: false }
       ],
       timeValues: {},
       userOptions: [],
       filterParams: {
-        orgId: undefined,
-        writPoliceIds: [],
-        writAddress: undefined,
-        writSource: undefined
+        caseAddress: undefined,
+        caseOrgId: undefined,
+        processPoliceIds: []
       }
     }
   },
   methods: {
     handleTimeRangeToggle(range) {
       if (!range.enabled) {
+        // 清空该时间范围的数据
         this.$set(this.timeValues, range.key, null)
       }
+      // 移除立即查询，等待用户点击"搜索"按钮
     },
     handleTimeChange(key) {
-      // 等待用户点击"搜索"按钮
+      // 移除立即查询，等待用户点击"搜索"按钮
     },
     handleOrgChange(orgId) {
-      // 当组织变化时，清空警员选择并加载该组织下的人员
-      this.filterParams.writPoliceIds = []
+      // 当组织变化时，清空人员选择并加载该组织下的人员
+      this.filterParams.processPoliceIds = []
       if (orgId) {
         this.loadUserOptions(orgId)
       } else {
@@ -161,28 +153,31 @@ export default {
           this.userOptions = []
         })
     },
+    handleApply() {
+      this.$emit('apply', this.getFilterData())
+    },
     handleReset() {
+      // 重置所有筛选条件
       this.timeRanges.forEach(range => {
         range.enabled = false
       })
       this.timeValues = {}
       this.userOptions = []
       this.filterParams = {
-        orgId: undefined,
-        writPoliceIds: [],
-        writAddress: undefined,
-        writSource: undefined
+        caseAddress: undefined,
+        caseOrgId: undefined,
+        processPoliceIds: []
       }
       this.$emit('reset')
     },
     getFilterData() {
       const data = { ...this.filterParams }
 
-      // 处理时间范围
+      // 处理时间范围 - 移除字段名中的 'Range' 部分
       this.timeRanges.forEach(range => {
         if (range.enabled && this.timeValues[range.key]) {
           const [start, end] = this.timeValues[range.key]
-          // 将 writTimeRange -> writTime, createdAtRange -> createdAt 等
+          // 将 caseTimeRange -> caseTime, procTimeRange -> procTime 等
           const fieldKey = range.key.replace('Range', '')
           data[fieldKey + 'Start'] = start
           data[fieldKey + 'End'] = end
@@ -190,30 +185,20 @@ export default {
       })
 
       return data
+    },
+    emitFilterChange() {
+      this.$emit('filter-change', this.getFilterData())
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-// ========== 本组件样式说明 ==========
-// 以下样式已在全局样式中定义，供所有页面共享使用：
-// 全局样式位置: src/styles/components/forms.scss
-//
-// 高级筛选面板样式：
-// - .advanced-filter-panel (折叠面板基础样式)
-// - .filter-title (筛选标题样式)
-// - .filter-section-full (全宽筛选区块)
-// - .section-label (独立区块标签 - 用于时间范围等)
-// - .section-label-inline (行内标签 - 用于两列布局)
-// - .time-range-group (时间范围选择组)
-// - .time-range-item (时间范围选择项)
-//
-// 表单行内布局工具类：
-// - .filter-row (表单行容器 - 多列布局)
-// - .filter-section (表单区块 - 标签和输入框在同一行)
-// - 输入组件的 flex 布局样式
-//
-// Treeselect 下拉菜单样式已在 forms.scss 文件开头定义
-// ========== 本组件暂无特定样式 ==========
+// 全宽度工具类
+.full-width {
+  width: 100%;
+}
+
+// 组件特定的类名（如需自定义样式可在此添加）
+// .org-section {}
 </style>

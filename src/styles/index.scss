@@ -15,6 +15,7 @@
 @import './components/pagination.scss';
 @import './components/dialogs.scss';
 @import './components/forms.scss';
+@import './components/search.scss';
 @import './components/utilities.scss';
 
 body {
@@ -184,7 +185,11 @@ aside {
 }
 
 .filter-container {
-  padding-bottom: 10px;
+  background-color: $law-bg-paper;
+  border-radius: 4px;
+  border: 1px solid $law-gray-200;
+  padding: $spacing-4;
+  margin-bottom: $spacing-4;
 
   .filter-item {
     display: inline-block;

@@ -2,7 +2,7 @@
 
 // ========== 表格字体规范 ==========
 // 根据设计规范 5.2 表格字体规范
-::v-deep .el-table {
+.el-table {
   // 表头样式
   .el-table__header-wrapper {
     th {
@@ -41,6 +41,18 @@
     }
   }
 
+  // 右侧固定列特别处理：添加左边框
+  .el-table__fixed-right {
+    // 使用 Element UI 表格默认边框颜色，与普通列保持一致
+    border-left: 1px solid #dfe6ec;
+  }
+
+  // 左侧固定列特别处理：添加右边框
+  .el-table__fixed {
+    // 使用 Element UI 表格默认边框颜色，与普通列保持一致
+    border-right: 1px solid #dfe6ec;
+  }
+
   // 特别针对操作列（small-padding fixed-width class）
   th.small-padding,
   .el-table__fixed th.small-padding,
@@ -54,19 +66,86 @@
 
 // ========== 表格操作列样式 ==========
 // 普通列的操作按钮样式
-::v-deep .el-table .small-padding.fixed-width .cell,
+.el-table .small-padding.fixed-width .cell,
 // 固定列的操作按钮样式（fixed="left" 或 fixed="right"）
-::v-deep .el-table__fixed .small-padding.fixed-width .cell,
-::v-deep .el-table__fixed-right .small-padding.fixed-width .cell {
-  // 确保按钮横向排列，防止换行
-  display: inline-flex !important;
-  flex-wrap: nowrap !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 4px !important;
-  white-space: nowrap !important;
+.el-table__fixed .small-padding.fixed-width .cell,
+.el-table__fixed-right .small-padding.fixed-width .cell {
+  // 重置默认样式，确保单元格内容居中
+  text-align: center !important;
 
-  .el-button + .el-button {
-    margin-left: 0 !important; // 使用 gap 替代 margin
+  // 操作按钮容器（如 .action-buttons）
+  .action-buttons {
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 4px 8px !important;
+    // 确保容器宽度由内容决定，不受列宽影响
+    max-width: 100%;
+    width: auto !important;
+
+    // 清除 Element UI 按钮的默认间距
+    .el-button + .el-button {
+      margin-left: 0 !important;
+    }
+
+    // 每个按钮不伸缩，宽度完全由自身内容决定
+    .el-button {
+      flex: 0 0 auto !important;
+      margin: 0 !important;
+      white-space: nowrap;
+      padding: 5px 8px !important;
+
+      i {
+        margin-right: 3px !important;
+        margin-left: 0 !important;
+      }
+
+      span {
+        white-space: nowrap !important;
+      }
+    }
+  }
+
+  // 直接在 .cell 内的按钮（无 .action-buttons 容器的情况）
+  .el-button {
+    margin: 0 !important;
+    min-width: auto !important;
+    width: auto !important;
+  }
+}
+
+// ========== 状态单元格样式 ==========
+// 用于表格中的状态列，显示带颜色圆点的状态
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+
+    &.pending {
+      background-color: #909399;
+    }
+
+    &.processing {
+      background-color: #409eff;
+    }
+
+    &.completed {
+      background-color: #67c23a;
+    }
+
+    &.archived {
+      background-color: #e6a23c;
+    }
+  }
+
+  .status-text {
+    font-size: $font-size-sm;
   }
 }

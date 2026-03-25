@@ -1,23 +1,23 @@
 <template>
-  <div class="writ-query-bar">
+  <div class="media-query-bar">
     <!-- 统一的筛选容器 -->
     <div class="filter-container">
       <!-- 快速搜索区域 -->
-      <div class="query-section">
-        <SearchInput
+      <div class="search-section">
+        <MediaSearchInput
           ref="quickSearch"
-          :writ-type-options="writTypeOptions"
-          :relation-status-options="relationStatusOptions"
+          :media-cate-options="mediaCateOptions"
+          :is-archived-options="isArchivedOptions"
           @search="handleQuickSearch"
           @reset="handleQuickSearchReset"
         />
       </div>
 
       <!-- 快捷筛选 -->
-      <div class="query-section">
+      <div class="quick-filter-section">
         <div class="filter-row">
           <span class="section-label-inline">快捷筛选</span>
-          <QuickFilters
+          <MediaQuickFilters
             v-model="quickFilter"
             @change="handleQuickFilterChange"
           />
@@ -25,10 +25,13 @@
       </div>
 
       <!-- 高级筛选面板 -->
-      <div class="query-section">
-        <AdvancedFilterPanel
+      <div class="advanced-filter-section">
+        <MediaAdvancedFilterPanel
           ref="advancedFilter"
           :org-options="orgOptions"
+          :storage-type-options="storageTypeOptions"
+          :enforce-type-options="enforceTypeOptions"
+          :terminal-type-options="terminalTypeOptions"
           @filter-change="handleAdvancedFilterChange"
           @reset="handleAdvancedFilterReset"
         />
@@ -59,27 +62,39 @@
 </template>
 
 <script>
-import SearchInput from './SearchInput.vue'
-import QuickFilters from './QuickFilters.vue'
-import AdvancedFilterPanel from './AdvancedFilterPanel.vue'
+import MediaSearchInput from './MediaSearchInput.vue'
+import MediaQuickFilters from './MediaQuickFilters.vue'
+import MediaAdvancedFilterPanel from './MediaAdvancedFilterPanel.vue'
 
 export default {
-  name: 'WritQueryBar',
+  name: 'MediaQueryBar',
   components: {
-    SearchInput,
-    QuickFilters,
-    AdvancedFilterPanel
+    MediaSearchInput,
+    MediaQuickFilters,
+    MediaAdvancedFilterPanel
   },
   props: {
-    writTypeOptions: {
+    mediaCateOptions: {
       type: Array,
       default: () => []
     },
-    relationStatusOptions: {
+    isArchivedOptions: {
       type: Array,
       default: () => []
     },
     orgOptions: {
+      type: Array,
+      default: () => []
+    },
+    storageTypeOptions: {
+      type: Array,
+      default: () => []
+    },
+    enforceTypeOptions: {
+      type: Array,
+      default: () => []
+    },
+    terminalTypeOptions: {
       type: Array,
       default: () => []
     }
@@ -91,6 +106,7 @@ export default {
   },
   methods: {
     handleQuickSearch(searchParams) {
+      // 快速搜索：直接传递搜索参数
       this.$emit('search', searchParams)
     },
     handleQuickSearchReset() {
@@ -109,7 +125,7 @@ export default {
       this.$emit('filter-reset')
     },
     handleGlobalSearch() {
-      // 合并快速搜索和高级筛选的条件
+      // 全局搜索：合并快速搜索和高级筛选的条件
       const quickSearchParams = this.$refs.quickSearch.getSearchParams()
       const advancedParams = this.$refs.advancedFilter.getFilterData()
 
@@ -138,10 +154,29 @@ export default {
 }
 </script>
 
-<!--
-  样式说明：本组件全部使用全局样式
-  全局样式位置：
-  - src/styles/index.scss: .filter-container, .query-section
-  - src/styles/components/forms.scss: .filter-row, .section-label
-  - src/styles/components/dialogs.scss: .query-section
--->
+<style lang="scss" scoped>
+@import '@/styles/tokens/index.scss';
+
+.media-query-bar {
+  .filter-container {
+    .search-section {
+      margin-bottom: $spacing-4;
+    }
+
+    .quick-filter-section {
+      margin-bottom: $spacing-4;
+
+      .section-label {
+        white-space: nowrap;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+        color: $law-gray-700;
+      }
+    }
+
+    .advanced-filter-section {
+      margin-bottom: $spacing-2;
+    }
+  }
+}
+</style>

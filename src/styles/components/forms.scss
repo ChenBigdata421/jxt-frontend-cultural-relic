@@ -145,31 +145,29 @@
 }
 
 // ========== 表格操作列按钮横排布局 ==========
-// 适用于所有表格的操作列按钮
+// 适用于所有表格的操作列按钮（基础样式，表格内由 table.scss 覆盖）
 .action-buttons {
-  display: flex !important;
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
   justify-content: center !important;
   align-items: center !important;
-  gap: 4px !important;
-  flex-wrap: nowrap !important;
+  gap: 4px 8px !important;
+  // 确保容器宽度由内容决定，不受列宽影响
+  width: auto !important;
 
-  // 清除 Element UI 按钮的默认间距
   .el-button + .el-button {
     margin-left: 0 !important;
   }
 
-  // 缩小操作列按钮的 padding
-  .el-button--small {
-    padding: 4px 6px !important;
+  .el-button {
+    flex: 0 0 auto !important; // 不伸缩，宽度由自身内容决定
+    padding: 5px 8px !important;
+    white-space: nowrap !important;
 
     i {
-      margin-right: 2px !important;
+      margin-right: 3px !important;
+      margin-left: 0 !important;
     }
-  }
-
-  // text 类型按钮额外优化
-  .el-button--text.el-button--small {
-    padding: 4px 6px !important;
   }
 }
 
@@ -379,38 +377,49 @@
     margin-bottom: $spacing-4;
     border-radius: 8px;
     overflow: hidden;
+    // 折叠面板内容的内边距由子类控制
+    // .form-section 用 $spacing-5 (20px)，.detail-section 用 $spacing-4 (16px)
+  }
+}
 
-    ::v-deep .el-collapse-item__header {
-      height: 48px;
-      background-color: $law-bg-default;
-      border: none;
-      padding: 0 $spacing-4;
+// 折叠面板头部样式
+.form-collapse .form-section .el-collapse-item__header,
+.form-collapse .detail-section .el-collapse-item__header {
+  height: 48px !important;
+  line-height: 1 !important; // 覆盖 Element UI 默认的 line-height: 48px
+  background-color: $law-gray-50;
+  border: none;
+  padding: 0 $spacing-4 !important; // 无垂直 padding，靠 flex 居中
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
 
-      &:hover {
-        background-color: darken($law-bg-default, 2%);
-      }
-    }
-
-    ::v-deep .el-collapse-item__wrap {
-      border: none;
-      background-color: $law-bg-paper;
-    }
-
-    ::v-deep .el-collapse-item__content {
-      // 详情对话框使用 $spacing-4 (16px)，表单对话框使用 $spacing-5 (20px)
-      // 通过不同类名控制：.form-section 用 $spacing-5，.detail-section 用 $spacing-4
-    }
+  .el-collapse-item__arrow {
+    margin: 0 !important;
+    margin-left: auto !important;
+    flex-shrink: 0;
   }
 
-  // 表单对话框的内容内边距更大（20px）
-  .form-section ::v-deep .el-collapse-item__content {
-    padding: $spacing-5;
+  &:hover {
+    background-color: darken($law-gray-50, 3%);
   }
+}
 
-  // 详情对话框的内容内边距稍小（16px）
-  .detail-section ::v-deep .el-collapse-item__content {
-    padding: $spacing-4;
-  }
+// 折叠面板内容区域样式
+.form-collapse .form-section .el-collapse-item__wrap,
+.form-collapse .detail-section .el-collapse-item__wrap {
+  border: none;
+  background-color: $law-bg-paper;
+}
+
+// 表单对话框的内容内边距更大（20px）
+.form-collapse .form-section .el-collapse-item__content {
+  padding: $spacing-5;
+}
+
+// 详情对话框的内容内边距稍小（16px）
+.form-collapse .detail-section .el-collapse-item__content {
+  padding: $spacing-4;
 }
 
 // ========== 对话框表单字体规范 ==========
@@ -480,7 +489,30 @@
 // 用于对话框内表单元素的统一样式规范
 // 注意：对话框本身的结构样式（如标题、footer）在 src/styles/components/dialogs.scss 中管理
 .el-dialog {
-  // 表单标签
+  // 表单项垂直居中 - 适用于所有对话框内的表单
+  .el-form-item {
+    display: flex !important;
+    align-items: center !important;
+
+    // 标签样式
+    .el-form-item__label {
+      font-size: $font-size-sm;            // 13px
+      font-weight: $font-weight-medium;    // 500
+      color: $law-gray-700;                // #546E7A
+      line-height: 32px !important;        // 与输入框高度一致
+      height: auto;
+      padding-right: $spacing-1 !important; // 4px 右间距
+      flex-shrink: 0;                      // 防止标签被压缩
+    }
+
+    // 内容区域
+    .el-form-item__content {
+      line-height: 32px !important;        // 与输入框高度一致
+      margin-left: $spacing-1 !important;  // 4px 左间距（与标签的 padding-right 对应）
+    }
+  }
+
+  // 保留原有的表单标签样式（已被上面的 display: flex 覆盖）
   .el-form-item__label {
     font-size: $font-size-sm;            // 13px
     font-weight: $font-weight-medium;    // 500
@@ -531,3 +563,147 @@
 // - 移动端适配样式
 // - 滚动由 .form-collapse 统一管理（与修改对话框保持一致）
 // 此文件只保留表单相关的样式（如 .form-collapse）
+
+// ========== 表单行内布局工具类 ==========
+// 适用于非 el-form 组件的自定义布局场景（如高级筛选面板）
+// 更新日期：2026-03-22
+// 说明：.dialog-form 和 .form-collapse 样式是针对 el-form-item 组件的
+//       以下样式是针对自定义结构（非 Element UI 表单组件）的工具类
+
+// 表单行容器 - 多列布局
+.form-row,
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  margin-bottom: $spacing-5;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  // 表单区块 - 标签和输入框在同一行
+  .form-section,
+  .filter-section {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // 输入组件占据剩余空间
+  ::v-deep .el-input,
+  ::v-deep .el-select,
+  ::v-deep .vue-treeselect {
+    width: 100%;
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// 行内标签样式 - 与输入框在同一行，垂直居中
+// 宽度与 .search-item label (80px) 保持一致，确保上下标签右对齐
+.section-label-inline {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $law-gray-700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: 80px;
+  text-align: right;
+}
+
+// ========== 高级筛选面板样式 ==========
+// 用于页面中的高级筛选折叠面板，如媒体管理、文书管理等
+// 更新日期：2026-03-22
+
+// 高级筛选折叠面板基础样式
+.advanced-filter-panel {
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.advanced-filter-panel .el-collapse-item__header {
+  height: 40px;
+  background-color: $law-gray-50;
+  border: none;
+  border-radius: 0;
+  padding: 0 $spacing-4;
+
+  &:hover {
+    background-color: darken($law-gray-50, 3%);
+  }
+}
+
+.advanced-filter-panel .el-collapse-item__wrap {
+  border: none;
+  background-color: transparent;
+}
+
+.advanced-filter-panel .el-collapse-item__content {
+  padding: $spacing-4;
+}
+
+// 筛选标题样式 - 带折叠图标
+.filter-title {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  font-weight: $font-weight-medium;
+  color: $law-gray-700;
+
+  .collapse-icon {
+    color: $law-gray-500;
+    transition: transform 0.3s;
+    font-size: 12px;
+  }
+}
+
+// 折叠面板展开时旋转图标
+.el-collapse-item.is-active .filter-title .collapse-icon {
+  transform: rotate(90deg);
+}
+
+// 全宽筛选区块 - 用于占据整行的筛选条件（如时间范围）
+.filter-section-full {
+  width: 100%;
+  margin-bottom: $spacing-5;
+}
+
+// 独立区块标签 - 与输入框分两行显示（标签在上，输入框在下）
+.section-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $law-gray-700;
+  margin-bottom: $spacing-3;
+}
+
+// 时间范围选择组样式
+.time-range-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-3;
+}
+
+.time-range-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+
+  ::v-deep .el-checkbox__label {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $law-gray-700;
+  }
+
+  .time-range-picker {
+    flex: 1;
+    min-width: 250px;
+  }
+}

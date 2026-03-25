@@ -3,32 +3,32 @@
     <div class="quick-search-form">
       <div class="search-row">
         <div class="search-item">
-          <label>文书编号</label>
+          <label>案件编号</label>
           <el-input
-            v-model="searchForm.writCode"
-            placeholder="请输入文书编号"
+            v-model="searchForm.caseCode"
+            placeholder="请输入案件编号"
             clearable
             @keyup.enter.native="handleSearch"
           />
         </div>
         <div class="search-item">
-          <label>文书名称</label>
+          <label>案件名称</label>
           <el-input
-            v-model="searchForm.writName"
-            placeholder="请输入文书名称"
+            v-model="searchForm.caseName"
+            placeholder="请输入案件名称"
             clearable
             @keyup.enter.native="handleSearch"
           />
         </div>
         <div class="search-item">
-          <label>文书类型</label>
+          <label>案件类型</label>
           <el-select
-            v-model="searchForm.writType"
-            placeholder="请选择文书类型"
+            v-model="searchForm.caseType"
+            placeholder="请选择案件类型"
             clearable
           >
             <el-option
-              v-for="dict in writTypeOptions"
+              v-for="dict in caseTypeOptions"
               :key="dict.value"
               :label="dict.label"
               :value="dict.value"
@@ -36,7 +36,7 @@
           </el-select>
         </div>
         <div class="search-item">
-          <label>关联状态</label>
+          <label>是否关联</label>
           <el-select
             v-model="searchForm.isRelation"
             placeholder="请选择是否关联"
@@ -57,9 +57,9 @@
 
 <script>
 export default {
-  name: 'WritSearchInput',
+  name: 'SearchInput',
   props: {
-    writTypeOptions: {
+    caseTypeOptions: {
       type: Array,
       default: () => []
     },
@@ -71,16 +71,16 @@ export default {
   data() {
     return {
       searchForm: {
-        writCode: undefined,
-        writName: undefined,
-        writType: undefined,
+        caseCode: undefined,
+        caseName: undefined,
+        caseType: undefined,
         isRelation: undefined
       }
     }
   },
   methods: {
     getSearchParams() {
-      // 获取过滤空值后的搜索参数
+      // 获取过滤空值后的搜索参数（不显示警告）
       const searchParams = {}
       Object.keys(this.searchForm).forEach(key => {
         const value = this.searchForm[key]
@@ -91,14 +91,15 @@ export default {
       return searchParams
     },
     handleSearch() {
+      // 获取搜索参数（不显示警告，空参数将筛选全部数据）
       const searchParams = this.getSearchParams()
       this.$emit('search', searchParams)
     },
     handleReset() {
       this.searchForm = {
-        writCode: undefined,
-        writName: undefined,
-        writType: undefined,
+        caseCode: undefined,
+        caseName: undefined,
+        caseType: undefined,
         isRelation: undefined
       }
       this.$emit('reset')
@@ -156,12 +157,5 @@ export default {
       }
     }
   }
-
-  // ========== 注意：通用字体规范已移至全局样式 ==========
-  // 以下字体规范现已定义在 src/styles/components/forms.scss 中：
-  // - 输入框内容、Placeholder、焦点状态
-  // - 下拉列表选项（悬停、选中、禁用）
-  //
-  // 本文件只保留文书页面特有的布局样式。
 }
 </style>
