@@ -276,6 +276,15 @@ export default {
     },
     closeMenu() {
       this.visible = false
+    },
+    /**
+     * 处理下拉菜单命令
+     * @param {string} command - 命令类型 (closeAll)
+     */
+    handleCommand(command) {
+      if (command === 'closeAll') {
+        this.closeAllTags(this.selectedTag)
+      }
     }
   }
 }
