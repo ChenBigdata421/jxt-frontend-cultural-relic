@@ -297,7 +297,11 @@ export default {
      */
     handleCommand(command) {
       if (command === 'closeAll') {
-        this.closeAllTags(this.selectedTag)
+        // 使用当前路由作为选中标签，避免 selectedTag 未定义的问题
+        const currentTag = this.selectedTag && Object.keys(this.selectedTag).length > 0
+          ? this.selectedTag
+          : this.$route
+        this.closeAllTags(currentTag)
       }
     }
   }
