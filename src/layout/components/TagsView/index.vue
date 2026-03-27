@@ -4,34 +4,48 @@
   <!--v-model 绑定到 editableTabsValue，这意味着 editableTabsValue 将保存当前激活的标签页的 name 或 label。-->
   <!--这是一个事件监听器。当标签页被移除时，tab-remove 事件会被触发，并调用 closeSelectedTag 方法。-->
   <div id="tags-view-container" class="tags-view-container">
-    <el-tabs
-      v-model="editableTabsValue"
-      type="card"
-      @tab-remove="closeSelectedTag"
-    >
-      <el-tab-pane
-        v-for="item in visitedViews"
-        :key="item.path"
-        :closable="item.fullPath === '/dashboard' ? false : true"
-        :name="item.fullPath"
+    <div class="tags-view-wrapper">
+      <el-tabs
+        v-model="editableTabsValue"
+        type="card"
+        @tab-remove="closeSelectedTag"
       >
-        <!--@contextmenu.prevent.native="openMenu(item,$event)": 这是一个事件监听器，用于监听原生的
-        contextmenu 事件（通常是右键点击）。.prevent 修饰符会调用 event.preventDefault()，而 .native
-        修饰符表示这个监听器会直接添加到原生元素上，而不是组件根元素上。当这个事件被触发时，openMenu 方法
-        会被调用，并传入 item 和事件对象 $event。-->
-        <router-link
-          ref="tag"
-          slot="label"
-          tag="span"
-          class="tags-view-item"
-          :style="{ color: item.fullPath === $route.fullPath ? theme : '' }"
-          :to="{ path: item.path, query: item.query, fullPath: item.fullPath }"
-          @contextmenu.prevent.native="openMenu(item,$event)"
+        <el-tab-pane
+          v-for="item in visitedViews"
+          :key="item.path"
+          :closable="item.fullPath === '/dashboard' ? false : true"
+          :name="item.fullPath"
         >
-          {{ item.title }}
-        </router-link>
-      </el-tab-pane>
-    </el-tabs>
+          <!--@contextmenu.prevent.native="openMenu(item,$event)": 这是一个事件监听器，用于监听原生的
+          contextmenu 事件（通常是右键点击）。.prevent 修饰符会调用 event.preventDefault()，而 .native
+          修饰符表示这个监听器会直接添加到原生元素上，而不是组件根元素上。当这个事件被触发时，openMenu 方法
+          会被调用，并传入 item 和事件对象 $event。-->
+          <router-link
+            ref="tag"
+            slot="label"
+            tag="span"
+            class="tags-view-item"
+            :style="{ color: item.fullPath === $route.fullPath ? theme : '' }"
+            :to="{ path: item.path, query: item.query, fullPath: item.fullPath }"
+            @contextmenu.prevent.native="openMenu(item,$event)"
+          >
+            {{ item.title }}
+          </router-link>
+        </el-tab-pane>
+      </el-tabs>
+
+      <!-- 更多操作按钮 -->
+      <div class="tags-view-more">
+        <el-dropdown trigger="click" @command="handleCommand">
+          <span class="more-btn">
+            <i class="el-icon-more" />
+          </span>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item command="closeAll">关闭所有</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+      </div>
+    </div>
     <ul v-show="visible" :style="{left:left+'px',top:top+'px'}" class="contextmenu">
       <li class="tags-item" @click="refreshSelectedTag(selectedTag)" @mouseover="handleTagsOver(1)" @mouseleave="handleTagsLeave(1)">刷新当前标签页</li>
       <li v-if="!isAffix(selectedTag)" class="tags-item" @click="closeSelectedTag(selectedTag)" @mouseover="handleTagsOver(2)" @mouseleave="handleTagsLeave(2)">关闭当前标签页</li>
