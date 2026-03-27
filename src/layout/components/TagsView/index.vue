@@ -345,6 +345,66 @@ String.prototype.colorRgb = function() {
     display: inline-block;
   }
   .tags-view-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+
+    .el-tabs {
+      flex: 1;
+      overflow: hidden;
+
+      ::v-deep .el-tabs__header {
+        margin: 0;
+      }
+
+      ::v-deep .el-tabs__nav-wrap {
+        overflow: hidden;
+      }
+    }
+
+    .tags-view-more {
+      flex-shrink: 0;
+      margin-left: 10px;
+      display: flex;
+      align-items: center;
+
+      .more-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        border-radius: 4px;
+        color: #606266;
+        transition: all 0.3s;
+
+        &:hover {
+          background-color: #f5f7fa;
+          color: var(--theme-color, #409eff);
+        }
+
+        i {
+          font-size: 18px;
+        }
+      }
+
+      ::v-deep .el-dropdown-menu {
+        margin: 0;
+        padding: 5px 0;
+
+        .el-dropdown-menu__item {
+          padding: 8px 16px;
+          font-size: 14px;
+
+          &:hover {
+            background-color: #f5f7fa;
+            color: var(--theme-color, #409eff);
+          }
+        }
+      }
+    }
+
     .tags-view-item {
       display: inline-block;
       position: relative;
