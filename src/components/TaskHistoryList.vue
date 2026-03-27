@@ -7,7 +7,7 @@
         :key="index"
         class="timeline-item"
       >
-        <div class="timeline-dot" :class="`status-${history.result === '通过' || history.result === '完成' ? 'approved' : 'rejected'}`"></div>
+        <div class="timeline-dot" :class="`status-${history.result === '通过' || history.result === '完成' ? 'approved' : 'rejected'}`" />
         <div class="timeline-content">
           <div class="timeline-card">
             <div class="timeline-header">
@@ -24,7 +24,7 @@
 
             <!-- 时间戳 -->
             <div v-if="history.completedAt" class="timeline-timestamp">
-              <i class="el-icon-time"></i>
+              <i class="el-icon-time" />
               {{ history.completedAt }}
             </div>
 
@@ -73,11 +73,11 @@
             <!-- 处理人信息 -->
             <div class="timeline-footer">
               <span class="footer-item">
-                <i class="el-icon-user"></i>
+                <i class="el-icon-user" />
                 {{ getUserDisplayName(history.assignee) }}
               </span>
               <span class="footer-item">
-                <i class="el-icon-office-building"></i>
+                <i class="el-icon-office-building" />
                 {{ getUserOrgName(history.assignee) }}
               </span>
             </div>
@@ -89,51 +89,51 @@
 </template>
 
 <script>
-import workflowMixin from "@/mixins/workflowMixin";
-import { getUser } from "@/api/admin/sys-user";
-import { GetMediaByName } from "@/api/evidence/evidence_manage_query_api";
+import workflowMixin from '@/mixins/workflowMixin'
+import { getUser } from '@/api/admin/sys-user'
+import { GetMediaByName } from '@/api/evidence/evidence_manage_query_api'
 
 export default {
-  name: "TaskHistoryList",
+  name: 'TaskHistoryList',
   mixins: [workflowMixin],
   props: {
     // 任务历史数据
     taskHistory: {
       type: Array,
-      default: () => [],
-    },
+      default: () => []
+    }
   },
   data() {
     return {
       userCache: {}, // 用户信息缓存，避免重复请求
       // 媒体详情相关
       mediaDetailDialogVisible: false,
-      currentMediaData: {},
-    };
+      currentMediaData: {}
+    }
   },
   methods: {
     /**
      * 获取用户显示名称
      */
     getUserDisplayName(userId) {
-      if (!userId) return "自动";
+      if (!userId) return '自动'
       if (this.userCache[userId]) {
-        return this.userCache[userId].userName || "未知";
+        return this.userCache[userId].userName || '未知'
       }
       // 异步加载用户信息
-      this.fetchUserInfo(userId);
-      return "加载中...";
+      this.fetchUserInfo(userId)
+      return '加载中...'
     },
 
     /**
      * 获取用户组织名称
      */
     getUserOrgName(userId) {
-      if (!userId) return "自动";
+      if (!userId) return '自动'
       if (this.userCache[userId]) {
-        return this.userCache[userId].orgFullName || "未知";
+        return this.userCache[userId].orgFullName || '未知'
       }
-      return "加载中...";
+      return '加载中...'
     },
 
     /**
@@ -141,25 +141,25 @@ export default {
      */
     async fetchUserInfo(userId) {
       if (!userId || this.userCache[userId]) {
-        return;
+        return
       }
 
       try {
-        const response = await getUser(userId);
+        const response = await getUser(userId)
         if (response && response.code === 200 && response.data) {
           this.$set(this.userCache, userId, {
-            userName: response.data.userName || "未知",
-            orgFullName: response.data.orgFullName || "未知",
-          });
+            userName: response.data.userName || '未知',
+            orgFullName: response.data.orgFullName || '未知'
+          })
           // 触发重新渲染
-          this.$forceUpdate();
+          this.$forceUpdate()
         }
       } catch (error) {
-        console.error("获取用户信息失败:", error);
+        console.error('获取用户信息失败:', error)
         this.$set(this.userCache, userId, {
-          userName: "获取失败",
-          orgFullName: "获取失败",
-        });
+          userName: '获取失败',
+          orgFullName: '获取失败'
+        })
       }
     },
 
@@ -169,24 +169,24 @@ export default {
      */
     async handleMediaNameClick(mediaName) {
       if (!mediaName) {
-        this.$message.warning("媒体名称不存在");
-        return;
+        this.$message.warning('媒体名称不存在')
+        return
       }
 
       try {
         // 根据媒体名称获取完整媒体数据
-        const response = await GetMediaByName(mediaName);
+        const response = await GetMediaByName(mediaName)
 
         if (response.code === 200 && response.data) {
-          this.currentMediaData = response.data;
+          this.currentMediaData = response.data
           // 触发父组件显示媒体详情对话框
-          this.$emit('show-media-detail', response.data);
+          this.$emit('show-media-detail', response.data)
         } else {
-          this.$message.warning(response.msg || "获取媒体详情失败");
+          this.$message.warning(response.msg || '获取媒体详情失败')
         }
       } catch (error) {
-        console.error("获取媒体详情失败:", error);
-        this.$message.error("获取媒体详情失败");
+        console.error('获取媒体详情失败:', error)
+        this.$message.error('获取媒体详情失败')
       }
     },
 
@@ -194,10 +194,10 @@ export default {
      * 判断是否为媒体名称字段
      */
     isMediaNameField(key) {
-      return key === "mediaName" || key === "media_name";
-    },
-  },
-};
+      return key === 'mediaName' || key === 'media_name'
+    }
+  }
+}
 </script>
 
 <style scoped>

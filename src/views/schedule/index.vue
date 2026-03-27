@@ -57,11 +57,12 @@
                 icon="el-icon-search"
                 size="mini"
                 @click="handleQuery"
-                >搜索</el-button
-              >
-              <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-                >重置</el-button
-              >
+              >搜索</el-button>
+              <el-button
+                icon="el-icon-refresh"
+                size="mini"
+                @click="resetQuery"
+              >重置</el-button>
             </el-form-item>
           </el-form>
 
@@ -73,7 +74,7 @@
                 icon="el-icon-plus"
                 size="mini"
                 @click="handleAdd"
-                >新增
+              >新增
               </el-button>
             </el-col>
             <el-col :span="1.5">
@@ -84,7 +85,7 @@
                 size="mini"
                 :disabled="single"
                 @click="handleUpdate"
-                >修改
+              >修改
               </el-button>
             </el-col>
             <el-col :span="1.5">
@@ -95,7 +96,7 @@
                 size="mini"
                 :disabled="multiple"
                 @click="handleDelete"
-                >删除
+              >删除
               </el-button>
             </el-col>
             <el-col :span="1.5">
@@ -105,7 +106,7 @@
                 icon="el-icon-delete"
                 size="mini"
                 @click="handleLog"
-                >日志
+              >日志
               </el-button>
             </el-col>
           </el-row>
@@ -178,7 +179,7 @@
                   type="text"
                   icon="el-icon-edit"
                   @click="handleUpdate(scope.row)"
-                  >修改
+                >修改
                 </el-button>
                 <el-button
                   v-if="scope.row.entry_id !== 0 && scope.row.status != 1"
@@ -187,7 +188,7 @@
                   type="text"
                   icon="el-icon-edit"
                   @click="handleRemove(scope.row)"
-                  >停止
+                >停止
                 </el-button>
                 <el-button
                   v-if="scope.row.entry_id == 0 && scope.row.status != 1"
@@ -196,7 +197,7 @@
                   type="text"
                   icon="el-icon-edit"
                   @click="handleStart(scope.row)"
-                  >启动
+                >启动
                 </el-button>
                 <el-button
                   v-permisaction="['job:sysJob:remove']"
@@ -204,7 +205,7 @@
                   type="text"
                   icon="el-icon-delete"
                   @click="handleDelete(scope.row)"
-                  >删除
+                >删除
                 </el-button>
               </template>
             </el-table-column>
@@ -259,7 +260,7 @@
                         <div slot="content">
                           调用示例：func (t *EXEC) ExamplesNoParam(){..} 填写
                           ExamplesNoParam 即可；
-                          <br />参数说明：目前不支持带参调用
+                          <br>参数说明：目前不支持带参调用
                         </div>
                         <i class="el-icon-question" />
                       </el-tooltip>
@@ -277,7 +278,7 @@
                       <el-tooltip placement="top">
                         <div slot="content">
                           参数示例：有参：请以string格式填写；无参：为空；
-                          <br />参数说明：目前仅支持函数调用
+                          <br>参数说明：目前仅支持函数调用
                         </div>
                         <i class="el-icon-question" />
                       </el-tooltip>
@@ -352,11 +353,11 @@ import {
   listSysJob,
   updateSysJob,
   removeJob,
-  startJob,
-} from "@/api/job/sys-job";
+  startJob
+} from '@/api/job/sys-job'
 
 export default {
-  name: "SysJobManage",
+  name: 'SysJobManage',
   components: {},
   data() {
     return {
@@ -372,7 +373,7 @@ export default {
       // 总条数
       total: 0,
       // 弹出层标题
-      title: "",
+      title: '',
       // 是否显示弹出层
       open: false,
       isEdit: false,
@@ -387,53 +388,53 @@ export default {
         pageSize: 10,
         jobName: undefined,
         jobGroup: undefined,
-        status: undefined,
+        status: undefined
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
-        jobId: [{ required: true, message: "编码不能为空", trigger: "blur" }],
-        jobName: [{ required: true, message: "名称不能为空", trigger: "blur" }],
+        jobId: [{ required: true, message: '编码不能为空', trigger: 'blur' }],
+        jobName: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
         jobGroup: [
-          { required: true, message: "任务分组不能为空", trigger: "blur" },
+          { required: true, message: '任务分组不能为空', trigger: 'blur' }
         ],
         cronExpression: [
-          { required: true, message: "cron表达式不能为空", trigger: "blur" },
+          { required: true, message: 'cron表达式不能为空', trigger: 'blur' }
         ],
         invokeTarget: [
-          { required: true, message: "调用目标不能为空", trigger: "blur" },
+          { required: true, message: '调用目标不能为空', trigger: 'blur' }
         ],
-        status: [{ required: true, message: "状态不能为空", trigger: "blur" }],
-      },
-    };
+        status: [{ required: true, message: '状态不能为空', trigger: 'blur' }]
+      }
+    }
   },
   created() {
-    this.getList();
-    this.getDicts("sys_job_group").then((response) => {
-      this.jobGroupOptions = response.data;
-    });
+    this.getList()
+    this.getDicts('sys_job_group').then((response) => {
+      this.jobGroupOptions = response.data
+    })
 
-    this.getDicts("sys_job_status").then((response) => {
-      this.statusOptions = response.data;
-    });
+    this.getDicts('sys_job_status').then((response) => {
+      this.statusOptions = response.data
+    })
   },
   methods: {
     /** 查询参数列表 */
     getList() {
-      this.loading = true;
+      this.loading = true
       listSysJob(this.addDateRange(this.queryParams, this.dateRange)).then(
         (response) => {
-          this.sysjobList = response.data.list;
-          this.total = response.data.count;
-          this.loading = false;
+          this.sysjobList = response.data.list
+          this.total = response.data.count
+          this.loading = false
         }
-      );
+      )
     },
     // 取消按钮
     cancel() {
-      this.open = false;
-      this.reset();
+      this.open = false
+      this.reset()
     },
     // 表单重置
     reset() {
@@ -447,152 +448,152 @@ export default {
         misfirePolicy: 1,
         concurrent: 1,
         jobType: 1,
-        status: undefined,
-      };
-      this.resetForm("form");
+        status: undefined
+      }
+      this.resetForm('form')
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageIndex = 1;
-      this.getList();
+      this.queryParams.pageIndex = 1
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.dateRange = [];
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.dateRange = []
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
     /** 新增按钮操作 */
     handleAdd() {
-      this.reset();
-      this.open = true;
-      this.title = "添加定时任务";
-      this.isEdit = false;
+      this.reset()
+      this.open = true
+      this.title = '添加定时任务'
+      this.isEdit = false
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map((item) => item.jobId);
-      this.single = selection.length !== 1;
-      this.multiple = !selection.length;
+      this.ids = selection.map((item) => item.jobId)
+      this.single = selection.length !== 1
+      this.multiple = !selection.length
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset();
-      const jobId = row.jobId || this.ids;
+      this.reset()
+      const jobId = row.jobId || this.ids
       getSysJob(jobId).then((response) => {
-        this.form = response.data;
-        this.form.status = String(this.form.status);
-        this.form.misfirePolicy = String(this.form.misfirePolicy);
-        this.form.concurrent = String(this.form.concurrent);
-        this.form.jobType = String(this.form.jobType);
-        this.open = true;
-        this.title = "修改定时任务";
-        this.isEdit = true;
-      });
+        this.form = response.data
+        this.form.status = String(this.form.status)
+        this.form.misfirePolicy = String(this.form.misfirePolicy)
+        this.form.concurrent = String(this.form.concurrent)
+        this.form.jobType = String(this.form.jobType)
+        this.open = true
+        this.title = '修改定时任务'
+        this.isEdit = true
+      })
     },
     /** 提交按钮 */
-    submitForm: function () {
-      this.$refs["form"].validate((valid) => {
+    submitForm: function() {
+      this.$refs['form'].validate((valid) => {
         if (valid) {
           if (this.form.jobId !== undefined) {
-            this.form.status = parseInt(this.form.status);
-            this.form.misfirePolicy = parseInt(this.form.misfirePolicy);
-            this.form.concurrent = parseInt(this.form.concurrent);
-            this.form.jobType = parseInt(this.form.jobType);
+            this.form.status = parseInt(this.form.status)
+            this.form.misfirePolicy = parseInt(this.form.misfirePolicy)
+            this.form.concurrent = parseInt(this.form.concurrent)
+            this.form.jobType = parseInt(this.form.jobType)
             updateSysJob(this.form).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
+                this.msgSuccess(response.msg)
+                this.open = false
+                this.getList()
               } else {
-                this.msgError(response.msg);
+                this.msgError(response.msg)
               }
-            });
+            })
           } else {
-            this.form.status = parseInt(this.form.status);
-            this.form.misfirePolicy = parseInt(this.form.misfirePolicy);
-            this.form.concurrent = parseInt(this.form.concurrent);
-            this.form.jobType = parseInt(this.form.jobType);
+            this.form.status = parseInt(this.form.status)
+            this.form.misfirePolicy = parseInt(this.form.misfirePolicy)
+            this.form.concurrent = parseInt(this.form.concurrent)
+            this.form.jobType = parseInt(this.form.jobType)
             addSysJob(this.form).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
+                this.msgSuccess(response.msg)
+                this.open = false
+                this.getList()
               } else {
-                this.msgError(response.msg);
+                this.msgError(response.msg)
               }
-            });
+            })
           }
         }
-      });
+      })
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const Ids = (row.jobId && [row.jobId]) || this.ids;
-      this.$confirm('是否确认删除编号为"' + Ids + '"的数据项?', "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      const Ids = (row.jobId && [row.jobId]) || this.ids
+      this.$confirm('是否确认删除编号为"' + Ids + '"的数据项?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
-        .then(function () {
-          return delSysJob({ ids: Ids });
+        .then(function() {
+          return delSysJob({ ids: Ids })
         })
         .then((response) => {
           if (response.code === 200) {
-            this.msgSuccess(response.msg);
-            this.open = false;
-            this.getList();
+            this.msgSuccess(response.msg)
+            this.open = false
+            this.getList()
           } else {
-            this.msgError(response.msg);
+            this.msgError(response.msg)
           }
         })
-        .catch(function () {});
+        .catch(function() {})
     },
     /** 开始按钮操作 */
     handleStart(row) {
-      this.$confirm('是否确认启动编号为"' + row.jobId + '"的数据项?', "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('是否确认启动编号为"' + row.jobId + '"的数据项?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
-        .then(function () {
-          return startJob(row.jobId);
+        .then(function() {
+          return startJob(row.jobId)
         })
         .then((response) => {
           if (response.code === 200) {
-            this.msgSuccess(response.msg);
-            this.open = false;
-            this.getList();
+            this.msgSuccess(response.msg)
+            this.open = false
+            this.getList()
           } else {
-            this.msgError(response.msg);
+            this.msgError(response.msg)
           }
         })
-        .catch(function () {});
+        .catch(function() {})
     },
     /** 停止按钮操作 */
     handleRemove(row) {
-      this.$confirm('是否确认关闭编号为"' + row.jobId + '"的数据项?', "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('是否确认关闭编号为"' + row.jobId + '"的数据项?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
-        .then(function () {
-          return removeJob(row.jobId);
+        .then(function() {
+          return removeJob(row.jobId)
         })
         .then((response) => {
           if (response.code === 200) {
-            this.msgSuccess(response.msg);
-            this.open = false;
-            this.getList();
+            this.msgSuccess(response.msg)
+            this.open = false
+            this.getList()
           } else {
-            this.msgError(response.msg);
+            this.msgError(response.msg)
           }
         })
-        .catch(function () {});
+        .catch(function() {})
     },
     handleLog() {
-      this.$router.push({ name: "job_log", params: {} });
-    },
-  },
-};
+      this.$router.push({ name: 'job_log', params: {}})
+    }
+  }
+}
 </script>

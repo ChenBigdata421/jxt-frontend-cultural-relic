@@ -9,38 +9,44 @@
           :inline="true"
           label-width="68px"
         >
-          <el-form-item label="用户名" prop="username"
-            ><el-input
-              v-model="queryParams.username"
-              placeholder="请输入用户名"
-              clearable
-              size="small"
-              @keyup.enter.native="handleQuery"
-            />
+          <el-form-item
+            label="用户名"
+            prop="username"
+          ><el-input
+            v-model="queryParams.username"
+            placeholder="请输入用户名"
+            clearable
+            size="small"
+            @keyup.enter.native="handleQuery"
+          />
           </el-form-item>
-          <el-form-item label="状态" prop="status"
-            ><el-select
-              v-model="queryParams.status"
-              placeholder="系统登录日志状态"
-              clearable
-              size="small"
-            >
-              <el-option
-                v-for="dict in statusOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="ip地址" prop="ipaddr"
-            ><el-input
-              v-model="queryParams.ipaddr"
-              placeholder="请输入ip地址"
-              clearable
-              size="small"
-              @keyup.enter.native="handleQuery"
+          <el-form-item
+            label="状态"
+            prop="status"
+          ><el-select
+            v-model="queryParams.status"
+            placeholder="系统登录日志状态"
+            clearable
+            size="small"
+          >
+            <el-option
+              v-for="dict in statusOptions"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
             />
+          </el-select>
+          </el-form-item>
+          <el-form-item
+            label="ip地址"
+            prop="ipaddr"
+          ><el-input
+            v-model="queryParams.ipaddr"
+            placeholder="请输入ip地址"
+            clearable
+            size="small"
+            @keyup.enter.native="handleQuery"
+          />
           </el-form-item>
 
           <el-form-item>
@@ -49,11 +55,12 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-              >搜索</el-button
-            >
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-              >重置</el-button
-            >
+            >搜索</el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="mini"
+              @click="resetQuery"
+            >重置</el-button>
           </el-form-item>
         </el-form>
 
@@ -66,7 +73,7 @@
               size="mini"
               :disabled="multiple"
               @click="handleDelete"
-              >删除
+            >删除
             </el-button>
           </el-col>
         </el-row>
@@ -142,7 +149,7 @@
                 type="text"
                 icon="el-icon-delete"
                 @click="handleDelete(scope.row)"
-                >删除
+              >删除
               </el-button>
             </template>
           </el-table-column>
@@ -164,11 +171,11 @@
 import {
   delSysLoginlog,
   getSysLoginlog,
-  listSysLoginlog,
-} from "@/api/admin/sys-login-log";
+  listSysLoginlog
+} from '@/api/admin/sys-login-log'
 
 export default {
-  name: "SysLoginLogManage",
+  name: 'SysLoginLogManage',
   components: {},
   data() {
     return {
@@ -183,7 +190,7 @@ export default {
       // 总条数
       total: 0,
       // 弹出层标题
-      title: "",
+      title: '',
       // 是否显示弹出层
       open: false,
       isEdit: false,
@@ -203,36 +210,36 @@ export default {
         status: undefined,
         ipaddr: undefined,
         loginLocation: undefined,
-        createdAtOrder: "desc",
+        createdAtOrder: 'desc'
       },
       // 表单参数
       form: {},
       // 表单校验
-      rules: {},
-    };
+      rules: {}
+    }
   },
   created() {
-    this.getList();
-    this.getDicts("sys_common_status").then((response) => {
-      this.statusOptions = response.data;
-    });
+    this.getList()
+    this.getDicts('sys_common_status').then((response) => {
+      this.statusOptions = response.data
+    })
   },
   methods: {
     /** 查询参数列表 */
     getList() {
-      this.loading = true;
+      this.loading = true
       listSysLoginlog(this.addDateRange(this.queryParams, this.dateRange)).then(
         (response) => {
-          this.sysloginlogList = response.data.list;
-          this.total = response.data.count;
-          this.loading = false;
+          this.sysloginlogList = response.data.list
+          this.total = response.data.count
+          this.loading = false
         }
-      );
+      )
     },
     // 取消按钮
     cancel() {
-      this.open = false;
-      this.reset();
+      this.open = false
+      this.reset()
     },
     // 表单重置
     reset() {
@@ -247,77 +254,77 @@ export default {
         platform: undefined,
         loginTime: undefined,
         remark: undefined,
-        msg: undefined,
-      };
-      this.resetForm("form");
+        msg: undefined
+      }
+      this.resetForm('form')
     },
-    getImgList: function () {
+    getImgList: function() {
       this.form[this.fileIndex] =
-        this.$refs["fileChoose"].resultList[0].fullUrl;
+        this.$refs['fileChoose'].resultList[0].fullUrl
     },
-    fileClose: function () {
-      this.fileOpen = false;
+    fileClose: function() {
+      this.fileOpen = false
     },
     // 关系
     // 文件
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageIndex = 1;
-      this.getList();
+      this.queryParams.pageIndex = 1
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.dateRange = [];
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.dateRange = []
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
     /** 新增按钮操作 */
     handleAdd() {
-      this.reset();
-      this.open = true;
-      this.title = "添加系统登录日志";
-      this.isEdit = false;
+      this.reset()
+      this.open = true
+      this.title = '添加系统登录日志'
+      this.isEdit = false
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map((item) => item.id);
-      this.single = selection.length !== 1;
-      this.multiple = !selection.length;
+      this.ids = selection.map((item) => item.id)
+      this.single = selection.length !== 1
+      this.multiple = !selection.length
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset();
-      const ID = row.id || this.ids;
+      this.reset()
+      const ID = row.id || this.ids
       getSysLoginlog(ID).then((response) => {
-        this.form = response.data;
-        this.open = true;
-        this.title = "修改系统登录日志";
-        this.isEdit = true;
-      });
+        this.form = response.data
+        this.open = true
+        this.title = '修改系统登录日志'
+        this.isEdit = true
+      })
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      var Ids = (row.id && [row.id]) || this.ids;
+      var Ids = (row.id && [row.id]) || this.ids
 
-      this.$confirm('是否确认删除编号为"' + Ids + '"的数据项?', "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('是否确认删除编号为"' + Ids + '"的数据项?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
-        .then(function () {
-          return delSysLoginlog({ ids: Ids });
+        .then(function() {
+          return delSysLoginlog({ ids: Ids })
         })
         .then((response) => {
           if (response.code === 200) {
-            this.msgSuccess(response.msg);
-            this.open = false;
-            this.getList();
+            this.msgSuccess(response.msg)
+            this.open = false
+            this.getList()
           } else {
-            this.msgError(response.msg);
+            this.msgError(response.msg)
           }
         })
-        .catch(function () {});
-    },
-  },
-};
+        .catch(function() {})
+    }
+  }
+}
 </script>

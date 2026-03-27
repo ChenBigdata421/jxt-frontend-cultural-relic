@@ -1,28 +1,128 @@
-// src/styles/tokens/typography.scss
-// 字体系统
+// ============================================
+// JXT 数字证据管理平台 - 字体系统
+// ============================================
 
+// ============================================
 // 字体家族
-$font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                   "Helvetica Neue", Arial, sans-serif;
+// ============================================
+// 中文字体优先，确保专业感
+$font-family-base: "SF Pro Text", "PingFang SC", "Hiragino Sans GB",
+                   "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+
+// 数字字体（用于数据展示）
+$font-family-number: "SF Mono", "Roboto Mono", "Consolas", monospace;
+
+// 代码字体
 $font-family-code: "SF Mono", Monaco, "Consolas", "Liberation Mono", "Courier New", monospace;
 
-// 字体大小 scale
-$font-size-xs: 12px;
-$font-size-sm: 13px;
-$font-size-base: 14px;    // 正文最小字号
-$font-size-md: 16px;
-$font-size-lg: 18px;
-$font-size-xl: 20px;
-$font-size-2xl: 24px;
-$font-size-3xl: 30px;
+// ============================================
+// 字体大小阶梯 - 基于 1.25 倍率的完美比例
+// ============================================
+$font-size-xs: 12px;     // 辅助信息
+$font-size-sm: 13px;     // 次要文本
+$font-size-base: 14px;   // 正文（最小可读）
+$font-size-md: 16px;     // 强调正文
+$font-size-lg: 18px;     // 小标题
+$font-size-xl: 20px;     // 卡片标题
+$font-size-2xl: 24px;    // 页面标题
+$font-size-3xl: 30px;    // 主标题
+$font-size-4xl: 36px;    // 特殊标题
 
-// 字重
-$font-weight-normal: 400;
-$font-weight-medium: 500;
-$font-weight-semibold: 600;
-$font-weight-bold: 700;
+// ============================================
+// 字重规范
+// ============================================
+$font-weight-light: 300;     // 轻盈（少用）
+$font-weight-normal: 400;    // 正文
+$font-weight-medium: 500;    // 强调文本
+$font-weight-semibold: 600;  // 小标题
+$font-weight-bold: 700;      // 标题
 
-// 行高
-$line-height-tight: 1.25;
-$line-height-normal: 1.5;
-$line-height-relaxed: 1.75;
+// ============================================
+// 行高规范
+// ============================================
+$line-height-tight: 1.25;    // 标题
+$line-height-normal: 1.5;    // 正文
+$line-height-relaxed: 1.75;  // 长文本
+
+// ============================================
+// 字间距
+// ============================================
+$letter-spacing-tight: -0.02em;
+$letter-spacing-normal: 0;
+$letter-spacing-wide: 0.02em;
+$letter-spacing-wider: 0.04em;
+
+// ============================================
+// 字体应用规则 Mixins
+// ============================================
+@mixin text-xs {
+  font-size: $font-size-xs;
+  line-height: $line-height-normal;
+}
+
+@mixin text-sm {
+  font-size: $font-size-sm;
+  line-height: $line-height-normal;
+}
+
+@mixin text-base {
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+}
+
+@mixin text-md {
+  font-size: $font-size-md;
+  line-height: $line-height-normal;
+}
+
+@mixin text-lg {
+  font-size: $font-size-lg;
+  line-height: $line-height-tight;
+  font-weight: $font-weight-semibold;
+}
+
+@mixin text-xl {
+  font-size: $font-size-xl;
+  line-height: $line-height-tight;
+  font-weight: $font-weight-semibold;
+}
+
+@mixin text-2xl {
+  font-size: $font-size-2xl;
+  line-height: $line-height-tight;
+  font-weight: $font-weight-semibold;
+}
+
+@mixin text-3xl {
+  font-size: $font-size-3xl;
+  line-height: $line-height-tight;
+  font-weight: $font-weight-semibold;
+}
+
+@mixin text-title {
+  font-size: $font-size-xl;
+  line-height: $line-height-tight;
+  font-weight: $font-weight-semibold;
+  color: var(--law-gray-800, $law-gray-800);
+}
+
+@mixin text-body {
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+  font-weight: $font-weight-normal;
+  color: var(--law-gray-700, $law-gray-700);
+}
+
+@mixin text-secondary {
+  font-size: $font-size-sm;
+  line-height: $line-height-normal;
+  font-weight: $font-weight-normal;
+  color: var(--law-gray-600, $law-gray-600);
+}
+
+@mixin text-caption {
+  font-size: $font-size-xs;
+  line-height: $line-height-normal;
+  font-weight: $font-weight-normal;
+  color: var(--law-gray-500, $law-gray-500);
+}

@@ -154,7 +154,7 @@
               <el-col :span="12">
                 <!-- prop="orgCode" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 orgCode 规则进行校验。-->
                 <el-form-item label="组织编码" prop="orgCode">
-                  <el-input v-model="form.orgCode" placeholder="请输入组织编码" :disabled="title !== '添加组织'"/>
+                  <el-input v-model="form.orgCode" placeholder="请输入组织编码" :disabled="title !== '添加组织'" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -476,7 +476,6 @@ export default {
     },
     /** 根据组织ID获取人员列表 */
     getUserListByOrgId(orgId) {
-
       // 如果是主类目（orgId为0），加载全体人员
       if (orgId === 0) {
         this.userOptions = [...this.allUserOptions]
@@ -499,7 +498,6 @@ export default {
     },
     /** 上级组织变更时的处理（仅在新增时生效） */
     handleParentOrgChange(orgId) {
-
       if (!this.isEdit && orgId !== undefined) {
         // 清空已选择的负责人
         this.form.leaderId = undefined

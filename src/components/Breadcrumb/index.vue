@@ -46,7 +46,7 @@ export default {
         matched = [{ path: '/index', meta: { title: '首页' }}].concat(matched)
       }
       this.levelList = matched.filter(item => item.meta && item.meta.title && item.meta.breadcrumb !== false)
-      //假设当前路由是：path: "/admin/sys-api"，则levelList包含三项路由信息：/index，/admin,/admin/sys-api
+      // 假设当前路由是：path: "/admin/sys-api"，则levelList包含三项路由信息：/index，/admin,/admin/sys-api
     },
     isDashboard(route) { // 是否为仪表板
       const name = route && route.name

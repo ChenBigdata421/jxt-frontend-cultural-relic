@@ -1,0 +1,73 @@
+// ============================================
+// JXT 数字证据管理平台 - 阴影系统
+// ============================================
+// 阴影层级（体现司法系统的严谨层次）
+
+// ============================================
+// 基础阴影
+// ============================================
+$shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.04);
+$shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.08), 0 10px 10px rgba(0, 0, 0, 0.04);
+$shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+
+// ============================================
+// 特殊阴影
+// ============================================
+$shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);                // 内阴影
+$shadow-focus: 0 0 0 3px rgba(26, 95, 122, 0.15);                // 焦点阴影
+$shadow-focus-error: 0 0 0 3px rgba(198, 40, 40, 0.15);          // 错误焦点阴影
+
+// ============================================
+// 组件特定阴影
+// ============================================
+$shadow-button: $shadow-sm;        // 按钮阴影
+$shadow-button-hover: $shadow-md;  // 按钮悬停阴影
+$shadow-card: $shadow-sm;          // 卡片阴影
+$shadow-card-hover: $shadow-md;    // 卡片悬停阴影
+$shadow-modal: $shadow-xl;         // 模态框阴影
+$shadow-dropdown: $shadow-lg;      // 下拉菜单阴影
+$shadow-popover: $shadow-lg;       // 气泡阴影
+$shadow-tooltip: $shadow-md;       // 提示框阴影
+
+// ============================================
+// 登录页专用阴影
+// ============================================
+$shadow-login-card: 0 20px 40px rgba(0, 0, 0, 0.3);
+
+// ============================================
+// 阴影 Mixins
+// ============================================
+@mixin shadow($value: $shadow-sm) {
+  box-shadow: $value;
+}
+
+@mixin shadow-sm {
+  box-shadow: $shadow-sm;
+}
+
+@mixin shadow-md {
+  box-shadow: $shadow-md;
+}
+
+@mixin shadow-lg {
+  box-shadow: $shadow-lg;
+}
+
+@mixin shadow-xl {
+  box-shadow: $shadow-xl;
+}
+
+@mixin shadow-none {
+  box-shadow: none;
+}
+
+@mixin shadow-focus {
+  box-shadow: $shadow-focus;
+}
+
+@mixin shadow-focus-error {
+  box-shadow: $shadow-focus-error;
+}

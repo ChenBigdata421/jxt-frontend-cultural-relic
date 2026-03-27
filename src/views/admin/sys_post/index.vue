@@ -47,11 +47,12 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-              >搜索</el-button
-            >
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-              >重置</el-button
-            >
+            >搜索</el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="mini"
+              @click="resetQuery"
+            >重置</el-button>
           </el-form-item>
         </el-form>
 
@@ -63,8 +64,7 @@
               icon="el-icon-plus"
               size="mini"
               @click="handleAdd"
-              >新增</el-button
-            >
+            >新增</el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button
@@ -74,8 +74,7 @@
               size="mini"
               :disabled="single"
               @click="handleUpdate"
-              >修改</el-button
-            >
+            >修改</el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button
@@ -85,8 +84,7 @@
               size="mini"
               :disabled="multiple"
               @click="handleDelete"
-              >删除</el-button
-            >
+            >删除</el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button
@@ -95,8 +93,7 @@
               icon="el-icon-download"
               size="mini"
               @click="handleExport"
-              >导出</el-button
-            >
+            >导出</el-button>
           </el-col>
         </el-row>
 
@@ -148,8 +145,7 @@
                 :type="row.status === 2 ? 'success' : 'info'"
                 size="small"
                 effect="dark"
-                >{{ selectDictLabel(statusOptions, row.status) }}</el-tag
-              >
+              >{{ selectDictLabel(statusOptions, row.status) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column
@@ -175,16 +171,14 @@
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
-                >修改</el-button
-              >
+              >修改</el-button>
               <el-button
                 v-permisaction="['admin:sysPost:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
                 @click="handleDelete(scope.row)"
-                >删除</el-button
-              >
+              >删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -224,8 +218,7 @@
                   v-for="dict in statusOptions"
                   :key="dict.value"
                   :label="dict.value"
-                  >{{ dict.label }}</el-radio
-                >
+                >{{ dict.label }}</el-radio>
               </el-radio-group>
             </el-form-item>
             <el-form-item label="备注" prop="remark">
@@ -252,12 +245,12 @@ import {
   getPost,
   delPost,
   addPost,
-  updatePost,
-} from "@/api/admin/sys-post";
-import { formatJson } from "@/utils";
+  updatePost
+} from '@/api/admin/sys-post'
+import { formatJson } from '@/utils'
 
 export default {
-  name: "SysPostManage",
+  name: 'SysPostManage',
   data() {
     return {
       // 遮罩层
@@ -273,7 +266,7 @@ export default {
       // 岗位表格数据
       postList: [],
       // 弹出层标题
-      title: "",
+      title: '',
       // 是否显示弹出层
       open: false,
       // 状态数据字典
@@ -284,50 +277,50 @@ export default {
         pageSize: 10,
         postCode: undefined,
         postName: undefined,
-        status: undefined,
+        status: undefined
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
         postName: [
-          { required: true, message: "岗位名称不能为空", trigger: "blur" },
+          { required: true, message: '岗位名称不能为空', trigger: 'blur' }
         ],
         postCode: [
-          { required: true, message: "岗位编码不能为空", trigger: "blur" },
+          { required: true, message: '岗位编码不能为空', trigger: 'blur' }
         ],
         sort: [
-          { required: true, message: "岗位顺序不能为空", trigger: "blur" },
-        ],
-      },
-    };
+          { required: true, message: '岗位顺序不能为空', trigger: 'blur' }
+        ]
+      }
+    }
   },
   created() {
-    this.getList();
-    this.getDicts("sys_normal_disable").then((response) => {
+    this.getList()
+    this.getDicts('sys_normal_disable').then((response) => {
       this.statusOptions = response.data.map((item) => ({
         ...item,
-        value: parseInt(item.value, 10),
-      }));
-    });
+        value: parseInt(item.value, 10)
+      }))
+    })
   },
   methods: {
     /** 查询岗位列表 */
     getList() {
-      this.loading = true;
+      this.loading = true
       listPost(this.queryParams).then((response) => {
         this.postList = response.data.list.map((item) => ({
           ...item,
-          status: Number(item.status),
-        }));
-        this.total = response.data.count;
-        this.loading = false;
-      });
+          status: Number(item.status)
+        }))
+        this.total = response.data.count
+        this.loading = false
+      })
     },
     // 取消按钮
     cancel() {
-      this.open = false;
-      this.reset();
+      this.open = false
+      this.reset()
     },
     // 表单重置
     reset() {
@@ -337,151 +330,151 @@ export default {
         postName: undefined,
         sort: 0,
         status: 2,
-        remark: undefined,
-      };
-      this.resetForm("form");
+        remark: undefined
+      }
+      this.resetForm('form')
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageIndex = 1;
-      this.getList();
+      this.queryParams.pageIndex = 1
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map((item) => item.postId);
-      this.single = selection.length !== 1;
-      this.multiple = !selection.length;
+      this.ids = selection.map((item) => item.postId)
+      this.single = selection.length !== 1
+      this.multiple = !selection.length
     },
     /** 新增按钮操作 */
     handleAdd() {
-      this.reset();
-      this.open = true;
-      this.title = "添加岗位";
+      this.reset()
+      this.open = true
+      this.title = '添加岗位'
     },
     handleSortChange(column, prop, order) {
-      prop = column.prop;
-      order = column.order;
-      if (this.order !== "" && this.order !== prop + "Order") {
-        this.queryParams[this.order] = undefined;
+      prop = column.prop
+      order = column.order
+      if (this.order !== '' && this.order !== prop + 'Order') {
+        this.queryParams[this.order] = undefined
       }
-      if (order === "descending") {
-        this.queryParams[prop + "Order"] = "desc";
-        this.order = prop + "Order";
-      } else if (order === "ascending") {
-        this.queryParams[prop + "Order"] = "asc";
-        this.order = prop + "Order";
+      if (order === 'descending') {
+        this.queryParams[prop + 'Order'] = 'desc'
+        this.order = prop + 'Order'
+      } else if (order === 'ascending') {
+        this.queryParams[prop + 'Order'] = 'asc'
+        this.order = prop + 'Order'
       } else {
-        this.queryParams[prop + "Order"] = undefined;
+        this.queryParams[prop + 'Order'] = undefined
       }
-      this.getList();
+      this.getList()
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset();
+      this.reset()
 
-      const postId = row.postId || this.ids;
+      const postId = row.postId || this.ids
       getPost(postId).then((response) => {
-        this.form = response.data;
-        this.form.status = Number(this.form.status);
-        this.open = true;
-        this.title = "修改岗位";
-      });
+        this.form = response.data
+        this.form.status = Number(this.form.status)
+        this.open = true
+        this.title = '修改岗位'
+      })
     },
     /** 提交按钮 */
-    submitForm: function () {
-      this.$refs["form"].validate((valid) => {
+    submitForm: function() {
+      this.$refs['form'].validate((valid) => {
         if (valid) {
           if (this.form.postId !== undefined) {
             updatePost(this.form, this.form.postId).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
+                this.msgSuccess(response.msg)
+                this.open = false
+                this.getList()
               } else {
-                this.msgError(response.msg);
+                this.msgError(response.msg)
               }
-            });
+            })
           } else {
             addPost(this.form).then((response) => {
               if (response.code === 200) {
-                this.msgSuccess(response.msg);
-                this.open = false;
-                this.getList();
+                this.msgSuccess(response.msg)
+                this.open = false
+                this.getList()
               } else {
-                this.msgError(response.msg);
+                this.msgError(response.msg)
               }
-            });
+            })
           }
         }
-      });
+      })
     },
     /** 删除按钮操作 */
     handleDelete(row) {
       // const postIds = row.postId || this.ids
-      const Ids = (row.postId && [row.postId]) || this.ids;
-      this.$confirm('是否确认删除岗位编号为"' + Ids + '"的数据项?', "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      const Ids = (row.postId && [row.postId]) || this.ids
+      this.$confirm('是否确认删除岗位编号为"' + Ids + '"的数据项?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
-        .then(function () {
-          return delPost({ ids: Ids });
+        .then(function() {
+          return delPost({ ids: Ids })
         })
         .then((response) => {
           if (response.code === 200) {
-            this.msgSuccess(response.msg);
-            this.open = false;
-            this.getList();
+            this.msgSuccess(response.msg)
+            this.open = false
+            this.getList()
           } else {
-            this.msgError(response.msg);
+            this.msgError(response.msg)
           }
         })
-        .catch(function () {});
+        .catch(function() {})
     },
     /** 导出按钮操作 */
     handleExport() {
       // const queryParams = this.queryParams
-      this.$confirm("是否确认导出所有岗位数据项?", "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('是否确认导出所有岗位数据项?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
         .then(() => {
-          this.downloadLoading = true;
-          import("@/vendor/Export2Excel").then((excel) => {
+          this.downloadLoading = true
+          import('@/vendor/Export2Excel').then((excel) => {
             const tHeader = [
-              "岗位编号",
-              "岗位编码",
-              "岗位名称",
-              "排序",
-              "创建时间",
-            ];
+              '岗位编号',
+              '岗位编码',
+              '岗位名称',
+              '排序',
+              '创建时间'
+            ]
             const filterVal = [
-              "postId",
-              "postCode",
-              "postName",
-              "sort",
-              "createdAt",
-            ];
-            const list = this.postList;
-            const data = formatJson(filterVal, list);
+              'postId',
+              'postCode',
+              'postName',
+              'sort',
+              'createdAt'
+            ]
+            const list = this.postList
+            const data = formatJson(filterVal, list)
             excel.export_json_to_excel({
               header: tHeader,
               data,
-              filename: "岗位管理",
+              filename: '岗位管理',
               autoWidth: true, // Optional
-              bookType: "xlsx", // Optional
-            });
-            this.downloadLoading = false;
-          });
+              bookType: 'xlsx' // Optional
+            })
+            this.downloadLoading = false
+          })
         })
-        .catch(function () {});
-    },
-  },
-};
+        .catch(function() {})
+    }
+  }
+}
 </script>

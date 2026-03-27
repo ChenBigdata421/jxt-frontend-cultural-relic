@@ -43,11 +43,12 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-              >搜索</el-button
-            >
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-              >重置</el-button
-            >
+            >搜索</el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="mini"
+              @click="resetQuery"
+            >重置</el-button>
           </el-form-item>
         </el-form>
 
@@ -60,8 +61,7 @@
               size="mini"
               :disabled="multiple"
               @click="handleDelete"
-              >删除</el-button
-            >
+            >删除</el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button
@@ -70,8 +70,7 @@
               icon="el-icon-download"
               size="mini"
               @click="handleExport"
-              >导出</el-button
-            >
+            >导出</el-button>
           </el-col>
         </el-row>
 
@@ -94,18 +93,15 @@
                   <el-tag
                     v-if="scope.row.requestMethod == 'POST'"
                     type="success"
-                    >{{ scope.row.requestMethod }}</el-tag
-                  >
+                  >{{ scope.row.requestMethod }}</el-tag>
                   <el-tag
                     v-if="scope.row.requestMethod == 'PUT'"
                     type="warning"
-                    >{{ scope.row.requestMethod }}</el-tag
-                  >
+                  >{{ scope.row.requestMethod }}</el-tag>
                   <el-tag
                     v-if="scope.row.requestMethod == 'DELETE'"
                     type="danger"
-                    >{{ scope.row.requestMethod }}</el-tag
-                  >
+                  >{{ scope.row.requestMethod }}</el-tag>
                   {{ scope.row.operUrl }}
                 </p>
                 <p>Host: {{ scope.row.operIp }}</p>
@@ -118,18 +114,15 @@
                   <el-tag
                     v-if="scope.row.requestMethod == 'POST'"
                     type="success"
-                    >{{ scope.row.requestMethod }}</el-tag
-                  >
+                  >{{ scope.row.requestMethod }}</el-tag>
                   <el-tag
                     v-if="scope.row.requestMethod == 'PUT'"
                     type="warning"
-                    >{{ scope.row.requestMethod }}</el-tag
-                  >
+                  >{{ scope.row.requestMethod }}</el-tag>
                   <el-tag
                     v-if="scope.row.requestMethod == 'DELETE'"
                     type="danger"
-                    >{{ scope.row.requestMethod }}</el-tag
-                  >
+                  >{{ scope.row.requestMethod }}</el-tag>
                   {{ scope.row.operUrl }}
                 </div>
               </el-popover>
@@ -169,8 +162,7 @@
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row, scope.index)"
-                >详细</el-button
-              >
+              >详细</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -198,10 +190,10 @@
                 }}</el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="登录信息："
-                  >{{ form.operName }} / {{ form.operIp }} /
-                  {{ form.operLocation }}</el-form-item
-                >
+                <el-form-item
+                  label="登录信息："
+                >{{ form.operName }} / {{ form.operIp }} /
+                  {{ form.operLocation }}</el-form-item>
               </el-col>
 
               <el-col :span="12">
@@ -255,12 +247,12 @@
 import {
   listSysOperlog,
   delSysOperlog,
-  cleanOperlog,
-} from "@/api/admin/sys-opera-log";
-import { formatJson } from "@/utils";
+  cleanOperlog
+} from '@/api/admin/sys-opera-log'
+import { formatJson } from '@/utils'
 
 export default {
-  name: "SysOperLogManage",
+  name: 'SysOperLogManage',
   data() {
     return {
       // 遮罩层
@@ -289,147 +281,147 @@ export default {
         operName: undefined,
         businessType: undefined,
         status: undefined,
-        createdAtOrder: "desc",
-      },
-    };
+        createdAtOrder: 'desc'
+      }
+    }
   },
   created() {
-    this.getList();
+    this.getList()
 
-    this.getDicts("sys_common_status").then((response) => {
-      this.statusOptions = response.data;
-    });
+    this.getDicts('sys_common_status').then((response) => {
+      this.statusOptions = response.data
+    })
   },
   methods: {
     /** 查询登录日志 */
     getList() {
-      this.loading = true;
+      this.loading = true
       listSysOperlog(this.addDateRange(this.queryParams, this.dateRange)).then(
         (response) => {
-          this.list = response.data.list;
-          this.total = response.data.count;
-          this.loading = false;
+          this.list = response.data.list
+          this.total = response.data.count
+          this.loading = false
         }
-      );
+      )
     },
 
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageIndex = 1;
-      this.getList();
+      this.queryParams.pageIndex = 1
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.dateRange = [];
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.dateRange = []
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map((item) => item.id);
-      this.multiple = !selection.length;
+      this.ids = selection.map((item) => item.id)
+      this.multiple = !selection.length
     },
     /** 详细按钮操作 */
     handleView(row) {
-      this.open = true;
-      this.form = row;
+      this.open = true
+      this.form = row
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const operIds = (row.id && [row.id]) || this.ids;
+      const operIds = (row.id && [row.id]) || this.ids
       this.$confirm(
         '是否确认删除日志编号为"' + operIds + '"的数据项?',
-        "警告",
+        '警告',
         {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
         }
       )
-        .then(function () {
-          return delSysOperlog({ ids: operIds });
+        .then(function() {
+          return delSysOperlog({ ids: operIds })
         })
         .then((response) => {
           if (response.code === 200) {
-            this.msgSuccess(response.msg);
-            this.open = false;
-            this.getList();
+            this.msgSuccess(response.msg)
+            this.open = false
+            this.getList()
           } else {
-            this.msgError(response.msg);
+            this.msgError(response.msg)
           }
         })
-        .catch(function () {});
+        .catch(function() {})
     },
 
     /** 清空按钮操作 */
     handleClean() {
-      this.$confirm("是否确认清空所有操作日志数据项?", "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('是否确认清空所有操作日志数据项?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
-        .then(function () {
-          return cleanOperlog();
+        .then(function() {
+          return cleanOperlog()
         })
         .then((response) => {
           if (response.code === 200) {
-            this.msgSuccess(response.msg);
-            this.open = false;
-            this.getList();
+            this.msgSuccess(response.msg)
+            this.open = false
+            this.getList()
           } else {
-            this.msgError(response.msg);
+            this.msgError(response.msg)
           }
         })
-        .catch(function () {});
+        .catch(function() {})
     },
     /** 导出按钮操作 */
     handleExport() {
       // const queryParams = this.queryParams
-      this.$confirm("是否确认导出所有操作日志数据项?", "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('是否确认导出所有操作日志数据项?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       }).then(() => {
-        this.downloadLoading = true;
-        import("@/vendor/Export2Excel").then((excel) => {
+        this.downloadLoading = true
+        import('@/vendor/Export2Excel').then((excel) => {
           const tHeader = [
-            "日志编号",
-            "系统模块",
-            "操作类型",
-            "请求方式",
-            "操作人员",
-            "主机",
-            "操作地点",
-            "操作状态",
-            "操作url",
-            "操作日期",
-          ];
+            '日志编号',
+            '系统模块',
+            '操作类型',
+            '请求方式',
+            '操作人员',
+            '主机',
+            '操作地点',
+            '操作状态',
+            '操作url',
+            '操作日期'
+          ]
           const filterVal = [
-            "ID",
-            "title",
-            "businessType",
-            "method",
-            "operName",
-            "operIp",
-            "operLocation",
-            "status",
-            "operUrl",
-            "operTime",
-          ];
-          const list = this.list;
-          const data = formatJson(filterVal, list);
+            'ID',
+            'title',
+            'businessType',
+            'method',
+            'operName',
+            'operIp',
+            'operLocation',
+            'status',
+            'operUrl',
+            'operTime'
+          ]
+          const list = this.list
+          const data = formatJson(filterVal, list)
           excel.export_json_to_excel({
             header: tHeader,
             data,
-            filename: "操作日志",
+            filename: '操作日志',
             autoWidth: true, // Optional
-            bookType: "xlsx", // Optional
-          });
-          this.downloadLoading = false;
-        });
-      });
-    },
-  },
-};
+            bookType: 'xlsx' // Optional
+          })
+          this.downloadLoading = false
+        })
+      })
+    }
+  }
+}
 </script>
 

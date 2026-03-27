@@ -1,7 +1,14 @@
 <template>
-  <div>
-    <svg-icon :icon-class="isFullscreen?'exit-fullscreen':'fullscreen'" @click="click" />
-  </div>
+  <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="bottom" effect="dark">
+    <div class="screenfull-container" @click="click">
+      <svg v-if="!isFullscreen" class="screenfull-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+      </svg>
+      <svg v-else class="screenfull-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
+      </svg>
+    </div>
+  </el-tooltip>
 </template>
 
 <script>
@@ -60,12 +67,22 @@ export default {
 </script>
 
 <style scoped>
-.screenfull-svg {
+.screenfull-container {
   display: inline-block;
   cursor: pointer;
-  fill: #5a5e66;;
   width: 20px;
   height: 20px;
   vertical-align: 10px;
+
+  .screenfull-icon {
+    width: 20px;
+    height: 20px;
+    fill: #1A5F7A;
+    transition: fill 0.3s;
+  }
+
+  &:hover .screenfull-icon {
+    fill: #0D47A1;
+  }
 }
 </style>

@@ -13,15 +13,15 @@
         type="primary"
         icon="el-icon-plus"
         size="medium"
-        @click="openCreateDialog"
         class="create-btn"
+        @click="openCreateDialog"
       >
         新增配置
       </el-button>
     </div>
 
     <!-- FTP Table -->
-    <div class="ftp-table-wrapper" v-loading="loading">
+    <div v-loading="loading" class="ftp-table-wrapper">
       <el-table
         :data="ftpList"
         border
@@ -34,7 +34,7 @@
         <el-table-column label="用户名" min-width="160">
           <template slot-scope="scope">
             <div class="username-cell">
-              <i class="el-icon-user username-icon"></i>
+              <i class="el-icon-user username-icon" />
               <span class="username-text">{{ scope.row.username }}</span>
             </div>
           </template>
@@ -53,8 +53,8 @@
               active-value="active"
               inactive-value="inactive"
               :loading="scope.row.statusChanging"
-              @change="handleStatusChange(scope.row)"
               class="status-switch"
+              @change="handleStatusChange(scope.row)"
             />
           </template>
         </el-table-column>
@@ -100,7 +100,7 @@
 
       <!-- Empty State -->
       <div v-if="!loading && ftpList.length === 0" class="empty-state">
-        <i class="el-icon-folder-opened empty-icon"></i>
+        <i class="el-icon-folder-opened empty-icon" />
         <p class="empty-text">暂无 FTP 配置</p>
         <p class="empty-hint">点击上方"新增配置"按钮创建第一个 FTP 账号</p>
       </div>
@@ -134,7 +134,7 @@
             clearable
           >
             <template slot="prefix">
-              <i class="el-icon-user input-icon"></i>
+              <i class="el-icon-user input-icon" />
             </template>
           </el-input>
           <div v-if="dialogMode === 'edit'" class="form-tip">用户名创建后不可修改</div>
@@ -150,7 +150,7 @@
             :maxlength="64"
           >
             <template slot="prefix">
-              <i class="el-icon-lock input-icon"></i>
+              <i class="el-icon-lock input-icon" />
             </template>
           </el-input>
         </el-form-item>
@@ -168,7 +168,7 @@
             class="password-input"
           >
             <template slot="prefix">
-              <i class="el-icon-lock input-icon"></i>
+              <i class="el-icon-lock input-icon" />
             </template>
           </el-input>
           <div v-if="!formData.changePassword" class="form-tip">
@@ -193,13 +193,13 @@
           <el-radio-group v-model="formData.status">
             <el-radio label="active">
               <span class="status-radio-label">
-                <i class="el-icon-circle-check"></i>
+                <i class="el-icon-circle-check" />
                 活跃
               </span>
             </el-radio>
             <el-radio label="inactive">
               <span class="status-radio-label">
-                <i class="el-icon-circle-close"></i>
+                <i class="el-icon-circle-close" />
                 禁用
               </span>
             </el-radio>
@@ -208,12 +208,12 @@
       </el-form>
 
       <div slot="footer" class="dialog-footer">
-        <el-button @click="handleDialogClose" size="medium">取消</el-button>
+        <el-button size="medium" @click="handleDialogClose">取消</el-button>
         <el-button
           type="primary"
-          @click="handleSubmit"
           :loading="submitting"
           size="medium"
+          @click="handleSubmit"
         >
           {{ dialogMode === 'edit' ? '保存' : '创建' }}
         </el-button>
@@ -231,17 +231,17 @@
       :modal-append-to-body="true"
     >
       <div class="delete-content">
-        <i class="el-icon-warning-outline delete-icon"></i>
+        <i class="el-icon-warning-outline delete-icon" />
         <p class="delete-text">确定要删除 FTP 配置 <strong>"{{ deletingItem && deletingItem.username }}"</strong> 吗？</p>
         <p class="delete-hint">删除后将无法恢复，请谨慎操作</p>
       </div>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="deleteDialogVisible = false" size="medium">取消</el-button>
+        <el-button size="medium" @click="deleteDialogVisible = false">取消</el-button>
         <el-button
           type="danger"
-          @click="confirmDelete"
           :loading="deleting"
           size="medium"
+          @click="confirmDelete"
         >
           确认删除
         </el-button>
@@ -256,175 +256,175 @@ import {
   createTenantFtpConfig,
   updateTenantFtpConfig,
   deleteTenantFtpConfig,
-  testTenantFtpConfig,
-} from "@/api/platform/tenants";
+  testTenantFtpConfig
+} from '@/api/platform/tenants'
 
 export default {
-  name: "MultiFtpConfig",
+  name: 'MultiFtpConfig',
   props: {
     tenantId: {
       type: [Number, String],
-      required: true,
-    },
+      required: true
+    }
   },
   data() {
     return {
       loading: false,
       ftpList: [],
-      emptyText: "暂无数据",
+      emptyText: '暂无数据',
 
       // Dialog state
       dialogVisible: false,
-      dialogMode: "create", // 'create' or 'edit'
+      dialogMode: 'create', // 'create' or 'edit'
       submitting: false,
 
       // Form data
       formData: {
-        username: "",
-        password: "",
-        description: "",
-        status: "active",
-        changePassword: false,
+        username: '',
+        password: '',
+        description: '',
+        status: 'active',
+        changePassword: false
       },
 
       // Form validation rules
       formRules: {
         username: [
-          { required: true, message: "请输入用户名", trigger: "blur" },
-          { min: 3, max: 64, message: "用户名长度在 3 到 64 个字符", trigger: "blur" },
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 3, max: 64, message: '用户名长度在 3 到 64 个字符', trigger: 'blur' },
           {
             pattern: /^[a-zA-Z0-9_-]+$/,
-            message: "用户名只能包含字母、数字、下划线和连字符",
-            trigger: "blur",
-          },
+            message: '用户名只能包含字母、数字、下划线和连字符',
+            trigger: 'blur'
+          }
         ],
-        password: [{ validator: this.validatePassword, trigger: "blur" }],
+        password: [{ validator: this.validatePassword, trigger: 'blur' }],
         description: [
-          { max: 255, message: "描述最多 255 个字符", trigger: "blur" },
-        ],
+          { max: 255, message: '描述最多 255 个字符', trigger: 'blur' }
+        ]
       },
 
       // Delete dialog
       deleteDialogVisible: false,
       deletingItem: null,
-      deleting: false,
-    };
+      deleting: false
+    }
   },
   computed: {
     dialogTitle() {
-      return this.dialogMode === "create" ? "新增 FTP 配置" : "编辑 FTP 配置";
-    },
+      return this.dialogMode === 'create' ? '新增 FTP 配置' : '编辑 FTP 配置'
+    }
   },
   watch: {
     tenantId: {
       immediate: true,
       handler(newVal) {
         if (newVal) {
-          this.loadFtpList();
+          this.loadFtpList()
         }
-      },
-    },
+      }
+    }
   },
   methods: {
     // Custom validation for password
     validatePassword(rule, value, callback) {
-      const isEditing = this.dialogMode === 'edit';
+      const isEditing = this.dialogMode === 'edit'
       if (!isEditing && !value) {
-        callback(new Error("密码不能为空"));
+        callback(new Error('密码不能为空'))
       } else if (value && value.length < 6) {
-        callback(new Error("密码至少需要6个字符"));
+        callback(new Error('密码至少需要6个字符'))
       } else {
-        callback();
+        callback()
       }
     },
 
     // Load FTP configuration list
     async loadFtpList() {
-      if (!this.tenantId) return;
+      if (!this.tenantId) return
 
-      this.loading = true;
+      this.loading = true
       try {
-        const resp = await listTenantFtpConfigs(this.tenantId);
+        const resp = await listTenantFtpConfigs(this.tenantId)
         if (resp && resp.code === 200 && resp.data) {
           this.ftpList = (resp.data.items || []).map(item => ({
             ...item,
-            statusChanging: false,
-          }));
+            statusChanging: false
+          }))
         } else {
-          this.ftpList = [];
-          this.$message.error((resp && resp.msg) || "获取 FTP 配置失败");
+          this.ftpList = []
+          this.$message.error((resp && resp.msg) || '获取 FTP 配置失败')
         }
       } catch (e) {
-        this.ftpList = [];
-        this.$message.error("获取 FTP 配置失败：" + (e.message || "未知错误"));
+        this.ftpList = []
+        this.$message.error('获取 FTP 配置失败：' + (e.message || '未知错误'))
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
 
     // Open create dialog
     openCreateDialog() {
-      this.dialogMode = "create";
-      this.dialogVisible = true;
-      this.resetForm();
+      this.dialogMode = 'create'
+      this.dialogVisible = true
+      this.resetForm()
       this.$nextTick(() => {
         if (this.$refs.ftpForm) {
-          this.$refs.ftpForm.clearValidate();
+          this.$refs.ftpForm.clearValidate()
         }
-      });
+      })
     },
 
     // Open edit dialog
     openEditDialog(row) {
-      this.dialogMode = "edit";
-      this.dialogVisible = true;
+      this.dialogMode = 'edit'
+      this.dialogVisible = true
       this.formData = {
         username: row.username,
-        password: "",
-        description: row.description || "",
+        password: '',
+        description: row.description || '',
         status: row.status,
-        changePassword: false,
-      };
+        changePassword: false
+      }
       this.$nextTick(() => {
         if (this.$refs.ftpForm) {
-          this.$refs.ftpForm.clearValidate();
+          this.$refs.ftpForm.clearValidate()
         }
-      });
+      })
     },
 
     // Handle dialog close
     handleDialogClose() {
-      this.dialogVisible = false;
-      this.resetForm();
+      this.dialogVisible = false
+      this.resetForm()
     },
 
     // Reset form
     resetForm() {
       this.formData = {
-        username: "",
-        password: "",
-        description: "",
-        status: "active",
-        changePassword: false,
-      };
+        username: '',
+        password: '',
+        description: '',
+        status: 'active',
+        changePassword: false
+      }
     },
 
     // Handle form submit
     handleSubmit() {
-      this.$refs.ftpForm.validate(async (valid) => {
-        if (!valid) return;
+      this.$refs.ftpForm.validate(async(valid) => {
+        if (!valid) return
 
-        this.submitting = true;
+        this.submitting = true
         try {
           if (this.dialogMode === 'edit') {
-            await this.updateFtpConfig();
+            await this.updateFtpConfig()
           } else {
-            await this.createFtpConfig();
+            await this.createFtpConfig()
           }
         } finally {
-          this.submitting = false;
+          this.submitting = false
         }
-      });
+      })
     },
 
     // Create FTP config
@@ -432,16 +432,16 @@ export default {
       const data = {
         username: this.formData.username,
         password: this.formData.password,
-        description: this.formData.description,
-      };
+        description: this.formData.description
+      }
 
-      const resp = await createTenantFtpConfig(this.tenantId, data);
+      const resp = await createTenantFtpConfig(this.tenantId, data)
       if (resp && resp.code === 200) {
-        this.$message.success(resp.msg || "创建成功");
-        this.dialogVisible = false;
-        this.loadFtpList();
+        this.$message.success(resp.msg || '创建成功')
+        this.dialogVisible = false
+        this.loadFtpList()
       } else {
-        this.$message.error((resp && resp.msg) || "创建失败");
+        this.$message.error((resp && resp.msg) || '创建失败')
       }
     },
 
@@ -449,138 +449,138 @@ export default {
     async updateFtpConfig() {
       const row = this.ftpList.find(
         item => item.username === this.formData.username
-      );
+      )
       if (!row) {
-        this.$message.error("找不到要更新的配置");
-        return;
+        this.$message.error('找不到要更新的配置')
+        return
       }
 
       const data = {
         description: this.formData.description,
-        status: this.formData.status,
-      };
+        status: this.formData.status
+      }
 
       // Only include password if user wants to change it
       if (this.formData.changePassword && this.formData.password) {
-        data.password = this.formData.password;
+        data.password = this.formData.password
       }
 
       const resp = await updateTenantFtpConfig(
         this.tenantId,
         row.id,
         data
-      );
+      )
       if (resp && resp.code === 200) {
-        this.$message.success(resp.msg || "保存成功");
-        this.dialogVisible = false;
-        this.loadFtpList();
+        this.$message.success(resp.msg || '保存成功')
+        this.dialogVisible = false
+        this.loadFtpList()
       } else {
-        this.$message.error((resp && resp.msg) || "保存失败");
+        this.$message.error((resp && resp.msg) || '保存失败')
       }
     },
 
     // Handle status change (inline switch)
     async handleStatusChange(row) {
-      row.statusChanging = true;
+      row.statusChanging = true
       try {
         const resp = await updateTenantFtpConfig(this.tenantId, row.id, {
-          status: row.status,
-        });
+          status: row.status
+        })
         if (resp && resp.code === 200) {
-          this.$message.success(resp.msg || "状态已更新");
+          this.$message.success(resp.msg || '状态已更新')
         } else {
           // Revert status on failure
-          row.status = row.status === "active" ? "inactive" : "active";
-          this.$message.error((resp && resp.msg) || "状态更新失败");
+          row.status = row.status === 'active' ? 'inactive' : 'active'
+          this.$message.error((resp && resp.msg) || '状态更新失败')
         }
       } catch (e) {
         // Revert status on error
-        row.status = row.status === "active" ? "inactive" : "active";
-        this.$message.error("状态更新失败：" + (e.message || "未知错误"));
+        row.status = row.status === 'active' ? 'inactive' : 'active'
+        this.$message.error('状态更新失败：' + (e.message || '未知错误'))
       } finally {
-        row.statusChanging = false;
+        row.statusChanging = false
       }
     },
 
     // Handle test connection
     async handleTestConnection(row) {
-      row.testing = true;
+      row.testing = true
       try {
-        const resp = await testTenantFtpConfig(this.tenantId, row.id);
+        const resp = await testTenantFtpConfig(this.tenantId, row.id)
         if (resp && resp.code === 200 && resp.data) {
-          const result = resp.data;
+          const result = resp.data
           if (result.success) {
             this.$notify({
-              title: "测试成功",
-              message: result.message || "FTP 配置有效",
-              type: "success",
-              duration: 3000,
-            });
+              title: '测试成功',
+              message: result.message || 'FTP 配置有效',
+              type: 'success',
+              duration: 3000
+            })
           } else {
             this.$notify({
-              title: "测试失败",
-              message: result.message || "FTP 配置无效",
-              type: "warning",
-              duration: 3000,
-            });
+              title: '测试失败',
+              message: result.message || 'FTP 配置无效',
+              type: 'warning',
+              duration: 3000
+            })
           }
         } else {
-          this.$message.error((resp && resp.msg) || "测试失败");
+          this.$message.error((resp && resp.msg) || '测试失败')
         }
       } catch (e) {
-        this.$message.error("测试失败：" + (e.message || "未知错误"));
+        this.$message.error('测试失败：' + (e.message || '未知错误'))
       } finally {
-        row.testing = false;
+        row.testing = false
       }
     },
 
     // Handle delete button click
     handleDelete(row) {
-      this.deletingItem = row;
-      this.deleteDialogVisible = true;
+      this.deletingItem = row
+      this.deleteDialogVisible = true
     },
 
     // Confirm delete
     async confirmDelete() {
-      if (!this.deletingItem) return;
+      if (!this.deletingItem) return
 
-      this.deleting = true;
+      this.deleting = true
       try {
         const resp = await deleteTenantFtpConfig(
           this.tenantId,
           this.deletingItem.id
-        );
+        )
         if (resp && resp.code === 200) {
-          this.$message.success(resp.msg || "删除成功");
-          this.deleteDialogVisible = false;
-          this.loadFtpList();
+          this.$message.success(resp.msg || '删除成功')
+          this.deleteDialogVisible = false
+          this.loadFtpList()
         } else {
-          this.$message.error((resp && resp.msg) || "删除失败");
+          this.$message.error((resp && resp.msg) || '删除失败')
         }
       } catch (e) {
-        this.$message.error("删除失败：" + (e.message || "未知错误"));
+        this.$message.error('删除失败：' + (e.message || '未知错误'))
       } finally {
-        this.deleting = false;
+        this.deleting = false
       }
     },
 
     // Format time
     formatTime(timeStr) {
-      if (!timeStr) return "-";
+      if (!timeStr) return '-'
       try {
-        const date = new Date(timeStr);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
-        return `${year}-${month}-${day} ${hours}:${minutes}`;
+        const date = new Date(timeStr)
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        const hours = String(date.getHours()).padStart(2, '0')
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        return `${year}-${month}-${day} ${hours}:${minutes}`
       } catch (e) {
-        return timeStr;
+        return timeStr
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>
 
 <style>

@@ -47,11 +47,12 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-              >搜索</el-button
-            >
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-              >重置</el-button
-            >
+            >搜索</el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="mini"
+              @click="resetQuery"
+            >重置</el-button>
           </el-form-item>
         </el-form>
 
@@ -63,8 +64,7 @@
               icon="el-icon-plus"
               size="mini"
               @click="handleAdd"
-              >新增</el-button
-            >
+            >新增</el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button
@@ -74,8 +74,7 @@
               size="mini"
               :disabled="!selectedId"
               @click="handleUpdate"
-              >修改</el-button
-            >
+            >修改</el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button
@@ -85,8 +84,7 @@
               size="mini"
               :disabled="selectedIds.length === 0"
               @click="handleDelete"
-              >删除</el-button
-            >
+            >删除</el-button>
           </el-col>
         </el-row>
 
@@ -143,8 +141,7 @@
                 type="text"
                 icon="el-icon-view"
                 @click="handlePrecheck(scope.row)"
-                >检查</el-button
-              >
+              >检查</el-button>
               <el-button
                 v-permisaction="['platform:tenants:status']"
                 size="mini"
@@ -152,32 +149,28 @@
                 icon="el-icon-circle-check"
                 :disabled="scope.row && scope.row.status === 'active'"
                 @click="handleActivate(scope.row)"
-                >激活</el-button
-              >
+              >激活</el-button>
               <el-button
                 v-permisaction="['platform:tenants:status']"
                 size="mini"
                 type="text"
                 icon="el-icon-refresh"
                 @click="handleChangeStatus(scope.row)"
-                >状态</el-button
-              >
+              >状态</el-button>
               <el-button
                 v-permisaction="['platform:tenants:config']"
                 size="mini"
                 type="text"
                 icon="el-icon-setting"
                 @click="openTenantConfig(scope.row)"
-                >配置</el-button
-              >
+              >配置</el-button>
               <el-button
                 v-permisaction="['platform:tenants:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
-                >编辑</el-button
-              >
+              >编辑</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -289,9 +282,9 @@
             <el-tabs v-model="configActiveTab" type="border-card">
               <el-tab-pane label="Domain" name="domain">
                 <el-form
+                  v-loading="configLoading"
                   :model="tenantDomainForm"
                   label-width="120px"
-                  v-loading="configLoading"
                 >
                   <el-form-item label="主域名">
                     <el-input
@@ -319,14 +312,12 @@
                       size="mini"
                       :loading="configSaving"
                       @click="saveTenantDomain"
-                      >保存</el-button
-                    >
+                    >保存</el-button>
                     <el-button
                       size="mini"
                       :disabled="configSaving"
                       @click="loadTenantDomain"
-                      >刷新</el-button
-                    >
+                    >刷新</el-button>
                   </el-form-item>
                 </el-form>
               </el-tab-pane>
@@ -341,9 +332,9 @@
 
               <el-tab-pane label="Storage" name="storage">
                 <el-form
+                  v-loading="configLoading"
                   :model="tenantStorageForm"
                   label-width="150px"
-                  v-loading="configLoading"
                 >
                   <el-form-item label="上传配额（GB）">
                     <el-input-number
@@ -375,14 +366,12 @@
                       size="mini"
                       :loading="configSaving"
                       @click="saveTenantStorage"
-                      >保存</el-button
-                    >
+                    >保存</el-button>
                     <el-button
                       size="mini"
                       :disabled="configSaving"
                       @click="loadTenantStorage"
-                      >刷新</el-button
-                    >
+                    >刷新</el-button>
                   </el-form-item>
                 </el-form>
               </el-tab-pane>
@@ -414,16 +403,16 @@
                   </el-tag>
                 </el-col>
                 <el-col :span="12" style="text-align: right">
-                  <span v-if="precheckResult.checkTime"
-                    >检查时间：{{ precheckResult.checkTime }}</span
-                  >
+                  <span
+                    v-if="precheckResult.checkTime"
+                  >检查时间：{{ precheckResult.checkTime }}</span>
                 </el-col>
               </el-row>
 
               <el-table
                 v-if="
                   precheckResult.checkedItems &&
-                  precheckResult.checkedItems.length
+                    precheckResult.checkedItems.length
                 "
                 :data="precheckResult.checkedItems"
                 border
@@ -480,16 +469,16 @@ import {
   updateTenantStorage,
   getTenantPrecheck,
   updateTenantCode,
-  getTenantByCode,
-} from "@/api/platform/tenants";
-import ServiceDatabaseConfig from "./ServiceDatabaseConfig.vue";
-import MultiFtpConfig from "./MultiFtpConfig.vue";
+  getTenantByCode
+} from '@/api/platform/tenants'
+import ServiceDatabaseConfig from './ServiceDatabaseConfig.vue'
+import MultiFtpConfig from './MultiFtpConfig.vue'
 
 export default {
-  name: "PlatformTenants",
+  name: 'PlatformTenants',
   components: {
     ServiceDatabaseConfig,
-    MultiFtpConfig,
+    MultiFtpConfig
   },
   data() {
     return {
@@ -498,112 +487,112 @@ export default {
       total: 0,
       selectedIds: [],
       open: false,
-      dialogTitle: "",
+      dialogTitle: '',
       form: {},
       configOpen: false,
-      configActiveTab: "hosts",
+      configActiveTab: 'hosts',
       configSaving: false,
       configLoading: false,
       configTenantId: null,
-      configTenantName: "",
+      configTenantName: '',
       tenantDomainForm: {
-        primary: "",
-        aliases: "",
-        internal: "",
+        primary: '',
+        aliases: '',
+        internal: ''
       },
       tenantStorageForm: {
         uploadQuotaGb: 100,
         maxFileSizeMb: 1024,
-        maxConcurrentUploads: 10,
+        maxConcurrentUploads: 10
       },
       precheckOpen: false,
       precheckLoading: false,
-      precheckError: "",
+      precheckError: '',
       precheckResult: null,
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
         name: undefined,
         code: undefined,
-        status: undefined,
+        status: undefined
       },
       rules: {
         code: [
-          { required: true, message: "租户编码不能为空", trigger: "blur" },
+          { required: true, message: '租户编码不能为空', trigger: 'blur' },
           {
             min: 2,
             max: 32,
-            message: "长度在 2 到 32 个字符",
-            trigger: "blur",
+            message: '长度在 2 到 32 个字符',
+            trigger: 'blur'
           },
           {
             pattern: /^[a-zA-Z0-9_-]+$/,
-            message: "只能包含字母、数字、下划线和连字符",
-            trigger: "blur",
-          },
+            message: '只能包含字母、数字、下划线和连字符',
+            trigger: 'blur'
+          }
         ],
         name: [
-          { required: true, message: "租户名称不能为空", trigger: "blur" },
+          { required: true, message: '租户名称不能为空', trigger: 'blur' }
         ],
         status: [
-          { required: true, message: "状态不能为空", trigger: "change" },
-        ],
-      },
-    };
+          { required: true, message: '状态不能为空', trigger: 'change' }
+        ]
+      }
+    }
   },
   computed: {
     selectedId() {
-      return this.selectedIds.length === 1 ? this.selectedIds[0] : null;
+      return this.selectedIds.length === 1 ? this.selectedIds[0] : null
     },
     tenantConfigTitle() {
-      if (!this.configTenantId) return "租户配置";
-      return `租户配置：${this.configTenantName}（ID: ${this.configTenantId}）`;
-    },
+      if (!this.configTenantId) return '租户配置'
+      return `租户配置：${this.configTenantName}（ID: ${this.configTenantId}）`
+    }
   },
   created() {
-    this.getList();
+    this.getList()
   },
   methods: {
     normalizeQueryParams(params = {}) {
-      const query = { ...params };
+      const query = { ...params }
       Object.keys(query).forEach((key) => {
-        const value = query[key];
-        if (value === "" || value === null || value === undefined) {
-          delete query[key];
+        const value = query[key]
+        if (value === '' || value === null || value === undefined) {
+          delete query[key]
         }
-      });
-      return query;
+      })
+      return query
     },
     async getList() {
-      this.loading = true;
+      this.loading = true
       try {
-        const query = this.normalizeQueryParams(this.queryParams);
-        const resp = await listTenants(query);
+        const query = this.normalizeQueryParams(this.queryParams)
+        const resp = await listTenants(query)
         if (resp && resp.code === 200 && resp.data) {
-          this.list = resp.data.list || [];
-          this.total = resp.data.count || 0;
+          this.list = resp.data.list || []
+          this.total = resp.data.count || 0
         } else {
-          this.list = [];
-          this.total = 0;
-          this.msgError((resp && resp.msg) || "获取租户列表失败");
+          this.list = []
+          this.total = 0
+          this.msgError((resp && resp.msg) || '获取租户列表失败')
         }
       } catch (e) {
-        this.list = [];
-        this.total = 0;
-        this.msgError("获取租户列表失败：" + (e.message || "未知错误"));
+        this.list = []
+        this.total = 0
+        this.msgError('获取租户列表失败：' + (e.message || '未知错误'))
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
     handleSelectionChange(selection) {
       this.selectedIds = (selection || [])
         .map((r) => r && r.id)
-        .filter(Boolean);
+        .filter(Boolean)
     },
     handleQuery() {
-      this.queryParams.pageIndex = 1;
-      this.selectedIds = [];
-      this.getList();
+      this.queryParams.pageIndex = 1
+      this.selectedIds = []
+      this.getList()
     },
     resetQuery() {
       this.queryParams = {
@@ -611,285 +600,285 @@ export default {
         pageSize: 10,
         name: undefined,
         code: undefined,
-        status: undefined,
-      };
-      this.selectedIds = [];
-      this.getList();
+        status: undefined
+      }
+      this.selectedIds = []
+      this.getList()
     },
     handleAdd() {
-      this.form = { status: "inactive", code: undefined };
-      this.dialogTitle = "新增租户";
-      this.open = true;
+      this.form = { status: 'inactive', code: undefined }
+      this.dialogTitle = '新增租户'
+      this.open = true
     },
     handleUpdate() {
-      const row = (this.list || []).find((x) => x && x.id === this.selectedId);
+      const row = (this.list || []).find((x) => x && x.id === this.selectedId)
       if (!row) {
-        this.msgError("请选择要编辑的数据");
-        return;
+        this.msgError('请选择要编辑的数据')
+        return
       }
-      this.form = { ...row };
-      this.dialogTitle = "修改租户";
-      this.open = true;
+      this.form = { ...row }
+      this.dialogTitle = '修改租户'
+      this.open = true
     },
     async handleChangeStatus(row) {
       if (!row || !row.id) {
-        this.msgError("数据不完整");
-        return;
+        this.msgError('数据不完整')
+        return
       }
       try {
         const { value } = await this.$prompt(
-          "请输入状态（active/inactive/suspended）",
-          "修改状态",
+          '请输入状态（active/inactive/suspended）',
+          '修改状态',
           {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            inputValue: row.status || "active",
-          },
-        );
-        const status = (value || "").trim();
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            inputValue: row.status || 'active'
+          }
+        )
+        const status = (value || '').trim()
         if (!status) {
-          this.msgError("状态不能为空");
-          return;
+          this.msgError('状态不能为空')
+          return
         }
-        const resp = await updateTenantStatus(row.id, { status });
+        const resp = await updateTenantStatus(row.id, { status })
         if (resp && resp.code === 200) {
-          this.msgSuccess(resp.msg || "修改成功");
-          this.getList();
+          this.msgSuccess(resp.msg || '修改成功')
+          this.getList()
         } else {
-          this.msgError((resp && resp.msg) || "修改失败");
+          this.msgError((resp && resp.msg) || '修改失败')
         }
       } catch (e) {
-        if (e !== "cancel") {
-          this.msgError("修改失败：" + (e.message || "未知错误"));
+        if (e !== 'cancel') {
+          this.msgError('修改失败：' + (e.message || '未知错误'))
         }
       }
     },
     openTenantConfig(row) {
       if (!row || !row.id) {
-        this.msgError("请选择租户");
-        return;
+        this.msgError('请选择租户')
+        return
       }
-      this.configTenantId = row.id;
-      this.configTenantName = row.name || "";
-      this.configActiveTab = "domain";
-      this.configOpen = true;
-      this.loadTenantDomain();
-      this.loadTenantStorage();
+      this.configTenantId = row.id
+      this.configTenantName = row.name || ''
+      this.configActiveTab = 'domain'
+      this.configOpen = true
+      this.loadTenantDomain()
+      this.loadTenantStorage()
     },
     safeStringify(value) {
-      if (value === null || value === undefined) return "";
-      if (typeof value === "string") return value;
+      if (value === null || value === undefined) return ''
+      if (typeof value === 'string') return value
       try {
-        return JSON.stringify(value, null, 2);
+        return JSON.stringify(value, null, 2)
       } catch (e) {
-        return String(value);
+        return String(value)
       }
     },
     safeParse(jsonText) {
-      const text = (jsonText || "").trim();
-      if (!text) return {};
+      const text = (jsonText || '').trim()
+      if (!text) return {}
       try {
-        return JSON.parse(text);
+        return JSON.parse(text)
       } catch (e) {
-        return text;
+        return text
       }
     },
     async loadTenantDomain() {
-      if (!this.configTenantId) return;
-      this.configLoading = true;
+      if (!this.configTenantId) return
+      this.configLoading = true
       try {
-        const resp = await getTenantDomain(this.configTenantId);
+        const resp = await getTenantDomain(this.configTenantId)
         if (resp && resp.code === 200 && resp.data) {
-          this.tenantDomainForm.primary = resp.data.primary || "";
-          this.tenantDomainForm.internal = resp.data.internal || "";
+          this.tenantDomainForm.primary = resp.data.primary || ''
+          this.tenantDomainForm.internal = resp.data.internal || ''
           // 处理 aliases JSON 数组
           if (Array.isArray(resp.data.aliases)) {
-            this.tenantDomainForm.aliases = resp.data.aliases.join("\n");
-          } else if (typeof resp.data.aliases === "string") {
+            this.tenantDomainForm.aliases = resp.data.aliases.join('\n')
+          } else if (typeof resp.data.aliases === 'string') {
             try {
-              const parsed = JSON.parse(resp.data.aliases);
+              const parsed = JSON.parse(resp.data.aliases)
               this.tenantDomainForm.aliases = Array.isArray(parsed)
-                ? parsed.join("\n")
-                : "";
+                ? parsed.join('\n')
+                : ''
             } catch (e) {
-              this.tenantDomainForm.aliases = "";
+              this.tenantDomainForm.aliases = ''
             }
           } else {
-            this.tenantDomainForm.aliases = "";
+            this.tenantDomainForm.aliases = ''
           }
         } else {
-          this.msgError((resp && resp.msg) || "获取域名配置失败");
+          this.msgError((resp && resp.msg) || '获取域名配置失败')
         }
       } catch (e) {
-        this.msgError("获取域名配置失败：" + (e.message || "未知错误"));
+        this.msgError('获取域名配置失败：' + (e.message || '未知错误'))
       } finally {
-        this.configLoading = false;
+        this.configLoading = false
       }
     },
     async saveTenantDomain() {
-      if (!this.configTenantId) return;
-      this.configSaving = true;
+      if (!this.configTenantId) return
+      this.configSaving = true
       try {
         // 验证主域名
-        const primary = (this.tenantDomainForm.primary || "").trim();
+        const primary = (this.tenantDomainForm.primary || '').trim()
         if (!primary) {
-          this.msgError("请输入主域名");
-          this.configSaving = false;
-          return;
+          this.msgError('请输入主域名')
+          this.configSaving = false
+          return
         }
         // 处理别名：将多行文本转换为 JSON 数组（直接发送数组，不转为字符串）
-        const aliasesText = (this.tenantDomainForm.aliases || "")
+        const aliasesText = (this.tenantDomainForm.aliases || '')
           .trim()
-          .split("\n")
+          .split('\n')
           .map((line) => line.trim())
-          .filter((line) => line);
-        const internal = (this.tenantDomainForm.internal || "").trim();
+          .filter((line) => line)
+        const internal = (this.tenantDomainForm.internal || '').trim()
         const data = {
           primary: primary,
           aliases: aliasesText, // 直接发送数组，后端会处理
-          internal: internal || null,
-        };
-        const resp = await updateTenantDomain(this.configTenantId, data);
+          internal: internal || null
+        }
+        const resp = await updateTenantDomain(this.configTenantId, data)
         if (resp && resp.code === 200) {
-          this.msgSuccess(resp.msg || "保存成功");
-          this.loadTenantDomain();
+          this.msgSuccess(resp.msg || '保存成功')
+          this.loadTenantDomain()
         } else {
-          this.msgError((resp && resp.msg) || "保存失败");
+          this.msgError((resp && resp.msg) || '保存失败')
         }
       } catch (e) {
-        this.msgError("保存失败：" + (e.message || "未知错误"));
+        this.msgError('保存失败：' + (e.message || '未知错误'))
       } finally {
-        this.configSaving = false;
+        this.configSaving = false
       }
     },
     async loadTenantStorage() {
-      if (!this.configTenantId) return;
-      this.configLoading = true;
+      if (!this.configTenantId) return
+      this.configLoading = true
       try {
-        const resp = await getTenantStorage(this.configTenantId);
+        const resp = await getTenantStorage(this.configTenantId)
         if (resp && resp.code === 200 && resp.data) {
           // 从后端 JSON 提取数据填充表单
-          this.tenantStorageForm.uploadQuotaGb = resp.data.uploadQuotaGb || 100;
+          this.tenantStorageForm.uploadQuotaGb = resp.data.uploadQuotaGb || 100
           this.tenantStorageForm.maxFileSizeMb =
-            resp.data.maxFileSizeMb || 1024;
+            resp.data.maxFileSizeMb || 1024
           this.tenantStorageForm.maxConcurrentUploads =
-            resp.data.maxConcurrentUploads || 10;
+            resp.data.maxConcurrentUploads || 10
         } else {
-          this.msgError((resp && resp.msg) || "获取 storage 失败");
+          this.msgError((resp && resp.msg) || '获取 storage 失败')
         }
       } catch (e) {
-        this.msgError("获取 storage 失败：" + (e.message || "未知错误"));
+        this.msgError('获取 storage 失败：' + (e.message || '未知错误'))
       } finally {
-        this.configLoading = false;
+        this.configLoading = false
       }
     },
     async saveTenantStorage() {
-      if (!this.configTenantId) return;
-      this.configSaving = true;
+      if (!this.configTenantId) return
+      this.configSaving = true
       try {
         // 将表单数据转换为后端需要的 JSON 格式
         const data = {
           uploadQuotaGb: this.tenantStorageForm.uploadQuotaGb || 100,
           maxFileSizeMb: this.tenantStorageForm.maxFileSizeMb || 1024,
           maxConcurrentUploads:
-            this.tenantStorageForm.maxConcurrentUploads || 10,
-        };
-        const resp = await updateTenantStorage(this.configTenantId, data);
+            this.tenantStorageForm.maxConcurrentUploads || 10
+        }
+        const resp = await updateTenantStorage(this.configTenantId, data)
         if (resp && resp.code === 200) {
-          this.msgSuccess(resp.msg || "保存成功");
-          this.loadTenantStorage();
+          this.msgSuccess(resp.msg || '保存成功')
+          this.loadTenantStorage()
         } else {
-          this.msgError((resp && resp.msg) || "保存失败");
+          this.msgError((resp && resp.msg) || '保存失败')
         }
       } catch (e) {
-        this.msgError("保存失败：" + (e.message || "未知错误"));
+        this.msgError('保存失败：' + (e.message || '未知错误'))
       } finally {
-        this.configSaving = false;
+        this.configSaving = false
       }
     },
     async handlePrecheck(row) {
       if (!row || !row.id) {
-        this.msgError("请选择租户");
-        return;
+        this.msgError('请选择租户')
+        return
       }
-      this.precheckOpen = true;
-      this.precheckLoading = true;
-      this.precheckError = "";
-      this.precheckResult = null;
+      this.precheckOpen = true
+      this.precheckLoading = true
+      this.precheckError = ''
+      this.precheckResult = null
       try {
-        const resp = await getTenantPrecheck(row.id);
+        const resp = await getTenantPrecheck(row.id)
         if (resp && resp.code === 200) {
-          this.precheckResult = resp.data;
+          this.precheckResult = resp.data
         } else {
-          this.precheckError = (resp && resp.msg) || "检查失败";
+          this.precheckError = (resp && resp.msg) || '检查失败'
         }
       } catch (e) {
-        this.precheckError = "检查失败：" + (e.message || "未知错误");
+        this.precheckError = '检查失败：' + (e.message || '未知错误')
       } finally {
-        this.precheckLoading = false;
+        this.precheckLoading = false
       }
     },
     async handleActivate(row) {
       if (!row || !row.id) {
-        this.msgError("请选择租户");
-        return;
+        this.msgError('请选择租户')
+        return
       }
-      if (row.status === "active") {
-        this.msgSuccess("租户已处于 active");
-        return;
+      if (row.status === 'active') {
+        this.msgSuccess('租户已处于 active')
+        return
       }
       try {
         const confirm = await this.$confirm(
-          "激活前将执行检查，确认继续激活该租户吗？",
-          "提示",
+          '激活前将执行检查，确认继续激活该租户吗？',
+          '提示',
           {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "warning",
-          },
-        );
-        if (!confirm) return;
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        )
+        if (!confirm) return
       } catch (e) {
-        return;
+        return
       }
 
-      this.precheckOpen = true;
-      this.precheckLoading = true;
-      this.precheckError = "";
-      this.precheckResult = null;
+      this.precheckOpen = true
+      this.precheckLoading = true
+      this.precheckError = ''
+      this.precheckResult = null
       try {
-        const pre = await getTenantPrecheck(row.id);
+        const pre = await getTenantPrecheck(row.id)
         if (pre && pre.code === 200) {
-          this.precheckResult = pre.data;
+          this.precheckResult = pre.data
         } else {
-          this.precheckError = (pre && pre.msg) || "检查失败";
-          return;
+          this.precheckError = (pre && pre.msg) || '检查失败'
+          return
         }
         if (!this.precheckResult || this.precheckResult.canActivate !== true) {
-          this.msgError("检查未通过，无法激活");
-          return;
+          this.msgError('检查未通过，无法激活')
+          return
         }
-        const resp = await updateTenantStatus(row.id, { status: "active" });
+        const resp = await updateTenantStatus(row.id, { status: 'active' })
         if (resp && resp.code === 200) {
-          this.msgSuccess(resp.msg || "激活成功");
-          this.precheckOpen = false;
-          this.getList();
+          this.msgSuccess(resp.msg || '激活成功')
+          this.precheckOpen = false
+          this.getList()
         } else {
-          this.msgError((resp && resp.msg) || "激活失败");
+          this.msgError((resp && resp.msg) || '激活失败')
         }
       } catch (e) {
-        this.msgError("激活失败：" + (e.message || "未知错误"));
+        this.msgError('激活失败：' + (e.message || '未知错误'))
       } finally {
-        this.precheckLoading = false;
+        this.precheckLoading = false
       }
     },
     cancel() {
-      this.open = false;
-      this.form = {};
+      this.open = false
+      this.form = {}
     },
     submitForm() {
-      this.$refs.form.validate(async (valid) => {
-        if (!valid) return;
+      this.$refs.form.validate(async(valid) => {
+        if (!valid) return
         try {
           const payload = {
             code: this.form.code,
@@ -899,65 +888,65 @@ export default {
             contactPhone: this.form.contactPhone,
             billingPlan: this.form.billingPlan,
             quotaJson: this.form.quotaJson,
-            remark: this.form.remark,
-          };
-          if (this.dialogTitle === "修改租户") {
+            remark: this.form.remark
+          }
+          if (this.dialogTitle === '修改租户') {
             // 编辑时：不发送 code（code 通过单独接口修改）
-            const resp = await updateTenant(this.form.id, payload);
+            const resp = await updateTenant(this.form.id, payload)
             if (resp && resp.code === 200) {
-              this.msgSuccess(resp.msg || "修改成功");
-              this.open = false;
-              this.getList();
+              this.msgSuccess(resp.msg || '修改成功')
+              this.open = false
+              this.getList()
             } else {
-              this.msgError((resp && resp.msg) || "修改失败");
+              this.msgError((resp && resp.msg) || '修改失败')
             }
           } else {
             // 创建时：发送 code
-            const resp = await createTenant(payload);
+            const resp = await createTenant(payload)
             if (resp && resp.code === 200) {
-              this.msgSuccess(resp.msg || "新增成功");
-              this.open = false;
-              this.getList();
+              this.msgSuccess(resp.msg || '新增成功')
+              this.open = false
+              this.getList()
             } else {
-              this.msgError((resp && resp.msg) || "新增失败");
+              this.msgError((resp && resp.msg) || '新增失败')
             }
           }
         } catch (e) {
-          this.msgError("提交失败：" + (e.message || "未知错误"));
+          this.msgError('提交失败：' + (e.message || '未知错误'))
         }
-      });
+      })
     },
     async handleDelete() {
       if (!this.selectedIds.length) {
-        this.msgError("请选择要删除的数据");
-        return;
+        this.msgError('请选择要删除的数据')
+        return
       }
       try {
         await this.$confirm(
           `确认删除选中的 ${this.selectedIds.length} 条租户吗？`,
-          "提示",
+          '提示',
           {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "warning",
-          },
-        );
-        const resp = await deleteTenants({ ids: this.selectedIds });
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        )
+        const resp = await deleteTenants({ ids: this.selectedIds })
         if (resp && resp.code === 200) {
-          this.msgSuccess(resp.msg || "删除成功");
-          this.selectedIds = [];
-          this.getList();
+          this.msgSuccess(resp.msg || '删除成功')
+          this.selectedIds = []
+          this.getList()
         } else {
-          this.msgError((resp && resp.msg) || "删除失败");
+          this.msgError((resp && resp.msg) || '删除失败')
         }
       } catch (e) {
-        if (e !== "cancel") {
-          this.msgError("删除失败：" + (e.message || "未知错误"));
+        if (e !== 'cancel') {
+          this.msgError('删除失败：' + (e.message || '未知错误'))
         }
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>
 
 <style scoped>

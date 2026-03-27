@@ -2,21 +2,19 @@
   <div class="task-notification">
     <!-- 通知图标 -->
     <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="notification-badge">
-      <el-button icon="el-icon-bell" circle @click="showNotifications" />
+      <el-tooltip content="任务通知" placement="bottom" effect="dark">
+        <el-button
+          circle
+          class="notification-bell"
+          :class="{ 'has-unread': unreadCount > 0 }"
+          @click="showNotifications"
+        >
+          <svg class="bell-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+          </svg>
+        </el-button>
+      </el-tooltip>
     </el-badge>
-
-    <!-- 用户信息显示 -->
-    <el-tooltip
-      class="user-info"
-      effect="dark"
-      :content="`组织：${orgName || '未知组织'}`"
-      placement="bottom"
-    >
-      <div>
-        <span class="info-label">登录警员：</span>
-        <span class="info-value">{{ userName }}</span>
-      </div>
-    </el-tooltip>
 
     <!-- 通知列表对话框 -->
     <el-dialog
@@ -70,199 +68,180 @@
 </template>
 
 <script>
-import websocketService from "@/utils/websocket";
-import { mapGetters, mapState } from "vuex";
-import { getOrg } from "@/api/admin/sys-org";
+import websocketService from '@/utils/websocket'
 
 export default {
-  name: "TaskNotification",
+  name: 'TaskNotification',
   data() {
     return {
       dialogVisible: false,
       notifications: [],
-      unsubscribe: null,
-      orgName: "",
-    };
+      unsubscribe: null
+    }
   },
   computed: {
-    ...mapGetters(["name"]),
-    ...mapState("user", ["orgid"]),
     unreadCount() {
-      return this.notifications.filter((n) => !n.read).length;
-    },
-    userName() {
-      return this.name || "未知用户";
-    },
+      return this.notifications.filter((n) => !n.read).length
+    }
   },
   mounted() {
     // 从localStorage加载通知
-    this.loadNotifications();
+    this.loadNotifications()
 
     // 订阅WebSocket消息
-    this.unsubscribe = websocketService.onMessage(this.handleWebSocketMessage);
-
-    // 加载组织信息
-    this.loadOrgInfo();
-
-    // 调试：打印用户信息
-    console.log("[TaskNotification] User info:", {
-      name: this.name,
-      orgid: this.orgid,
-      userName: this.userName,
-      storeState: this.$store.state.user,
-    });
+    this.unsubscribe = websocketService.onMessage(this.handleWebSocketMessage)
   },
   beforeDestroy() {
     // 取消订阅
     if (this.unsubscribe) {
-      this.unsubscribe();
+      this.unsubscribe()
     }
   },
   methods: {
     handleWebSocketMessage(message) {
-      console.log("[TaskNotification] Received message:", message);
+      console.log('[TaskNotification] Received message:', message)
 
       // 处理不同类型的消息
       switch (message.type) {
-        case "task_created":
+        case 'task_created':
           this.addNotification({
-            type: "task_created",
+            type: 'task_created',
             data: message.data,
             timestamp: message.timestamp,
-            read: false,
-          });
-          this.showToast("新任务", `您有新的待办任务：${message.data.taskName}`);
-          break;
+            read: false
+          })
+          this.showToast('新任务', `您有新的待办任务：${message.data.taskName}`)
+          break
 
-        case "task_assigned":
+        case 'task_assigned':
           this.addNotification({
-            type: "task_assigned",
+            type: 'task_assigned',
             data: message.data,
             timestamp: message.timestamp,
-            read: false,
-          });
-          this.showToast("任务分配", `任务已分配给您：${message.data.taskName}`);
-          break;
+            read: false
+          })
+          this.showToast('任务分配', `任务已分配给您：${message.data.taskName}`)
+          break
 
-        case "task_completed":
+        case 'task_completed':
           this.addNotification({
-            type: "task_completed",
+            type: 'task_completed',
             data: message.data,
             timestamp: message.timestamp,
-            read: false,
-          });
-          break;
+            read: false
+          })
+          break
 
-        case "workflow_completed":
+        case 'workflow_completed':
           this.addNotification({
-            type: "workflow_completed",
+            type: 'workflow_completed',
             data: message.data,
             timestamp: message.timestamp,
-            read: false,
-          });
-          this.showToast("流程完成", "工作流已完成");
-          break;
+            read: false
+          })
+          this.showToast('流程完成', '工作流已完成')
+          break
 
-        case "connected":
-          console.log("[TaskNotification] WebSocket connected");
-          break;
+        case 'connected':
+          console.log('[TaskNotification] WebSocket connected')
+          break
 
-        case "disconnected":
-          console.log("[TaskNotification] WebSocket disconnected");
-          break;
+        case 'disconnected':
+          console.log('[TaskNotification] WebSocket disconnected')
+          break
       }
     },
 
     addNotification(notification) {
-      notification.id = Date.now() + Math.random();
-      this.notifications.unshift(notification);
+      notification.id = Date.now() + Math.random()
+      this.notifications.unshift(notification)
 
       // 限制通知数量
       if (this.notifications.length > 50) {
-        this.notifications = this.notifications.slice(0, 50);
+        this.notifications = this.notifications.slice(0, 50)
       }
 
-      this.saveNotifications();
+      this.saveNotifications()
     },
 
     showNotifications() {
-      this.dialogVisible = true;
+      this.dialogVisible = true
     },
 
     handleClose() {
-      this.dialogVisible = false;
+      this.dialogVisible = false
     },
 
     handleNotificationClick(notification) {
       // 标记为已读
-      this.markAsRead(notification);
+      this.markAsRead(notification)
 
       // 根据通知类型跳转
-      if (notification.type === "task_created" || notification.type === "task_assigned") {
-        this.$router.push("/processmanage/tasktodo");
+      if (notification.type === 'task_created' || notification.type === 'task_assigned') {
+        this.$router.push('/processmanage/tasktodo')
       }
     },
 
     markAsRead(notification) {
-      notification.read = true;
-      this.saveNotifications();
+      notification.read = true
+      this.saveNotifications()
     },
 
     markAllAsRead() {
       this.notifications.forEach((n) => {
-        n.read = true;
-      });
-      this.saveNotifications();
+        n.read = true
+      })
+      this.saveNotifications()
     },
 
     clearAll() {
-      this.notifications = [];
-      this.saveNotifications();
+      this.notifications = []
+      this.saveNotifications()
     },
 
     getNotificationIcon(type) {
       const icons = {
-        task_created: "el-icon-document-add",
-        task_assigned: "el-icon-user",
-        task_completed: "el-icon-circle-check",
-        workflow_completed: "el-icon-success",
-      };
-      return icons[type] || "el-icon-bell";
+        task_created: 'el-icon-document-add',
+        task_assigned: 'el-icon-user',
+        task_completed: 'el-icon-circle-check',
+        workflow_completed: 'el-icon-success'
+      }
+      return icons[type] || 'el-icon-bell'
     },
 
     getNotificationColor(type) {
       const colors = {
-        task_created: "#409EFF",
-        task_assigned: "#E6A23C",
-        task_completed: "#67C23A",
-        workflow_completed: "#67C23A",
-      };
-      return colors[type] || "#909399";
+        task_created: '#409EFF',
+        task_assigned: '#E6A23C',
+        task_completed: '#67C23A',
+        workflow_completed: '#67C23A'
+      }
+      return colors[type] || '#909399'
     },
 
     getNotificationTitle(notification) {
       const titles = {
-        task_created: "新任务",
-        task_assigned: "任务分配",
-        task_completed: "任务完成",
-        workflow_completed: "流程完成",
-      };
-      return titles[notification.type] || "通知";
+        task_created: '新任务',
+        task_assigned: '任务分配',
+        task_completed: '任务完成',
+        workflow_completed: '流程完成'
+      }
+      return titles[notification.type] || '通知'
     },
 
     getNotificationDesc(notification) {
-      const { type, data } = notification;
+      const { type, data } = notification
       switch (type) {
-        case "task_created":
-          return `您有新的待办任务：${data.taskName}`;
-        case "task_assigned":
-          return `任务已分配给您：${data.taskName}`;
-        case "task_completed":
-          return `任务已完成：${data.taskName}`;
-        case "workflow_completed":
-          return "工作流已完成";
+        case 'task_created':
+          return `您有新的待办任务：${data.taskName}`
+        case 'task_assigned':
+          return `任务已分配给您：${data.taskName}`
+        case 'task_completed':
+          return `任务已完成：${data.taskName}`
+        case 'workflow_completed':
+          return '工作流已完成'
         default:
-          return "您有新的通知";
+          return '您有新的通知'
       }
     },
 
@@ -270,80 +249,138 @@ export default {
       this.$notify({
         title: title,
         message: message,
-        type: "info",
+        type: 'info',
         duration: 3000,
-        position: "top-right",
-      });
+        position: 'top-right'
+      })
     },
 
     loadNotifications() {
       try {
-        const saved = localStorage.getItem("task_notifications");
+        const saved = localStorage.getItem('task_notifications')
         if (saved) {
-          this.notifications = JSON.parse(saved);
+          this.notifications = JSON.parse(saved)
         }
       } catch (error) {
-        console.error("[TaskNotification] Failed to load notifications:", error);
+        console.error('[TaskNotification] Failed to load notifications:', error)
       }
     },
 
     saveNotifications() {
       try {
-        localStorage.setItem("task_notifications", JSON.stringify(this.notifications));
+        localStorage.setItem('task_notifications', JSON.stringify(this.notifications))
       } catch (error) {
-        console.error("[TaskNotification] Failed to save notifications:", error);
+        console.error('[TaskNotification] Failed to save notifications:', error)
       }
-    },
-
-    loadOrgInfo() {
-      if (this.orgid) {
-        getOrg(this.orgid)
-          .then((response) => {
-            if (response && response.code === 200 && response.data) {
-              this.orgName = response.data.orgFullName || "未知组织";
-            }
-          })
-          .catch((error) => {
-            console.error("[TaskNotification] Failed to load org info:", error);
-            this.orgName = "未知组织";
-          });
-      }
-    },
-  },
-};
+    }
+  }
+}
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import "@/styles/tokens/index.scss";
+
 .task-notification {
   display: inline-block;
 }
 
+// ============================================
+// 通知铃铛样式 - 醒目提醒设计
+// ============================================
 .notification-badge {
   cursor: pointer;
 }
 
-.user-info {
-  display: inline-block;
-  margin-left: 15px;
-  font-size: 13px;
-  color: #606266;
-  line-height: 40px;
-  vertical-align: middle;
+// Element UI Badge 样式覆盖 - 使用全局样式避免深度选择器问题
+.notification-badge >>> .el-badge__content {
+  background-color: #F56C6C;
+  border-color: #F56C6C;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(245, 108, 108, 0.4);
+  animation: pulse-badge 2s ease-in-out infinite;
 }
 
-.info-label {
-  font-weight: 500;
-  color: #303133;
+.notification-bell {
+  transition: all $transition-base;
+  border: none;
+  background: transparent;
+
+  .bell-icon {
+    width: 22px;
+    height: 22px;
+    fill: #1A5F7A;
+    transition: all $transition-base;
+  }
+
+  &:hover {
+    background: transparent;
+
+    .bell-icon {
+      fill: #0D47A1;
+      transform: scale(1.1);
+    }
+  }
+
+  // 有未读消息时的醒目样式
+  &.has-unread {
+    background: transparent;
+    animation: shake-bell 0.8s ease-in-out infinite;
+    box-shadow: none;
+
+    .bell-icon {
+      width: 24px;
+      height: 24px;
+      fill: #FF6B6B;
+      filter: drop-shadow(0 0 4px rgba(255, 107, 107, 0.6));
+    }
+
+    &:hover {
+      background: transparent;
+
+      .bell-icon {
+        fill: #FF5252;
+        transform: scale(1.15);
+        filter: drop-shadow(0 0 6px rgba(255, 82, 82, 0.8));
+      }
+    }
+  }
 }
 
-.info-value {
-  color: #606266;
-  margin-right: 10px;
+// ============================================
+// 动画定义
+// ============================================
+
+// 铃铛摇晃动画 - 模拟真实铃铛摇晃效果
+@keyframes shake-bell {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: rotate(-8deg);
+  }
+  20%, 40%, 60%, 80% {
+    transform: rotate(8deg);
+  }
 }
 
-.info-separator {
-  color: #dcdfe6;
-  margin: 0 8px;
+// 铃铛发光动画 - 增强视觉提醒
+@keyframes glow-bell {
+  0% {
+    box-shadow: 0 0 8px rgba(255, 107, 107, 0.4), 0 0 16px rgba(255, 107, 107, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 12px rgba(255, 107, 107, 0.6), 0 0 24px rgba(255, 107, 107, 0.3);
+  }
+}
+
+// 徽章脉冲动画 - 吸引注意力
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 .notification-list {

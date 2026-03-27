@@ -218,7 +218,7 @@ export default {
       this.form = {}
     },
     submitForm() {
-      this.$refs.form.validate(async (valid) => {
+      this.$refs.form.validate(async(valid) => {
         if (!valid) return
         try {
           let resp

@@ -4,10 +4,10 @@
     :visible.sync="visible"
     width="1000px"
     append-to-body
-    @close="handleClose"
     custom-class="task-process-dialog"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
+    @close="handleClose"
   >
     <!-- 任务基本信息卡片 -->
     <div class="task-info-card">
@@ -36,7 +36,7 @@
     <!-- 驳回信息 -->
     <div v-if="processForm.rejectionInfo" class="rejection-alert" role="alert" aria-live="polite">
       <div class="rejection-header">
-        <i class="el-icon-warning-outline"></i>
+        <i class="el-icon-warning-outline" />
         <span class="rejection-title">驳回信息</span>
       </div>
       <div class="rejection-content">
@@ -68,7 +68,7 @@
         class="history-section"
       >
         <h3 class="section-title">
-          <i class="el-icon-time"></i>
+          <i class="el-icon-time" />
           流程处理历史
         </h3>
         <div class="history-timeline">
@@ -77,7 +77,7 @@
             :key="index"
             class="timeline-item"
           >
-            <div class="timeline-dot" :class="`status-${history.result === '通过' || history.result === '完成' ? 'approved' : 'rejected'}`"></div>
+            <div class="timeline-dot" :class="`status-${history.result === '通过' || history.result === '完成' ? 'approved' : 'rejected'}`" />
             <div class="timeline-content">
               <div class="timeline-card">
                 <div class="timeline-header">
@@ -137,11 +137,11 @@
                 <!-- 处理人信息 -->
                 <div class="timeline-footer">
                   <span class="footer-item">
-                    <i class="el-icon-user"></i>
+                    <i class="el-icon-user" />
                     {{ getUserDisplayName(history.assignee) }}
                   </span>
                   <span class="footer-item">
-                    <i class="el-icon-office-building"></i>
+                    <i class="el-icon-office-building" />
                     {{ getUserOrgName(history.assignee) }}
                   </span>
                 </div>
@@ -154,7 +154,7 @@
       <!-- 动态表单字段 -->
       <div class="form-section">
         <h3 class="section-title">
-          <i class="el-icon-edit"></i>
+          <i class="el-icon-edit" />
           填写信息
         </h3>
         <div v-if="processForm.formFields && processForm.formFields.length > 0" class="form-fields-grid">
@@ -229,7 +229,7 @@
               class="enhanced-input"
             >
               <template slot="prefix">
-                <i class="el-icon-message"></i>
+                <i class="el-icon-message" />
               </template>
             </el-input>
             <!-- 电话类型字段 -->
@@ -242,7 +242,7 @@
               class="enhanced-input"
             >
               <template slot="prefix">
-                <i class="el-icon-phone"></i>
+                <i class="el-icon-phone" />
               </template>
             </el-input>
             <!-- URL类型字段 -->
@@ -255,7 +255,7 @@
               class="enhanced-input"
             >
               <template slot="prefix">
-                <i class="el-icon-link"></i>
+                <i class="el-icon-link" />
               </template>
             </el-input>
             <treeselect
@@ -310,7 +310,7 @@
         :loading="isSubmitting"
         @click="handleApprove"
       >
-        <i class="el-icon-check"></i>
+        <i class="el-icon-check" />
         {{ isFirstStep ? "提交申请" : "通过" }}
       </el-button>
       <el-button
@@ -319,7 +319,7 @@
         :loading="isSubmitting"
         @click="handleReject"
       >
-        <i class="el-icon-close"></i>
+        <i class="el-icon-close" />
         {{ isFirstStep ? "撤销" : "驳回" }}
       </el-button>
       <el-button class="action-btn cancel-btn" @click="handleClose">
@@ -337,32 +337,32 @@
 </template>
 
 <script>
-import workflowMixin from "@/mixins/workflowMixin";
-import { orgTreeSelect, getOrgLeader } from "@/api/admin/sys-org";
-import { getUser } from "@/api/admin/sys-user";
-import Treeselect from "@riophae/vue-treeselect";
-import { cancelTask } from "@/api/process/task";
-import { cancelInstance } from "@/api/process/instance";
-import { GetMediaByName } from "@/api/evidence/evidence_manage_query_api";
-import MediaDetailDialog from "@/components/MediaDetailDialog";
-import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import workflowMixin from '@/mixins/workflowMixin'
+import { orgTreeSelect, getOrgLeader } from '@/api/admin/sys-org'
+import { getUser } from '@/api/admin/sys-user'
+import Treeselect from '@riophae/vue-treeselect'
+import { cancelTask } from '@/api/process/task'
+import { cancelInstance } from '@/api/process/instance'
+import { GetMediaByName } from '@/api/evidence/evidence_manage_query_api'
+import MediaDetailDialog from '@/components/MediaDetailDialog'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
 export default {
-  name: "TaskProcessDialog",
+  name: 'TaskProcessDialog',
   components: {
     Treeselect,
-    MediaDetailDialog,
+    MediaDetailDialog
   },
   mixins: [workflowMixin],
   props: {
     value: {
       type: Boolean,
-      default: false,
+      default: false
     },
     taskId: {
       type: String,
-      default: "",
-    },
+      default: ''
+    }
   },
   data() {
     return {
@@ -374,23 +374,23 @@ export default {
       userCache: {}, // 用户信息缓存，避免重复请求
       // 媒体详情相关
       mediaDetailDialogVisible: false, // 媒体详情对话框显示状态
-      currentMediaData: {}, // 当前查看的媒体数据
-    };
-  },
-  created() {
-    this.getOrgTree();
+      currentMediaData: {} // 当前查看的媒体数据
+    }
   },
   watch: {
     value(val) {
-      //val：value变化后的新值
-      this.visible = val;
+      // val：value变化后的新值
+      this.visible = val
       if (val && this.taskId) {
-        this.loadTask();
+        this.loadTask()
       }
     },
     visible(val) {
-      this.$emit("input", val);
-    },
+      this.$emit('input', val)
+    }
+  },
+  created() {
+    this.getOrgTree()
   },
   methods: {
     /**
@@ -399,36 +399,36 @@ export default {
     getOrgTree() {
       orgTreeSelect()
         .then((response) => {
-          this.orgOptions = response.data;
+          this.orgOptions = response.data
         })
         .catch((error) => {
-          console.error("获取组织树失败:", error);
-          this.orgOptions = [];
-        });
+          console.error('获取组织树失败:', error)
+          this.orgOptions = []
+        })
     },
 
     /**
      * 获取用户显示名称
      */
     getUserDisplayName(userId) {
-      if (!userId) return "未知";
+      if (!userId) return '未知'
       if (this.userCache[userId]) {
-        return this.userCache[userId].userName || "未知";
+        return this.userCache[userId].userName || '未知'
       }
       // 异步加载用户信息
-      this.fetchUserInfo(userId);
-      return "加载中...";
+      this.fetchUserInfo(userId)
+      return '加载中...'
     },
 
     /**
      * 获取用户组织名称
      */
     getUserOrgName(userId) {
-      if (!userId) return "未知";
+      if (!userId) return '未知'
       if (this.userCache[userId]) {
-        return this.userCache[userId].orgFullName || "未知";
+        return this.userCache[userId].orgFullName || '未知'
       }
-      return "加载中...";
+      return '加载中...'
     },
 
     /**
@@ -436,25 +436,25 @@ export default {
      */
     async fetchUserInfo(userId) {
       if (!userId || this.userCache[userId]) {
-        return;
+        return
       }
 
       try {
-        const response = await getUser(userId);
+        const response = await getUser(userId)
         if (response && response.code === 200 && response.data) {
           this.$set(this.userCache, userId, {
-            userName: response.data.userName || "未知",
-            orgFullName: response.data.orgFullName || "未知",
-          });
+            userName: response.data.userName || '未知',
+            orgFullName: response.data.orgFullName || '未知'
+          })
           // 触发重新渲染
-          this.$forceUpdate();
+          this.$forceUpdate()
         }
       } catch (error) {
-        console.error("获取用户信息失败:", error);
+        console.error('获取用户信息失败:', error)
         this.$set(this.userCache, userId, {
-          userName: "获取失败",
-          orgFullName: "获取失败",
-        });
+          userName: '获取失败',
+          orgFullName: '获取失败'
+        })
       }
     },
 
@@ -464,24 +464,24 @@ export default {
     async loadTask() {
       await this.loadTaskForProcessing(this.taskId, () => {
         // 任务加载完成
-      });
+      })
     },
 
     /**
      * 处理通过
      */
     async handleApprove() {
-      if (this.isSubmitting) return;
+      if (this.isSubmitting) return
 
-      this.isSubmitting = true;
+      this.isSubmitting = true
       try {
-        await this.submitTaskApproval("taskProcessForm", () => {
-          this.isNormalClose = true; // 标记为正常完成
-          this.visible = false;
-          this.$emit("success");
-        });
+        await this.submitTaskApproval('taskProcessForm', () => {
+          this.isNormalClose = true // 标记为正常完成
+          this.visible = false
+          this.$emit('success')
+        })
       } finally {
-        this.isSubmitting = false;
+        this.isSubmitting = false
       }
     },
 
@@ -489,32 +489,32 @@ export default {
      * 处理驳回
      */
     async handleReject() {
-      if (this.isSubmitting) return;
+      if (this.isSubmitting) return
 
-      this.isSubmitting = true;
+      this.isSubmitting = true
       try {
         if (this.isFirstStep) {
-          const response = await cancelTask(this.currentTaskId);
+          const response = await cancelTask(this.currentTaskId)
           if (response.code === 200) {
-            this.msgSuccess("任务已撤销");
+            this.msgSuccess('任务已撤销')
           } else {
-            this.msgError(response.msg || "任务撤销失败");
+            this.msgError(response.msg || '任务撤销失败')
           }
-          response = await cancelInstance(this.currentInstanceId);
+          response = await cancelInstance(this.currentInstanceId)
           if (response.code === 200) {
-            this.msgSuccess("实例已取消");
+            this.msgSuccess('实例已取消')
           } else {
-            this.msgError(response.msg || "实例取消失败");
+            this.msgError(response.msg || '实例取消失败')
           }
         } else {
-          await this.submitTaskRejection("taskProcessForm", () => {
-            this.isNormalClose = true; // 标记为正常完成
-            this.visible = false;
-            this.$emit("success");
-          });
+          await this.submitTaskRejection('taskProcessForm', () => {
+            this.isNormalClose = true // 标记为正常完成
+            this.visible = false
+            this.$emit('success')
+          })
         }
       } finally {
-        this.isSubmitting = false;
+        this.isSubmitting = false
       }
     },
 
@@ -525,19 +525,19 @@ export default {
     handleOrgSelect(orgId, field) {
       if (!orgId) {
         // 如果清空选择，则清空对应的表单字段
-        this.processForm.formData[field] = null;
-        this.processForm.nextTaskApprover = null;
-        return;
+        this.processForm.formData[field] = null
+        this.processForm.nextTaskApprover = null
+        return
       }
 
       // 从组织树中查找选中组织的名称
-      const orgName = this.findOrgName(orgId);
+      const orgName = this.findOrgName(orgId)
       if (orgName) {
-        this.processForm.formData[field] = orgName;
+        this.processForm.formData[field] = orgName
       }
 
       // 调用获取组织负责人的API
-      this.getOrgLeaderInfo(orgId, field);
+      this.getOrgLeaderInfo(orgId, field)
     },
 
     /**
@@ -547,16 +547,16 @@ export default {
       const search = (options) => {
         for (const opt of options) {
           if (opt.id === orgId) {
-            return opt.label;
+            return opt.label
           }
           if (Array.isArray(opt.children) && opt.children.length > 0) {
-            const found = search(opt.children);
-            if (found) return found;
+            const found = search(opt.children)
+            if (found) return found
           }
         }
-        return null;
-      };
-      return search(this.orgOptions);
+        return null
+      }
+      return search(this.orgOptions)
     },
 
     /**
@@ -564,16 +564,16 @@ export default {
      */
     async getOrgLeaderInfo(orgId, field) {
       try {
-        const response = await getOrgLeader(orgId);
+        const response = await getOrgLeader(orgId)
         if (response && response.code === 200 && response.data) {
           // 将负责人的ID赋值给 nextTaskApprover
-          this.processForm.nextTaskApprover = response.data.leaderId;
+          this.processForm.nextTaskApprover = response.data.leaderId
         } else {
-          this.$message.warning("获取组织负责人失败，请手动选择");
+          this.$message.warning('获取组织负责人失败，请手动选择')
         }
       } catch (error) {
-        console.error("获取组织负责人失败:", error);
-        this.$message.error("获取组织负责人失败：" + (error.message || "未知错误"));
+        console.error('获取组织负责人失败:', error)
+        this.$message.error('获取组织负责人失败：' + (error.message || '未知错误'))
       }
     },
 
@@ -583,32 +583,32 @@ export default {
     async handleClose() {
       // 防止重复执行
       if (this.isClosing) {
-        return;
+        return
       }
-      this.isClosing = true;
+      this.isClosing = true
 
       try {
         // 如果是正常完成（通过/驳回），关闭对话框
         if (this.isNormalClose) {
-          this.visible = false;
-          this.$emit("close");
-          return;
+          this.visible = false
+          this.$emit('close')
+          return
         }
 
-        this.$message.info("请在'我的待办'中处理任务！");
-        this.$emit("close");
+        this.$message.info("请在'我的待办'中处理任务！")
+        this.$emit('close')
       } catch (error) {
-        if (error !== "cancel") {
-          this.msgError(error.message || "删除失败");
+        if (error !== 'cancel') {
+          this.msgError(error.message || '删除失败')
         }
-        this.$emit("close");
+        this.$emit('close')
       } finally {
-        this.visible = false;
+        this.visible = false
         // 延迟重置标志位，确保对话框完全关闭后才允许再次打开
         this.$nextTick(() => {
-          this.isClosing = false;
-          this.isNormalClose = false; // 重置标志位
-        });
+          this.isClosing = false
+          this.isNormalClose = false // 重置标志位
+        })
       }
     },
 
@@ -618,23 +618,23 @@ export default {
      */
     async handleMediaNameClick(mediaName) {
       if (!mediaName) {
-        this.$message.warning("媒体名称不存在");
-        return;
+        this.$message.warning('媒体名称不存在')
+        return
       }
 
       try {
         // 根据媒体名称获取完整媒体数据
-        const response = await GetMediaByName(mediaName);
+        const response = await GetMediaByName(mediaName)
 
         if (response.code === 200 && response.data) {
-          this.currentMediaData = response.data;
-          this.mediaDetailDialogVisible = true;
+          this.currentMediaData = response.data
+          this.mediaDetailDialogVisible = true
         } else {
-          this.$message.warning(response.msg || "获取媒体详情失败");
+          this.$message.warning(response.msg || '获取媒体详情失败')
         }
       } catch (error) {
-        console.error("获取媒体详情失败:", error);
-        this.$message.error("获取媒体详情失败");
+        console.error('获取媒体详情失败:', error)
+        this.$message.error('获取媒体详情失败')
       }
     },
 
@@ -642,15 +642,15 @@ export default {
      * 关闭媒体详情对话框
      */
     handleMediaDetailClose() {
-      this.mediaDetailDialogVisible = false;
-      this.currentMediaData = {};
+      this.mediaDetailDialogVisible = false
+      this.currentMediaData = {}
     },
 
     /**
      * 判断是否为媒体名称字段
      */
     isMediaNameField(key) {
-      return key === "mediaName" || key === "media_name";
+      return key === 'mediaName' || key === 'media_name'
     },
 
     /**
@@ -661,11 +661,11 @@ export default {
         high: '高',
         medium: '中',
         low: '低'
-      };
-      return priorityMap[priority] || '中';
-    },
-  },
-};
+      }
+      return priorityMap[priority] || '中'
+    }
+  }
+}
 </script>
 
 <style scoped>

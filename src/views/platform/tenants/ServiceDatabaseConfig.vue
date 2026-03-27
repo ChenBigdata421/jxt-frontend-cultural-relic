@@ -1,7 +1,7 @@
 <template>
   <div class="service-db-config">
     <!-- Background grid effect -->
-    <div class="grid-bg"></div>
+    <div class="grid-bg" />
 
     <div class="config-layout">
       <!-- Left: Service Selector Panel -->
@@ -9,10 +9,10 @@
         <div class="panel-header">
           <div class="header-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <rect x="2" y="2" width="20" height="8" rx="2" stroke-width="2"/>
-              <rect x="2" y="14" width="20" height="8" rx="2" stroke-width="2"/>
-              <line x1="6" y1="6" x2="6" y2="6" stroke-width="3" stroke-linecap="round"/>
-              <line x1="6" y1="18" x2="6" y2="18" stroke-width="3" stroke-linecap="round"/>
+              <rect x="2" y="2" width="20" height="8" rx="2" stroke-width="2" />
+              <rect x="2" y="14" width="20" height="8" rx="2" stroke-width="2" />
+              <line x1="6" y1="6" x2="6" y2="6" stroke-width="3" stroke-linecap="round" />
+              <line x1="6" y1="18" x2="6" y2="18" stroke-width="3" stroke-linecap="round" />
             </svg>
           </div>
           <span class="header-title">SERVICES</span>
@@ -31,7 +31,7 @@
             @click="selectService(service.code)"
           >
             <div class="service-indicator">
-              <span class="indicator-dot"></span>
+              <span class="indicator-dot" />
             </div>
             <div class="service-info">
               <span class="service-name">{{ service.label }}</span>
@@ -39,11 +39,11 @@
             </div>
             <div class="service-status">
               <svg v-if="service.isConfigured" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"/>
+                <polyline points="20 6 9 17 4 12" />
               </svg>
               <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </div>
           </div>
@@ -52,8 +52,8 @@
         <div class="panel-footer">
           <button class="add-service-btn" @click="handleAddServiceClick">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             Add Service
           </button>
@@ -64,9 +64,9 @@
       <main class="config-panel">
         <div v-if="!currentService" class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           <p>Select a service to configure</p>
         </div>
@@ -90,19 +90,19 @@
               <button
                 v-if="currentService.isConfigured"
                 class="action-btn danger"
-                @click="confirmDelete"
                 :disabled="configSaving"
+                @click="confirmDelete"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
                 Delete
               </button>
-              <button class="action-btn primary" @click="testConnection" :disabled="configSaving || !hasRequiredFields">
+              <button class="action-btn primary" :disabled="configSaving || !hasRequiredFields" @click="testConnection">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
                 Test Connection
               </button>
@@ -110,7 +110,7 @@
           </header>
 
           <!-- Configuration Form -->
-          <div class="config-form" v-loading="configLoading">
+          <div v-loading="configLoading" class="config-form">
             <!-- Connection Section -->
             <section class="form-section">
               <div class="section-header">
@@ -118,7 +118,7 @@
                   <span class="section-number">01</span>
                   <h3 class="section-title">CONNECTION</h3>
                 </div>
-                <div class="section-divider"></div>
+                <div class="section-divider" />
               </div>
 
               <div class="form-grid">
@@ -128,11 +128,11 @@
                     <span class="field-required">*</span>
                   </label>
                   <div class="field-wrapper">
-                    <select v-model="form.driver" @change="handleDriverChange" class="field-select">
+                    <select v-model="form.driver" class="field-select" @change="handleDriverChange">
                       <option value="postgres">PostgreSQL</option>
                       <option value="mysql">MySQL</option>
                     </select>
-                    <div class="field-border"></div>
+                    <div class="field-border" />
                   </div>
                 </div>
 
@@ -147,8 +147,8 @@
                       type="text"
                       placeholder="localhost"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
 
@@ -164,8 +164,8 @@
                       min="1"
                       max="65535"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
 
@@ -180,7 +180,7 @@
                       <option value="verify-ca">Verify CA</option>
                       <option value="verify-full">Verify Full</option>
                     </select>
-                    <div class="field-border"></div>
+                    <div class="field-border" />
                   </div>
                 </div>
 
@@ -195,8 +195,8 @@
                       type="text"
                       placeholder="database_name"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
               </div>
@@ -209,7 +209,7 @@
                   <span class="section-number">02</span>
                   <h3 class="section-title">CREDENTIALS</h3>
                 </div>
-                <div class="section-divider"></div>
+                <div class="section-divider" />
               </div>
 
               <div class="form-grid">
@@ -224,15 +224,15 @@
                       type="text"
                       placeholder="db_user"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
 
                 <div class="form-field">
                   <label class="field-label">
                     <span>Password</span>
-                    <span class="field-required" v-if="!form.passwordSet">*</span>
+                    <span v-if="!form.passwordSet" class="field-required">*</span>
                   </label>
                   <div class="field-wrapper">
                     <input
@@ -240,20 +240,20 @@
                       :type="showPassword ? 'text' : 'password'"
                       :placeholder="form.passwordSet && !form.password ? '•••••••• Encrypted' : 'Enter password'"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                     <button
                       type="button"
                       class="password-toggle"
                       @click="showPassword = !showPassword"
                     >
                       <svg v-if="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
                       </svg>
                       <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                        <line x1="1" y1="1" x2="23" y2="23"/>
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
                       </svg>
                     </button>
                   </div>
@@ -271,7 +271,7 @@
                   <span class="section-number">03</span>
                   <h3 class="section-title">CONNECTION POOL</h3>
                 </div>
-                <div class="section-divider"></div>
+                <div class="section-divider" />
               </div>
 
               <div class="form-grid">
@@ -286,8 +286,8 @@
                       min="1"
                       max="100"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
 
@@ -302,8 +302,8 @@
                       min="1"
                       max="50"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
 
@@ -318,8 +318,8 @@
                       min="0"
                       max="3600"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
 
@@ -334,8 +334,8 @@
                       min="0"
                       max="7200"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
               </div>
@@ -348,7 +348,7 @@
                   <span class="section-number">04</span>
                   <h3 class="section-title">TIMEOUTS</h3>
                 </div>
-                <div class="section-divider"></div>
+                <div class="section-divider" />
               </div>
 
               <div class="form-grid">
@@ -363,8 +363,8 @@
                       min="1"
                       max="300"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
 
@@ -379,8 +379,8 @@
                       min="1"
                       max="300"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
 
@@ -395,8 +395,8 @@
                       min="1"
                       max="300"
                       class="field-input"
-                    />
-                    <div class="field-border"></div>
+                    >
+                    <div class="field-border" />
                   </div>
                 </div>
               </div>
@@ -411,17 +411,17 @@
               </span>
             </div>
             <div class="footer-actions">
-              <button class="footer-btn secondary" @click="loadCurrentConfig" :disabled="configSaving">
+              <button class="footer-btn secondary" :disabled="configSaving" @click="loadCurrentConfig">
                 Reset
               </button>
-              <button class="footer-btn primary" @click="saveConfig" :disabled="configSaving || !hasRequiredFields">
+              <button class="footer-btn primary" :disabled="configSaving || !hasRequiredFields" @click="saveConfig">
                 <svg v-if="configSaving" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin">
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                 </svg>
                 <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                  <polyline points="17 21 17 13 7 13 7 21"/>
-                  <polyline points="7 3 7 8 15 8"/>
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
                 </svg>
                 {{ configSaving ? 'Saving...' : 'Save Configuration' }}
               </button>
@@ -438,8 +438,8 @@
           <h3>Add Service Configuration</h3>
           <button class="modal-close" @click="showAddService = false">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -458,14 +458,14 @@
                 <span class="option-code">{{ service.code }}</span>
               </div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </div>
           </div>
           <div v-else class="empty-services">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
             <p>All services are already configured!</p>
             <p class="empty-hint">You can edit existing configurations from the service list on the left.</p>
@@ -481,17 +481,17 @@
           <h3>Delete Configuration</h3>
           <button class="modal-close" @click="showDeleteConfirm = false">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
         <div class="modal-body">
           <div class="warning-icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
           </div>
           <p class="modal-desc">Are you sure you want to delete the database configuration for <strong>{{ currentServiceCode }}</strong>?</p>
@@ -512,27 +512,27 @@ import {
   getTenantServiceConfig,
   updateTenantServiceConfig,
   deleteTenantServiceConfig,
-  createTenantServiceConfigs,
-} from "@/api/platform/tenants";
-import { getTenant } from "@/api/platform/tenants";
+  createTenantServiceConfigs
+} from '@/api/platform/tenants'
+import { getTenant } from '@/api/platform/tenants'
 
 export default {
-  name: "ServiceDatabaseConfig",
+  name: 'ServiceDatabaseConfig',
   props: {
     tenantId: {
       type: Number,
-      required: true,
-    },
+      required: true
+    }
   },
   data() {
     return {
       // All available services
       allServices: [
-        { code: "evidence-command", label: "Evidence Command", category: "write", icon: "⚡" },
-        { code: "evidence-query", label: "Evidence Query", category: "read", icon: "🔍" },
-        { code: "file-storage", label: "File Storage", category: "storage", icon: "📁" },
-        { code: "security-management", label: "Security Management", category: "security", icon: "🔒" },
-        { code: "process-management", label: "Process Management", category: "process", icon: "✍️" },
+        { code: 'evidence-command', label: 'Evidence Command', category: 'write', icon: '⚡' },
+        { code: 'evidence-query', label: 'Evidence Query', category: 'read', icon: '🔍' },
+        { code: 'file-storage', label: 'File Storage', category: 'storage', icon: '📁' },
+        { code: 'security-management', label: 'Security Management', category: 'security', icon: '🔒' },
+        { code: 'process-management', label: 'Process Management', category: 'process', icon: '✍️' }
       ],
 
       // Configured services loaded from API
@@ -551,14 +551,14 @@ export default {
 
       // Current service form
       form: {
-        driver: "postgres",
-        host: "",
+        driver: 'postgres',
+        host: '',
         port: 5432,
-        database: "",
-        username: "",
-        password: "",
+        database: '',
+        username: '',
+        password: '',
         passwordSet: false,
-        sslMode: "disable",
+        sslMode: 'disable',
         maxOpenConns: 100,
         maxIdleConns: 20,
         connMaxIdleTime: 300,
@@ -567,28 +567,28 @@ export default {
         readTimeout: 30,
         writeTimeout: 30,
         enabled: true,
-        updatedAt: null,
-      },
-    };
+        updatedAt: null
+      }
+    }
   },
   computed: {
     services() {
       return this.allServices.map((s) => ({
         ...s,
-        isConfigured: this.configuredServices.some((c) => c.serviceCode === s.code),
-      }));
+        isConfigured: this.configuredServices.some((c) => c.serviceCode === s.code)
+      }))
     },
     currentService() {
-      return this.services.find((s) => s.code === this.currentServiceCode);
+      return this.services.find((s) => s.code === this.currentServiceCode)
     },
     unconfiguredServices() {
-      const unconfigured = this.services.filter((s) => !s.isConfigured);
-      console.log('All services:', this.services.map(s => ({ code: s.code, configured: s.isConfigured })));
-      console.log('Unconfigured services:', unconfigured);
-      return unconfigured;
+      const unconfigured = this.services.filter((s) => !s.isConfigured)
+      console.log('All services:', this.services.map(s => ({ code: s.code, configured: s.isConfigured })))
+      console.log('Unconfigured services:', unconfigured)
+      return unconfigured
     },
     configuredCount() {
-      return this.configuredServices.length;
+      return this.configuredServices.length
     },
     hasRequiredFields() {
       return (
@@ -598,66 +598,66 @@ export default {
         this.form.database &&
         this.form.username &&
         (this.form.password || this.form.passwordSet)
-      );
-    },
+      )
+    }
   },
   watch: {
     tenantId: {
-      immediate: true,//设为 true 时，组件创建后会立即执行一次 handler
+      immediate: true, // 设为 true 时，组件创建后会立即执行一次 handler
       handler() {
-        this.loadAllConfigs();
-      },
-    },
+        this.loadAllConfigs()
+      }
+    }
   },
   methods: {
     async loadAllConfigs() {
-      if (!this.tenantId) return;
+      if (!this.tenantId) return
 
-      this.configLoading = true;
+      this.configLoading = true
       try {
         // Load tenant info to get tenantCode
-        const tenantResp = await getTenant(this.tenantId);
+        const tenantResp = await getTenant(this.tenantId)
         if (tenantResp && tenantResp.code === 200 && tenantResp.data) {
-          this.tenantCode = tenantResp.data.code || null;
+          this.tenantCode = tenantResp.data.code || null
         }
 
         // Load service configurations
-        const resp = await getTenantServiceConfigs(this.tenantId);
+        const resp = await getTenantServiceConfigs(this.tenantId)
         if (resp && resp.code === 200 && resp.data) {
-          this.configuredServices = resp.data || [];
+          this.configuredServices = resp.data || []
 
           // Auto-select first configured service, or first unconfigured
           if (this.configuredServices.length > 0) {
-            this.currentServiceCode = this.configuredServices[0].serviceCode;
-            await this.loadCurrentConfig();
+            this.currentServiceCode = this.configuredServices[0].serviceCode
+            await this.loadCurrentConfig()
           } else if (this.services.length > 0) {
-            this.currentServiceCode = this.services[0].code;
+            this.currentServiceCode = this.services[0].code
           }
         }
       } catch (e) {
-        this.$message.error("Failed to load service configurations: " + (e.message || "Unknown error"));
+        this.$message.error('Failed to load service configurations: ' + (e.message || 'Unknown error'))
       } finally {
-        this.configLoading = false;
+        this.configLoading = false
       }
     },
 
     async loadCurrentConfig() {
-      if (!this.tenantId || !this.currentServiceCode) return;
+      if (!this.tenantId || !this.currentServiceCode) return
 
-      this.configLoading = true;
+      this.configLoading = true
       try {
-        const resp = await getTenantServiceConfig(this.tenantId, this.currentServiceCode);
+        const resp = await getTenantServiceConfig(this.tenantId, this.currentServiceCode)
         if (resp && resp.code === 200 && resp.data) {
-          const data = resp.data;
+          const data = resp.data
           this.form = {
-            driver: data.driver || "postgres",
-            host: data.host || "",
+            driver: data.driver || 'postgres',
+            host: data.host || '',
             port: data.port || 5432,
-            database: data.database || "",
-            username: data.username || "",
-            password: "",
-            passwordSet: !!(data.username || data.host),//如果 data.username 存在（truthy），返回 data.username，如果 data.username 不存在，返回 data.host，如果两者都不存在，返回 false；双重非运算将任何值转换为严格的布尔值
-            sslMode: data.sslmode || data.sslMode || "disable",  // Handle both 'sslmode' and 'sslMode'
+            database: data.database || '',
+            username: data.username || '',
+            password: '',
+            passwordSet: !!(data.username || data.host), // 如果 data.username 存在（truthy），返回 data.username，如果 data.username 不存在，返回 data.host，如果两者都不存在，返回 false；双重非运算将任何值转换为严格的布尔值
+            sslMode: data.sslmode || data.sslMode || 'disable', // Handle both 'sslmode' and 'sslMode'
             maxOpenConns: data.maxOpenConns || 100,
             maxIdleConns: data.maxIdleConns || 20,
             connMaxIdleTime: data.connMaxIdleTime || 300,
@@ -666,34 +666,34 @@ export default {
             readTimeout: data.readTimeout || 30,
             writeTimeout: data.writeTimeout || 30,
             enabled: data.enabled !== false,
-            updatedAt: data.updatedAt || null,
-          };
+            updatedAt: data.updatedAt || null
+          }
         }
       } catch (e) {
         // Service not configured - reset form silently (normal for new services)
         const isNotFound = e.response?.status === 404 ||
-                           e.response?.data?.msg?.toLowerCase().includes('not found');
+                           e.response?.data?.msg?.toLowerCase().includes('not found')
         if (isNotFound) {
-          this.resetForm();
+          this.resetForm()
         } else {
-          this.$message.error("Failed to load configuration: " + (e.message || "Unknown error"));
+          this.$message.error('Failed to load configuration: ' + (e.message || 'Unknown error'))
         }
       } finally {
-        this.configLoading = false;
+        this.configLoading = false
       }
     },
 
     resetForm() {
-      const isMySQL = this.form.driver === "mysql";
+      const isMySQL = this.form.driver === 'mysql'
       this.form = {
         driver: this.form.driver,
-        host: "",
+        host: '',
         port: isMySQL ? 3306 : 5432,
-        database: "",
-        username: "",
-        password: "",
+        database: '',
+        username: '',
+        password: '',
         passwordSet: false,
-        sslMode: "disable",
+        sslMode: 'disable',
         maxOpenConns: 100,
         maxIdleConns: 20,
         connMaxIdleTime: 300,
@@ -702,44 +702,44 @@ export default {
         readTimeout: 30,
         writeTimeout: 30,
         enabled: true,
-        updatedAt: null,
-      };
+        updatedAt: null
+      }
     },
 
     selectService(code) {
-      if (this.currentServiceCode === code) return;
-      this.currentServiceCode = code;
-      this.loadCurrentConfig();
+      if (this.currentServiceCode === code) return
+      this.currentServiceCode = code
+      this.loadCurrentConfig()
     },
 
     handleAddServiceClick() {
-      this.showAddService = true;
+      this.showAddService = true
     },
 
     addService(code) {
-      this.showAddService = false;
-      this.selectService(code);
+      this.showAddService = false
+      this.selectService(code)
     },
 
     handleDriverChange() {
-      this.form.port = this.form.driver === "mysql" ? 3306 : 5432;
+      this.form.port = this.form.driver === 'mysql' ? 3306 : 5432
     },
 
     async saveConfig() {
       if (!this.hasRequiredFields) {
-        this.$message.error("Please fill in all required fields");
-        return;
+        this.$message.error('Please fill in all required fields')
+        return
       }
 
       if (!this.tenantCode) {
-        this.$message.error("Tenant code not found. Please refresh the page.");
-        return;
+        this.$message.error('Tenant code not found. Please refresh the page.')
+        return
       }
 
-      this.configSaving = true;
+      this.configSaving = true
       try {
-        const isConfigured = this.currentService?.isConfigured || false;
-        let resp;
+        const isConfigured = this.currentService?.isConfigured || false
+        let resp
 
         if (isConfigured) {
           // Update existing config with PUT
@@ -749,7 +749,7 @@ export default {
             port: this.form.port,
             database: this.form.database,
             username: this.form.username,
-            sslmode: this.form.sslMode,  // Backend expects 'sslmode' (lowercase)
+            sslmode: this.form.sslMode, // Backend expects 'sslmode' (lowercase)
             maxOpenConns: this.form.maxOpenConns,
             maxIdleConns: this.form.maxIdleConns,
             connMaxIdleTime: this.form.connMaxIdleTime,
@@ -757,15 +757,15 @@ export default {
             connectTimeout: this.form.connectTimeout,
             readTimeout: this.form.readTimeout,
             writeTimeout: this.form.writeTimeout,
-            enabled: this.form.enabled,
-          };
+            enabled: this.form.enabled
+          }
 
           // Only include password if it's set
           if (this.form.password) {
-            data.password = this.form.password;
+            data.password = this.form.password
           }
 
-          resp = await updateTenantServiceConfig(this.tenantId, this.currentServiceCode, data);
+          resp = await updateTenantServiceConfig(this.tenantId, this.currentServiceCode, data)
         } else {
           // Create new config with POST
           const data = {
@@ -785,67 +785,67 @@ export default {
                 connMaxLifeTime: this.form.connMaxLifeTime,
                 connectTimeout: this.form.connectTimeout,
                 readTimeout: this.form.readTimeout,
-                writeTimeout: this.form.writeTimeout,
-              },
-            ],
-          };
+                writeTimeout: this.form.writeTimeout
+              }
+            ]
+          }
 
-          resp = await createTenantServiceConfigs(data);
+          resp = await createTenantServiceConfigs(data)
         }
 
         if (resp && resp.code === 200) {
-          this.$message.success(resp.msg || "Configuration saved successfully");
-          this.form.password = "";
-          this.form.passwordSet = true;
-          await this.loadAllConfigs();
+          this.$message.success(resp.msg || 'Configuration saved successfully')
+          this.form.password = ''
+          this.form.passwordSet = true
+          await this.loadAllConfigs()
         } else {
-          this.$message.error((resp && resp.msg) || "Failed to save configuration");
+          this.$message.error((resp && resp.msg) || 'Failed to save configuration')
         }
       } catch (e) {
-        this.$message.error("Failed to save configuration: " + (e.message || "Unknown error"));
+        this.$message.error('Failed to save configuration: ' + (e.message || 'Unknown error'))
       } finally {
-        this.configSaving = false;
+        this.configSaving = false
       }
     },
 
     testConnection() {
-      this.$message.info("Connection testing requires backend API support");
+      this.$message.info('Connection testing requires backend API support')
     },
 
     confirmDelete() {
-      this.showDeleteConfirm = true;
+      this.showDeleteConfirm = true
     },
 
     async deleteConfig() {
-      this.showDeleteConfirm = false;
-      this.configSaving = true;
+      this.showDeleteConfirm = false
+      this.configSaving = true
       try {
-        const resp = await deleteTenantServiceConfig(this.tenantId, this.currentServiceCode);
+        const resp = await deleteTenantServiceConfig(this.tenantId, this.currentServiceCode)
         if (resp && resp.code === 200) {
-          this.$message.success(resp.msg || "Configuration deleted successfully");
-          await this.loadAllConfigs();
+          this.$message.success(resp.msg || 'Configuration deleted successfully')
+          await this.loadAllConfigs()
         } else {
-          this.$message.error((resp && resp.msg) || "Failed to delete configuration");
+          this.$message.error((resp && resp.msg) || 'Failed to delete configuration')
         }
       } catch (e) {
-        this.$message.error("Failed to delete configuration: " + (e.message || "Unknown error"));
+        this.$message.error('Failed to delete configuration: ' + (e.message || 'Unknown error'))
       } finally {
-        this.configSaving = false;
+        this.configSaving = false
       }
     },
 
     getIconForService(code) {
-      const service = this.allServices.find((s) => s.code === code);
-      return service?.icon || "⚙️";
+      const service = this.allServices.find((s) => s.code === code)
+      return service?.icon || '⚙️'
     },
 
     formatDate(dateStr) {
-      if (!dateStr) return "";
-      const date = new Date(dateStr);
-      return date.toLocaleString();
-    },
-  },
-};
+      if (!dateStr) return ''
+      const date = new Date(dateStr)
+      return date.toLocaleString()
+    }
+  }
+}
 </script>
 
 <style>

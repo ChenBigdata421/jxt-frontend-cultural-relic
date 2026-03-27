@@ -21,9 +21,12 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery"
-          >搜索</el-button
-        >
+        <el-button
+          type="primary"
+          icon="el-icon-search"
+          size="mini"
+          @click="handleQuery"
+        >搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
@@ -57,15 +60,13 @@
             type="text"
             icon="el-icon-view"
             @click="handleView(scope.row)"
-            >查看</el-button
-          >
+          >查看</el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-document"
             @click="handleViewHistory(scope.row)"
-            >历史</el-button
-          >
+          >历史</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -138,12 +139,16 @@
             </div>
             <p>
               处理结果：
-              <el-tag v-if="item.result === 'approved'" type="success" size="small"
-                >通过</el-tag
-              >
-              <el-tag v-else-if="item.result === 'rejected'" type="danger" size="small"
-                >驳回</el-tag
-              >
+              <el-tag
+                v-if="item.result === 'approved'"
+                type="success"
+                size="small"
+              >通过</el-tag>
+              <el-tag
+                v-else-if="item.result === 'rejected'"
+                type="danger"
+                size="small"
+              >驳回</el-tag>
               <el-tag v-else type="info" size="small">完成</el-tag>
             </p>
             <p v-if="item.comment">处理意见：{{ item.comment }}</p>
@@ -159,10 +164,10 @@
 </template>
 
 <script>
-import { listMyDoneTasks, getTask, getTaskHistory } from "@/api/process/task";
-import { getUser } from "@/api/admin/sys-user";
+import { listMyDoneTasks, getTask, getTaskHistory } from '@/api/process/task'
+import { getUser } from '@/api/admin/sys-user'
 export default {
-  name: "DoneTask",
+  name: 'DoneTask',
   data() {
     return {
       // 遮罩层
@@ -181,100 +186,100 @@ export default {
         pageNum: 1,
         pageSize: 10,
         taskName: undefined,
-        workflowName: undefined,
+        workflowName: undefined
       },
       // 任务详情
       taskDetail: {},
       // 历史列表
-      historyList: [],
-    };
+      historyList: []
+    }
   },
   created() {
-    this.getList();
+    this.getList()
   },
   methods: {
     /** 查询任务列表 */
     getList() {
-      this.loading = true;
+      this.loading = true
       const params = {
         limit: this.queryParams.pageSize,
         offset: (this.queryParams.pageNum - 1) * this.queryParams.pageSize,
         task_name: this.queryParams.taskName,
-        workflow_name: this.queryParams.workflowName,
-      };
+        workflow_name: this.queryParams.workflowName
+      }
       listMyDoneTasks(params)
         .then((response) => {
           if (response.code === 200) {
             this.taskList =
               response.data.list ||
               response.data.items ||
-              (Array.isArray(response.data) ? response.data : []);
-            this.total = response.data.total || response.data.count || 0;
+              (Array.isArray(response.data) ? response.data : [])
+            this.total = response.data.total || response.data.count || 0
           } else {
-            this.msgError(response.msg || "查询失败");
+            this.msgError(response.msg || '查询失败')
           }
-          this.loading = false;
+          this.loading = false
         })
         .catch((error) => {
-          this.msgError("查询失败：" + error.message);
-          this.loading = false;
-        });
+          this.msgError('查询失败：' + error.message)
+          this.loading = false
+        })
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageNum = 1;
-      this.getList();
+      this.queryParams.pageNum = 1
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
     /** 查看按钮操作 */
     handleView(row) {
-      const id = row.taskId;
+      const id = row.taskId
       getTask(id)
         .then((response) => {
           if (response.code === 200) {
-            this.taskDetail = response.data;
-            this.viewOpen = true;
+            this.taskDetail = response.data
+            this.viewOpen = true
           } else {
-            this.msgError(response.msg || "获取详情失败");
+            this.msgError(response.msg || '获取详情失败')
           }
         })
         .catch((error) => {
-          this.msgError("获取详情失败：" + error.message);
-        });
+          this.msgError('获取详情失败：' + error.message)
+        })
     },
     /** 查看历史按钮操作 */
     handleViewHistory(row) {
       getTaskHistory(row.taskId)
         .then((response) => {
           if (response.code === 200) {
-            this.historyList = response.data || [];
-            this.historyOpen = true;
+            this.historyList = response.data || []
+            this.historyOpen = true
           } else {
-            this.msgError(response.msg || "获取历史失败");
+            this.msgError(response.msg || '获取历史失败')
           }
         })
         .catch((error) => {
-          this.msgError("获取历史失败：" + error.message);
-        });
+          this.msgError('获取历史失败：' + error.message)
+        })
     },
     /** 获取时间线类型 */
     getTimelineType(result) {
-      if (result === "approved") return "success";
-      if (result === "rejected") return "danger";
-      return "primary";
+      if (result === 'approved') return 'success'
+      if (result === 'rejected') return 'danger'
+      return 'primary'
     },
     /** 格式化JSON */
     formatJson(jsonStr) {
-      if (!jsonStr) return "";
+      if (!jsonStr) return ''
       try {
-        const obj = typeof jsonStr === "string" ? JSON.parse(jsonStr) : jsonStr;
-        return JSON.stringify(obj, null, 2);
+        const obj = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr
+        return JSON.stringify(obj, null, 2)
       } catch (e) {
-        return jsonStr;
+        return jsonStr
       }
     },
 
@@ -282,24 +287,24 @@ export default {
      * 获取用户显示名称
      */
     getUserDisplayName(userId) {
-      if (!userId) return "未知";
+      if (!userId) return '未知'
       if (this.userCache[userId]) {
-        return this.userCache[userId].userName || "未知";
+        return this.userCache[userId].userName || '未知'
       }
       // 异步加载用户信息
-      this.fetchUserInfo(userId);
-      return "加载中...";
+      this.fetchUserInfo(userId)
+      return '加载中...'
     },
 
     /**
      * 获取用户组织名称
      */
     getUserOrgName(userId) {
-      if (!userId) return "未知";
+      if (!userId) return '未知'
       if (this.userCache[userId]) {
-        return this.userCache[userId].orgFullName || "未知";
+        return this.userCache[userId].orgFullName || '未知'
       }
-      return "加载中...";
+      return '加载中...'
     },
 
     /**
@@ -307,29 +312,29 @@ export default {
      */
     async fetchUserInfo(userId) {
       if (!userId || this.userCache[userId]) {
-        return;
+        return
       }
 
       try {
-        const response = await getUser(userId);
+        const response = await getUser(userId)
         if (response && response.code === 200 && response.data) {
           this.$set(this.userCache, userId, {
-            userName: response.data.userName || "未知",
-            orgFullName: response.data.orgFullName || "未知",
-          });
+            userName: response.data.userName || '未知',
+            orgFullName: response.data.orgFullName || '未知'
+          })
           // 触发重新渲染
-          this.$forceUpdate();
+          this.$forceUpdate()
         }
       } catch (error) {
-        console.error("获取用户信息失败:", error);
+        console.error('获取用户信息失败:', error)
         this.$set(this.userCache, userId, {
-          userName: "获取失败",
-          orgFullName: "获取失败",
-        });
+          userName: '获取失败',
+          orgFullName: '获取失败'
+        })
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>
 
 <style scoped>

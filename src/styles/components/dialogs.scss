@@ -207,7 +207,7 @@
     min-height: 44px;                    // 确保触控区域足够 ✓
     display: flex;
     align-items: center;
-    border-bottom: 1px solid $law-gray-100;
+    border-bottom: 1px solid $law-gray-200;
 
     &:last-child {
       border-bottom: none;
@@ -285,7 +285,7 @@
 }
 
 // 列设置 Popover 容器样式 - 响应式适配
-::v-deep .column-settings-popover {
+.column-settings-popover {
   // 桌面端样式
   max-width: 320px;
   max-height: 400px;

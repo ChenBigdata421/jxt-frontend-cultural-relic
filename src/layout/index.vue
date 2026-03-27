@@ -2,7 +2,7 @@
   <div :class="classObj" class="app-wrapper" :style="{'--current-color': $store.state.settings.theme}">
     <!--本行只适用于手机，对电脑终端没有-->
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
-     <!--下面为class的动态绑定，似乎没有什么作用-->
+    <!--下面为class的动态绑定，似乎没有什么作用-->
     <div :class="{hasTagsView:needTagsView}" class="main-container">
       <div :class="{'fixed-header':fixedHeader}">
         <Navbar />

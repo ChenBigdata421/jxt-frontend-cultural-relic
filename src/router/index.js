@@ -108,7 +108,7 @@ export const constantRoutes = [
  * the routes that need to be dynamically loaded based on user roles
  */
 export const asyncRoutes = [
-  
+
 ]
 // scrollBehavior 是一个函数，用于定义路由跳转时的滚动行为。这里，它简单地返回一个对象，将页面滚动到顶部（y: 0）
 // constantRoutes 可能包含了应用的静态路由，而动态路由（需要根据用户状态或其他条件动态生成的路由）可能是在创建 Router 实例之后通过其他方式添加的

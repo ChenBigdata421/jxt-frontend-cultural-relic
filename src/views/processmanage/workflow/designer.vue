@@ -3,9 +3,9 @@
     <!-- 工具栏 -->
     <div class="designer-toolbar">
       <el-button type="primary" icon="el-icon-plus" size="small" @click="addStep">添加步骤</el-button>
-      <el-button type="danger" icon="el-icon-delete" size="small" @click="deleteStep" :disabled="!selectedStep">删除步骤</el-button>
+      <el-button type="danger" icon="el-icon-delete" size="small" :disabled="!selectedStep" @click="deleteStep">删除步骤</el-button>
       <el-button icon="el-icon-refresh" size="small" @click="resetDesigner">重置</el-button>
-      <el-divider direction="vertical"></el-divider>
+      <el-divider direction="vertical" />
       <el-button type="info" icon="el-icon-view" size="small" @click="showPreview">预览</el-button>
     </div>
 
@@ -15,16 +15,16 @@
       <div class="steps-library">
         <h4>步骤库</h4>
         <div class="step-item" draggable="true" @dragstart="dragStart($event, 'userTask')" @dragend="dragEnd">
-          <i class="el-icon-user"></i> 用户任务
+          <i class="el-icon-user" /> 用户任务
         </div>
         <div class="step-item" draggable="true" @dragstart="dragStart($event, 'process')" @dragend="dragEnd">
-          <i class="el-icon-s-tools"></i> 自动任务
+          <i class="el-icon-s-tools" /> 自动任务
         </div>
         <div class="step-item" draggable="true" @dragstart="dragStart($event, 'parallel')" @dragend="dragEnd">
-          <i class="el-icon-share"></i> 并行任务
+          <i class="el-icon-share" /> 并行任务
         </div>
         <div class="step-item" draggable="true" @dragstart="dragStart($event, 'complete')" @dragend="dragEnd">
-          <i class="el-icon-success"></i> 完成
+          <i class="el-icon-success" /> 完成
         </div>
       </div>
 
@@ -32,12 +32,12 @@
       <div class="design-area" @drop.prevent="dropStep" @dragover.prevent @dragenter.prevent @dragleave="dragLeave">
         <div class="workflow-canvas">
           <div v-if="steps.length === 0" class="empty-state">
-            <i class="el-icon-picture"></i>
+            <i class="el-icon-picture" />
             <p>拖拽步骤到这里开始设计工作流</p>
           </div>
           <div v-else class="workflow-tree">
             <div v-if="rootIds.length === 0" class="empty-state">
-              <i class="el-icon-warning"></i>
+              <i class="el-icon-warning" />
               <p>未找到起始节点，请检查 nextSteps 引用</p>
             </div>
             <div v-else class="roots-row">
@@ -85,7 +85,7 @@
                   :label="opt.label"
                   :value="opt.value"
                 >
-                  <span><i :class="opt.icon"></i> {{ opt.desc }}</span>
+                  <span><i :class="opt.icon" /> {{ opt.desc }}</span>
                 </el-option>
               </el-select>
             </el-form-item>
@@ -93,7 +93,7 @@
               <el-input v-model="selectedStep.description" type="textarea" :rows="3" placeholder="输入步骤描述" />
             </el-form-item>
             <el-form-item label="条件">
-              <el-input v-model="selectedStep.condition" type="textarea" :rows="2" placeholder='例如：${variable} == "value"' />
+              <el-input v-model="selectedStep.condition" type="textarea" :rows="2" placeholder="例如：${variable} == &quot;value&quot;" />
             </el-form-item>
             <el-form-item label="超时(秒)">
               <el-input-number v-model="selectedStep.timeout" :min="1" :max="3600" />
@@ -116,7 +116,7 @@
                 v-model="selectedStep.params"
                 type="textarea"
                 :rows="4"
-                placeholder='{"key": "value"}'
+                placeholder="{&quot;key&quot;: &quot;value&quot;}"
               />
             </el-form-item>
             <el-form-item v-if="selectedStep.type === 'parallel'" label="并行任务">
@@ -151,7 +151,7 @@
                         <el-input v-model="task.description" type="textarea" :rows="2" placeholder="输入任务描述" />
                       </el-form-item>
                       <el-form-item label="条件">
-                        <el-input v-model="task.condition" type="textarea" :rows="2" placeholder='例如：${step_id.field} == true' />
+                        <el-input v-model="task.condition" type="textarea" :rows="2" placeholder="例如：${step_id.field} == true" />
                       </el-form-item>
                       <el-form-item label="超时(秒)">
                         <el-input-number v-model="task.timeout" :min="1" :max="3600" />
@@ -164,7 +164,7 @@
                           v-model="task.params"
                           type="textarea"
                           :rows="3"
-                          placeholder='{"key": "value"}'
+                          placeholder="{&quot;key&quot;: &quot;value&quot;}"
                         />
                       </el-form-item>
                     </el-form>
@@ -280,22 +280,22 @@ const WorkflowNode = {
     const head = h('div', { class: 'node-head' }, [
       h('span', { class: 'node-type' }, this.typeLabel(this.node.type)),
       h('div', { class: 'node-actions' }, [
-        h('el-tooltip', { props: { content: '添加下一步', placement: 'top' } }, [
-          h('el-button', { props: { type: 'text', size: 'mini', icon: 'el-icon-plus' }, on: { click: (e) => { e.stopPropagation(); this.onAddNext() } } })
+        h('el-tooltip', { props: { content: '添加下一步', placement: 'top' }}, [
+          h('el-button', { props: { type: 'text', size: 'mini', icon: 'el-icon-plus' }, on: { click: (e) => { e.stopPropagation(); this.onAddNext() } }})
         ]),
-        h('el-tooltip', { props: { content: '添加分支', placement: 'top' } }, [
-          h('el-button', { props: { type: 'text', size: 'mini', icon: 'el-icon-share' }, on: { click: (e) => { e.stopPropagation(); this.onAddBranch() } } })
+        h('el-tooltip', { props: { content: '添加分支', placement: 'top' }}, [
+          h('el-button', { props: { type: 'text', size: 'mini', icon: 'el-icon-share' }, on: { click: (e) => { e.stopPropagation(); this.onAddBranch() } }})
         ]),
-        h('el-tooltip', { props: { content: '添加并行', placement: 'top' } }, [
-          h('el-button', { props: { type: 'text', size: 'mini', icon: 'el-icon-connection' }, on: { click: (e) => { e.stopPropagation(); this.onAddParallel() } } })
+        h('el-tooltip', { props: { content: '添加并行', placement: 'top' }}, [
+          h('el-button', { props: { type: 'text', size: 'mini', icon: 'el-icon-connection' }, on: { click: (e) => { e.stopPropagation(); this.onAddParallel() } }})
         ]),
         this.isParallelGateway
-          ? h('el-tooltip', { props: { content: '添加并行任务', placement: 'top' } }, [
-            h('el-button', { props: { type: 'text', size: 'mini', icon: 'el-icon-menu' }, on: { click: (e) => { e.stopPropagation(); this.onAddPTask() } } })
+          ? h('el-tooltip', { props: { content: '添加并行任务', placement: 'top' }}, [
+            h('el-button', { props: { type: 'text', size: 'mini', icon: 'el-icon-menu' }, on: { click: (e) => { e.stopPropagation(); this.onAddPTask() } }})
           ])
           : null,
-        h('el-tooltip', { props: { content: '删除', placement: 'top' } }, [
-          h('el-button', { props: { type: 'text', size: 'mini', icon: 'el-icon-close' }, on: { click: (e) => { e.stopPropagation(); this.onDelete() } } })
+        h('el-tooltip', { props: { content: '删除', placement: 'top' }}, [
+          h('el-button', { props: { type: 'text', size: 'mini', icon: 'el-icon-close' }, on: { click: (e) => { e.stopPropagation(); this.onDelete() } }})
         ])
       ])
     ])

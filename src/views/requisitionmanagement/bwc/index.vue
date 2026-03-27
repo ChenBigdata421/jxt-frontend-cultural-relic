@@ -69,11 +69,12 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-              >搜索</el-button
-            >
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-              >重置</el-button
-            >
+            >搜索</el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="mini"
+              @click="resetQuery"
+            >重置</el-button>
           </el-form-item>
         </el-form>
         <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
@@ -107,12 +108,11 @@
                 type="text"
                 icon="el-icon-setting"
                 @click="handleRequisition(scope.row)"
-                >领用</el-button
-              >
+              >领用</el-button>
               <el-button
                 v-if="
                   scope.row.useState === 1 &&
-                  userId === scope.row.requisitionerId
+                    userId === scope.row.requisitionerId
                 "
                 v-permisaction="['bwc:return']"
                 size="mini"
@@ -120,24 +120,21 @@
                 icon="el-icon-setting"
                 style="color: #ff0000"
                 @click="handleReturn(scope.row)"
-                >退还</el-button
-              >
+              >退还</el-button>
               <el-button
                 v-permisaction="['bwc:info']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row)"
-                >执法仪信息</el-button
-              >
+              >执法仪信息</el-button>
               <el-button
                 v-permisaction="['bwc:requisitionrecord']"
                 size="mini"
                 type="text"
                 icon="el-icon-view"
                 @click="requisitionLog(scope.row.bwcNo)"
-                >领用记录</el-button
-              >
+              >领用记录</el-button>
             </template>
           </el-table-column>
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
@@ -168,8 +165,7 @@
               <el-tag
                 :type="scope.row.useState === 1 ? 'success' : 'danger'"
                 disable-transitions
-                >{{ useStatusFormat(scope.row) }}</el-tag
-              >
+              >{{ useStatusFormat(scope.row) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="requisitionerName" label="领用者" width="80" />
@@ -251,7 +247,7 @@
             }}</el-descriptions-item>
             <el-descriptions-item label="领用状态">{{
               selectDictLabel(requisitionStatusOptions, viewData.useState) ||
-              "-"
+                "-"
             }}</el-descriptions-item>
             <el-descriptions-item label="领用者">{{
               viewData.requisitionerName || "-"
@@ -276,15 +272,15 @@
 import {
   getBwcRequisitionList,
   bwcRequisition,
-  bwcReturn,
-} from "@/api/admin/bwc_requisition_manage_api";
-import { orgTreeSelect } from "@/api/admin/sys-org";
-import Treeselect from "@riophae/vue-treeselect";
-import "@riophae/vue-treeselect/dist/vue-treeselect.css";
-import { listUser } from "@/api/admin/sys-user";
-import RequisitionLogSelector from "@/components/RequisitionLogSelector";
+  bwcReturn
+} from '@/api/admin/bwc_requisition_manage_api'
+import { orgTreeSelect } from '@/api/admin/sys-org'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import { listUser } from '@/api/admin/sys-user'
+import RequisitionLogSelector from '@/components/RequisitionLogSelector'
 export default {
-  name: "LawCaremaRequisition",
+  name: 'LawCaremaRequisition',
   components: { Treeselect, RequisitionLogSelector },
   data() {
     return {
@@ -300,7 +296,7 @@ export default {
       orgOptions: undefined,
       userOptions: undefined,
       // 弹出层标题
-      title: "",
+      title: '',
       isEdit: false,
       // 是否显示增加执法仪对话框
       open: false,
@@ -321,7 +317,7 @@ export default {
         bwcName: undefined,
         managerOrgId: undefined,
         managerId: undefined,
-        useState: undefined,
+        useState: undefined
       },
       // 浏览数据
       viewData: {},
@@ -329,114 +325,114 @@ export default {
       form: {},
       // 表单校验,触发时机（trigger: 'blur'）：当输入框失去焦点（blur 事件）时触发验证。
       rules: {
-        no: [{ required: true, message: "编号不能为空", trigger: "blur" }],
-      },
-    };
+        no: [{ required: true, message: '编号不能为空', trigger: 'blur' }]
+      }
+    }
   },
   computed: {
     userId() {
-      return this.$store.state.user.userid;
+      return this.$store.state.user.userid
     },
     orgId() {
-      return this.$store.state.user.orgid;
-    },
+      return this.$store.state.user.orgid
+    }
   },
   watch: {
-    "queryParams.managerOrgId": function (newVal) {
+    'queryParams.managerOrgId': function(newVal) {
       // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
       if (newVal) {
-        this.queryParams.managerId = null; // 清空管理人员选择
-        this.getQueryUser();
+        this.queryParams.managerId = null // 清空管理人员选择
+        this.getQueryUser()
       } else {
-        this.userOptions = [];
-        this.queryParams.managerId = undefined;
+        this.userOptions = []
+        this.queryParams.managerId = undefined
       }
-    },
+    }
   },
   created() {
-    this.getList();
-    this.getTreeselect();
-    this.getDicts("bwc_status").then((response) => {
-      this.stateOptions = response.data;
-    });
-    this.getDicts("enableuse_state").then((response) => {
-      this.enableUseOptions = response.data;
-    });
-    this.getDicts("requisition_status").then((response) => {
-      this.requisitionStatusOptions = response.data;
-    });
+    this.getList()
+    this.getTreeselect()
+    this.getDicts('bwc_status').then((response) => {
+      this.stateOptions = response.data
+    })
+    this.getDicts('enableuse_state').then((response) => {
+      this.enableUseOptions = response.data
+    })
+    this.getDicts('requisition_status').then((response) => {
+      this.requisitionStatusOptions = response.data
+    })
   },
   methods: {
     /** 查询组织下拉树结构 */
     getTreeselect() {
       orgTreeSelect().then((response) => {
-        this.orgOptions = response.data; // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
-      });
+        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
+      })
     },
     /** 查询执法仪列表 */
     getList() {
-      this.loading = true;
+      this.loading = true
       getBwcRequisitionList(this.queryParams).then((response) => {
-        this.bwcRequisitionList = response.data.list;
-        this.total = response.data.count;
-        this.loading = false;
-      });
+        this.bwcRequisitionList = response.data.list
+        this.total = response.data.count
+        this.loading = false
+      })
     },
     handleRequisition(row) {
       bwcRequisition({ id: row.id }).then((response) => {
-        if (response.msg === "领用成功") {
-          this.$confirm("领用成功！", "信息", {
-            confirmButtonText: "确定",
-            type: "info",
-          }).then(this.getList());
+        if (response.msg === '领用成功') {
+          this.$confirm('领用成功！', '信息', {
+            confirmButtonText: '确定',
+            type: 'info'
+          }).then(this.getList())
         }
-      });
+      })
     },
     getQueryUser() {
-      listUser({ orgId: "/" + this.queryParams.managerOrgId + "/" }).then(
+      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(
         (response) => {
-          this.userOptions = response.data.list;
+          this.userOptions = response.data.list
         }
-      );
+      )
     },
     /** 重置按钮操作
      * resetForm() 清空表单字段时，managerOrgId 的变化触发了 watch 监听器，watch 会异步清空 managerId 和 userOptions。
      * 但 resetQuery() 中的 handleQuery() 是同步执行的，导致查询时数据还未完全清空，需要再点一次才能获取完整数据。
      * $nextTick() 包装 handleQuery()，确保表单重置和 watch 监听器完全执行后再进行查询*/
     resetQuery() {
-      this.resetForm("queryForm");
+      this.resetForm('queryForm')
       this.$nextTick(() => {
-        this.handleQuery();
-      });
+        this.handleQuery()
+      })
     },
     handleReturn(row) {
       bwcReturn({ id: row.id }).then((response) => {
-        if (response.msg === "退还成功") {
-          this.$confirm("退还成功！", "信息", {
-            confirmButtonText: "确定",
-            type: "info",
-          }).then(this.getList());
+        if (response.msg === '退还成功') {
+          this.$confirm('退还成功！', '信息', {
+            confirmButtonText: '确定',
+            type: 'info'
+          }).then(this.getList())
         }
-      });
+      })
     },
 
     handleSortChang(column, prop, order) {
-      prop = column.prop;
-      order = column.order;
-      if (order === "descending") {
-        this.queryParams[prop + "Order"] = "desc";
-      } else if (order === "ascending") {
-        this.queryParams[prop + "Order"] = "asc";
+      prop = column.prop
+      order = column.order
+      if (order === 'descending') {
+        this.queryParams[prop + 'Order'] = 'desc'
+      } else if (order === 'ascending') {
+        this.queryParams[prop + 'Order'] = 'asc'
       } else {
-        this.queryParams[prop + "Order"] = undefined;
+        this.queryParams[prop + 'Order'] = undefined
       }
-      this.getList();
+      this.getList()
     },
 
     /** 浏览按钮操作 */
     handleView(row) {
-      this.viewData = row;
-      this.ViewOpen = true;
+      this.viewData = row
+      this.ViewOpen = true
     },
 
     // 表单重置
@@ -446,8 +442,8 @@ export default {
         org_id: undefined,
         police_id: undefined,
         alias: undefined,
-        enable_use: "0",
-        state: "0",
+        enable_use: '0',
+        state: '0',
         brand_id: undefined,
         cpu: undefined,
         memory: undefined,
@@ -455,34 +451,34 @@ export default {
         usb_num: undefined,
         system: undefined,
         version: undefined,
-        remark: undefined,
-      };
+        remark: undefined
+      }
     },
     // 字典状态字典翻译
     useStatusFormat(row) {
-      return this.selectDictLabel(this.requisitionStatusOptions, row.useState);
+      return this.selectDictLabel(this.requisitionStatusOptions, row.useState)
     },
     // 取消按钮
     cancel() {
-      this.open = false;
-      this.reset();
+      this.open = false
+      this.reset()
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageIndex = 1;
-      this.getList();
+      this.queryParams.pageIndex = 1
+      this.getList()
     },
     /** 查看领用记录 */
     requisitionLog(bwcNo) {
-      this.title = "领用记录";
+      this.title = '领用记录'
       // 先清空 currentBwcNo，然后在 $nextTick 中设置新值
       // 这样可以确保即使点击同一个执法仪多次，也会触发 watch 监听器
-      this.currentBwcNo = undefined;
+      this.currentBwcNo = undefined
       this.$nextTick(() => {
-        this.currentBwcNo = bwcNo;
-        this.requisitionLogOpen = true;
-      });
-    },
-  },
-};
+        this.currentBwcNo = bwcNo
+        this.requisitionLogOpen = true
+      })
+    }
+  }
+}
 </script>

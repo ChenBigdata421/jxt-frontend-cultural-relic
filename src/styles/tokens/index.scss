@@ -1,11 +1,112 @@
-// src/styles/tokens/index.scss
-// 设计令牌入口文件
+// ============================================
+// JXT 数字证据管理平台 - 设计系统入口
+// ============================================
+// 统一导入所有设计 Token
 
-// 颜色系统
-@import './colors.scss';
+// ============================================
+// 核心变量
+// ============================================
+@import './colors';
+@import './typography';
+@import './spacing';
+@import './radius';
+@import './shadows';
+@import './transitions';
+@import './z-index';
 
-// 间距系统
-@import './spacing.scss';
+// ============================================
+// 断点系统
+// ============================================
+$breakpoint-xs: 0;
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+$breakpoint-xxl: 1600px;
 
-// 字体系统
-@import './typography.scss';
+// ============================================
+// 容器最大宽度
+// ============================================
+$container-sm: 540px;
+$container-md: 720px;
+$container-lg: 960px;
+$container-xl: 1140px;
+$container-xxl: 1320px;
+
+// ============================================
+// 导出变量供 JavaScript 使用
+// ============================================
+:export {
+  // 颜色
+  primary: $law-primary;
+  primaryLight: $law-primary-light;
+  primaryDark: $law-primary-dark;
+  success: $law-success;
+  warning: $law-warning;
+  danger: $law-danger;
+  info: $law-info;
+
+  // 状态色
+  statusArchived: $law-status-archived;
+  statusCompleted: $law-status-completed;
+  statusProcessing: $law-status-processing;
+  statusPending: $law-status-pending;
+  statusRejected: $law-status-rejected;
+  statusReview: $law-status-review;
+
+  // 优先级色
+  priorityUrgent: $law-priority-urgent;
+  priorityHigh: $law-priority-high;
+  priorityMedium: $law-priority-medium;
+  priorityLow: $law-priority-low;
+
+  // 中性色
+  gray50: $law-gray-50;
+  gray100: $law-gray-100;
+  gray200: $law-gray-200;
+  gray300: $law-gray-300;
+  gray400: $law-gray-400;
+  gray500: $law-gray-500;
+  gray600: $law-gray-600;
+  gray700: $law-gray-700;
+  gray800: $law-gray-800;
+  gray900: $law-gray-900;
+
+  // 背景色
+  bgPage: $law-bg-page;
+  bgCard: $law-bg-card;
+  bgSidebar: $law-bg-sidebar;
+
+  // 字体
+  fontSizeXs: $font-size-xs;
+  fontSizeSm: $font-size-sm;
+  fontSizeBase: $font-size-base;
+  fontSizeMd: $font-size-md;
+  fontSizeLg: $font-size-lg;
+  fontSizeXl: $font-size-xl;
+  fontSize2xl: $font-size-2xl;
+  fontSize3xl: $font-size-3xl;
+
+  // 间距
+  spacing1: $spacing-1;
+  spacing2: $spacing-2;
+  spacing3: $spacing-3;
+  spacing4: $spacing-4;
+  spacing5: $spacing-5;
+  spacing6: $spacing-6;
+  spacing8: $spacing-8;
+  spacing10: $spacing-10;
+  spacing12: $spacing-12;
+
+  // 圆角
+  radiusSm: $radius-sm;
+  radiusMd: $radius-md;
+  radiusLg: $radius-lg;
+  radiusXl: $radius-xl;
+  radiusFull: $radius-full;
+
+  // 尺寸
+  navHeight: $law-nav-height;
+  sidebarWidth: $law-sidebar-width;
+  sidebarCollapsedWidth: $law-sidebar-collapsed-width;
+}

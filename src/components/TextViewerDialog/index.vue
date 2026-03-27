@@ -27,14 +27,14 @@
 
           <div v-if="loading" class="text-overlay">
             <div class="text-loading">
-              <i class="el-icon-loading"></i>
+              <i class="el-icon-loading" />
               <span class="loading-text">加载中...</span>
             </div>
           </div>
 
           <div v-else-if="loadError" class="text-overlay">
             <div class="text-error">
-              <i class="el-icon-warning-outline"></i>
+              <i class="el-icon-warning-outline" />
               <span class="error-text">{{ errorText }}</span>
             </div>
           </div>
@@ -49,142 +49,142 @@
 </template>
 
 <script>
-import request from "@/utils/request";
+import request from '@/utils/request'
 
 export default {
-  name: "TextViewerDialog",
+  name: 'TextViewerDialog',
   props: {
     visible: {
       type: Boolean,
-      default: false,
+      default: false
     },
     initialUrl: {
       type: String,
-      default: "",
-    },
+      default: ''
+    }
   },
   data() {
     return {
-      textUrl: "",
+      textUrl: '',
       loading: false,
       loadError: false,
-      errorText: "内容加载失败",
-      textContent: "",
-      retryKey: 0,
-    };
+      errorText: '内容加载失败',
+      textContent: '',
+      retryKey: 0
+    }
   },
   computed: {
     dialogVisible: {
       get() {
-        return this.visible;
+        return this.visible
       },
       set(val) {
-        this.$emit("update:visible", val);
-      },
-    },
+        this.$emit('update:visible', val)
+      }
+    }
   },
   watch: {
     visible(val) {
       if (val) {
-        this.setTextUrl(this.initialUrl);
+        this.setTextUrl(this.initialUrl)
       } else {
-        this.resetState();
+        this.resetState()
       }
     },
     initialUrl(val) {
       if (this.visible) {
-        this.setTextUrl(val);
+        this.setTextUrl(val)
       }
-    },
+    }
   },
   methods: {
     setTextUrl(url) {
-      this.textUrl = url || "";
-      this.textContent = "";
-      this.loadError = false;
-      this.errorText = "内容加载失败";
+      this.textUrl = url || ''
+      this.textContent = ''
+      this.loadError = false
+      this.errorText = '内容加载失败'
 
       if (!this.textUrl) {
-        this.loading = false;
-        return;
+        this.loading = false
+        return
       }
 
-      this.loading = true;
-      this.loadText();
+      this.loading = true
+      this.loadText()
     },
     async loadText() {
       if (!this.textUrl) {
-        return;
+        return
       }
 
-      const currentUrl = this.textUrl;
+      const currentUrl = this.textUrl
       try {
         const resp = await request({
           url: currentUrl,
-          method: "get",
-          responseType: "text",
+          method: 'get',
+          responseType: 'text',
           transformResponse: [
             (data) => {
-              return data;
-            },
-          ],
-        });
+              return data
+            }
+          ]
+        })
 
         if (currentUrl !== this.textUrl) {
-          return;
+          return
         }
 
-        this.textContent = resp || "";
-        this.loading = false;
-        this.loadError = false;
+        this.textContent = resp || ''
+        this.loading = false
+        this.loadError = false
       } catch (e) {
         if (currentUrl !== this.textUrl) {
-          return;
+          return
         }
 
-        this.loading = false;
-        this.loadError = true;
-        const msg = e?.message || "";
-        this.errorText = msg ? `内容加载失败：${msg}` : "内容加载失败";
+        this.loading = false
+        this.loadError = true
+        const msg = e?.message || ''
+        this.errorText = msg ? `内容加载失败：${msg}` : '内容加载失败'
       }
     },
     handleRetry() {
       if (!this.textUrl) {
-        return;
+        return
       }
-      this.loading = true;
-      this.loadError = false;
-      this.errorText = "内容加载失败";
-      this.retryKey += 1;
-      const sep = this.textUrl.includes("?") ? "&" : "?";
+      this.loading = true
+      this.loadError = false
+      this.errorText = '内容加载失败'
+      this.retryKey += 1
+      const sep = this.textUrl.includes('?') ? '&' : '?'
       this.textUrl = this.textUrl
-        .split("#")[0]
-        .replace(/([?&])_t=\d+(&?)/, "$1")
-        .replace(/\?$/, "");
-      this.textUrl = `${this.textUrl}${sep}_t=${Date.now()}_${this.retryKey}`;
-      this.loadText();
+        .split('#')[0]
+        .replace(/([?&])_t=\d+(&?)/, '$1')
+        .replace(/\?$/, '')
+      this.textUrl = `${this.textUrl}${sep}_t=${Date.now()}_${this.retryKey}`
+      this.loadText()
     },
     handleOpenOriginal() {
       if (!this.textUrl) {
-        return;
+        return
       }
-      window.open(this.textUrl, "_blank");
+      window.open(this.textUrl, '_blank')
     },
     resetState() {
-      this.textUrl = "";
-      this.loading = false;
-      this.loadError = false;
-      this.errorText = "内容加载失败";
-      this.textContent = "";
-      this.retryKey = 0;
+      this.textUrl = ''
+      this.loading = false
+      this.loadError = false
+      this.errorText = '内容加载失败'
+      this.textContent = ''
+      this.retryKey = 0
     },
     handleClose() {
-      this.resetState();
-      this.$emit("update:visible", false);
-      this.$emit("close");
-    },
-  },
-};
+      this.resetState()
+      this.$emit('update:visible', false)
+      this.$emit('close')
+    }
+  }
+}
 </script>
 
 <style scoped>

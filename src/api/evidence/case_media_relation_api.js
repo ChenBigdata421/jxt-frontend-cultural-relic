@@ -59,7 +59,7 @@ export function getUnassociatedMediaList(caseId, query) {
  * @returns {Promise}
  */
 export function getUnassociatedMediaByCaseId(caseId, query) {
-  return getUnassociatedMediaList(caseId, query);
+  return getUnassociatedMediaList(caseId, query)
 }
 
 // ========== 命令端API（Command） ==========

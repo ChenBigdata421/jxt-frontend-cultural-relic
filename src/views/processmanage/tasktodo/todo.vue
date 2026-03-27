@@ -21,9 +21,12 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery"
-          >搜索</el-button
-        >
+        <el-button
+          type="primary"
+          icon="el-icon-search"
+          size="mini"
+          @click="handleQuery"
+        >搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
@@ -54,22 +57,19 @@
             type="text"
             icon="el-icon-view"
             @click="handleView(scope.row)"
-            >查看</el-button
-          >
+          >查看</el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-edit"
             @click="handleProcess(scope.row)"
-            >处理</el-button
-          >
+          >处理</el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-share"
             @click="handleDelegate(scope.row)"
-            >转办</el-button
-          >
+          >转办</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -176,18 +176,18 @@
 </template>
 
 <script>
-import { listMyTodoTasks, getTask, delegateTask } from "@/api/process/task";
-import { orgTreeSelect } from "@/api/admin/sys-org";
-import { listUser } from "@/api/admin/sys-user";
-import TaskProcessDialog from "@/components/TaskProcessDialog";
-import Treeselect from "@riophae/vue-treeselect";
-import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import { listMyTodoTasks, getTask, delegateTask } from '@/api/process/task'
+import { orgTreeSelect } from '@/api/admin/sys-org'
+import { listUser } from '@/api/admin/sys-user'
+import TaskProcessDialog from '@/components/TaskProcessDialog'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
 export default {
-  name: "TodoTask",
+  name: 'TodoTask',
   components: {
     TaskProcessDialog,
-    Treeselect,
+    Treeselect
   },
   data() {
     return {
@@ -198,7 +198,7 @@ export default {
       // 任务列表
       taskList: [],
       // 对话框标题
-      dialogTitle: "",
+      dialogTitle: '',
       viewOpen: false,
       processOpen: false,
       delegateOpen: false,
@@ -207,7 +207,7 @@ export default {
         pageNum: 1,
         pageSize: 10,
         taskName: undefined,
-        workflowName: undefined,
+        workflowName: undefined
       },
       // 任务详情
       taskDetail: {},
@@ -220,161 +220,161 @@ export default {
       orgId: undefined,
       // 表单校验
       delegateRules: {
-        targetId: [{ required: true, message: "转办人不能为空", trigger: "blur" }],
-        comment: [{ required: true, message: "转办说明不能为空", trigger: "blur" }],
-      },
-    };
+        targetId: [{ required: true, message: '转办人不能为空', trigger: 'blur' }],
+        comment: [{ required: true, message: '转办说明不能为空', trigger: 'blur' }]
+      }
+    }
   },
   watch: {
-    orgId: function (newVal) {
+    orgId: function(newVal) {
       // 当 form.orgId 更新时，调用 getUser
       if (newVal) {
-        this.getFormUser();
+        this.getFormUser()
       }
-    },
+    }
   },
   created() {
-    this.getList();
-    this.getTreeselect();
+    this.getList()
+    this.getTreeselect()
   },
   methods: {
     /** 查询任务列表 */
     getList() {
-      this.loading = true;
+      this.loading = true
       const params = {
         limit: this.queryParams.pageSize,
         offset: (this.queryParams.pageNum - 1) * this.queryParams.pageSize,
         task_name: this.queryParams.taskName,
-        workflow_name: this.queryParams.workflowName,
-      };
+        workflow_name: this.queryParams.workflowName
+      }
       listMyTodoTasks(params)
         .then((response) => {
           if (response.code === 200) {
             this.taskList =
               response.data.list ||
               response.data.items ||
-              (Array.isArray(response.data) ? response.data : []);
-            this.total = response.data.total || response.data.count || 0;
+              (Array.isArray(response.data) ? response.data : [])
+            this.total = response.data.total || response.data.count || 0
           } else {
-            this.msgError(response.msg || "查询失败");
+            this.msgError(response.msg || '查询失败')
           }
-          this.loading = false;
+          this.loading = false
         })
         .catch((error) => {
-          this.msgError("查询失败" + error.message);
-          this.loading = false;
-        });
+          this.msgError('查询失败' + error.message)
+          this.loading = false
+        })
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageNum = 1;
-      this.getList();
+      this.queryParams.pageNum = 1
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
     /** 查询组织下拉树结构 */
     getTreeselect() {
       orgTreeSelect().then((response) => {
-        this.orgOptions = response.data; // 返回数组类型；[id:    label(组织名称):  children []]），
-      });
+        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]），
+      })
     },
     handleOrgSelect(node) {
-      listUser({ orgId: "/" + node.id + "/" }).then((response) => {
-        this.userOptions = response.data.list;
-      });
+      listUser({ orgId: '/' + node.id + '/' }).then((response) => {
+        this.userOptions = response.data.list
+      })
     },
     getFormUser() {
       return new Promise((resolve, reject) => {
-        listUser({ orgId: "/" + this.form.orgId + "/" })
+        listUser({ orgId: '/' + this.form.orgId + '/' })
           .then((response) => {
-            this.userOptions = response.data.list;
-            resolve("true");
+            this.userOptions = response.data.list
+            resolve('true')
           })
           .catch((error) => {
-            console.error("获取用户失败:", error);
-            this.userOptions = [];
-            reject(error);
-          });
-      });
+            console.error('获取用户失败:', error)
+            this.userOptions = []
+            reject(error)
+          })
+      })
     },
     /** 查看按钮操作 */
     handleView(row) {
-      const id = row.id;
+      const id = row.id
       getTask(id)
         .then((response) => {
           if (response.code === 200) {
-            this.taskDetail = response.data;
-            this.viewOpen = true;
-            this.dialogTitle = "任务详情";
+            this.taskDetail = response.data
+            this.viewOpen = true
+            this.dialogTitle = '任务详情'
           } else {
-            this.msgError(response.msg || "获取详情失败");
+            this.msgError(response.msg || '获取详情失败')
           }
         })
         .catch((error) => {
-          this.msgError("获取详情失败" + error.message);
-        });
+          this.msgError('获取详情失败' + error.message)
+        })
     },
     /** 处理按钮操作 */
     handleProcess(row) {
-      this.currentTaskId = row.taskId;
-      this.processOpen = true;
+      this.currentTaskId = row.taskId
+      this.processOpen = true
     },
     /** 转办按钮操作 */
     handleDelegate(row) {
-      this.currentTaskId = row.taskId;
-      const currentUserId = this.$store?.state?.user?.userid || undefined;
+      this.currentTaskId = row.taskId
+      const currentUserId = this.$store?.state?.user?.userid || undefined
       this.delegateForm = {
         userId: currentUserId,
         targetId: undefined,
-        comment: "",
-      };
-      this.orgId = undefined;
-      this.delegateOpen = true;
+        comment: ''
+      }
+      this.orgId = undefined
+      this.delegateOpen = true
     },
     /** 任务处理成功回调 */
     handleTaskProcessSuccess() {
-      this.processOpen = false;
-      this.getList();
+      this.processOpen = false
+      this.getList()
     },
     /** 任务处理对话框关闭回调 */
     handleTaskProcessClose() {
-      this.processOpen = false;
+      this.processOpen = false
     },
     /** 提交转办 */
     submitDelegate() {
-      this.$refs["delegateForm"].validate((valid) => {
+      this.$refs['delegateForm'].validate((valid) => {
         if (valid) {
           delegateTask(this.currentTaskId, this.delegateForm)
             .then((response) => {
               if (response.code === 200) {
-                this.msgSuccess("转办成功");
-                this.delegateOpen = false;
-                this.getList();
+                this.msgSuccess('转办成功')
+                this.delegateOpen = false
+                this.getList()
               } else {
-                this.msgError(response.msg || "转办失败");
+                this.msgError(response.msg || '转办失败')
               }
             })
             .catch((error) => {
-              this.msgError("转办失败" + error.message);
-            });
+              this.msgError('转办失败' + error.message)
+            })
         }
-      });
+      })
     },
     /** 格式化JSON */
     formatJson(jsonStr) {
-      if (!jsonStr) return "";
+      if (!jsonStr) return ''
       try {
-        const obj = typeof jsonStr === "string" ? JSON.parse(jsonStr) : jsonStr;
-        return JSON.stringify(obj, null, 2);
+        const obj = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr
+        return JSON.stringify(obj, null, 2)
       } catch (e) {
-        return jsonStr;
+        return jsonStr
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>
 
 <style scoped>

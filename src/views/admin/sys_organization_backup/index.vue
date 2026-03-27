@@ -62,7 +62,7 @@
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column prop="orgName" label="组织名称" />
-           <!--<el-table-column prop="status" label="状态" :formatter="statusFormat" width="100">在<template slot-scope="scope">中已经调用了statusFormat，这里就不需要了-->
+          <!--<el-table-column prop="status" label="状态" :formatter="statusFormat" width="100">在<template slot-scope="scope">中已经调用了statusFormat，这里就不需要了-->
           <el-table-column prop="xtZxbz" label="状态" width="100">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">

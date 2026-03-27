@@ -170,7 +170,6 @@ export function getTaskForm(id) {
   })
 }
 
-
 /**
  * 创建任务
  * @param {Object} data - 任务数据 { instance_id, workflow_id, task_name, task_key, description, assignee, candidate_users, candidate_groups, priority }

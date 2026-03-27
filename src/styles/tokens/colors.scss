@@ -1,50 +1,178 @@
-// src/styles/tokens/colors.scss
-// 执法场景专业配色系统
+// ============================================
+// JXT 数字证据管理平台 - 色彩系统
+// ============================================
+// 基于司法权威和科技感的配色方案
+// 体现专业性、权威性、安全性
 
-// 主色 - 权威、专业
-$law-primary: #1A5F7A;
-$law-primary-light: #2E86AB;
-$law-primary-dark: #0D3B4D;
+// ============================================
+// 主色 - 司法蓝（权威、专业、可靠）
+// ============================================
+$law-primary-50: #E3F2FD;
+$law-primary-100: #BBDEFB;
+$law-primary-200: #90CAF9;
+$law-primary-300: #64B5F6;
+$law-primary-400: #42A5F5;
+$law-primary-500: #1A5F7A;     // 主蓝色 - 用于主要操作、导航激活
+$law-primary-600: #1565C0;
+$law-primary-700: #0D47A1;
+$law-primary-800: #0D3B4D;     // 深蓝色 - 用于强调、层级
+$law-primary-900: #0A2D3A;
+
+// 主色别名（向后兼容）
+$law-primary: $law-primary-500;
+$law-primary-light: $law-primary-300;
+$law-primary-dark: $law-primary-800;
 $law-primary-contrast: #FFFFFF;
 
+// ============================================
+// 辅助色 - 司法灰蓝（稳重、专业）
+// ============================================
+$law-secondary: #455A64;       // 灰蓝色 - 用于次要元素
+$law-accent: #0D47A1;          // 强调蓝 - 用于重要提示
+
+// ============================================
 // 功能色
-$law-success: #3D8B40;    // 已结案、正常
-$law-warning: #E9A825;    // 待处理
-$law-danger: #C62828;     // 删除、异常
-$law-info: #2E86AB;       // 信息提示
+// ============================================
+// 成功 - 已结案、正常
+$law-success: #2E7D32;         // 深绿色（更专业）
+$law-success-light: #4CAF50;
+$law-success-bg: #E8F5E9;
 
-// 中性色
-$law-gray-50: #ECEFF1;
-$law-gray-100: #CFD8DC;
-$law-gray-200: #B0BEC5;
-$law-gray-300: #90A4AE;
-$law-gray-400: #78909C;
-$law-gray-500: #546E7A;  // 正文
-$law-gray-600: #455A64;
-$law-gray-700: #37474F;
-$law-gray-800: #263238;
-$law-gray-900: #1A1A1A;   // 标题
+// 警告 - 待处理、注意
+$law-warning: #F57C00;         // 深橙色
+$law-warning-light: #FF9800;
+$law-warning-bg: #FFF3E0;
 
+// 危险 - 删除、异常、紧急
+$law-danger: #C62828;          // 深红色（警示感）
+$law-danger-light: #EF5350;
+$law-danger-bg: #FFEBEE;
+
+// 信息 - 一般提示
+$law-info: #0277BD;            // 深蓝色
+$law-info-light: #03A9F4;
+$law-info-bg: #E1F5FE;
+
+// ============================================
+// 中性色阶梯（用于文本、边框、背景）
+// ============================================
+$law-gray-50: #ECEFF1;         // 最浅背景
+$law-gray-100: #F5F5F5;        // 页面背景
+$law-gray-200: #B0BEC5;        // 分割线
+$law-gray-300: #E0E0E0;        // 边框
+$law-gray-400: #78909C;        // 禁用状态
+$law-gray-500: #546E7A;        // 次要文本
+$law-gray-600: #757575;        // 辅助文本
+$law-gray-700: #616161;        // 正文
+$law-gray-800: #424242;        // 标题
+$law-gray-900: #212121;        // 最重要标题
+
+// ============================================
 // 背景色
-$law-bg-default: #F5F7FA;
-$law-bg-paper: #FFFFFF;
-$law-bg-overlay: rgba(0, 0, 0, 0.5);
+// ============================================
+$law-bg-page: #F5F7FA;         // 页面背景（浅蓝灰）
+$law-bg-card: #FFFFFF;         // 卡片背景
+$law-bg-paper: #FFFFFF;        // 纸张背景（向后兼容别名）
+$law-bg-sidebar: #001529;      // 侧边栏背景（深蓝黑）
+$law-bg-header: #FFFFFF;       // 顶部栏背景
+$law-bg-overlay: rgba(0, 0, 0, 0.55); // 模态框遮罩
 
+// ============================================
 // 状态色 - 用于表格状态列
-$law-status-processing: #FF9800;  // 处理中 - 橙色
-$law-status-completed: #4CAF50;   // 已结案 - 绿色
-$law-status-archived: #607D8B;    // 已归档 - 灰蓝
-$law-status-pending: #2196F3;     // 待处理 - 蓝色
+// ============================================
+$law-status-archived: #607D8B;  // 已归档 - 灰蓝
+$law-status-completed: #4CAF50; // 已结案 - 绿色
+$law-status-processing: #FF9800;// 处理中 - 橙色
+$law-status-pending: #2196F3;   // 待处理 - 蓝色
+$law-status-rejected: #C62828;  // 已驳回 - 红色
+$law-status-review: #7B1FA2;    // 待审核 - 紫色
 
+// ============================================
+// 优先级色
+// ============================================
+$law-priority-urgent: #C62828;  // 紧急
+$law-priority-high: #F57C00;    // 高
+$law-priority-medium: #0277BD;  // 中
+$law-priority-low: #607D8B;     // 低
+
+// ============================================
+// 登录页专用色
+// ============================================
+$law-login-bg-start: #1A5F7A;   // 渐变起始色
+$law-login-bg-end: #0D3B4D;     // 渐变结束色
+$law-login-card-bg: rgba(255, 255, 255, 0.95); // 登录卡片背景
+
+// ============================================
+// 导航色
+// ============================================
+$law-nav-height: 56px;
+$law-nav-bg: #FFFFFF;
+$law-nav-border: #E0E0E0;
+$law-nav-text: #616161;
+$law-nav-text-hover: #212121;
+$law-nav-text-active: #1A5F7A;
+$law-nav-indicator: #1A5F7A;
+$law-nav-hover-bg: rgba(26, 95, 122, 0.06);
+
+// 侧边栏导航（深色主题）
+$law-sidebar-width: 220px;
+$law-sidebar-collapsed-width: 64px;
+$law-sidebar-bg: #001529;
+$law-sidebar-border: rgba(255, 255, 255, 0.08);
+$law-sidebar-text: rgba(255, 255, 255, 0.65);
+$law-sidebar-text-hover: rgba(255, 255, 255, 0.85);
+$law-sidebar-text-active: #FFFFFF;
+$law-sidebar-active-bg: #1A5F7A;
+$law-sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+$law-sidebar-submenu-bg: #000C17;
+
+// 侧边栏导航（浅色主题）
+$law-sidebar-light-bg: #FFFFFF;
+$law-sidebar-light-border: #E0E0E0;
+$law-sidebar-light-text: #616161;
+$law-sidebar-light-text-hover: #212121;
+$law-sidebar-light-text-active: #1A5F7A;
+$law-sidebar-light-active-bg: rgba(26, 95, 122, 0.1);
+$law-sidebar-light-hover-bg: #F5F5F5;
+
+// ============================================
 // 导出为 CSS 变量（用于 Vue 组件中）
+// ============================================
 :root {
+  // 主色
   --law-primary: #{$law-primary};
+  --law-primary-light: #{$law-primary-light};
+  --law-primary-dark: #{$law-primary-dark};
+
+  // 功能色
   --law-success: #{$law-success};
   --law-warning: #{$law-warning};
   --law-danger: #{$law-danger};
   --law-info: #{$law-info};
-  --law-status-processing: #{$law-status-processing};
-  --law-status-completed: #{$law-status-completed};
+
+  // 中性色
+  --law-gray-50: #{$law-gray-50};
+  --law-gray-100: #{$law-gray-100};
+  --law-gray-200: #{$law-gray-200};
+  --law-gray-300: #{$law-gray-300};
+  --law-gray-400: #{$law-gray-400};
+  --law-gray-500: #{$law-gray-500};
+  --law-gray-600: #{$law-gray-600};
+  --law-gray-700: #{$law-gray-700};
+  --law-gray-800: #{$law-gray-800};
+  --law-gray-900: #{$law-gray-900};
+
+  // 背景色
+  --law-bg-page: #{$law-bg-page};
+  --law-bg-card: #{$law-bg-card};
+  --law-bg-paper: #{$law-bg-paper};
+  --law-bg-sidebar: #{$law-bg-sidebar};
+
+  // 状态色
   --law-status-archived: #{$law-status-archived};
+  --law-status-completed: #{$law-status-completed};
+  --law-status-processing: #{$law-status-processing};
   --law-status-pending: #{$law-status-pending};
+  --law-status-rejected: #{$law-status-rejected};
+  --law-status-review: #{$law-status-review};
 }

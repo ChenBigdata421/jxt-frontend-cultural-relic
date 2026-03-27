@@ -10,7 +10,7 @@
       <!-- 视频播放区域 -->
       <div class="video-section" :style="{ minHeight: isAudio ? '120px' : '500px' }">
         <div v-if="!isPlaying" class="video-placeholder">
-          <i :class="placeholderIcon" class="placeholder-icon"></i>
+          <i :class="placeholderIcon" class="placeholder-icon" />
           <p class="placeholder-text">点击播放按钮开始播放</p>
         </div>
         <div v-show="isPlaying" class="video-wrapper">
@@ -24,7 +24,7 @@
             :height="playerHeight"
             controlslist="nodownload"
           >
-            <source :src="videoUrl" :type="mediaMime" />
+            <source :src="videoUrl" :type="mediaMime">
             您的浏览器不支持HTML5媒体播放。
           </component>
         </div>
@@ -293,7 +293,6 @@ export default {
               this.$message.warning('自动播放失败，请手动点击播放按钮')
             })
         }
-
       } catch (error) {
         console.error('初始化播放器失败:', error)
         this.$message.error('初始化播放器失败: ' + error.message)
@@ -382,8 +381,7 @@ export default {
         'ts': 'video/MP2T'
       }
       return typeMap[extension] || 'video/mp4'
-    }
-    ,
+    },
     /** 根据URL推断媒体MIME（用于 <source type> 提升兼容性） */
     getMediaMime(url) {
       if (!url) {

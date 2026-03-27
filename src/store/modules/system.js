@@ -15,7 +15,7 @@ const actions = {
   settingDetail({ commit }) {
     return new Promise((resolve, reject) => {
       getSetting().then(response => {
-        const { data } = response   //data:{"sys_app_log":"","sys_app_name":""}
+        const { data } = response // data:{"sys_app_log":"","sys_app_name":""}
         commit('SET_INFO', data)
         resolve(data)
       }).catch(error => {

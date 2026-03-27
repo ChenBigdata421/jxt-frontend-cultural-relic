@@ -28,7 +28,7 @@ export default {
         comment: '',
         output: '',
         rejectionInfo: null,
-        nextTaskApprover:undefined,
+        nextTaskApprover: undefined
       },
 
       // 表单验证规则
@@ -69,7 +69,7 @@ export default {
         const pendingTask = tasksResponse.data
 
         if (pendingTask) {
-          //this.msgSuccess('任务已创建')
+          // this.msgSuccess('任务已创建')
           this.currentTaskId = pendingTask.taskId
           if (onSuccess) {
             onSuccess(pendingTask.taskId)
@@ -125,7 +125,7 @@ export default {
           formData: formData,
           comment: '',
           output: '',
-          rejectionInfo: rejectionInfo,
+          rejectionInfo: rejectionInfo
         }
 
         // 8. 动态生成表单验证规则
@@ -260,7 +260,7 @@ export default {
             const data = {
               comment: this.processForm.comment || '审批通过',
               output: outputData,
-              nextTaskApprover: this.processForm.nextTaskApprover,
+              nextTaskApprover: this.processForm.nextTaskApprover
             }
 
             const response = await approveTask(this.currentTaskId, data)
@@ -297,7 +297,7 @@ export default {
 
             const data = {
               comment: this.processForm.comment,
-              reason: this.processForm.comment,
+              reason: this.processForm.comment
             }
 
             const response = await rejectTask(this.currentTaskId, data)
@@ -688,5 +688,4 @@ export default {
     }
   }
 }
-
 

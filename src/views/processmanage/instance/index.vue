@@ -24,7 +24,7 @@
 
     <!-- 查询条件卡片 -->
     <div class="filter-card">
-      <el-form :model="queryParams" ref="queryForm" :inline="true" class="filter-form" label-width="80px">
+      <el-form ref="queryForm" :model="queryParams" :inline="true" class="filter-form" label-width="80px">
         <el-form-item label="工作流" prop="workflowId">
           <el-select
             v-model="queryParams.workflowId"
@@ -49,35 +49,35 @@
           >
             <el-option label="运行中" value="running">
               <span class="status-option">
-                <span class="status-dot running"></span>
+                <span class="status-dot running" />
                 运行中
               </span>
             </el-option>
             <el-option label="已完成" value="completed">
               <span class="status-option">
-                <span class="status-dot completed"></span>
+                <span class="status-dot completed" />
                 已完成
               </span>
             </el-option>
             <el-option label="失败" value="failed">
               <span class="status-option">
-                <span class="status-dot failed"></span>
+                <span class="status-dot failed" />
                 失败
               </span>
             </el-option>
             <el-option label="已取消" value="cancelled">
               <span class="status-option">
-                <span class="status-dot cancelled"></span>
+                <span class="status-dot cancelled" />
                 已取消
               </span>
             </el-option>
           </el-select>
         </el-form-item>
         <el-form-item class="filter-actions">
-          <el-button type="primary" icon="el-icon-search" @click="handleQuery" class="search-btn">
+          <el-button type="primary" icon="el-icon-search" class="search-btn" @click="handleQuery">
             查询
           </el-button>
-          <el-button icon="el-icon-refresh" @click="resetQuery" class="reset-btn">
+          <el-button icon="el-icon-refresh" class="reset-btn" @click="resetQuery">
             重置
           </el-button>
         </el-form-item>
@@ -116,7 +116,7 @@
         <el-table-column label="实例编号" align="left" prop="instanceNo" min-width="220" show-overflow-tooltip resizable>
           <template slot-scope="scope">
             <div class="cell-content">
-              <i class="el-icon-document-copy cell-icon"></i>
+              <i class="el-icon-document-copy cell-icon" />
               <span class="cell-text">{{ scope.row.instanceNo }}</span>
             </div>
           </template>
@@ -124,7 +124,7 @@
         <el-table-column label="工作流" align="left" prop="workflowName" min-width="200" show-overflow-tooltip resizable>
           <template slot-scope="scope">
             <div class="cell-content">
-              <i class="el-icon-share cell-icon"></i>
+              <i class="el-icon-share cell-icon" />
               <span class="cell-text">{{ scope.row.workflowName }}</span>
             </div>
           </template>
@@ -132,7 +132,7 @@
         <el-table-column label="状态" align="center" prop="status" width="140" resizable>
           <template slot-scope="scope">
             <span :class="['status-badge', `status-${scope.row.status}`]">
-              <span class="status-dot"></span>
+              <span class="status-dot" />
               <span class="status-text">{{ getStatusText(scope.row.status) }}</span>
             </span>
           </template>
@@ -140,7 +140,7 @@
         <el-table-column label="开始时间" align="center" prop="startedAt" width="180" resizable>
           <template slot-scope="scope">
             <div class="time-cell">
-              <i class="el-icon-time time-icon"></i>
+              <i class="el-icon-time time-icon" />
               <span>{{ parseTime(scope.row.startedAt) }}</span>
             </div>
           </template>
@@ -148,7 +148,7 @@
         <el-table-column label="完成时间" align="center" prop="completedAt" width="180" resizable>
           <template slot-scope="scope">
             <div class="time-cell">
-              <i class="el-icon-check time-icon completed"></i>
+              <i class="el-icon-check time-icon completed" />
               <span>{{ parseTime(scope.row.completedAt) || '-' }}</span>
             </div>
           </template>
@@ -157,7 +157,7 @@
 
       <!-- 空状态 -->
       <div v-if="!loading && instanceList.length === 0" class="empty-state">
-        <i class="el-icon-folder-opened empty-icon"></i>
+        <i class="el-icon-folder-opened empty-icon" />
         <p class="empty-text">暂无工作流实例数据</p>
         <p class="empty-hint">请调整筛选条件或等待新的工作流实例创建</p>
       </div>
@@ -198,7 +198,7 @@
                 <label class="task-info-label">状态</label>
                 <div class="task-info-value">
                   <span :class="['status-badge', `status-${instanceData.status}`]">
-                    <span class="status-dot"></span>
+                    <span class="status-dot" />
                     <span class="status-text">{{ getStatusText(instanceData.status) }}</span>
                   </span>
                 </div>
@@ -229,7 +229,7 @@
           <!-- 任务处理历史 -->
           <div v-if="taskHistory && taskHistory.length > 0" class="history-section">
             <h3 class="section-title">
-              <i class="el-icon-time"></i>
+              <i class="el-icon-time" />
               任务处理历史
             </h3>
             <task-history-list :task-history="taskHistory" @show-media-detail="handleShowMediaDetail" />
@@ -237,7 +237,7 @@
 
           <!-- 空状态 -->
           <div v-else class="empty-timeline">
-            <i class="el-icon-warning-outline empty-icon"></i>
+            <i class="el-icon-warning-outline empty-icon" />
             <p class="empty-text">暂无任务处理历史</p>
             <p class="empty-hint">工作流实例尚未开始处理</p>
           </div>
@@ -247,15 +247,15 @@
             <el-button
               type="primary"
               icon="el-icon-refresh"
-              @click="refreshDetail"
               class="action-btn approve-btn"
+              @click="refreshDetail"
             >
               刷新状态
             </el-button>
             <el-button
               icon="el-icon-close"
-              @click="handleDrawerClose"
               class="action-btn cancel-btn"
+              @click="handleDrawerClose"
             >
               关闭
             </el-button>
@@ -294,7 +294,7 @@
               :value="opt.workflowId"
             >
               <span class="workflow-option">
-                <i class="el-icon-share option-icon"></i>
+                <i class="el-icon-share option-icon" />
                 <span class="option-label">{{ opt.name }}</span>
               </span>
             </el-option>
@@ -305,19 +305,19 @@
             v-model="startForm.input"
             type="textarea"
             :rows="10"
-            placeholder='请输入输入数据(JSON格式)，例如：{"key": "value"}'
+            placeholder="请输入输入数据(JSON格式)，例如：{&quot;key&quot;: &quot;value&quot;}"
             class="json-textarea"
           />
           <div class="form-hint">
-            <i class="el-icon-info"></i>
+            <i class="el-icon-info" />
             输入数据必须是有效的JSON格式
           </div>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer enhanced-footer">
-        <el-button @click="cancelStart" class="cancel-btn">取 消</el-button>
-        <el-button type="primary" @click="submitStart" class="submit-btn">
-          <i class="el-icon-video-play"></i>
+        <el-button class="cancel-btn" @click="cancelStart">取 消</el-button>
+        <el-button type="primary" class="submit-btn" @click="submitStart">
+          <i class="el-icon-video-play" />
           启动实例
         </el-button>
       </div>
@@ -331,17 +331,17 @@ import {
   getInstance,
   startInstance,
   getInstanceDetail,
-  cancelInstance,
-} from "@/api/process/instance";
-import { listAllWorkflows } from "@/api/process/workflow";
-import TaskHistoryList from "@/components/TaskHistoryList.vue";
-import MediaDetailDialog from "@/components/MediaDetailDialog";
+  cancelInstance
+} from '@/api/process/instance'
+import { listAllWorkflows } from '@/api/process/workflow'
+import TaskHistoryList from '@/components/TaskHistoryList.vue'
+import MediaDetailDialog from '@/components/MediaDetailDialog'
 
 export default {
-  name: "WorkflowInstance",
+  name: 'WorkflowInstance',
   components: {
     TaskHistoryList,
-    MediaDetailDialog,
+    MediaDetailDialog
   },
   data() {
     return {
@@ -366,7 +366,7 @@ export default {
         pageIndex: 1,
         pageSize: 10,
         workflowId: undefined,
-        status: undefined,
+        status: undefined
       },
       // 实例详情数据
       instanceData: {},
@@ -384,7 +384,7 @@ export default {
       currentMediaData: {},
       // 启动表单参数
       startForm: {
-        input: '',
+        input: ''
       },
       // 启动表单校验
       startRules: {
@@ -395,253 +395,253 @@ export default {
           {
             validator: (rule, value, callback) => {
               if (!value) {
-                callback();
-                return;
+                callback()
+                return
               }
               try {
-                JSON.parse(value);
-                callback();
+                JSON.parse(value)
+                callback()
               } catch (e) {
-                callback(new Error("输入数据必须是有效的JSON格式"));
+                callback(new Error('输入数据必须是有效的JSON格式'))
               }
             },
-            trigger: "blur",
-          },
-        ],
-      },
-    };
+            trigger: 'blur'
+          }
+        ]
+      }
+    }
   },
   computed: {
     // 运行中的实例数量
     runningCount() {
-      return this.instanceList.filter(item => item.status === 'running').length;
+      return this.instanceList.filter(item => item.status === 'running').length
     },
     // 已完成的实例数量
     completedCount() {
-      return this.instanceList.filter(item => item.status === 'completed').length;
+      return this.instanceList.filter(item => item.status === 'completed').length
     },
     // 空状态文本
     emptyText() {
       if (this.queryParams.workflowId || this.queryParams.status) {
-        return '没有符合条件的实例';
+        return '没有符合条件的实例'
       }
-      return '暂无工作流实例';
+      return '暂无工作流实例'
     }
   },
   created() {
-    this.getList();
-    this.getAllWorkflow();
+    this.getList()
+    this.getAllWorkflow()
   },
   beforeDestroy() {
     // 清除定时器
-    this.stopAutoRefresh();
+    this.stopAutoRefresh()
   },
   methods: {
     /** 查询实例列表 */
     getList() {
-      this.loading = true;
+      this.loading = true
       listAllInstances(this.queryParams)
         .then((response) => {
           if (response.code === 200) {
             this.instanceList =
               response.data.list ||
               response.data.items ||
-              (Array.isArray(response.data) ? response.data : []);
-            this.total = response.data.total || response.data.count || 0;
+              (Array.isArray(response.data) ? response.data : [])
+            this.total = response.data.total || response.data.count || 0
           } else {
-            this.msgError(response.msg || "查询失败");
+            this.msgError(response.msg || '查询失败')
           }
-          this.loading = false;
+          this.loading = false
         })
         .catch((error) => {
-          this.msgError("查询失败：" + error.message);
-          this.loading = false;
-        });
+          this.msgError('查询失败：' + error.message)
+          this.loading = false
+        })
     },
 
     getAllWorkflow() {
       listAllWorkflows()
         .then((response) => {
           if (response.code === 200 && response.data) {
-            this.workflowOptions = response.data;
+            this.workflowOptions = response.data
           } else {
-            this.workflowOptions = [];
-            this.msgError(response.msg || "获取工作流失败");
+            this.workflowOptions = []
+            this.msgError(response.msg || '获取工作流失败')
           }
         })
         .catch((error) => {
-          this.msgError("查询工作流失败：" + (error.message || "未知错误"));
-          this.workflowOptions = [];
+          this.msgError('查询工作流失败：' + (error.message || '未知错误'))
+          this.workflowOptions = []
         })
-        .finally(() => {});
+        .finally(() => {})
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageIndex = 1;
-      this.getList();
+      this.queryParams.pageIndex = 1
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
     /** 详情按钮操作 */
     handleDetail(row) {
       // 先清空之前的数据
-      this.instanceData = {};
-      this.activities = [];
-      this.taskHistory = [];
-      this.stopAutoRefresh();
+      this.instanceData = {}
+      this.activities = []
+      this.taskHistory = []
+      this.stopAutoRefresh()
 
       // 设置当前实例ID
-      this.currentInstanceId = row.instanceId;
+      this.currentInstanceId = row.instanceId
 
       // 打开抽屉
-      this.detailDrawerVisible = true;
+      this.detailDrawerVisible = true
 
-      this.getInstance(row.instanceId);
+      this.getInstance(row.instanceId)
 
       // 加载实例详情和任务历史
-      this.loadInstanceDetail(row.instanceId);
+      this.loadInstanceDetail(row.instanceId)
     },
 
     /** 加载实例详情 */
     async getInstance(instanceId) {
       try {
-        const response = await getInstance(instanceId);
+        const response = await getInstance(instanceId)
         if (response && response.code === 200 && response.data) {
           // 设置实例基本信息
-          this.instanceData = response.data || {};
+          this.instanceData = response.data || {}
         } else {
-          this.msgError(response.msg || "获取实例详情失败");
+          this.msgError(response.msg || '获取实例详情失败')
         }
       } catch (error) {
-        console.error("获取实例详情失败:", error);
-        this.msgError("获取实例详情失败：" + (error.message || "未知错误"));
+        console.error('获取实例详情失败:', error)
+        this.msgError('获取实例详情失败：' + (error.message || '未知错误'))
       } finally {
       }
     },
 
     /** 加载实例任务历史 */
     async loadInstanceDetail(instanceId) {
-      this.detailLoading = true;
+      this.detailLoading = true
       try {
-        const response = await getInstanceDetail(instanceId);
+        const response = await getInstanceDetail(instanceId)
         if (response && response.code === 200 && response.data) {
           // 设置任务历史
-          this.taskHistory = response.data || [];
+          this.taskHistory = response.data || []
         } else {
-          this.msgError(response.msg || "获取实例任务失败");
+          this.msgError(response.msg || '获取实例任务失败')
         }
       } catch (error) {
-        console.error("获取实例任务失败:", error);
-        this.msgError("获取实例任务失败：" + (error.message || "未知错误"));
+        console.error('获取实例任务失败:', error)
+        this.msgError('获取实例任务失败：' + (error.message || '未知错误'))
       } finally {
-        this.detailLoading = false;
+        this.detailLoading = false
       }
     },
 
     /** 刷新详情 */
     refreshDetail() {
       if (this.currentInstanceId) {
-        this.getInstance(this.currentInstanceId);
-        this.loadInstanceDetail(this.currentInstanceId);
+        this.getInstance(this.currentInstanceId)
+        this.loadInstanceDetail(this.currentInstanceId)
       }
     },
     /** 启动自动刷新 */
     startAutoRefresh(instanceId) {
-      this.stopAutoRefresh();
+      this.stopAutoRefresh()
       this.refreshTimer = setInterval(() => {
-        if (this.instanceData.status === "running") {
-          this.refreshDetail();
+        if (this.instanceData.status === 'running') {
+          this.refreshDetail()
         } else {
-          this.stopAutoRefresh();
+          this.stopAutoRefresh()
         }
-      }, 5000); // 每5秒刷新一次
+      }, 5000) // 每5秒刷新一次
     },
     /** 停止自动刷新 */
     stopAutoRefresh() {
       if (this.refreshTimer) {
-        clearInterval(this.refreshTimer);
-        this.refreshTimer = null;
+        clearInterval(this.refreshTimer)
+        this.refreshTimer = null
       }
     },
     /** 关闭抽屉 */
     handleDrawerClose() {
-      this.stopAutoRefresh();
-      this.detailDrawerVisible = false;
-      this.currentInstanceId = null;
-      this.instanceData = {};
-      this.activities = [];
+      this.stopAutoRefresh()
+      this.detailDrawerVisible = false
+      this.currentInstanceId = null
+      this.instanceData = {}
+      this.activities = []
     },
     /** 取消工作流 */
     handleCancel(row) {
-      this.$confirm("确定要取消该工作流实例吗？", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('确定要取消该工作流实例吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
-        .then(async () => {
-          const response = await cancelInstance(row.instanceId);
+        .then(async() => {
+          const response = await cancelInstance(row.instanceId)
           if (response && response.code === 200) {
-            this.msgSuccess("实例取消成功");
-            this.getList();
+            this.msgSuccess('实例取消成功')
+            this.getList()
           } else {
-            this.msgError(response.msg || "实例取消失败");
+            this.msgError(response.msg || '实例取消失败')
           }
         })
-        .catch(() => {});
+        .catch(() => {})
     },
     /** 获取状态文本 */
     getStatusText(status) {
       const statusMap = {
-        running: "运行中",
-        completed: "已完成",
-        failed: "失败",
-        cancelled: "已取消",
-        pending: "等待中",
-      };
-      return statusMap[status] || status;
+        running: '运行中',
+        completed: '已完成',
+        failed: '失败',
+        cancelled: '已取消',
+        pending: '等待中'
+      }
+      return statusMap[status] || status
     },
     /** 启动实例按钮操作 */
     handleStart() {
       this.startForm = {
-        input: "",
-      };
-      this.startOpen = true;
+        input: ''
+      }
+      this.startOpen = true
     },
     /** 取消启动 */
     cancelStart() {
-      this.startOpen = false;
-      this.resetForm("startForm");
+      this.startOpen = false
+      this.resetForm('startForm')
     },
     /** 提交启动 */
     submitStart() {
-      this.$refs["startForm"].validate((valid) => {
+      this.$refs['startForm'].validate((valid) => {
         if (valid) {
           const data = {
             workflow_id: this.workflowId,
-            input: this.startForm.input || "",
-          };
+            input: this.startForm.input || ''
+          }
           startInstance(data)
             .then((response) => {
               if (response.code === 200) {
-                this.msgSuccess("启动成功");
-                this.startOpen = false;
-                this.getList();
+                this.msgSuccess('启动成功')
+                this.startOpen = false
+                this.getList()
               } else {
-                this.msgError(response.msg || "启动失败");
+                this.msgError(response.msg || '启动失败')
               }
             })
             .catch((error) => {
-              this.msgError("启动失败：" + error.message);
-            });
+              this.msgError('启动失败：' + error.message)
+            })
         }
-      });
+      })
     },
     /** 返回按钮操作 */
     handleBack() {
-      this.$router.push("/processmanage/workflow");
+      this.$router.push('/processmanage/workflow')
     },
     /**
      * 处理显示媒体详情
@@ -649,19 +649,19 @@ export default {
      */
     handleShowMediaDetail(mediaData) {
       if (mediaData) {
-        this.currentMediaData = mediaData;
-        this.mediaDetailDialogVisible = true;
+        this.currentMediaData = mediaData
+        this.mediaDetailDialogVisible = true
       }
     },
     /**
      * 关闭媒体详情对话框
      */
     handleMediaDetailClose() {
-      this.mediaDetailDialogVisible = false;
-      this.currentMediaData = {};
-    },
-  },
-};
+      this.mediaDetailDialogVisible = false
+      this.currentMediaData = {}
+    }
+  }
+}
 </script>
 
 <style scoped>

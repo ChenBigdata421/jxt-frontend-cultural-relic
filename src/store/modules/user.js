@@ -33,10 +33,23 @@ const mutations = {
     state.orgid = orgId
   },
   SET_AVATAR: (state, avatar) => {
-    if (avatar.indexOf('http') !== -1) {
+    if (!avatar) {
+      state.avatar = ''
+      return
+    }
+    // 如果已经是完整的 URL，直接使用
+    if (avatar.indexOf('http://') !== -1 || avatar.indexOf('https://') !== -1) {
       state.avatar = avatar
     } else {
-      state.avatar = process.env.VUE_APP_BASE_API + avatar
+      // 获取 API 基础路径
+      let baseApi = process.env.VUE_APP_BASE_API || ''
+      // 如果 baseApi 为空或未定义，使用当前页面的 origin
+      if (!baseApi || baseApi === '' || baseApi === '/') {
+        if (typeof window !== 'undefined') {
+          baseApi = window.location.origin
+        }
+      }
+      state.avatar = baseApi + avatar
     }
   },
   SET_ROLES: (state, roles) => {
@@ -72,7 +85,7 @@ const actions = {
           resolve()
         }
 
-        const { roles, userName, userId, orgId, introduction, permissions } = response.data
+        const { roles, userName, userId, orgId, introduction, permissions, avatar } = response.data
         const userID = userId
         const orgID = orgId
 
@@ -86,6 +99,10 @@ const actions = {
         commit('SET_USERID', userID)
         commit('SET_ORGID', orgID)
         commit('SET_INTRODUCTION', introduction)
+        // 更新用户头像
+        if (avatar) {
+          commit('SET_AVATAR', avatar)
+        }
 
         // 初始化 WebSocket 连接
         if (userID) {

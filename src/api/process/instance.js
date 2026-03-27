@@ -96,7 +96,7 @@ export function getInstanceTasks(instanceId, query) {
 export function getRecentTaskByInstance(instanceId) {
   return request({
     url: '/api/v1/tasks/instance/' + instanceId + '/recent',
-    method: 'get',
+    method: 'get'
   })
 }
 

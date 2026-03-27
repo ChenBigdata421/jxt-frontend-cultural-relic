@@ -82,11 +82,12 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-              >搜索</el-button
-            >
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-              >重置</el-button
-            >
+            >搜索</el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="mini"
+              @click="resetQuery"
+            >重置</el-button>
           </el-form-item>
         </el-form>
 
@@ -100,8 +101,7 @@
                   icon="el-icon-plus"
                   size="mini"
                   @click="handleAdd"
-                  >新增</el-button
-                >
+                >新增</el-button>
               </el-col>
               <el-col :span="1.5">
                 <el-button
@@ -111,8 +111,7 @@
                   size="mini"
                   :disabled="selectedTrialRecords.length !== 1"
                   @click="handleUpdate"
-                  >修改</el-button
-                >
+                >修改</el-button>
               </el-col>
               <el-col :span="1.5">
                 <el-button
@@ -122,8 +121,7 @@
                   size="mini"
                   :disabled="selectedTrialRecords.length === 0"
                   @click="handleDelete"
-                  >删除</el-button
-                >
+                >删除</el-button>
               </el-col>
               <el-col :span="1.5">
                 <el-button
@@ -132,8 +130,7 @@
                   icon="el-icon-download"
                   size="mini"
                   @click="handleExport"
-                  >导出</el-button
-                >
+                >导出</el-button>
               </el-col>
             </el-row>
           </el-col>
@@ -142,9 +139,11 @@
               <div class="column-settings">
                 <div class="column-settings-header">
                   <span>列显示设置</span>
-                  <el-button type="text" size="mini" @click="resetColumns"
-                    >重置</el-button
-                  >
+                  <el-button
+                    type="text"
+                    size="mini"
+                    @click="resetColumns"
+                  >重置</el-button>
                 </div>
                 <el-checkbox-group
                   v-model="visibleColumns"
@@ -161,9 +160,11 @@
                   </div>
                 </el-checkbox-group>
               </div>
-              <el-button slot="reference" size="mini" icon="el-icon-setting"
-                >列设置</el-button
-              >
+              <el-button
+                slot="reference"
+                size="mini"
+                icon="el-icon-setting"
+              >列设置</el-button>
             </el-popover>
           </el-col>
         </el-row>
@@ -191,24 +192,21 @@
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row)"
-                >浏览</el-button
-              >
+              >浏览</el-button>
               <el-button
                 v-permisaction="['equipment:trial:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
-                >修改</el-button
-              >
+              >修改</el-button>
               <el-button
                 v-permisaction="['equipment:trial:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
                 @click="handleDelete(scope.row)"
-                >删除</el-button
-              >
+              >删除</el-button>
             </template>
           </el-table-column>
           <el-table-column
@@ -295,8 +293,7 @@
               <el-tag
                 :type="scope.row.status === 1 ? 'success' : 'danger'"
                 disable-transitions
-                >{{ statusFormat(scope.row) }}</el-tag
-              >
+              >{{ statusFormat(scope.row) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column
@@ -434,8 +431,7 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
                       v-for="dict in statusOptions"
                       :key="dict.value"
                       :label="dict.value"
-                      >{{ dict.label }}</el-radio
-                    >
+                    >{{ dict.label }}</el-radio>
                   </el-radio-group>
                 </el-form-item>
               </el-col>
@@ -532,15 +528,15 @@ import {
   delEquipmentTrial,
   addEquipmentTrial,
   updateEquipmentTrial,
-  listEquipmentBrand,
-} from "@/api/admin/equipment_manage_api";
-import { formatJson } from "@/utils";
-import { orgTreeSelect } from "@/api/admin/sys-org";
-import Treeselect from "@riophae/vue-treeselect";
-import "@riophae/vue-treeselect/dist/vue-treeselect.css";
-import { listUser } from "@/api/admin/sys-user";
+  listEquipmentBrand
+} from '@/api/admin/equipment_manage_api'
+import { formatJson } from '@/utils'
+import { orgTreeSelect } from '@/api/admin/sys-org'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import { listUser } from '@/api/admin/sys-user'
 export default {
-  name: "Trial",
+  name: 'Trial',
   components: { Treeselect },
   data() {
     return {
@@ -560,27 +556,27 @@ export default {
       equipmentTrialList: [],
       // 列配置
       columnOptions: [
-        { prop: "trialNo", label: "编号", defaultVisible: true },
-        { prop: "trialName", label: "名称", defaultVisible: true },
-        { prop: "brandName", label: "品牌名称", defaultVisible: true },
-        { prop: "managerName", label: "管理员", defaultVisible: true },
+        { prop: 'trialNo', label: '编号', defaultVisible: true },
+        { prop: 'trialName', label: '名称', defaultVisible: true },
+        { prop: 'brandName', label: '品牌名称', defaultVisible: true },
+        { prop: 'managerName', label: '管理员', defaultVisible: true },
         {
-          prop: "managerOrgFullName",
-          label: "管理员所在组织",
-          defaultVisible: true,
+          prop: 'managerOrgFullName',
+          label: '管理员所在组织',
+          defaultVisible: true
         },
-        { prop: "trialIp", label: "IP", defaultVisible: true },
-        { prop: "address", label: "地址", defaultVisible: true },
-        { prop: "trialUrl", label: "播放地址", defaultVisible: false },
-        { prop: "purchaseDate", label: "购置时间", defaultVisible: false },
-        { prop: "version", label: "版本号", defaultVisible: false },
-        { prop: "status", label: "状态", defaultVisible: true },
-        { prop: "remark", label: "备注", defaultVisible: false },
+        { prop: 'trialIp', label: 'IP', defaultVisible: true },
+        { prop: 'address', label: '地址', defaultVisible: true },
+        { prop: 'trialUrl', label: '播放地址', defaultVisible: false },
+        { prop: 'purchaseDate', label: '购置时间', defaultVisible: false },
+        { prop: 'version', label: '版本号', defaultVisible: false },
+        { prop: 'status', label: '状态', defaultVisible: true },
+        { prop: 'remark', label: '备注', defaultVisible: false }
       ],
       // 可见列
       visibleColumns: [],
       // 弹出层标题
-      title: "",
+      title: '',
       // 是否显示弹出层
       open: false,
       viewOpen: false,
@@ -604,122 +600,122 @@ export default {
         status: undefined,
         brandName: undefined,
         managerOrgId: undefined,
-        managerId: undefined,
+        managerId: undefined
       },
       // 表单参数
       form: {
-        status: undefined,
+        status: undefined
       },
       defaultProps: {
-        children: "children",
-        label: "label",
+        children: 'children',
+        label: 'label'
       },
       // 表单校验
       rules: {
-        trialNo: [{ required: true, message: "编号不能为空", trigger: "blur" }],
+        trialNo: [{ required: true, message: '编号不能为空', trigger: 'blur' }],
         trialName: [
-          { required: true, message: "名称不能为空", trigger: "blur" },
-        ],
+          { required: true, message: '名称不能为空', trigger: 'blur' }
+        ]
       },
-      processingInstance: null, //Element UI全局加载动画的实例
-      previousCursor: null, //记录鼠标状态
-    };
+      processingInstance: null, // Element UI全局加载动画的实例
+      previousCursor: null // 记录鼠标状态
+    }
   },
   watch: {
-    "form.managerOrgId": function (newVal) {
+    'form.managerOrgId': function(newVal) {
       // 当 form.managerOrgId 更新时，调用 getUser
       if (newVal) {
         if (this.firstLoad !== true) {
           // 首次打开对话框，不需要清空管理人员
-          this.form.managerId = null; // 清空管理人员选择
+          this.form.managerId = null // 清空管理人员选择
         }
-        this.firstLoad = false;
-        this.getFormUser();
+        this.firstLoad = false
+        this.getFormUser()
       }
     },
-    "queryParams.managerOrgId": function (newVal) {
+    'queryParams.managerOrgId': function(newVal) {
       // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
       if (newVal) {
-        this.queryParams.managerId = null; // 清空管理人员选择
-        this.getQueryUser();
+        this.queryParams.managerId = null // 清空管理人员选择
+        this.getQueryUser()
       }
-    },
+    }
   },
   created() {
-    this.getList();
-    this.getTreeselect();
-    this.getFormBrand();
-    this.getDicts("trial_status").then((response) => {
-      this.statusOptions = response.data;
-    });
-    this.initVisibleColumns();
+    this.getList()
+    this.getTreeselect()
+    this.getFormBrand()
+    this.getDicts('trial_status').then((response) => {
+      this.statusOptions = response.data
+    })
+    this.initVisibleColumns()
   },
   methods: {
     getDefaultVisibleColumns() {
       return this.columnOptions
         .filter((item) => item.defaultVisible !== false)
-        .map((item) => item.prop);
+        .map((item) => item.prop)
     },
     initVisibleColumns() {
-      const saved = localStorage.getItem("trial_manage_visible_columns");
+      const saved = localStorage.getItem('trial_manage_visible_columns')
       if (saved) {
         try {
-          this.visibleColumns = JSON.parse(saved);
-          return;
+          this.visibleColumns = JSON.parse(saved)
+          return
         } catch (error) {
-          console.warn("解析列配置失败，使用默认列", error);
+          console.warn('解析列配置失败，使用默认列', error)
         }
       }
-      this.visibleColumns = this.getDefaultVisibleColumns();
+      this.visibleColumns = this.getDefaultVisibleColumns()
     },
     isColumnVisible(prop) {
-      return this.visibleColumns.includes(prop);
+      return this.visibleColumns.includes(prop)
     },
     handleColumnChange(value) {
-      this.visibleColumns = value;
+      this.visibleColumns = value
       localStorage.setItem(
-        "trial_manage_visible_columns",
+        'trial_manage_visible_columns',
         JSON.stringify(this.visibleColumns)
-      );
+      )
     },
     resetColumns() {
-      this.visibleColumns = this.getDefaultVisibleColumns();
+      this.visibleColumns = this.getDefaultVisibleColumns()
       localStorage.setItem(
-        "trial_manage_visible_columns",
+        'trial_manage_visible_columns',
         JSON.stringify(this.visibleColumns)
-      );
-      this.$message.success("已重置为默认显示");
+      )
+      this.$message.success('已重置为默认显示')
     },
     /** 查询trial列表 */
     getList() {
-      this.loading = true;
-      const query = this.normalizeQueryParams(this.queryParams);
+      this.loading = true
+      const query = this.normalizeQueryParams(this.queryParams)
       listEquipmentTrial(query)
         .then((response) => {
           if (response.code === 200 && response.data) {
-            this.equipmentTrialList = response.data.list;
-            this.total = response.data.count;
+            this.equipmentTrialList = response.data.list
+            this.total = response.data.count
             // 分页/查询后回显跨分页选择
-            this.restoreSelection();
+            this.restoreSelection()
           } else {
-            this.equipmentTrialList = [];
-            this.total = 0;
-            this.msgError(response.msg || "获取trial列表失败");
+            this.equipmentTrialList = []
+            this.total = 0
+            this.msgError(response.msg || '获取trial列表失败')
           }
         })
         .catch((error) => {
-          this.equipmentTrialList = [];
-          this.total = 0;
-          this.msgError("获取trial列表失败：" + (error.message || "未知错误"));
+          this.equipmentTrialList = []
+          this.total = 0
+          this.msgError('获取trial列表失败：' + (error.message || '未知错误'))
         })
         .finally(() => {
-          this.loading = false;
-        });
+          this.loading = false
+        })
     },
     // 取消按钮
     cancel() {
-      this.open = false;
-      this.reset();
+      this.open = false
+      this.reset()
     },
     // 表单重置
     reset() {
@@ -737,40 +733,40 @@ export default {
         remark: undefined,
         brandName: undefined,
         brandId: undefined,
-        status: undefined,
-      };
-      this.resetForm("form");
+        status: undefined
+      }
+      this.resetForm('form')
     },
     // 字典翻译
     statusFormat(row) {
-      return this.selectDictLabel(this.statusOptions, row.status);
+      return this.selectDictLabel(this.statusOptions, row.status)
     },
     /** 查询组织下拉树结构 */
     getTreeselect() {
       orgTreeSelect().then((response) => {
-        this.orgOptions = response.data; // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
-      });
+        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
+      })
     },
     getFormUser() {
-      listUser({ orgId: "/" + this.form.managerOrgId + "/" }).then(
+      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(
         (response) => {
-          this.userOptions = response.data.list;
+          this.userOptions = response.data.list
         }
-      );
+      )
     },
 
     getFormBrand() {
       listEquipmentBrand().then((response) => {
-        this.brandOptions = response.data.list;
-      });
+        this.brandOptions = response.data.list
+      })
     },
 
     getQueryUser() {
-      listUser({ orgId: "/" + this.queryParams.managerOrgId + "/" }).then(
+      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(
         (response) => {
-          this.userOptions = response.data.list;
+          this.userOptions = response.data.list
         }
-      );
+      )
     },
     /**
      * 需要清空记录选中状态的场景如下：
@@ -780,25 +776,25 @@ export default {
      * 其他场景下，不需要清空记录选中状态
      */
     resetSelected() {
-      this.selectedTrialMap = {};
-      this.selectedTrialRecords = [];
+      this.selectedTrialMap = {}
+      this.selectedTrialRecords = []
     },
 
-    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
-    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    // pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    // 每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
     resetPage() {
-      this.queryParams.pageIndex = 1;
+      this.queryParams.pageIndex = 1
     },
 
     handleQuery() {
-      this.resetSelected();
-      this.resetPage();
-      this.getList();
+      this.resetSelected()
+      this.resetPage()
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
 
     /** 开始执行操作 */
@@ -806,28 +802,28 @@ export default {
       this.processingInstance = this.$loading({
         lock: true,
         text: text,
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.3)",
-      });
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.3)'
+      })
       // 鼠标切换为等待状态
-      this.previousCursor = document.body.style.cursor;
-      document.body.style.cursor = "wait";
+      this.previousCursor = document.body.style.cursor
+      document.body.style.cursor = 'wait'
     },
 
     /** 停止执行操作 */
     stopProcessing() {
       if (this.processingInstance) {
-        this.processingInstance.close();
-        this.processingInstance = null;
+        this.processingInstance.close()
+        this.processingInstance = null
       }
       // 恢复鼠标状态
-      document.body.style.cursor = this.previousCursor;
+      document.body.style.cursor = this.previousCursor
     },
 
     // 多选框选中数据
     handleSelectionChange(selection) {
       if (this.isRestoringSelection) {
-        return;
+        return
       }
       // 以当前页为准增删选中项（实现跨分页记忆）
       const selectedIdSet = new Set(
@@ -835,265 +831,265 @@ export default {
       );
 
       (this.equipmentTrialList || []).forEach((row) => {
-        const id = row && row.id;
-        if (!id) return;
+        const id = row && row.id
+        if (!id) return
         if (selectedIdSet.has(id)) {
-          this.selectedTrialMap[id] = row;
+          this.selectedTrialMap[id] = row
         } else {
-          delete this.selectedTrialMap[id];
+          delete this.selectedTrialMap[id]
         }
-      });
+      })
       this.selectedTrialRecords = Object.values(this.selectedTrialMap).filter(
         Boolean
-      );
+      )
     },
 
     restoreSelection() {
-      if (this.isRestoringSelection) return;
-      if (!this.$refs.trialTable) return;
-      if (!this.equipmentTrialList || !this.equipmentTrialList.length) return;
+      if (this.isRestoringSelection) return
+      if (!this.$refs.trialTable) return
+      if (!this.equipmentTrialList || !this.equipmentTrialList.length) return
 
-      this.isRestoringSelection = true;
+      this.isRestoringSelection = true
       this.$nextTick(() => {
         try {
           this.equipmentTrialList.forEach((row) => {
-            const id = row && row.id;
-            if (!id) return;
+            const id = row && row.id
+            if (!id) return
             if (this.selectedTrialMap[id]) {
-              this.$refs.trialTable.toggleRowSelection(row, true);
+              this.$refs.trialTable.toggleRowSelection(row, true)
             }
-          });
+          })
         } finally {
-          this.isRestoringSelection = false;
+          this.isRestoringSelection = false
         }
-      });
+      })
     },
     /** 新增按钮操作 */
     handleAdd() {
-      this.reset();
+      this.reset()
       // this.getMenuTreeselect(0)
-      this.open = true;
-      this.title = "添加场地";
-      this.isEdit = false;
+      this.open = true
+      this.title = '添加场地'
+      this.isEdit = false
     },
     handleSortChang(column, prop, order) {
-      prop = column.prop;
-      order = column.order;
-      if (order === "descending") {
-        this.queryParams[prop + "Order"] = "desc";
-      } else if (order === "ascending") {
-        this.queryParams[prop + "Order"] = "asc";
+      prop = column.prop
+      order = column.order
+      if (order === 'descending') {
+        this.queryParams[prop + 'Order'] = 'desc'
+      } else if (order === 'ascending') {
+        this.queryParams[prop + 'Order'] = 'asc'
       } else {
-        this.queryParams[prop + "Order"] = undefined;
+        this.queryParams[prop + 'Order'] = undefined
       }
-      this.getList();
+      this.getList()
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset();
-      this.firstLoad = true;
+      this.reset()
+      this.firstLoad = true
       // 使用对象展开运算符创建新对象
       if (row && row.id !== undefined) {
-        this.form = { ...row };
+        this.form = { ...row }
       } else {
         this.form = this.selectedTrialRecords[0]
           ? { ...this.selectedTrialRecords[0] }
-          : {};
+          : {}
       }
-      this.title = "修改场地";
-      this.isEdit = true;
-      this.open = true;
+      this.title = '修改场地'
+      this.isEdit = true
+      this.open = true
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      this.viewData = row;
-      this.viewOpen = true;
+      this.viewData = row
+      this.viewOpen = true
     },
     /** 提交按钮 */
-    submitForm: function () {
-      this.$refs["form"].validate((valid) => {
+    submitForm: function() {
+      this.$refs['form'].validate((valid) => {
         if (valid) {
           if (this.form.id !== undefined) {
-            this.startProcessing("正在修改场地...");
+            this.startProcessing('正在修改场地...')
             updateEquipmentTrial(this.form, this.form.id)
-              .then(async (response) => {
+              .then(async(response) => {
                 if (response.code === 200) {
-                  await this.delay(1000);
-                  this.resetSelected();
-                  this.getList();
-                  this.msgSuccess(response.msg);
-                  this.open = false;
+                  await this.delay(1000)
+                  this.resetSelected()
+                  this.getList()
+                  this.msgSuccess(response.msg)
+                  this.open = false
                 } else {
-                  this.msgError(response.msg);
+                  this.msgError(response.msg)
                 }
               })
               .catch((error) => {
-                this.msgError("修改场地失败：" + (error.message || "未知错误"));
+                this.msgError('修改场地失败：' + (error.message || '未知错误'))
               })
               .finally(() => {
-                this.stopProcessing();
-              });
+                this.stopProcessing()
+              })
           } else {
-            this.startProcessing("正在创建场地...");
+            this.startProcessing('正在创建场地...')
             addEquipmentTrial(this.form)
-              .then(async (response) => {
+              .then(async(response) => {
                 if (response.code === 200) {
-                  await this.delay(1000);
-                  this.getList();
-                  this.msgSuccess(response.msg);
-                  this.open = false;
+                  await this.delay(1000)
+                  this.getList()
+                  this.msgSuccess(response.msg)
+                  this.open = false
                 } else {
-                  this.msgError(response.msg);
+                  this.msgError(response.msg)
                 }
               })
               .catch((error) => {
-                this.msgError("新增场地失败：" + (error.message || "未知错误"));
+                this.msgError('新增场地失败：' + (error.message || '未知错误'))
               })
               .finally(() => {
-                this.stopProcessing();
-              });
+                this.stopProcessing()
+              })
           }
         }
-      });
+      })
     },
     /** 删除按钮操作 */
     async handleDelete(row) {
       try {
-        var trialIds = [];
-        var trialNos = [];
+        var trialIds = []
+        var trialNos = []
         if (row && row.id !== undefined) {
-          trialIds = [row.id];
-          trialNos = [row.trialNo];
+          trialIds = [row.id]
+          trialNos = [row.trialNo]
         } else {
-          trialIds = this.selectedTrialRecords.map((item) => item.id);
-          trialNos = this.selectedTrialRecords.map((item) => item.trialNo);
+          trialIds = this.selectedTrialRecords.map((item) => item.id)
+          trialNos = this.selectedTrialRecords.map((item) => item.trialNo)
         }
         await this.$confirm(
           '是否确认删除场地编号为"' + trialNos + '"的数据项?',
-          "信息",
+          '信息',
           {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "info",
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'info'
           }
-        );
-        this.startProcessing("正在删除场地...");
-        const response = await delEquipmentTrial({ ids: trialIds });
+        )
+        this.startProcessing('正在删除场地...')
+        const response = await delEquipmentTrial({ ids: trialIds })
         if (response.code === 200) {
-          await this.delay(1000);
-          this.resetSelected();
-          this.resetPage();
-          this.getList();
-          this.msgSuccess(response.msg || "删除场地成功");
+          await this.delay(1000)
+          this.resetSelected()
+          this.resetPage()
+          this.getList()
+          this.msgSuccess(response.msg || '删除场地成功')
         } else {
-          this.msgError(response.msg || "删除场地失败");
+          this.msgError(response.msg || '删除场地失败')
         }
-        this.stopProcessing();
+        this.stopProcessing()
       } catch (error) {
-        if (error !== "cancel") {
-          this.msgError("删除场地失败：" + (error.message || "未知错误"));
+        if (error !== 'cancel') {
+          this.msgError('删除场地失败：' + (error.message || '未知错误'))
         }
       }
     },
     normalizeQueryParams(params = {}) {
-      const query = { ...params };
+      const query = { ...params }
       Object.keys(query).forEach((key) => {
-        const value = query[key];
-        if (value === "" || value === null || value === undefined) {
-          delete query[key];
+        const value = query[key]
+        if (value === '' || value === null || value === undefined) {
+          delete query[key]
         }
-      });
-      return query;
+      })
+      return query
     },
     /** 导出按钮操作 */
     async handleExport() {
       try {
         const hasSelection =
           Array.isArray(this.selectedTrialRecords) &&
-          this.selectedTrialRecords.length > 0;
+          this.selectedTrialRecords.length > 0
 
         const confirmText = hasSelection
           ? `是否确认导出已勾选的 ${this.selectedTrialRecords.length} 条场地数据？`
-          : "是否确认导出所有场地数据项？";
+          : '是否确认导出所有场地数据项？'
 
-        await this.$confirm(confirmText, "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "info",
-        });
+        await this.$confirm(confirmText, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'info'
+        })
 
         const columnOptions = Array.isArray(this.columnOptions)
           ? this.columnOptions
-          : [];
+          : []
         const visibleColumns = Array.isArray(this.visibleColumns)
           ? this.visibleColumns
-          : [];
+          : []
         const exportColumns = columnOptions.filter((c) =>
           visibleColumns.includes(c.prop)
-        );
+        )
 
         if (!exportColumns.length) {
-          this.msgError("当前未选择任何可导出的列");
-          return;
+          this.msgError('当前未选择任何可导出的列')
+          return
         }
 
-        const tHeader = exportColumns.map((c) => c.label);
-        const filterVal = exportColumns.map((c) => c.field || c.prop);
+        const tHeader = exportColumns.map((c) => c.label)
+        const filterVal = exportColumns.map((c) => c.field || c.prop)
 
-        let list = [];
+        let list = []
         if (hasSelection) {
-          list = this.selectedTrialRecords;
+          list = this.selectedTrialRecords
         } else {
           const baseQueryParams = this.normalizeQueryParams(
             this.queryParams || {}
-          );
-          const pageSize = 1000;
-          let pageIndex = 1;
-          let total = Infinity;
+          )
+          const pageSize = 1000
+          let pageIndex = 1
+          let total = Infinity
 
           while (list.length < total) {
             const query = {
               ...baseQueryParams,
               pageIndex,
-              pageSize,
-            };
-            const resp = await listEquipmentTrial(query);
+              pageSize
+            }
+            const resp = await listEquipmentTrial(query)
             if (!resp || resp.code !== 200) {
-              throw new Error((resp && resp.msg) || "查询场地列表失败");
+              throw new Error((resp && resp.msg) || '查询场地列表失败')
             }
 
-            const pageList = (resp.data && resp.data.list) || [];
-            total = (resp.data && resp.data.count) || 0;
-            list = list.concat(pageList);
+            const pageList = (resp.data && resp.data.list) || []
+            total = (resp.data && resp.data.count) || 0
+            list = list.concat(pageList)
 
             if (!pageList.length) {
-              break;
+              break
             }
-            pageIndex += 1;
+            pageIndex += 1
           }
         }
 
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
-          const output = { ...row };
-          output.status = this.statusFormat(row);
-          output.purchaseDate = this.parseTime(row.purchaseDate);
-          return output;
-        });
+          const output = { ...row }
+          output.status = this.statusFormat(row)
+          output.purchaseDate = this.parseTime(row.purchaseDate)
+          return output
+        })
 
-        const data = formatJson(filterVal, normalizeList);
+        const data = formatJson(filterVal, normalizeList)
 
         // 触发导出（会弹出另存为对话框）
-        const excel = await import("@/vendor/Export2Excel");
+        const excel = await import('@/vendor/Export2Excel')
         excel.export_json_to_excel({
           header: tHeader,
           data,
-          filename: "场地列表",
+          filename: '场地列表',
           autoWidth: true,
-          bookType: "xlsx",
-        });
+          bookType: 'xlsx'
+        })
       } catch (error) {
-        if (error !== "cancel") {
-          this.msgError("导出失败：" + (error.message || "未知错误"));
+        if (error !== 'cancel') {
+          this.msgError('导出失败：' + (error.message || '未知错误'))
         }
       } finally {
       }
@@ -1101,10 +1097,10 @@ export default {
 
     /** 延迟函数 */
     delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    },
-  },
-};
+      return new Promise((resolve) => setTimeout(resolve, ms))
+    }
+  }
+}
 </script>
 
 <style scoped>

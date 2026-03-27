@@ -1,0 +1,53 @@
+// ============================================
+// JXT 数字证据管理平台 - 圆角系统
+// ============================================
+
+// ============================================
+// 圆角规范
+// ============================================
+$radius-xs: 2px;     // 极小圆角（标签、徽章）
+$radius-sm: 4px;     // 小圆角（按钮、输入框）
+$radius-md: 6px;     // 中圆角（卡片）
+$radius-lg: 8px;     // 大圆角（模态框、卡片）
+$radius-xl: 12px;    // 超大圆角（特殊卡片）
+$radius-2xl: 16px;   // 超超大圆角
+$radius-full: 9999px; // 完全圆角（头像、标签）
+
+// ============================================
+// 组件特定圆角
+// ============================================
+$radius-button: $radius-sm;      // 按钮圆角
+$radius-input: $radius-sm;       // 输入框圆角
+$radius-card: $radius-lg;        // 卡片圆角
+$radius-modal: $radius-lg;       // 模态框圆角
+$radius-dropdown: $radius-md;    // 下拉菜单圆角
+$radius-tag: $radius-xs;         // 标签圆角
+$radius-avatar: $radius-full;    // 头像圆角
+$radius-badge: $radius-full;     // 徽章圆角
+
+// ============================================
+// 圆角 Mixins
+// ============================================
+@mixin radius($value: $radius-sm) {
+  border-radius: $value;
+}
+
+@mixin radius-sm {
+  border-radius: $radius-sm;
+}
+
+@mixin radius-md {
+  border-radius: $radius-md;
+}
+
+@mixin radius-lg {
+  border-radius: $radius-lg;
+}
+
+@mixin radius-xl {
+  border-radius: $radius-xl;
+}
+
+@mixin radius-full {
+  border-radius: $radius-full;
+}

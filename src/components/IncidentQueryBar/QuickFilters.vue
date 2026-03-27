@@ -3,8 +3,8 @@
     <el-radio-group
       v-model="activeFilter"
       size="small"
-      @change="handleFilterChange"
       class="filter-group"
+      @change="handleFilterChange"
     >
       <el-radio-button label="all">全部</el-radio-button>
       <el-radio-button label="today">今日警情</el-radio-button>
@@ -27,20 +27,20 @@ export default {
   data() {
     return {
       activeFilter: this.value || 'all'
-    };
+    }
   },
   watch: {
     value(newVal) {
-      this.activeFilter = newVal;
+      this.activeFilter = newVal
     }
   },
   methods: {
     handleFilterChange(value) {
-      this.$emit('input', value);
-      this.$emit('change', value);
+      this.$emit('input', value)
+      this.$emit('change', value)
     }
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>

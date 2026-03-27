@@ -100,11 +100,12 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-              >搜索</el-button
-            >
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-              >重置</el-button
-            >
+            >搜索</el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="mini"
+              @click="resetQuery"
+            >重置</el-button>
           </el-form-item>
         </el-form>
         <el-row :gutter="10" class="mb8" type="flex" justify="space-between">
@@ -117,8 +118,7 @@
                   icon="el-icon-plus"
                   size="mini"
                   @click="handleAdd"
-                  >新增</el-button
-                >
+                >新增</el-button>
               </el-col>
               <el-col :span="1.5">
                 <el-button
@@ -128,8 +128,7 @@
                   size="mini"
                   :disabled="selectedBwcRecords.length !== 1"
                   @click="handleUpdate"
-                  >修改</el-button
-                >
+                >修改</el-button>
               </el-col>
               <el-col :span="1.5">
                 <el-button
@@ -139,8 +138,7 @@
                   size="mini"
                   :disabled="selectedBwcRecords.length === 0"
                   @click="handleDelete"
-                  >删除</el-button
-                >
+                >删除</el-button>
               </el-col>
               <el-col :span="1.5">
                 <el-button
@@ -149,8 +147,7 @@
                   icon="el-icon-download"
                   size="mini"
                   @click="handleExport"
-                  >导出</el-button
-                >
+                >导出</el-button>
               </el-col>
             </el-row>
           </el-col>
@@ -159,9 +156,11 @@
               <div class="column-settings">
                 <div class="column-settings-header">
                   <span>列显示设置</span>
-                  <el-button type="text" size="mini" @click="resetColumns"
-                    >重置</el-button
-                  >
+                  <el-button
+                    type="text"
+                    size="mini"
+                    @click="resetColumns"
+                  >重置</el-button>
                 </div>
                 <el-checkbox-group
                   v-model="visibleColumns"
@@ -178,9 +177,11 @@
                   </div>
                 </el-checkbox-group>
               </div>
-              <el-button slot="reference" size="mini" icon="el-icon-setting"
-                >列设置</el-button
-              >
+              <el-button
+                slot="reference"
+                size="mini"
+                icon="el-icon-setting"
+              >列设置</el-button>
             </el-popover>
           </el-col>
         </el-row>
@@ -217,24 +218,21 @@
                 type="text"
                 icon="el-icon-view"
                 @click="handleView(scope.row)"
-                >浏览</el-button
-              >
+              >浏览</el-button>
               <el-button
                 v-permisaction="['equipment:bwc:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
-                >修改</el-button
-              >
+              >修改</el-button>
               <el-button
                 v-permisaction="['equipment:bwc:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
                 @click="handleDelete(scope.row)"
-                >删除</el-button
-              >
+              >删除</el-button>
             </template>
           </el-table-column>
           <el-table-column
@@ -284,8 +282,7 @@
               <el-tag
                 :type="scope.row.enableUse === 1 ? 'success' : 'danger'"
                 disable-transitions
-                >{{ enableUseFormat(scope.row) }}</el-tag
-              >
+              >{{ enableUseFormat(scope.row) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column
@@ -301,8 +298,7 @@
               <el-tag
                 :type="scope.row.status === 1 ? 'success' : 'danger'"
                 disable-transitions
-                >{{ statusFormat(scope.row) }}</el-tag
-              >
+              >{{ statusFormat(scope.row) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column
@@ -454,8 +450,7 @@
                       v-for="dict in enableUseOptions"
                       :key="dict.value"
                       :label="dict.value"
-                      >{{ dict.label }}</el-radio
-                    >
+                    >{{ dict.label }}</el-radio>
                   </el-radio-group>
                 </el-form-item>
               </el-col>
@@ -466,8 +461,7 @@
                       v-for="dict in statusOptions"
                       :key="dict.value"
                       :label="dict.value"
-                      >{{ dict.label }}</el-radio
-                    >
+                    >{{ dict.label }}</el-radio>
                   </el-radio-group>
                 </el-form-item>
               </el-col>
@@ -637,15 +631,15 @@ import {
   delEquipmentBwc,
   addEquipmentBwc,
   updateEquipmentBwc,
-  listEquipmentBrand,
-} from "@/api/admin/equipment_manage_api";
-import { formatJson } from "@/utils";
-import { orgTreeSelect } from "@/api/admin/sys-org";
-import Treeselect from "@riophae/vue-treeselect";
-import "@riophae/vue-treeselect/dist/vue-treeselect.css";
-import { listUser } from "@/api/admin/sys-user";
+  listEquipmentBrand
+} from '@/api/admin/equipment_manage_api'
+import { formatJson } from '@/utils'
+import { orgTreeSelect } from '@/api/admin/sys-org'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import { listUser } from '@/api/admin/sys-user'
 export default {
-  name: "LawCarema",
+  name: 'LawCarema',
   components: { Treeselect },
   data() {
     return {
@@ -666,40 +660,40 @@ export default {
       selectedBwcMap: {},
       // 防止恢复选中时触发事件循环
       isRestoringSelection: false,
-      //所有选中的警情记录
+      // 所有选中的警情记录
       selectedBwcRecords: [],
       // 列配置
       columnOptions: [
-        { prop: "no", field: "bwcNo", label: "编号", defaultVisible: true },
-        { prop: "name", field: "bwcName", label: "名称", defaultVisible: true },
-        { prop: "managerName", label: "管理员", defaultVisible: true },
+        { prop: 'no', field: 'bwcNo', label: '编号', defaultVisible: true },
+        { prop: 'name', field: 'bwcName', label: '名称', defaultVisible: true },
+        { prop: 'managerName', label: '管理员', defaultVisible: true },
         {
-          prop: "managerOrgFullName",
-          label: "管理员所在组织",
-          defaultVisible: true,
+          prop: 'managerOrgFullName',
+          label: '管理员所在组织',
+          defaultVisible: true
         },
-        { prop: "brandName", label: "品牌", defaultVisible: true },
-        { prop: "enableUse", label: "是否可用", defaultVisible: true },
-        { prop: "state", field: "status", label: "状态", defaultVisible: true },
-        { prop: "cpu", label: "CPU", defaultVisible: false },
-        { prop: "memory", label: "内存(G)", defaultVisible: false },
-        { prop: "disk", label: "存储(G)", defaultVisible: false },
-        { prop: "networkCard", label: "网卡", defaultVisible: false },
-        { prop: "usbNum", label: "USB数量", defaultVisible: false },
-        { prop: "system", label: "操作系统", defaultVisible: false },
-        { prop: "version", label: "版本", defaultVisible: false },
+        { prop: 'brandName', label: '品牌', defaultVisible: true },
+        { prop: 'enableUse', label: '是否可用', defaultVisible: true },
+        { prop: 'state', field: 'status', label: '状态', defaultVisible: true },
+        { prop: 'cpu', label: 'CPU', defaultVisible: false },
+        { prop: 'memory', label: '内存(G)', defaultVisible: false },
+        { prop: 'disk', label: '存储(G)', defaultVisible: false },
+        { prop: 'networkCard', label: '网卡', defaultVisible: false },
+        { prop: 'usbNum', label: 'USB数量', defaultVisible: false },
+        { prop: 'system', label: '操作系统', defaultVisible: false },
+        { prop: 'version', label: '版本', defaultVisible: false },
         {
-          prop: "buyTime",
-          field: "purchaseDate",
-          label: "购买时间",
-          defaultVisible: false,
+          prop: 'buyTime',
+          field: 'purchaseDate',
+          label: '购买时间',
+          defaultVisible: false
         },
-        { prop: "remark", label: "备注", defaultVisible: false },
+        { prop: 'remark', label: '备注', defaultVisible: false }
       ],
       // 可见列
       visibleColumns: [],
       // 弹出层标题
-      title: "",
+      title: '',
       isEdit: false,
       // 是否显示增加执法仪对话框
       open: false,
@@ -720,156 +714,156 @@ export default {
         managerId: undefined,
         brandId: undefined,
         status: undefined,
-        enableUse: undefined,
+        enableUse: undefined
       },
       // 表单参数
       form: {},
       // 表单校验,触发时机（trigger: 'blur'）：当输入框失去焦点（blur 事件）时触发验证。
       rules: {
-        no: [{ required: true, message: "编号不能为空", trigger: "blur" }],
+        no: [{ required: true, message: '编号不能为空', trigger: 'blur' }]
       },
-      processingInstance: null, //Element UI全局加载动画的实例
-      previousCursor: null, //记录鼠标状态
-    };
+      processingInstance: null, // Element UI全局加载动画的实例
+      previousCursor: null // 记录鼠标状态
+    }
   },
   watch: {
-    "form.managerOrgId": function (newVal) {
+    'form.managerOrgId': function(newVal) {
       // 当 form.managerOrgId 更新时，调用 getUser
       if (newVal) {
         if (this.firstLoad !== true) {
           // 首次打开对话框，不需要清空管理人员
-          this.form.managerId = null; // 清空管理人员选择
+          this.form.managerId = null // 清空管理人员选择
         }
-        this.firstLoad = false;
-        this.getFormUser();
+        this.firstLoad = false
+        this.getFormUser()
       }
     },
-    "queryParams.managerOrgId": function (newVal) {
+    'queryParams.managerOrgId': function(newVal) {
       // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
       if (newVal) {
-        this.queryParams.managerId = null; // 清空管理人员选择
-        this.getQueryUser();
+        this.queryParams.managerId = null // 清空管理人员选择
+        this.getQueryUser()
       }
-    },
+    }
   },
   created() {
-    this.getList();
-    this.getTreeselect();
-    this.getFormBrand();
-    this.getDicts("bwc_status").then((response) => {
-      this.statusOptions = response.data;
-    });
-    this.getDicts("enableuse_state").then((response) => {
-      this.enableUseOptions = response.data;
-    });
-    this.initVisibleColumns();
+    this.getList()
+    this.getTreeselect()
+    this.getFormBrand()
+    this.getDicts('bwc_status').then((response) => {
+      this.statusOptions = response.data
+    })
+    this.getDicts('enableuse_state').then((response) => {
+      this.enableUseOptions = response.data
+    })
+    this.initVisibleColumns()
   },
   methods: {
     getDefaultVisibleColumns() {
       return this.columnOptions
         .filter((item) => item.defaultVisible !== false)
-        .map((item) => item.prop);
+        .map((item) => item.prop)
     },
     initVisibleColumns() {
-      const saved = localStorage.getItem("bwc_manage_visible_columns");
+      const saved = localStorage.getItem('bwc_manage_visible_columns')
       if (saved) {
         try {
-          this.visibleColumns = JSON.parse(saved);
-          return;
+          this.visibleColumns = JSON.parse(saved)
+          return
         } catch (error) {
-          console.warn("解析列配置失败，使用默认列", error);
+          console.warn('解析列配置失败，使用默认列', error)
         }
       }
-      this.visibleColumns = this.getDefaultVisibleColumns();
+      this.visibleColumns = this.getDefaultVisibleColumns()
     },
     isColumnVisible(prop) {
-      return this.visibleColumns.includes(prop);
+      return this.visibleColumns.includes(prop)
     },
     handleColumnChange(value) {
-      this.visibleColumns = value;
+      this.visibleColumns = value
       localStorage.setItem(
-        "bwc_manage_visible_columns",
+        'bwc_manage_visible_columns',
         JSON.stringify(this.visibleColumns)
-      );
+      )
     },
     resetColumns() {
-      this.visibleColumns = this.getDefaultVisibleColumns();
+      this.visibleColumns = this.getDefaultVisibleColumns()
       localStorage.setItem(
-        "bwc_manage_visible_columns",
+        'bwc_manage_visible_columns',
         JSON.stringify(this.visibleColumns)
-      );
-      this.$message.success("已重置为默认显示");
+      )
+      this.$message.success('已重置为默认显示')
     },
     /** 查询执法仪列表 */
     getList() {
-      this.loading = true;
-      const query = this.normalizeQueryParams(this.queryParams);
+      this.loading = true
+      const query = this.normalizeQueryParams(this.queryParams)
       getEquipmentBwcList(query)
         .then((response) => {
           if (response.code === 200 && response.data) {
-            this.bwcList = response.data.list;
-            this.total = response.data.count;
+            this.bwcList = response.data.list
+            this.total = response.data.count
             // 分页/查询后回显跨分页选择
-            this.restoreSelection();
+            this.restoreSelection()
           } else {
-            this.bwcList = [];
-            this.total = 0;
-            this.msgError(response.msg || "获取执法仪列表失败");
+            this.bwcList = []
+            this.total = 0
+            this.msgError(response.msg || '获取执法仪列表失败')
           }
         })
         .catch((error) => {
-          this.bwcList = [];
-          this.total = 0;
-          this.msgError("查询执法仪列表失败：" + (error.message || "未知错误"));
+          this.bwcList = []
+          this.total = 0
+          this.msgError('查询执法仪列表失败：' + (error.message || '未知错误'))
         })
         .finally(() => {
-          this.loading = false;
-        });
+          this.loading = false
+        })
     },
-    //当用户在页面中清除查询条件后，有些查询条件可能被置为空串或者空，这样在随后的restful 请求中仍会被携带
+    // 当用户在页面中清除查询条件后，有些查询条件可能被置为空串或者空，这样在随后的restful 请求中仍会被携带
     normalizeQueryParams(params = {}) {
-      const query = { ...params };
+      const query = { ...params }
       Object.keys(query).forEach((key) => {
-        const value = query[key];
-        if (value === "" || value === null) {
-          delete query[key];
+        const value = query[key]
+        if (value === '' || value === null) {
+          delete query[key]
         }
-      });
-      return query;
+      })
+      return query
     },
     getFormBrand() {
       listEquipmentBrand().then((response) => {
-        this.brandOptions = response.data.list;
-      });
+        this.brandOptions = response.data.list
+      })
     },
     // 字典状态字典翻译
     statusFormat(row) {
-      return this.selectDictLabel(this.statusOptions, row.status);
+      return this.selectDictLabel(this.statusOptions, row.status)
     },
     // 字典状态字典翻译
     enableUseFormat(row) {
-      return this.selectDictLabel(this.enableUseOptions, row.enableUse);
+      return this.selectDictLabel(this.enableUseOptions, row.enableUse)
     },
     /** 查询组织下拉树结构 */
     getTreeselect() {
       orgTreeSelect().then((response) => {
-        this.orgOptions = response.data; // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
-      });
+        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
+      })
     },
     getFormUser() {
-      listUser({ orgId: "/" + this.form.managerOrgId + "/" }).then(
+      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(
         (response) => {
-          this.userOptions = response.data.list;
+          this.userOptions = response.data.list
         }
-      );
+      )
     },
 
     getQueryUser() {
-      listUser({ orgId: "/" + this.queryParams.managerOrgId + "/" }).then(
+      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(
         (response) => {
-          this.userOptions = response.data.list;
+          this.userOptions = response.data.list
         }
-      );
+      )
     },
 
     // 表单重置
@@ -889,19 +883,19 @@ export default {
         system: undefined,
         version: undefined,
         purchaseDate: undefined,
-        remark: undefined,
-      };
-      this.resetForm("form");
+        remark: undefined
+      }
+      this.resetForm('form')
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
     // 取消按钮
     cancel() {
-      this.open = false;
-      this.reset();
+      this.open = false
+      this.reset()
     },
     /**
      * 需要清空记录选中状态的场景如下：
@@ -911,25 +905,25 @@ export default {
      * 其他场景下，不需要清空记录选中状态
      */
     resetSelected() {
-      this.selectedBwcMap = {};
-      this.selectedBwcRecords = [];
+      this.selectedBwcMap = {}
+      this.selectedBwcRecords = []
     },
 
-    //pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
-    //每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
+    // pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
+    // 每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
     resetPage() {
-      this.queryParams.pageIndex = 1;
+      this.queryParams.pageIndex = 1
     },
 
     handleQuery() {
-      this.resetPage();
-      this.resetSelected();
-      this.getList();
+      this.resetPage()
+      this.resetSelected()
+      this.getList()
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
       if (this.isRestoringSelection) {
-        return;
+        return
       }
       // 以当前页为准增删选中项（实现跨分页记忆）
       const selectedIdSet = new Set(
@@ -937,169 +931,169 @@ export default {
       );
 
       (this.bwcList || []).forEach((row) => {
-        const id = row && row.id;
-        if (!id) return;
+        const id = row && row.id
+        if (!id) return
         if (selectedIdSet.has(id)) {
-          this.selectedBwcMap[id] = row;
+          this.selectedBwcMap[id] = row
         } else {
-          delete this.selectedBwcMap[id];
+          delete this.selectedBwcMap[id]
         }
-      });
+      })
       this.selectedBwcRecords = Object.values(this.selectedBwcMap).filter(
         Boolean
-      );
+      )
     },
     /** 新增按钮操作*/
     handleAdd(row) {
-      this.reset();
-      this.open = true;
-      this.title = "添加执法仪";
-      this.isEdit = false;
+      this.reset()
+      this.open = true
+      this.title = '添加执法仪'
+      this.isEdit = false
     },
 
     restoreSelection() {
-      if (this.isRestoringSelection) return;
-      if (!this.$refs.bwcTable) return;
-      if (!this.bwcList || !this.bwcList.length) return;
+      if (this.isRestoringSelection) return
+      if (!this.$refs.bwcTable) return
+      if (!this.bwcList || !this.bwcList.length) return
 
-      this.isRestoringSelection = true;
+      this.isRestoringSelection = true
       this.$nextTick(() => {
         try {
           this.bwcList.forEach((row) => {
-            const id = row && row.id;
-            if (!id) return;
+            const id = row && row.id
+            if (!id) return
             if (this.selectedBwcMap[id]) {
-              this.$refs.bwcTable.toggleRowSelection(row, true);
+              this.$refs.bwcTable.toggleRowSelection(row, true)
             }
-          });
+          })
         } finally {
-          this.isRestoringSelection = false;
+          this.isRestoringSelection = false
         }
-      });
+      })
     },
 
     handleSortChang(column, prop, order) {
-      prop = column.prop;
-      order = column.order;
-      if (order === "descending") {
-        this.queryParams[prop + "Order"] = "desc";
-      } else if (order === "ascending") {
-        this.queryParams[prop + "Order"] = "asc";
+      prop = column.prop
+      order = column.order
+      if (order === 'descending') {
+        this.queryParams[prop + 'Order'] = 'desc'
+      } else if (order === 'ascending') {
+        this.queryParams[prop + 'Order'] = 'asc'
       } else {
-        this.queryParams[prop + "Order"] = undefined;
+        this.queryParams[prop + 'Order'] = undefined
       }
-      this.getList();
+      this.getList()
     },
 
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.reset();
-      this.firstLoad = true;
+      this.reset()
+      this.firstLoad = true
       // 使用对象展开运算符创建新对象
       if (row && row.id !== undefined) {
-        this.form = { ...row };
+        this.form = { ...row }
       } else {
         this.form = this.selectedBwcRecords[0]
           ? { ...this.selectedBwcRecords[0] }
-          : {};
+          : {}
       }
-      this.title = "修改执法仪";
-      this.isEdit = true;
-      this.open = true;
+      this.title = '修改执法仪'
+      this.isEdit = true
+      this.open = true
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      this.viewData = row;
-      this.viewOpen = true;
+      this.viewData = row
+      this.viewOpen = true
     },
     /** 提交按钮 */
-    submitForm: function () {
-      this.$refs["form"].validate((valid) => {
+    submitForm: function() {
+      this.$refs['form'].validate((valid) => {
         if (valid) {
           if (this.form.id !== undefined) {
-            this.startProcessing("正在修改执法仪...");
+            this.startProcessing('正在修改执法仪...')
             updateEquipmentBwc(this.form, this.form.id)
-              .then(async (response) => {
+              .then(async(response) => {
                 if (response.code === 200) {
-                  await this.delay(1000);
-                  this.resetSelected();
-                  this.getList();
-                  this.msgSuccess(response.msg);
-                  this.open = false;
+                  await this.delay(1000)
+                  this.resetSelected()
+                  this.getList()
+                  this.msgSuccess(response.msg)
+                  this.open = false
                 } else {
-                  this.msgError(response.msg);
+                  this.msgError(response.msg)
                 }
               })
               .catch((error) => {
                 this.msgError(
-                  "修改执法仪失败：" + (error.message || "未知错误")
-                );
+                  '修改执法仪失败：' + (error.message || '未知错误')
+                )
               })
               .finally(() => {
-                this.stopProcessing();
-              });
+                this.stopProcessing()
+              })
           } else {
-            this.startProcessing("正在创建执法仪...");
+            this.startProcessing('正在创建执法仪...')
             addEquipmentBwc(this.form)
-              .then(async (response) => {
+              .then(async(response) => {
                 if (response.code === 200) {
-                  await this.delay(1000);
-                  this.getList();
-                  this.msgSuccess(response.msg);
-                  this.open = false;
+                  await this.delay(1000)
+                  this.getList()
+                  this.msgSuccess(response.msg)
+                  this.open = false
                 } else {
-                  this.msgError(response.msg);
+                  this.msgError(response.msg)
                 }
               })
               .catch((error) => {
                 this.msgError(
-                  "新增执法仪失败：" + (error.message || "未知错误")
-                );
+                  '新增执法仪失败：' + (error.message || '未知错误')
+                )
               })
               .finally(() => {
-                this.stopProcessing();
-              });
+                this.stopProcessing()
+              })
           }
         }
-      });
+      })
     },
 
     async handleDelete(row) {
       try {
-        var bwcIds = [];
-        var bwcNos = [];
+        var bwcIds = []
+        var bwcNos = []
         if (row && row.id !== undefined) {
-          bwcIds = append(bwcIds, row.id);
-          bwcNos = append(bwcCodes, row.bwcNo);
+          bwcIds = append(bwcIds, row.id)
+          bwcNos = append(bwcCodes, row.bwcNo)
         } else {
-          bwcIds = this.selectedBwcRecords.map((item) => item.id);
-          bwcNos = this.selectedBwcRecords.map((item) => item.bwcNo);
+          bwcIds = this.selectedBwcRecords.map((item) => item.id)
+          bwcNos = this.selectedBwcRecords.map((item) => item.bwcNo)
         }
         await this.$confirm(
           '是否确认删除执法仪编号为"' + bwcNos + '"的数据项?',
-          "信息",
+          '信息',
           {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "info",
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'info'
           }
-        );
+        )
 
-        this.startProcessing("正在删除执法仪...");
-        const response = await delEquipmentBwc({ ids: bwcIds });
+        this.startProcessing('正在删除执法仪...')
+        const response = await delEquipmentBwc({ ids: bwcIds })
         if (response.code === 200) {
-          await this.delay(1000);
-          this.resetSelected();
-          this.resetPage();
-          this.getList();
-          this.msgSuccess(response.msg || "删除执法仪成功");
+          await this.delay(1000)
+          this.resetSelected()
+          this.resetPage()
+          this.getList()
+          this.msgSuccess(response.msg || '删除执法仪成功')
         } else {
-          this.msgError(response.msg || "删除执法仪失败");
+          this.msgError(response.msg || '删除执法仪失败')
         }
-        this.stopProcessing();
+        this.stopProcessing()
       } catch (error) {
-        if (error !== "cancel") {
-          this.msgError("删除执法仪失败：" + (error.message || "未知错误"));
+        if (error !== 'cancel') {
+          this.msgError('删除执法仪失败：' + (error.message || '未知错误'))
         }
       }
     },
@@ -1109,112 +1103,112 @@ export default {
       this.processingInstance = this.$loading({
         lock: true,
         text: text,
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.3)",
-      });
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.3)'
+      })
       // 鼠标切换为等待状态
-      this.previousCursor = document.body.style.cursor;
-      document.body.style.cursor = "wait";
+      this.previousCursor = document.body.style.cursor
+      document.body.style.cursor = 'wait'
     },
 
     /** 停止执行操作 */
     stopProcessing() {
       if (this.processingInstance) {
-        this.processingInstance.close();
-        this.processingInstance = null;
+        this.processingInstance.close()
+        this.processingInstance = null
       }
       // 恢复鼠标状态
-      document.body.style.cursor = this.previousCursor;
+      document.body.style.cursor = this.previousCursor
     },
 
     /** 导出按钮操作 */
     async handleExport() {
       try {
-        const hasSelection = this.selectedBwcRecords.length > 0;
+        const hasSelection = this.selectedBwcRecords.length > 0
 
         const confirmText = hasSelection
           ? `是否确认导出已勾选的 ${this.selectedBwcRecords.length} 条执法仪数据？`
-          : "是否确认导出所有执法仪数据项？";
+          : '是否确认导出所有执法仪数据项？'
 
-        await this.$confirm(confirmText, "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "info",
-        });
+        await this.$confirm(confirmText, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'info'
+        })
 
         const columnOptions = Array.isArray(this.columnOptions)
           ? this.columnOptions
-          : [];
+          : []
         const visibleColumns = Array.isArray(this.visibleColumns)
           ? this.visibleColumns
-          : [];
+          : []
         const exportColumns = columnOptions.filter((c) =>
           visibleColumns.includes(c.prop)
-        );
+        )
 
         if (!exportColumns.length) {
-          this.msgError("当前未选择任何可导出的列");
-          return;
+          this.msgError('当前未选择任何可导出的列')
+          return
         }
 
-        const tHeader = exportColumns.map((c) => c.label);
-        const filterVal = exportColumns.map((c) => c.field || c.prop);
+        const tHeader = exportColumns.map((c) => c.label)
+        const filterVal = exportColumns.map((c) => c.field || c.prop)
 
-        let list = [];
+        let list = []
         if (hasSelection) {
-          list = this.selectedBwcRecords;
+          list = this.selectedBwcRecords
         } else {
           const baseQueryParams = this.normalizeQueryParams(
             this.queryParams || {}
-          );
-          const pageSize = 1000;
-          let pageIndex = 1;
-          let total = Infinity;
+          )
+          const pageSize = 1000
+          let pageIndex = 1
+          let total = Infinity
 
           while (list.length < total) {
             const query = {
               ...baseQueryParams,
               pageIndex,
-              pageSize,
-            };
-            const resp = await getEquipmentBwcList(query);
+              pageSize
+            }
+            const resp = await getEquipmentBwcList(query)
             if (!resp || resp.code !== 200) {
-              throw new Error((resp && resp.msg) || "查询执法仪列表失败");
+              throw new Error((resp && resp.msg) || '查询执法仪列表失败')
             }
 
-            const pageList = (resp.data && resp.data.list) || [];
-            total = (resp.data && resp.data.count) || 0;
-            list = list.concat(pageList);
+            const pageList = (resp.data && resp.data.list) || []
+            total = (resp.data && resp.data.count) || 0
+            list = list.concat(pageList)
 
             if (!pageList.length) {
-              break;
+              break
             }
-            pageIndex += 1;
+            pageIndex += 1
           }
         }
 
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
-          const output = { ...row };
-          output.status = this.statusFormat(row);
-          output.enableUse = this.enableUseFormat(row);
-          output.purchaseDate = this.parseTime(row.purchaseDate);
-          return output;
-        });
+          const output = { ...row }
+          output.status = this.statusFormat(row)
+          output.enableUse = this.enableUseFormat(row)
+          output.purchaseDate = this.parseTime(row.purchaseDate)
+          return output
+        })
 
-        const data = formatJson(filterVal, normalizeList);
+        const data = formatJson(filterVal, normalizeList)
 
         // 触发导出（会弹出另存为对话框）
-        const excel = await import("@/vendor/Export2Excel");
+        const excel = await import('@/vendor/Export2Excel')
         excel.export_json_to_excel({
           header: tHeader,
           data,
-          filename: "执法仪列表",
+          filename: '执法仪列表',
           autoWidth: true,
-          bookType: "xlsx",
-        });
+          bookType: 'xlsx'
+        })
       } catch (error) {
-        if (error !== "cancel") {
-          this.msgError("导出失败：" + (error.message || "未知错误"));
+        if (error !== 'cancel') {
+          this.msgError('导出失败：' + (error.message || '未知错误'))
         }
       } finally {
       }
@@ -1222,10 +1216,10 @@ export default {
 
     /** 延迟函数 */
     delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    },
-  },
-};
+      return new Promise((resolve) => setTimeout(resolve, ms))
+    }
+  }
+}
 </script>
 
 <style scoped>

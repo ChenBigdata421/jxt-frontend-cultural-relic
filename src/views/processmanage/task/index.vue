@@ -49,9 +49,12 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery"
-          >搜索</el-button
-        >
+        <el-button
+          type="primary"
+          icon="el-icon-search"
+          size="mini"
+          @click="handleQuery"
+        >搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
@@ -71,12 +74,14 @@
       <el-table-column label="任务状态" align="center" prop="status" width="100">
         <template slot-scope="scope">
           <el-tag v-if="scope.row.status === 'pending'" type="warning">待处理</el-tag>
-          <el-tag v-else-if="scope.row.status === 'completed'" type="success"
-            >已完成</el-tag
-          >
-          <el-tag v-else-if="scope.row.status === 'rejected'" type="danger"
-            >已驳回</el-tag
-          >
+          <el-tag
+            v-else-if="scope.row.status === 'completed'"
+            type="success"
+          >已完成</el-tag>
+          <el-tag
+            v-else-if="scope.row.status === 'rejected'"
+            type="danger"
+          >已驳回</el-tag>
           <el-tag v-else type="info">{{ scope.row.status }}</el-tag>
         </template>
       </el-table-column>
@@ -110,16 +115,14 @@
             type="text"
             icon="el-icon-view"
             @click="handleView(scope.row)"
-            >查看</el-button
-          >
+          >查看</el-button>
           <el-button
+            v-if="scope.row.status === 'pending'"
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
-            v-if="scope.row.status === 'pending'"
-            >删除</el-button
-          >
+          >删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -150,12 +153,14 @@
         }}</el-descriptions-item>
         <el-descriptions-item label="任务状态">
           <el-tag v-if="taskDetail.status === 'pending'" type="warning">待处理</el-tag>
-          <el-tag v-else-if="taskDetail.status === 'completed'" type="success"
-            >已完成</el-tag
-          >
-          <el-tag v-else-if="taskDetail.status === 'rejected'" type="danger"
-            >已驳回</el-tag
-          >
+          <el-tag
+            v-else-if="taskDetail.status === 'completed'"
+            type="success"
+          >已完成</el-tag>
+          <el-tag
+            v-else-if="taskDetail.status === 'rejected'"
+            type="danger"
+          >已驳回</el-tag>
           <el-tag v-else type="info">{{ taskDetail.status }}</el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="优先级">
@@ -190,17 +195,17 @@
 </template>
 
 <script>
-import { listAllTasks, getTask, createTask, deleteTask } from "@/api/process/task";
-import { listAllWorkflows } from "@/api/process/workflow";
-import { orgTreeSelect, getOrgLeader } from "@/api/admin/sys-org";
-import { getUser } from "@/api/admin/sys-user";
-import Treeselect from "@riophae/vue-treeselect";
-import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import { listAllTasks, getTask, createTask, deleteTask } from '@/api/process/task'
+import { listAllWorkflows } from '@/api/process/workflow'
+import { orgTreeSelect, getOrgLeader } from '@/api/admin/sys-org'
+import { getUser } from '@/api/admin/sys-user'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
 export default {
-  name: "TaskManage",
+  name: 'TaskManage',
   components: {
-    Treeselect,
+    Treeselect
   },
   data() {
     return {
@@ -211,7 +216,7 @@ export default {
       // 任务列表
       taskList: [],
       // 弹出层标题
-      title: "",
+      title: '',
       // 是否显示弹出层
       open: false,
       orgOptions: [], // 组织树选项
@@ -225,7 +230,7 @@ export default {
         taskName: undefined,
         workflowId: undefined,
         status: undefined,
-        assignee: undefined,
+        assignee: undefined
       },
       // 表单参数
       form: {},
@@ -233,87 +238,87 @@ export default {
       taskDetail: {},
       // 表单校验
       rules: {},
-      userCache: {}, // 用户信息缓存，避免重复请求
-    };
+      userCache: {} // 用户信息缓存，避免重复请求
+    }
   },
   created() {
-    this.getList();
-    this.getAllWorkflow();
-    this.getOrgTree();
+    this.getList()
+    this.getAllWorkflow()
+    this.getOrgTree()
   },
   methods: {
     /** 查询任务列表 */
     getList() {
-      this.loading = true;
+      this.loading = true
       listAllTasks(this.queryParams)
         .then((response) => {
           if (response.code === 200) {
             this.taskList =
               response.data.list ||
               response.data.items ||
-              (Array.isArray(response.data) ? response.data : []);
-            this.total = response.data.total || response.data.count || 0;
+              (Array.isArray(response.data) ? response.data : [])
+            this.total = response.data.total || response.data.count || 0
           } else {
-            this.msgError(response.msg || "查询失败");
+            this.msgError(response.msg || '查询失败')
           }
-          this.loading = false;
+          this.loading = false
         })
         .catch((error) => {
-          this.msgError("查询失败：" + error.message);
-          this.loading = false;
-        });
+          this.msgError('查询失败：' + error.message)
+          this.loading = false
+        })
     },
     getAllWorkflow() {
       listAllWorkflows()
         .then((response) => {
           if (response.code === 200 && response.data) {
-            this.workflowOptions = response.data;
+            this.workflowOptions = response.data
           } else {
-            this.workflowOptions = [];
-            this.msgError(response.msg || "获取工作流失败");
+            this.workflowOptions = []
+            this.msgError(response.msg || '获取工作流失败')
           }
         })
         .catch((error) => {
-          this.msgError("查询工作流失败：" + (error.message || "未知错误"));
-          this.workflowOptions = [];
+          this.msgError('查询工作流失败：' + (error.message || '未知错误'))
+          this.workflowOptions = []
         })
-        .finally(() => {});
+        .finally(() => {})
     },
     getOrgTree() {
       orgTreeSelect()
         .then((response) => {
-          this.orgOptions = response.data;
+          this.orgOptions = response.data
         })
         .catch((error) => {
-          console.error("获取组织树失败:", error);
-          this.orgOptions = [];
-        });
+          console.error('获取组织树失败:', error)
+          this.orgOptions = []
+        })
     },
     async handleOrgSelect(orgId) {
       try {
-        const response = await getOrgLeader(orgId);
+        const response = await getOrgLeader(orgId)
         if (response && response.code === 200 && response.data) {
           // 将负责人的ID赋值给 nextTaskApprover
-          this.queryParams.assignee = response.data.leaderId;
+          this.queryParams.assignee = response.data.leaderId
         } else {
-          this.$message.warning("获取组织负责人失败");
+          this.$message.warning('获取组织负责人失败')
         }
       } catch (error) {
-        console.error("获取组织负责人失败:", error);
-        this.$message.error("获取组织负责人失败：" + (error.message || "未知错误"));
+        console.error('获取组织负责人失败:', error)
+        this.$message.error('获取组织负责人失败：' + (error.message || '未知错误'))
       }
     },
     /**
      * 获取用户显示名称
      */
     getUserDisplayName(userId) {
-      if (!userId) return "未知";
+      if (!userId) return '未知'
       if (this.userCache[userId]) {
-        return this.userCache[userId].userName || "未知";
+        return this.userCache[userId].userName || '未知'
       }
       // 异步加载用户信息
-      this.fetchUserInfo(userId);
-      return "加载中...";
+      this.fetchUserInfo(userId)
+      return '加载中...'
     },
 
     /**
@@ -321,97 +326,97 @@ export default {
      */
     async fetchUserInfo(userId) {
       if (!userId || this.userCache[userId]) {
-        return;
+        return
       }
 
       try {
-        const response = await getUser(userId);
+        const response = await getUser(userId)
         if (response && response.code === 200 && response.data) {
           this.$set(this.userCache, userId, {
-            userName: response.data.userName || "未知",
-          });
+            userName: response.data.userName || '未知'
+          })
           // 触发重新渲染
-          this.$forceUpdate();
+          this.$forceUpdate()
         }
       } catch (error) {
-        console.error("获取用户信息失败:", error);
+        console.error('获取用户信息失败:', error)
         this.$set(this.userCache, userId, {
-          userName: "获取失败",
-        });
+          userName: '获取失败'
+        })
       }
     },
 
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageIndex = 1;
-      this.getList();
+      this.queryParams.pageIndex = 1
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.resetForm('queryForm')
+      this.handleQuery()
     },
     /** 新增按钮操作 */
     handleAdd() {
-      this.reset();
-      this.open = true;
-      this.title = "新增任务";
+      this.reset()
+      this.open = true
+      this.title = '新增任务'
     },
     /** 查看按钮操作 */
     handleView(row) {
-      const id = row.taskId;
+      const id = row.taskId
       getTask(id)
         .then((response) => {
           if (response.code === 200) {
-            this.taskDetail = response.data;
-            this.viewOpen = true;
+            this.taskDetail = response.data
+            this.viewOpen = true
           } else {
-            this.msgError(response.msg || "获取详情失败");
+            this.msgError(response.msg || '获取详情失败')
           }
         })
         .catch((error) => {
-          this.msgError("获取详情失败：" + error.message);
-        });
+          this.msgError('获取详情失败：' + error.message)
+        })
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      this.$confirm('是否确认删除任务"' + row.taskName + '"?', "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
+      this.$confirm('是否确认删除任务"' + row.taskName + '"?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
         .then(() => {
-          return deleteTask(row.taskId);
+          return deleteTask(row.taskId)
         })
         .then((response) => {
           if (response.code === 200) {
-            this.getList();
-            this.msgSuccess("删除成功");
+            this.getList()
+            this.msgSuccess('删除成功')
           } else {
-            this.msgError(response.msg || "删除失败");
+            this.msgError(response.msg || '删除失败')
           }
         })
-        .catch(() => {});
+        .catch(() => {})
     },
 
     /** 取消按钮 */
     cancel() {
-      this.open = false;
-      this.reset();
+      this.open = false
+      this.reset()
     },
 
     /** 格式化JSON */
     formatJson(jsonStr) {
-      if (!jsonStr) return "";
+      if (!jsonStr) return ''
       try {
-        const obj = typeof jsonStr === "string" ? JSON.parse(jsonStr) : jsonStr;
-        return JSON.stringify(obj, null, 2);
+        const obj = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr
+        return JSON.stringify(obj, null, 2)
       } catch (e) {
-        return jsonStr;
+        return jsonStr
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>
 
 <style scoped>

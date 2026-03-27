@@ -23,6 +23,25 @@
     -webkit-box-shadow: 2px 0 6px rgba(0, 21, 41, .35);
     box-shadow: 2px 0 6px rgba(0, 21, 41, .35);
 
+    // 完全隐藏原生滚动条和 Element UI 滚动条的白色背景
+    ::-webkit-scrollbar {
+      width: 6px;
+      background-color: transparent !important;
+    }
+
+    ::-webkit-scrollbar-track {
+      background-color: transparent !important;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.4);
+      }
+    }
+
     // reset element-ui css
     .horizontal-collapse-transition {
       transition: 0s width ease-in-out, 0s padding-left ease-in-out, 0s padding-right ease-in-out;
@@ -34,10 +53,16 @@
 
     .el-scrollbar__bar.is-vertical {
       right: 0px;
+      background-color: transparent !important; // 移除滚动条轨道的白色背景
     }
 
     .el-scrollbar {
       height: 100%;
+
+      // 移除滚动条容器的白色背景
+      .el-scrollbar__wrap {
+        background-color: transparent !important;
+      }
     }
 
     &.has-logo {
@@ -61,16 +86,19 @@
     }
 
     .el-menu {
-      border: none;
+      border: none !important;
+      border-right: none !important; // 强制移除 Element UI 默认的右边框
       height: 100%;
       width: 100% !important;
+      background-color: inherit !important;
     }
 
     .el-menu-item,
     .el-submenu__title {
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      white-space: nowrap !important;
+      overflow: visible !important; // 允许箭头可见，文字溢出由内部 span 控制
+
+      // 文字部分的溢出处理由 Sidebar/index.vue 中的 span 样式控制
+      // 这样可以确保箭头始终可见，而文字部分会显示省略号
     }
 
     // menu hover

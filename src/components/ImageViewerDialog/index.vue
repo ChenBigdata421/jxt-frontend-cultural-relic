@@ -33,18 +33,18 @@
             alt="图片预览"
             @load="handleImgLoad"
             @error="handleImgError"
-          />
+          >
 
           <div v-if="loading" class="image-overlay">
             <div class="image-loading">
-              <i class="el-icon-loading"></i>
+              <i class="el-icon-loading" />
               <span class="loading-text">加载中...</span>
             </div>
           </div>
 
           <div v-else-if="loadError" class="image-overlay">
             <div class="image-error">
-              <i class="el-icon-warning-outline"></i>
+              <i class="el-icon-warning-outline" />
               <span class="error-text">图片加载失败</span>
             </div>
           </div>
@@ -60,93 +60,93 @@
 
 <script>
 export default {
-  name: "ImageViewerDialog",
+  name: 'ImageViewerDialog',
   props: {
     visible: {
       type: Boolean,
-      default: false,
+      default: false
     },
     initialUrl: {
       type: String,
-      default: "",
-    },
+      default: ''
+    }
   },
   data() {
     return {
-      imageUrl: "",
+      imageUrl: '',
       loading: false,
       loadError: false,
-      retryKey: 0,
-    };
+      retryKey: 0
+    }
   },
   computed: {
     dialogVisible: {
       get() {
-        return this.visible;
+        return this.visible
       },
       set(val) {
-        this.$emit("update:visible", val);
-      },
-    },
+        this.$emit('update:visible', val)
+      }
+    }
   },
   watch: {
     visible(val) {
       if (val) {
-        this.setImageUrl(this.initialUrl);
+        this.setImageUrl(this.initialUrl)
       } else {
-        this.resetState();
+        this.resetState()
       }
     },
     initialUrl(val) {
       if (this.visible) {
-        this.setImageUrl(val);
+        this.setImageUrl(val)
       }
-    },
+    }
   },
   methods: {
     setImageUrl(url) {
-      this.imageUrl = url || "";
-      this.loadError = false;
-      this.loading = !!this.imageUrl;
+      this.imageUrl = url || ''
+      this.loadError = false
+      this.loading = !!this.imageUrl
     },
     handleImgLoad() {
-      this.loading = false;
-      this.loadError = false;
+      this.loading = false
+      this.loadError = false
     },
     handleImgError() {
-      this.loading = false;
-      this.loadError = true;
+      this.loading = false
+      this.loadError = true
     },
     handleRetry() {
       if (!this.imageUrl) {
-        return;
+        return
       }
-      this.loading = true;
-      this.loadError = false;
-      this.retryKey += 1;
-      const sep = this.imageUrl.includes("?") ? "&" : "?";
-      this.imageUrl = this.imageUrl.split("#")[0].replace(/([?&])_t=\d+(&?)/, "$1").replace(/\?$/, "");
-      this.imageUrl = `${this.imageUrl}${sep}_t=${Date.now()}_${this.retryKey}`;
+      this.loading = true
+      this.loadError = false
+      this.retryKey += 1
+      const sep = this.imageUrl.includes('?') ? '&' : '?'
+      this.imageUrl = this.imageUrl.split('#')[0].replace(/([?&])_t=\d+(&?)/, '$1').replace(/\?$/, '')
+      this.imageUrl = `${this.imageUrl}${sep}_t=${Date.now()}_${this.retryKey}`
     },
     handleOpenOriginal() {
       if (!this.imageUrl) {
-        return;
+        return
       }
-      window.open(this.imageUrl, "_blank");
+      window.open(this.imageUrl, '_blank')
     },
     resetState() {
-      this.imageUrl = "";
-      this.loading = false;
-      this.loadError = false;
-      this.retryKey = 0;
+      this.imageUrl = ''
+      this.loading = false
+      this.loadError = false
+      this.retryKey = 0
     },
     handleClose() {
-      this.resetState();
-      this.$emit("update:visible", false);
-      this.$emit("close");
-    },
-  },
-};
+      this.resetState()
+      this.$emit('update:visible', false)
+      this.$emit('close')
+    }
+  }
+}
 </script>
 
 <style scoped>

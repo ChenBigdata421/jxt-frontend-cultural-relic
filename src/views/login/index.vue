@@ -1,10 +1,10 @@
 <template>
   <div class="login-container">
-    <div id="particles-js"></div>
+    <div id="particles-js" />
     <div class="login-weaper animated bounceInDown">
       <div class="login-left">
         <div class="login-time" v-text="currentTime" />
-        <img :src="logoUrl" alt="logo" class="img" />
+        <img :src="logoUrl" alt="logo" class="img">
         <p class="title" v-text="appName" />
       </div>
       <div class="login-border">
@@ -101,7 +101,7 @@
                 "
                 :src="codeUrl"
                 @click="getCode"
-              />
+              >
             </div>
 
             <el-button
@@ -125,7 +125,7 @@
     >
       Can not be simulated on local, so please combine you own business
       simulation! ! !
-      <br /><br /><br />
+      <br><br><br>
       <social-sign />
     </el-dialog>
 
@@ -136,9 +136,11 @@
     >
       <div class="s-bottom-layer-content">
         <div class="lh">
-          <a class="text-color" href="https://beian.miit.gov.cn" target="_blank"
-            >沪ICP备XXXXXXXXX号-1</a
-          >
+          <a
+            class="text-color"
+            href="https://beian.miit.gov.cn"
+            target="_blank"
+          >沪ICP备XXXXXXXXX号-1</a>
         </div>
         <div class="open-content-info">
           <div class="tip-hover-panel" style="top: -18px; right: -12px">
@@ -149,8 +151,7 @@
                     class="text-color"
                     href="https://beian.miit.gov.cn"
                     target="_blank"
-                    >沪ICP备XXXXXXXXX号-1</a
-                  >
+                  >沪ICP备XXXXXXXXX号-1</a>
                 </div>
               </div>
             </div>
@@ -162,184 +163,188 @@
 </template>
 
 <script>
-import { getCodeImg } from "@/api/login";
-import moment from "moment";
-import SocialSign from "./components/SocialSignin";
+import { getCodeImg } from '@/api/login'
+import moment from 'moment'
+import SocialSign from './components/SocialSignin'
 
 export default {
-  name: "Login",
+  name: 'Login',
   components: { SocialSign },
   data() {
     return {
-      codeUrl: "",
-      cookiePassword: "",
+      codeUrl: '',
+      cookiePassword: '',
       refreshParticles: true,
       loginForm: {
-        userName: "admin",
-        password: "123456",
+        userName: 'admin',
+        password: '123456',
         rememberMe: false,
-        code: "",
-        uuid: "",
+        code: '',
+        uuid: ''
       },
       loginRules: {
         userName: [
-          { required: true, trigger: "blur", message: "用户名不能为空" },
+          { required: true, trigger: 'blur', message: '用户名不能为空' }
         ],
         password: [
-          { required: true, trigger: "blur", message: "密码不能为空" },
+          { required: true, trigger: 'blur', message: '密码不能为空' }
         ],
         code: [
-          { required: true, trigger: "change", message: "验证码不能为空" },
-        ],
+          { required: true, trigger: 'change', message: '验证码不能为空' }
+        ]
       },
-      passwordType: "password",
+      passwordType: 'password',
       capsTooltip: false,
       loading: false,
       showDialog: false,
       redirect: undefined,
       otherQuery: {},
       currentTime: null,
-      sysInfo: {},
-    };
+      sysInfo: {}
+    }
   },
   computed: {
     // 根据构建模式选择 Logo 键名
     logoUrl() {
-      if (process.env.VUE_APP_MODE === "platform") {
-        return this.sysInfo.console_app_logo || "";
+      if (process.env.VUE_APP_MODE === 'platform') {
+        return this.sysInfo.console_app_logo || ''
       } else {
-        return this.sysInfo.sys_app_logo || "";
+        return this.sysInfo.sys_app_logo || ''
       }
     },
     // 根据构建模式选择系统名称键名
     appName() {
-      if (process.env.VUE_APP_MODE === "platform") {
-        return this.sysInfo.console_app_name || "";
+      if (process.env.VUE_APP_MODE === 'platform') {
+        return this.sysInfo.console_app_name || ''
       } else {
-        return this.sysInfo.sys_app_name || "";
+        return this.sysInfo.sys_app_name || ''
       }
-    },
+    }
   },
   watch: {
     $route: {
-      handler: function (route) {
-        const query = route.query;
+      handler: function(route) {
+        const query = route.query
         if (query) {
-          this.redirect = query.redirect;
-          this.otherQuery = this.getOtherQuery(query);
+          this.redirect = query.redirect
+          this.otherQuery = this.getOtherQuery(query)
         }
       },
-      immediate: true,
-    },
+      immediate: true
+    }
   },
   created() {
-    this.getCode();
-    this.getCurrentTime();
-    this.getSystemSetting();
+    this.getCode()
+    this.getCurrentTime()
+    this.getSystemSetting()
   },
   mounted() {
-    if (this.loginForm.userName === "") {
-      this.$refs.userName.focus();
-    } else if (this.loginForm.password === "") {
-      this.$refs.password.focus();
+    if (this.loginForm.userName === '') {
+      this.$refs.userName.focus()
+    } else if (this.loginForm.password === '') {
+      this.$refs.password.focus()
     }
-    window.addEventListener("resize", () => {
-      this.refreshParticles = false;
-      this.$nextTick(() => (this.refreshParticles = true));
-    });
+    window.addEventListener('resize', () => {
+      this.refreshParticles = false
+      this.$nextTick(() => (this.refreshParticles = true))
+    })
   },
   destroyed() {
-    clearInterval(this.timer);
-    window.removeEventListener("resize", () => {});
+    clearInterval(this.timer)
+    window.removeEventListener('resize', () => {})
   },
   methods: {
     getSystemSetting() {
-      this.$store.dispatch("system/settingDetail").then((ret) => {
-        this.sysInfo = ret || {};
+      this.$store.dispatch('system/settingDetail').then((ret) => {
+        this.sysInfo = ret || {}
         // 根据模式设置页面标题
-        if (process.env.VUE_APP_MODE === "platform") {
-          document.title = ret.console_app_name || "平台管控";
+        if (process.env.VUE_APP_MODE === 'platform') {
+          document.title = ret.console_app_name || '平台管控'
         } else {
-          document.title = ret.sys_app_name || "业务管理";
+          document.title = ret.sys_app_name || '业务管理'
         }
-      });
+      })
     },
     getCurrentTime() {
       this.timer = setInterval((_) => {
-        this.currentTime = moment().format("YYYY-MM-DD HH时mm分ss秒");
-      }, 1000);
+        this.currentTime = moment().format('YYYY-MM-DD HH时mm分ss秒')
+      }, 1000)
     },
     getCode() {
       getCodeImg().then((res) => {
         if (res !== undefined) {
-          this.codeUrl = res.data;
-          this.loginForm.uuid = res.id;
+          this.codeUrl = res.data
+          this.loginForm.uuid = res.id
         }
-      });
+      })
     },
     checkCapslock({ shiftKey, key } = {}) {
       if (key && key.length === 1) {
         if (
-          (shiftKey && key >= "a" && key <= "z") ||
-          (!shiftKey && key >= "A" && key <= "Z")
+          (shiftKey && key >= 'a' && key <= 'z') ||
+          (!shiftKey && key >= 'A' && key <= 'Z')
         ) {
-          this.capsTooltip = true;
+          this.capsTooltip = true
         } else {
-          this.capsTooltip = false;
+          this.capsTooltip = false
         }
       }
-      if (key === "CapsLock" && this.capsTooltip === true) {
-        this.capsTooltip = false;
+      if (key === 'CapsLock' && this.capsTooltip === true) {
+        this.capsTooltip = false
       }
     },
     showPwd() {
-      if (this.passwordType === "password") {
-        this.passwordType = "";
+      if (this.passwordType === 'password') {
+        this.passwordType = ''
       } else {
-        this.passwordType = "password";
+        this.passwordType = 'password'
       }
       this.$nextTick(() => {
-        this.$refs.password.focus();
-      });
+        this.$refs.password.focus()
+      })
     },
     handleLogin() {
       this.$refs.loginForm.validate((valid) => {
         if (valid) {
-          this.loading = true;
+          this.loading = true
           this.$store
-            .dispatch("user/login", this.loginForm)
+            .dispatch('user/login', this.loginForm)
             .then(() => {
               this.$router
-                .push({ path: this.redirect || "/", query: this.otherQuery })
-                .catch(() => {});
+                .push({ path: this.redirect || '/', query: this.otherQuery })
+                .catch(() => {})
             })
             .catch(() => {
-              this.loading = false;
-              this.getCode();
-            });
+              this.loading = false
+              this.getCode()
+            })
         } else {
-          console.log("error submit!!");
-          return false;
+          console.log('error submit!!')
+          return false
         }
-      });
+      })
     },
     getOtherQuery(query) {
       return Object.keys(query).reduce((acc, cur) => {
-        if (cur !== "redirect") {
-          acc[cur] = query[cur];
+        if (cur !== 'redirect') {
+          acc[cur] = query[cur]
         }
-        return acc;
-      }, {});
-    },
-  },
-};
+        return acc
+      }, {})
+    }
+  }
+}
 </script>
 
 <style lang="scss" scoped>
-$bg: #283443;
-$light_gray: #fff;
-$cursor: #fff;
+// 导入设计系统变量
+@import "@/styles/tokens/index.scss";
 
+// ============================================
+// JXT 数字证据管理平台 - 登录页样式
+// ============================================
+
+// 底部备案信息
 #bottom_layer {
   visibility: hidden;
   width: 3000px;
@@ -380,7 +385,7 @@ $cursor: #fff;
 }
 
 #bottom_layer .text-color {
-  color: #bbb;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 #bottom_layer .aria-img {
@@ -418,7 +423,7 @@ $cursor: #fff;
 }
 
 #bottom_layer .open-content-info .text-color {
-  color: #626675;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .open-content-info {
@@ -446,9 +451,9 @@ $cursor: #fff;
   max-width: 560px;
   padding: 8px 12px 8px 12px;
   background: #fff;
-  border-radius: 6px;
+  border-radius: $radius-md;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: $shadow-md;
   text-align: left;
 }
 
@@ -479,25 +484,19 @@ $cursor: #fff;
   }
 }
 
-.footer {
-  background-color: #0e6cff;
-  margin-bottom: -20px;
-}
-
+// ============================================
+// 登录容器
+// ============================================
 .login-container {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
   align-items: center;
+  justify-content: center;
   width: 100%;
-  height: 100%;
-  margin: 0 auto;
-  background-color: #0e6cff;
-  position: relative;
-  background-size: cover;
   height: 100vh;
+  margin: 0 auto;
+  position: relative;
+  background: linear-gradient(135deg, $law-login-bg-start 0%, $law-login-bg-end 100%);
+  background-size: cover;
   background-position: 50%;
 }
 
@@ -508,206 +507,293 @@ $cursor: #fff;
   position: absolute;
 }
 
+// ============================================
+// 登录卡片
+// ============================================
 .login-weaper {
   margin: 0 auto;
   width: 1000px;
-  -webkit-box-shadow: -4px 5px 10px rgba(0, 0, 0, 0.4);
-  box-shadow: -4px 5px 10px rgba(0, 0, 0, 0.4);
+  max-width: 90%;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-login-card;
   z-index: 1000;
+  display: flex;
+  overflow: hidden;
+  animation: fadeInDown 0.6s ease-out;
 }
 
-.login-left {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  background-color: rgba(64, 158, 255, 0);
-  color: #fff;
-  float: left;
-  width: 50%;
-  position: relative;
-  min-height: 500px;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-
-  .login-time {
-    position: absolute;
-    left: 25px;
-    top: 25px;
-    width: 100%;
-    color: #fff;
-    opacity: 0.9;
-    font-size: 18px;
-    overflow: hidden;
-    font-weight: 500;
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.login-left .img {
-  width: 240px;
-  height: 90px;
-  border-radius: 3px;
-}
-
-.login-left .title {
-  text-align: center;
-  color: #fff;
-  letter-spacing: 2px;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.login-border {
+// ============================================
+// 左侧品牌区
+// ============================================
+.login-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   position: relative;
   min-height: 500px;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  border-left: none;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+  padding: $spacing-10;
+  background: rgba(26, 95, 122, 0.25);
+  backdrop-filter: blur(10px);
   color: #fff;
-  background-color: hsla(0, 0%, 100%, 0.9);
-  width: 50%;
-  float: left;
+
+  .login-time {
+    position: absolute;
+    left: $spacing-6;
+    top: $spacing-6;
+    @include text-base;
+    color: #fff;
+    opacity: 0.9;
+    font-weight: $font-weight-medium;
+  }
+
+  .img {
+    width: 240px;
+    height: 90px;
+    border-radius: $radius-sm;
+    object-fit: contain;
+    margin-bottom: $spacing-6;
+  }
+
+  .title {
+    @include text-base;
+    text-align: center;
+    color: #fff;
+    letter-spacing: 2px;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+// ============================================
+// 右侧登录表单区
+// ============================================
+.login-border {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 500px;
+  background: $law-login-card-bg;
+  backdrop-filter: blur(20px);
+  padding: $spacing-10;
 }
 
 .login-main {
   margin: 0 auto;
-  width: 65%;
+  width: 75%;
 }
 
 .login-title {
-  color: #333;
-  margin-bottom: 40px;
-  font-weight: 500;
-  font-size: 22px;
+  @include text-2xl;
+  color: var(--law-gray-800, $law-gray-800);
+  margin-bottom: $spacing-10;
+  font-weight: $font-weight-semibold;
   text-align: center;
   letter-spacing: 4px;
 }
 
-@supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
-  .login-container .el-input input {
-    color: $cursor;
-  }
-}
-
-/* reset element-ui css */
+// ============================================
+// 表单样式
+// ============================================
 .login-container {
   ::v-deep .el-input {
     display: inline-block;
-    height: 47px;
+    height: 48px;
     width: 85%;
 
     input {
       background: transparent;
-      border: 0px;
+      border: 0;
       -webkit-appearance: none;
-      border-radius: 0px;
+      border-radius: 0;
       padding: 12px 5px 12px 15px;
-      color: #333;
-      height: 47px;
-      caret-color: #333;
+      color: var(--law-gray-700, $law-gray-700);
+      height: 48px;
+      caret-color: var(--law-primary, $law-primary);
+      @include text-base;
+      transition: $transition-color;
 
       &:-webkit-autofill {
-        box-shadow: 0 0 0px 1000px $bg inset !important;
-        -webkit-text-fill-color: $cursor !important;
+        box-shadow: 0 0 0px 1000px #fff inset !important;
+        -webkit-text-fill-color: var(--law-gray-700, $law-gray-700) !important;
+      }
+
+      &::placeholder {
+        color: var(--law-gray-400, $law-gray-400);
+      }
+
+      &:focus {
+        outline: none;
       }
     }
   }
 
   .el-form-item {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 5px;
-    color: #454545;
+    border: 1px solid var(--law-gray-300, $law-gray-300);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: $radius-sm;
+    margin-bottom: $spacing-5;
+    transition: $transition-base;
+
+    &:hover {
+      border-color: var(--law-gray-400, $law-gray-400);
+    }
+
+    &.is-error {
+      border-color: var(--law-danger, $law-danger);
+      background: var(--law-danger-bg, $law-danger-bg);
+    }
+
+    .el-form-item__error {
+      position: absolute;
+      bottom: -20px;
+      left: 0;
+      @include text-caption;
+      color: var(--law-danger, $law-danger);
+    }
   }
 }
 
-$bg: #2d3a4b;
-$dark_gray: #889aa4;
-$light_gray: #eee;
+// ============================================
+// 图标容器
+// ============================================
+.svg-container {
+  padding: 12px 5px 12px 15px;
+  color: var(--law-gray-500, $law-gray-500);
+  vertical-align: middle;
+  width: 40px;
+  display: inline-block;
+  transition: $transition-color;
 
+  i,
+  svg {
+    font-size: 18px;
+  }
+}
+
+// ============================================
+// 密码显示/隐藏按钮
+// ============================================
+.show-pwd {
+  position: absolute;
+  right: 15px;
+  top: 12px;
+  font-size: 16px;
+  color: var(--law-gray-500, $law-gray-500);
+  cursor: pointer;
+  user-select: none;
+  transition: $transition-color;
+
+  &:hover {
+    color: var(--law-primary, $law-primary);
+  }
+}
+
+// ============================================
+// 验证码
+// ============================================
+.login-code {
+  cursor: pointer;
+  width: 30%;
+  height: 48px;
+  float: right;
+  background-color: var(--law-gray-100, $law-gray-100);
+  border-radius: $radius-sm;
+  overflow: hidden;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: var(--law-gray-200, $law-gray-200);
+  }
+
+  img {
+    height: 48px;
+    width: 100%;
+    border: 1px solid var(--law-gray-300, $law-gray-300);
+    border-radius: $radius-sm;
+    display: block;
+  }
+}
+
+// ============================================
+// 登录按钮
+// ============================================
 .login-container {
-  .tips {
-    font-size: 14px;
-    color: #fff;
-    margin-bottom: 10px;
+  ::v-deep .el-button {
+    width: 100%;
+    height: 48px;
+    padding: $button-padding-lg;
+    margin-top: $spacing-4;
+    margin-bottom: $spacing-8;
+    border-radius: $radius-sm;
+    @include text-base;
+    font-weight: $font-weight-medium;
+    border: none;
+    background: var(--law-primary, $law-primary);
+    color: var(--law-primary-contrast, $law-primary-contrast);
+    transition: $transition-button;
 
-    span {
-      &:first-of-type {
-        margin-right: 16px;
-      }
+    &:hover,
+    &:focus {
+      background: var(--law-primary-light, $law-primary-light);
+      transform: translateY(-1px);
+      box-shadow: $shadow-button-hover;
+    }
+
+    &:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    &.is-loading {
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    &.is-disabled {
+      background: var(--law-gray-400, $law-gray-400);
+      opacity: 0.6;
     }
   }
+}
 
-  .svg-container {
-    padding: 6px 5px 6px 15px;
-    color: $dark_gray;
-    vertical-align: middle;
-    width: 30px;
-    display: inline-block;
+// ============================================
+// 响应式设计
+// ============================================
+@media only screen and (max-width: 768px) {
+  .login-weaper {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    box-shadow: none;
+    border-radius: 0;
   }
 
-  .title-container {
-    position: relative;
-
-    .title {
-      font-size: 26px;
-      color: $light_gray;
-      margin: 0px auto 40px auto;
-      text-align: center;
-      font-weight: bold;
-    }
+  .login-main {
+    width: 85%;
   }
 
-  .show-pwd {
-    position: absolute;
-    right: 10px;
-    top: 7px;
-    font-size: 16px;
-    color: $dark_gray;
-    cursor: pointer;
-    user-select: none;
+  .login-left {
+    display: none !important;
   }
 
-  .thirdparty-button {
-    position: absolute;
-    right: 0;
-    bottom: 6px;
-  }
-
-  @media only screen and (max-width: 470px) {
-    .thirdparty-button {
-      display: none;
-    }
-    .login-weaper {
-      width: 100%;
-      padding: 0 30px;
-      box-sizing: border-box;
-      box-shadow: none;
-    }
-    .login-main {
-      width: 80%;
-    }
-    .login-left {
-      display: none !important;
-    }
-    .login-border {
-      width: 100%;
-    }
+  .login-border {
+    width: 100%;
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.98);
   }
 }
 </style>

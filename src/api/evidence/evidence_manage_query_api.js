@@ -115,6 +115,6 @@ export function getIncidentRecordMediaInfos(query) {
 export function GetMediaByName(mediaName) {
   return request({
     url: `/api/v1/media/name/${mediaName}`,
-    method: 'get',
+    method: 'get'
   })
 }

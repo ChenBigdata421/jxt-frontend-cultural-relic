@@ -60,8 +60,7 @@
               icon="el-icon-search"
               size="mini"
               @click="handleQuery"
-              >搜索</el-button
-            >
+            >搜索</el-button>
           </el-form-item>
         </el-form>
         <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
@@ -121,7 +120,7 @@
 </template>
 
 <script>
-import { get_js_media_list } from "@/api/admin/js_media";
+import { get_js_media_list } from '@/api/admin/js_media'
 
 export default {
   data() {
@@ -140,37 +139,37 @@ export default {
       queryParams: {
         media_cate: undefined,
         bool_enfor: undefined,
-        storage_type: undefined,
-      },
-    };
+        storage_type: undefined
+      }
+    }
   },
   created() {
-    this.getList();
-    this.getDicts("media_type").then((response) => {
-      this.media_cate_options = response.data;
-    });
-    this.getDicts("storage_type").then((response) => {
-      this.storage_type_options = response.data;
-    });
-    this.getDicts("bool_enfor").then((response) => {
-      this.bool_enfor_options = response.data;
-    });
+    this.getList()
+    this.getDicts('media_type').then((response) => {
+      this.media_cate_options = response.data
+    })
+    this.getDicts('storage_type').then((response) => {
+      this.storage_type_options = response.data
+    })
+    this.getDicts('bool_enfor').then((response) => {
+      this.bool_enfor_options = response.data
+    })
   },
   methods: {
     /** 查询组织列表 */
     getList() {
-      this.loading = true;
+      this.loading = true
       get_js_media_list(this.queryParams).then((response) => {
         // 注意：response.data是数组类型，数组的元素是对象，response.data数组只有一个元素，即只有一个对象，[{根组织的信息（其中孩子又是一个数组，包含若干个对象，即若干个子组织）}]
-        this.js_media_list = response.data;
-        this.loading = false;
-      });
+        this.js_media_list = response.data
+        this.loading = false
+      })
     },
 
     /** 搜索按钮操作 */
     handleQuery() {
-      this.getList();
-    },
-  },
-};
+      this.getList()
+    }
+  }
+}
 </script>
