@@ -9,12 +9,12 @@
             </div>
             <div>
               <div class="text-center">
-                <userAvatar :user="user" />
+                <userAvatar :user="user" @avatar-updated="handleAvatarUpdated" />
               </div>
               <ul class="list-group list-group-striped">
                 <li class="list-group-item">
                   <svg-icon icon-class="user" />用户名称
-                  <div class="pull-right">{{ user.username }}</div>
+                  <div class="pull-right">{{ user.userName }}</div>
                 </li>
                 <li class="list-group-item">
                   <svg-icon icon-class="phone" />手机号码
@@ -26,15 +26,19 @@
                 </li>
                 <li class="list-group-item">
                   <svg-icon icon-class="tree" />所属组织
-                  <div class="pull-right">{{ orgName }}</div>
+                  <div class="pull-right">{{ user.orgFullName || user.orgName }}</div>
                 </li>
                 <li class="list-group-item">
                   <svg-icon icon-class="peoples" />所属角色
-                  <div class="pull-right">{{ roleName }}</div>
+                  <div class="pull-right">{{ user.roleName }}</div>
+                </li>
+                <li class="list-group-item">
+                  <svg-icon icon-class="skill" />所在岗位
+                  <div class="pull-right">{{ user.postName || '暂无' }}</div>
                 </li>
                 <li class="list-group-item">
                   <svg-icon icon-class="date" />创建日期
-                  <div class="pull-right">{{ user.createdAt }}</div>
+                  <div class="pull-right">{{ parseTime(user.createdAt) }}</div>
                 </li>
               </ul>
             </div>
@@ -64,7 +68,7 @@
 import userAvatar from './userAvatar'
 import userInfo from './userInfo'
 import resetPwd from './resetPwd'
-import { getUserProfile } from '@/api/admin/sys-user'
+import { getUser } from '@/api/admin/sys-user'
 
 export default {
   name: 'Profile',
@@ -72,16 +76,7 @@ export default {
   data() {
     return {
       user: {},
-      roleGroup: {},
-      postGroup: {},
-      orgGroup: {},
-      activeTab: 'userinfo',
-      roleIds: undefined,
-      postIds: undefined,
-      roleName: undefined,
-      postName: undefined,
-      org: {},
-      orgName: undefined
+      activeTab: 'userinfo'
     }
   },
   created() {
@@ -89,23 +84,56 @@ export default {
   },
   methods: {
     getUser() {
-      getUserProfile().then(response => {
-        this.user = response.data.user
-        this.roleIds = response.data.user.roleIds
-        this.roleGroup = response.data.roles
+      // 从 Vuex store 获取当前用户 ID
+      const userId = this.$store.state.user.userid
+      console.log('[Profile] Fetching user data for userId:', userId)
 
-        if (this.roleIds[0]) {
-          for (const key in this.roleGroup) {
-            if (this.roleIds[0] === this.roleGroup[key].roleId) {
-              this.roleName = this.roleGroup[key].roleName
-            }
+      getUser(userId).then(response => {
+        console.log('[Profile] User data response:', response)
+
+        if (response.code === 200 && response.data) {
+          this.user = response.data
+
+          // 处理性别字段：将数字转换为字符串（1=男，2=女）
+          const sexValue = this.user.sex
+          if (sexValue === 1) {
+            this.$set(this.user, 'sex', '1')
+          } else if (sexValue === 2) {
+            this.$set(this.user, 'sex', '2')
+          } else {
+            // sex为0、undefined、null或其他值时，默认设为"1"（男）
+            this.$set(this.user, 'sex', '1')
           }
-        } else {
-          this.roleName = '暂无'
+
+          // 确保昵称有值
+          if (!this.user.nickName && this.user.userName) {
+            this.$set(this.user, 'nickName', this.user.userName)
+          }
+
+          console.log('[Profile] User data loaded:', {
+            userName: this.user.userName,
+            orgFullName: this.user.orgFullName,
+            roleName: this.user.roleName,
+            postName: this.user.postName,
+            sex: this.user.sex
+          })
+
+          // 同步更新 Vuex store 中的头像
+          if (this.user.avatar) {
+            this.$store.commit('user/SET_AVATAR', this.user.avatar)
+          }
         }
-        this.org = response.data.user.org
-        this.orgName = this.org.orgName
+      }).catch(error => {
+        console.error('[Profile] Failed to fetch user data:', error)
+        this.$message.error('获取用户信息失败')
       })
+    },
+    handleAvatarUpdated(newAvatarPath) {
+      console.log('[Profile] Avatar updated event received:', newAvatarPath)
+      // 使用 $set 确保响应式更新
+      this.$set(this.user, 'avatar', newAvatarPath)
+      // 同步更新 Vuex store
+      this.$store.commit('user/SET_AVATAR', newAvatarPath)
     }
   }
 }
