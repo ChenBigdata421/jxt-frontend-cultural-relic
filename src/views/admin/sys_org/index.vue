@@ -2,64 +2,38 @@
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <!--inline 属性被绑定为 true，这意味着该 <el-form> 组件将以内联形式呈现。
-          内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
-          这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
-        <el-form :inline="true">
-          <el-form-item label="组织名称">
-            <el-input
-              v-model="queryParams.orgName"
-              placeholder="请输入组织名称"
-              clearable
-              size="small"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="状态">
-            <el-select v-model="queryParams.status" placeholder="组织状态" clearable size="small">
-              <el-option
-                v-for="dict in statusOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="负责人">
-            <el-select
-              v-model="queryParams.leaderId"
-              placeholder="请选择负责人"
-              clearable
-              filterable
-              size="small"
-              style="width: 170px"
-            >
-              <el-option
-                v-for="user in allUserOptions"
-                :key="user.userId"
-                :label="user.userName"
-                :value="user.userId"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button
-              class="filter-item"
-              type="primary"
-              icon="el-icon-search"
-              size="mini"
-              @click="handleQuery"
-            >搜索</el-button>
+        <!-- 查询栏组件 -->
+        <OrgQueryBar
+          ref="queryBar"
+          :status-options="statusOptions"
+          :user-options="allUserOptions"
+          @search="handleSearch"
+          @quick-search-reset="handleQuickSearchReset"
+        />
+
+        <!-- 主操作栏 -->
+        <div class="main-action-bar">
+          <div class="left-actions">
             <el-button
               v-permisaction="['admin:sysOrg:add']"
-              class="filter-item"
               type="primary"
               icon="el-icon-plus"
-              size="mini"
+              size="small"
               @click="handleAdd"
-            >新增</el-button>
-          </el-form-item>
-        </el-form>
+            >
+              新增组织
+            </el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="small"
+              type="text"
+              class="action-btn tertiary"
+              @click="handleRefresh"
+            >
+              刷新
+            </el-button>
+          </div>
+        </div>
         <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
         <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 orgId
           作为每行数据的唯一键。这有助于 Vue 跟踪每行数据的变化，提高渲染性能。-->
@@ -74,15 +48,16 @@
           row-key="orgId"
           default-expand-all
           border
+          style="width: 100%"
           :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
         >
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为"v-bind"或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
-          <el-table-column prop="orgName" label="组织名称" />
-          <el-table-column prop="orgCode" label="组织编码" />
-          <el-table-column prop="leader" label="负责人" width="100" />
+          <el-table-column prop="orgName" label="组织名称" min-width="150" />
+          <el-table-column prop="orgCode" label="组织编码" width="120" />
+          <el-table-column prop="leader" label="负责人" width="150" />
           <!--<el-table-column prop="status" label="状态" :formatter="statusFormat" width="100">在<template slot-scope="scope">中已经调用了statusFormat，这里就不需要了-->
-          <el-table-column prop="status" label="状态" width="100">
+          <el-table-column prop="status" label="状态" width="120">
             <template slot-scope="scope">
               <el-switch
                 v-model="scope.row.status"
@@ -97,105 +72,152 @@
               <span>{{ parseTime(scope.row.createdAt) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+          <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="260">
             <template slot-scope="scope">
-              <el-button
-                v-permisaction="['admin:sysOrg:edit']"
-                size="mini"
-                type="text"
-                icon="el-icon-edit"
-                @click="handleUpdate(scope.row)"
-              >修改</el-button>
-              <el-button
-                v-permisaction="['admin:sysOrg:add']"
-                size="mini"
-                type="text"
-                icon="el-icon-plus"
-                @click="handleAdd(scope.row)"
-              >新增</el-button>
-              <!--v-if="scope.row.p_id != 0",这个属性注释掉，因为p_id根本不存在-->
-              <el-button
-                v-permisaction="['admin:sysOrg:remove']"
-                size="mini"
-                type="text"
-                icon="el-icon-delete"
-                @click="handleDelete(scope.row)"
-              >删除</el-button>
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['admin:sysOrg:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  v-permisaction="['admin:sysOrg:add']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-plus"
+                  class="action-btn tertiary"
+                  @click="handleAdd(scope.row)"
+                >
+                  新增
+                </el-button>
+                <el-button
+                  v-permisaction="['admin:sysOrg:remove']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
 
         <!-- 添加或修改组织对话框 -->
-        <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
-          用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
-        <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
-        <el-dialog :title="title" :visible.sync="open" width="600px" :close-on-click-modal="false">
-          <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-            <el-row>
-              <el-col :span="24">
-                <el-form-item label="上级组织" prop="parentId">
-                  <treeselect
-                    v-model="form.parentId"
-                    :options="orgOptions"
-                    :normalizer="normalizer"
-                    :show-count="true"
-                    placeholder="选择上级组织"
-                    :disabled="isEdit"
-                    @input="handleParentOrgChange"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <!-- prop="orgName" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 orgName 规则进行校验。-->
-                <el-form-item label="组织名称" prop="orgName">
-                  <el-input v-model="form.orgName" placeholder="请输入组织名称" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <!-- prop="orgCode" 告诉 Element UI 的表单验证系统，这个表单项应该使用 rules 对象中定义的 orgCode 规则进行校验。-->
-                <el-form-item label="组织编码" prop="orgCode">
-                  <el-input v-model="form.orgCode" placeholder="请输入组织编码" :disabled="title !== '添加组织'" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="显示排序" prop="sort">
-                  <el-input-number v-model="form.sort" controls-position="right" :min="0" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="负责人" prop="leaderId">
-                  <el-select
-                    v-model="form.leaderId"
-                    placeholder="请选择负责人"
-                    clearable
-                    filterable
-                    style="width: 100%"
-                  >
-                    <el-option
-                      v-for="user in userOptions"
-                      :key="user.userId"
-                      :label="user.userName"
-                      :value="user.userId"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="联系电话" prop="phone">
-                  <el-input v-model="form.phone" placeholder="请输入联系电话" maxlength="11" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="邮箱" prop="email">
-                  <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="50" />
-                </el-form-item>
-              </el-col>
-            </el-row>
+        <el-dialog
+          :title="title"
+          :visible.sync="open"
+          width="700px"
+          append-to-body
+          :close-on-click-modal="false"
+          custom-class="edit-dialog"
+        >
+          <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+
+            <!-- 使用 el-collapse 实现可折叠分组 -->
+            <el-collapse v-model="activeFormSections" class="form-collapse">
+
+              <!-- 基础信息 -->
+              <el-collapse-item name="basic" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-document section-icon" />
+                    <span class="section-title">基础信息</span>
+                    <span class="section-badge">6项</span>
+                  </div>
+                </template>
+
+                <el-row :gutter="20">
+                  <el-col :span="24">
+                    <el-form-item label="上级组织" prop="parentId">
+                      <treeselect
+                        v-model="form.parentId"
+                        :options="orgOptions"
+                        :normalizer="normalizer"
+                        :show-count="true"
+                        placeholder="选择上级组织"
+                        :disabled="isEdit"
+                        @input="handleParentOrgChange"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="组织名称" prop="orgName">
+                      <el-input v-model="form.orgName" placeholder="请输入组织名称" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="组织编码" prop="orgCode">
+                      <el-input v-model="form.orgCode" placeholder="请输入组织编码" :disabled="title !== '添加组织'" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="显示排序" prop="sort">
+                      <el-input-number v-model="form.sort" controls-position="right" :min="0" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="负责人" prop="leaderId">
+                      <el-select
+                        v-model="form.leaderId"
+                        placeholder="请选择负责人"
+                        clearable
+                        filterable
+                        class="full-width"
+                      >
+                        <el-option
+                          v-for="user in userOptions"
+                          :key="user.userId"
+                          :label="user.userName"
+                          :value="user.userId"
+                        />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
+
+              <!-- 联系信息 -->
+              <el-collapse-item name="contact" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-phone section-icon" />
+                    <span class="section-title">联系信息</span>
+                    <span class="section-badge">2项</span>
+                  </div>
+                </template>
+
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="联系电话" prop="phone">
+                      <el-input v-model="form.phone" placeholder="请输入联系电话" maxlength="11" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="邮箱" prop="email">
+                      <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="50" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
+
+            </el-collapse>
           </el-form>
+
           <div slot="footer" class="dialog-footer">
-            <!--primary 类型通常具有一个更明显的样式，比如蓝色背景-->
-            <el-button type="primary" @click="submitForm">确 定</el-button>
-            <el-button @click="cancel">取 消</el-button>
+            <el-button type="text" class="action-btn tertiary" size="small" @click="cancel">取 消</el-button>
+            <el-button type="primary" size="small" @click="submitForm">确 定</el-button>
           </div>
         </el-dialog>
       </el-card>
@@ -208,10 +230,11 @@ import { getOrgList, getOrg, delOrg, addOrg, updateOrg, changeOrgStatus } from '
 import { listUser } from '@/api/admin/sys-user'
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import OrgQueryBar from '@/components/OrgQueryBar/index.vue'
 
 export default {
   name: 'SysOrgManage',
-  components: { Treeselect },
+  components: { Treeselect, OrgQueryBar },
   data() {
     return {
       // 遮罩层
@@ -229,6 +252,8 @@ export default {
       isEdit: false,
       // 是否显示弹出层
       open: false,
+      // 表单折叠状态
+      activeFormSections: ['basic', 'contact'],
       // 状态数据字典
       statusOptions: [],
       // 查询参数
@@ -350,6 +375,41 @@ export default {
         status: 2
       }
     },
+    /** 刷新列表 */
+    handleRefresh() {
+      this.getList()
+    },
+
+    /** 查询栏相关方法 */
+    handleSearch(searchData) {
+      // 快速搜索字段列表
+      const quickSearchFields = ['orgName', 'status', 'leaderId']
+
+      // 合并搜索条件
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key]
+      })
+
+      // 删除被清空的快速搜索字段
+      quickSearchFields.forEach(field => {
+        if (!(field in searchData)) {
+          this.queryParams[field] = undefined
+        }
+      })
+
+      this.getList()
+    },
+
+    handleQuickSearchReset() {
+      // 重置查询参数
+      this.queryParams = {
+        orgName: undefined,
+        status: undefined,
+        leaderId: undefined
+      }
+      this.getList()
+    },
+
     /** 搜索按钮操作 */
     handleQuery() {
       this.getList()
@@ -509,3 +569,13 @@ export default {
   }
 }
 </script>
+
+<!--
+  样式说明：本页面全部使用全局样式
+  全局样式位置：
+  - src/styles/index.scss: .filter-container
+  - src/styles/components/search.scss: .search-section, .quick-search-form, .search-row, .search-item
+  - src/styles/components/dialogs.scss: .edit-dialog, .form-collapse
+  - src/styles/components/forms.scss: .section-header
+  - src/styles/components/buttons.scss: .action-btn, .search-action-buttons
+-->

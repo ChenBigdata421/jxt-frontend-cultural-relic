@@ -1,11 +1,15 @@
 // ========== 搜索区域通用样式 ==========
 // 用于页面顶部的快速搜索区域
-// 更新日期：2026-03-24
+// 更新日期：2026-03-28
 
 // 搜索区域容器
 .search-section {
   margin-bottom: $spacing-4;
+}
 
+// SearchInput 组件根元素（兼容 .search-section 和 .search-input-wrapper）
+.search-section,
+.search-input-wrapper {
   .quick-search-form {
     background-color: transparent;
     padding: 0;
@@ -14,38 +18,91 @@
 
     .search-row {
       display: flex;
-      align-items: center;
       flex-wrap: wrap;
-      gap: $spacing-3;
-      margin-bottom: $spacing-3;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
+      gap: $spacing-4 $spacing-8; // 行间距 16px，列间距 32px（增大间距）
+      align-items: center;
 
       .search-item {
-        flex: 1;
-        min-width: 180px;
+        flex: 0 0 auto; // 不伸缩，保持内容自然宽度
         display: flex;
         align-items: center;
-        gap: $spacing-3;
+        gap: $spacing-2; // 标签和输入框之间的间距 8px
 
-        label {
-          white-space: nowrap;
-          font-size: $font-size-sm;
+        .search-label {
+          @include text-sm;
           font-weight: $font-weight-medium;
           color: $law-gray-700;
-          width: 80px;
+          white-space: nowrap;
           flex-shrink: 0;
-          text-align: right;
+          width: 80px; // 与"快捷筛选"标签宽度一致，确保右对齐
+          text-align: right; // 右对齐更美观
+        }
+
+        // 输入框和选择框固定宽度
+        .el-input,
+        .el-select {
+          width: 160px; // 稍微减小输入框宽度，让搜索项分布更均匀
+        }
+
+        // vue-treeselect 组件固定宽度（需要 !important 覆盖组件默认样式）
+        .vue-treeselect {
+          width: 160px !important;
+          min-width: 160px !important;
+          max-width: 160px !important;
         }
       }
 
-      // 使用 ::v-deep 确保样式正确应用到 Element UI 组件
-      ::v-deep .el-input,
-      ::v-deep .el-select {
-        flex: 1;
-        min-width: 0;
+      // 响应式：小屏幕时调整输入框宽度
+      @media (max-width: 1400px) {
+        .search-item {
+          .el-input,
+          .el-select {
+            width: 160px;
+          }
+
+          .vue-treeselect {
+            width: 160px !important;
+            min-width: 160px !important;
+            max-width: 160px !important;
+          }
+        }
+      }
+
+      @media (max-width: 1024px) {
+        .search-item {
+          .el-input,
+          .el-select {
+            width: 140px;
+          }
+
+          .vue-treeselect {
+            width: 140px !important;
+            min-width: 140px !important;
+            max-width: 140px !important;
+          }
+        }
+      }
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: stretch;
+
+        .search-item {
+          width: 100%;
+
+          .el-input,
+          .el-select {
+            flex: 1;
+            width: auto;
+          }
+
+          .vue-treeselect {
+            flex: 1;
+            width: auto !important;
+            min-width: auto !important;
+            max-width: none !important;
+          }
+        }
       }
     }
   }

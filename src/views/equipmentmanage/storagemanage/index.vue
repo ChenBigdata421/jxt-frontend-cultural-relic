@@ -2,167 +2,94 @@
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <!--inline 属性被绑定为 true，这意味着该 <el-form> 组件将以内联形式呈现。
-          内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
-          这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
-        <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="存储编号" prop="storageSiteNo">
-            <el-input
-              v-model="queryParams.storageSiteNo"
-              placeholder="请输入存储编号"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="存储名称" prop="storageSiteName">
-            <el-input
-              v-model="queryParams.storageSiteName"
-              placeholder="请输入存储名称"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="管理组织" prop="managerOrgId">
-            <treeselect
-              v-model="queryParams.managerOrgId"
-              :options="orgOptions"
-              placeholder="请选择管理组织"
-              style="width: 170px"
-            />
-          </el-form-item>
-          <el-form-item label="管理人员" prop="managerId">
-            <el-select
-              v-model="queryParams.managerId"
-              placeholder="请选择管理人员"
-              style="width: 170px"
-              clearable
-              @change="$forceUpdate()"
-            >
-              <el-option
-                v-for="item in userOptions"
-                :key="item.userId"
-                :label="item.userName"
-                :value="item.userId"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item prop="brandId" label="品牌">
-            <el-select
-              v-model="queryParams.brandId"
-              placeholder="请选择品牌"
-              style="width: 170px"
-              clearable
-            >
-              <el-option
-                v-for="item in brandOptions"
-                :key="item.id"
-                :label="item.brandName"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="启用状态" prop="openStatus">
-            <el-select
-              v-model="queryParams.openStatus"
-              placeholder="启用状态"
-              clearable
-              style="width: 170px"
-            >
-              <el-option
-                v-for="dict in openStatusOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-                style="width: 150px"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="状态" prop="status">
-            <el-select
-              v-model="queryParams.status"
-              placeholder="状态"
-              clearable
-              style="width: 170px"
-            >
-              <el-option
-                v-for="dict in statusOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-                style="width: 150px"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
+        <!-- 查询栏组件 -->
+        <StorageQueryBar
+          ref="queryBar"
+          :org-options="orgOptions"
+          :user-options="userOptions"
+          :brand-options="brandOptions"
+          :status-options="statusOptions"
+          :open-status-options="openStatusOptions"
+          @search="handleSearch"
+          @quick-search-reset="handleQuickSearchReset"
+          @org-change="handleOrgChange"
+        />
+
+        <!-- 批量操作栏 -->
+        <BatchActionBar
+          :selected-count="selectedStorageRecords.length"
+          :is-indeterminate="isSelectionIndeterminate"
+          :all-selected="isAllSelected"
+          @select-all-change="handleSelectAll"
+        />
+
+        <!-- 主操作栏 -->
+        <div class="main-action-bar">
+          <div class="left-actions">
             <el-button
+              v-permisaction="['equipment:storage:create']"
               type="primary"
-              icon="el-icon-search"
-              size="mini"
-              @click="handleQuery"
-            >搜索</el-button>
+              icon="el-icon-plus"
+              size="small"
+              @click="handleAdd"
+            >
+              新增存储
+            </el-button>
             <el-button
               icon="el-icon-refresh"
-              size="mini"
-              @click="resetQuery"
-            >重置</el-button>
-          </el-form-item>
-        </el-form>
-
-        <el-row :gutter="10" class="mb8" type="flex" justify="space-between">
-          <el-col :span="18">
-            <el-row :gutter="10">
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['equipment:storage:create']"
-                  type="primary"
-                  icon="el-icon-plus"
-                  size="mini"
-                  @click="handleAdd"
-                >新增</el-button>
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['equipment:storage:edit']"
-                  type="success"
-                  icon="el-icon-edit"
-                  size="mini"
-                  :disabled="selectedStorageRecords.length !== 1"
-                  @click="handleUpdate"
-                >修改</el-button>
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['equipment:storage:remove']"
-                  type="danger"
-                  icon="el-icon-delete"
-                  size="mini"
-                  :disabled="selectedStorageRecords.length === 0"
-                  @click="handleDelete"
-                >删除</el-button>
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['equipment:storage:export']"
-                  type="warning"
-                  icon="el-icon-download"
-                  size="mini"
-                  @click="handleExport"
-                >导出</el-button>
-              </el-col>
-            </el-row>
-          </el-col>
-          <el-col :span="6" class="column-settings-trigger">
-            <el-popover placement="bottom-end" width="280" trigger="click">
-              <div class="column-settings">
+              size="small"
+              type="text"
+              class="action-btn tertiary"
+              @click="handleRefresh"
+            >
+              刷新
+            </el-button>
+            <el-button
+              v-permisaction="['equipment:storage:export']"
+              icon="el-icon-download"
+              size="small"
+              class="action-btn secondary"
+              @click="handleExport"
+            >
+              导出
+            </el-button>
+            <el-button
+              v-permisaction="['equipment:storage:remove']"
+              icon="el-icon-delete"
+              size="small"
+              class="action-btn tertiary-danger"
+              :disabled="selectedStorageRecords.length === 0"
+              @click="handleDelete"
+            >
+              删除
+            </el-button>
+          </div>
+          <div class="right-actions">
+            <el-popover
+              ref="columnSettingsPopover"
+              placement="bottom-end"
+              width="300"
+              trigger="click"
+              popper-class="column-settings-popover"
+              :visible-arrow="true"
+              @after-enter="handleColumnSettingsOpen"
+              @after-leave="handleColumnSettingsClose"
+            >
+              <div
+                role="dialog"
+                aria-label="列显示设置"
+                class="column-settings"
+              >
                 <div class="column-settings-header">
-                  <span>列显示设置</span>
+                  <span class="column-settings-title">列显示设置</span>
                   <el-button
                     type="text"
-                    size="mini"
+                    size="small"
+                    class="column-settings-reset"
                     @click="resetColumns"
-                  >重置</el-button>
+                  >
+                    重置
+                  </el-button>
                 </div>
                 <el-checkbox-group
                   v-model="visibleColumns"
@@ -173,20 +100,37 @@
                     :key="col.prop"
                     class="column-item"
                   >
-                    <el-checkbox :label="col.prop" :disabled="col.fixed">
+                    <el-checkbox
+                      :label="col.prop"
+                      :disabled="col.fixed"
+                      :aria-label="col.fixed ? `${col.label}（必须显示）` : col.label"
+                    >
                       {{ col.label }}
+                      <el-tooltip
+                        v-if="col.fixed"
+                        content="此列必须显示，不能隐藏"
+                        placement="top"
+                      >
+                        <i class="el-icon-info column-item-icon" />
+                      </el-tooltip>
                     </el-checkbox>
                   </div>
                 </el-checkbox-group>
               </div>
               <el-button
                 slot="reference"
-                size="mini"
+                size="small"
                 icon="el-icon-setting"
-              >列设置</el-button>
+                type="text"
+                class="action-btn tertiary"
+                aria-label="打开列设置"
+                aria-haspopup="dialog"
+              >
+                列设置
+              </el-button>
             </el-popover>
-          </el-col>
-        </el-row>
+          </div>
+        </div>
         <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
         <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 id
           作为每行数据的唯一键。这有助于 Vue 跟踪每行数据的变化，提高渲染性能。-->
@@ -203,90 +147,97 @@
           @selection-change="handleSelectionChange"
           @sort-change="handleSortChang"
         >
-          <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
-          <!--:formatter 是一个属性绑定（也称为“v-bind”或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
-          <el-table-column type="selection" width="55" align="center" />
+          <el-table-column type="selection" width="60" align="center" />
           <el-table-column
             label="操作"
-            align="left"
+            align="center"
             class-name="small-padding fixed-width"
-            width="180"
+            width="220"
             fixed="left"
           >
             <template slot-scope="scope">
-              <el-button
-                v-permisaction="['equipment:storage:browse']"
-                size="mini"
-                type="text"
-                icon="el-icon-view"
-                @click="handleView(scope.row)"
-              >浏览</el-button>
-              <el-button
-                v-permisaction="['equipment:storage:edit']"
-                size="mini"
-                type="text"
-                icon="el-icon-edit"
-                @click="handleUpdate(scope.row)"
-              >修改</el-button>
-              <el-button
-                v-permisaction="['equipment:storage:remove']"
-                size="mini"
-                type="text"
-                icon="el-icon-delete"
-                @click="handleDelete(scope.row)"
-              >删除</el-button>
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['equipment:storage:browse']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >
+                  浏览
+                </el-button>
+                <el-button
+                  v-permisaction="['equipment:storage:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  v-permisaction="['equipment:storage:remove']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
           <el-table-column
             v-if="isColumnVisible('storageSiteNo')"
-            prop="storageSiteNo"
             label="编号"
-            width="120"
+            align="center"
+            prop="storageSiteNo"
             sortable="custom"
           />
           <el-table-column
             v-if="isColumnVisible('storageSiteName')"
-            prop="storageSiteName"
             label="名称"
+            align="center"
+            prop="storageSiteName"
             min-width="140"
             sortable="custom"
-            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('brandName')"
-            prop="brandName"
             label="品牌"
-            width="120"
+            align="center"
+            prop="brandName"
           />
           <el-table-column
             v-if="isColumnVisible('managerName')"
-            prop="managerName"
             label="管理员"
-            width="120"
+            align="center"
+            prop="managerName"
           />
           <el-table-column
             v-if="isColumnVisible('managerOrgFullName')"
-            prop="managerOrgFullName"
             label="管理员所在组织"
+            align="center"
+            prop="managerOrgFullName"
             min-width="180"
-            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('storageSiteIp')"
-            prop="storageSiteIp"
             label="IP地址"
-            width="140"
+            align="center"
+            prop="storageSiteIp"
           />
           <el-table-column
             v-if="isColumnVisible('status')"
-            prop="status"
             label="状态"
-            width="110"
+            align="center"
+            prop="status"
+            sortable="custom"
           >
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
               <el-tag
                 :type="scope.row.status === 1 ? 'success' : 'danger'"
                 disable-transitions
@@ -295,9 +246,9 @@
           </el-table-column>
           <el-table-column
             v-if="isColumnVisible('openStatus')"
-            prop="openStatus"
             label="启用状态"
-            width="110"
+            align="center"
+            prop="openStatus"
           >
             <template slot-scope="scope">
               <el-tag
@@ -308,68 +259,70 @@
           </el-table-column>
           <el-table-column
             v-if="isColumnVisible('system')"
-            prop="system"
             label="操作系统"
+            align="center"
+            prop="system"
             min-width="140"
-            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('version')"
-            prop="version"
             label="版本"
-            width="120"
+            align="center"
+            prop="version"
           />
           <el-table-column
             v-if="isColumnVisible('storageSiteUrl')"
-            prop="storageSiteUrl"
             label="播放地址"
+            align="center"
+            prop="storageSiteUrl"
             min-width="160"
-            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('address')"
-            prop="address"
             label="详细地址"
+            align="center"
+            prop="address"
             min-width="180"
-            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('cpu')"
-            prop="cpu"
             label="CPU"
-            width="120"
+            align="center"
+            prop="cpu"
           />
           <el-table-column
             v-if="isColumnVisible('memory')"
-            prop="memory"
             label="内存(GB)"
-            width="120"
+            align="center"
+            prop="memory"
           />
           <el-table-column
             v-if="isColumnVisible('purchaseDate')"
-            prop="purchaseDate"
             label="购置时间"
+            align="center"
+            prop="purchaseDate"
             width="180"
             sortable="custom"
           >
             <template slot-scope="{ row }">
-              {{ parseTime(row.purchaseDate) }}
+              <span>{{ parseTime(row.purchaseDate) }}</span>
             </template>
           </el-table-column>
           <el-table-column
             v-if="isColumnVisible('disk')"
-            prop="disk"
             label="磁盘(GB)"
-            width="120"
+            align="center"
+            prop="disk"
           />
           <el-table-column
             v-if="isColumnVisible('remark')"
-            prop="remark"
             label="备注"
+            align="center"
+            prop="remark"
             min-width="160"
-            :show-overflow-tooltip="true"
           />
         </el-table>
+        <!-- 分页 -->
         <pagination
           v-show="total > 0"
           :total="total"
@@ -377,238 +330,308 @@
           :limit.sync="queryParams.pageSize"
           @pagination="getList"
         />
-        <!-- 添加或修改执法仪对话框 -->
-        <!--:close-on-click-modal="false"：这是 Element UI el-dialog 组件的一个属性，
-          用于控制点击遮罩层时是否关闭对话框。当设置为 false 时，点击遮罩层不会关闭对话框。-->
-        <!--:show-count="true"：这个 prop 指示 treeselect 组件在节点旁边显示其子节点的数量。-->
+
+        <!-- 新增/修改对话框 -->
         <el-dialog
           :title="title"
           :visible.sync="open"
-          width="750px"
+          width="700px"
+          append-to-body
           :close-on-click-modal="false"
+          custom-class="edit-dialog"
         >
-          <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-            <!-- 管理信息 -->
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item
-                  label="管理组织"
-                  prop="managerOrgId"
-                  label-width="100px"
-                >
-                  <treeselect
-                    v-model="form.managerOrgId"
-                    :options="orgOptions"
-                    placeholder="请选择管理组织"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="管理人员" label-width="100px">
-                  <el-select
-                    v-model="form.managerId"
-                    placeholder="请选择"
-                    class="full-width"
-                    clearable
-                    @change="$forceUpdate()"
-                  >
-                    <el-option
-                      v-for="item in userOptions"
-                      :key="item.userId"
-                      :label="item.userName"
-                      :value="item.userId"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+          <el-form ref="form" :model="form" :rules="rules" label-width="100px">
 
-            <!-- 基础信息 -->
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item
-                  label="名称"
-                  prop="storageSiteName"
-                  label-width="100px"
-                >
-                  <el-input
-                    v-model="form.storageSiteName"
-                    placeholder="请输入名称"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item
-                  label="编号"
-                  prop="storageSiteNo"
-                  label-width="100px"
-                >
-                  <el-input
-                    v-model="form.storageSiteNo"
-                    placeholder="请输入编号"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="品牌" label-width="100px">
-                  <el-select v-model="form.brandId" placeholder="请选择">
-                    <el-option
-                      v-for="item in brandOptions"
-                      :key="item.id"
-                      :label="item.brandName"
-                      :value="item.id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+            <!-- 使用 el-collapse 实现可折叠分组 -->
+            <el-collapse v-model="activeFormSections" class="form-collapse">
 
-            <!-- 设备信息 -->
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="设备状态" label-width="100px">
-                  <el-radio-group v-model="form.status" class="radio-group">
-                    <el-radio
-                      v-for="dict in statusOptions"
-                      :key="dict.value"
-                      :label="dict.value"
-                    >{{ dict.label }}</el-radio>
-                  </el-radio-group>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="启用状态" label-width="100px">
-                  <el-radio-group v-model="form.openStatus">
-                    <el-radio
-                      v-for="dict in openStatusOptions"
-                      :key="dict.value"
-                      :label="dict.value"
-                    >{{ dict.label }}</el-radio>
-                  </el-radio-group>
-                </el-form-item>
-              </el-col>
-            </el-row>
+              <!-- 管理信息 -->
+              <el-collapse-item name="manage" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-user section-icon" />
+                    <span class="section-title">管理信息</span>
+                    <span class="section-badge">2项</span>
+                  </div>
+                </template>
 
-            <!-- 网络配置 -->
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item
-                  label="IP地址"
-                  prop="storageSiteIp"
-                  label-width="100px"
-                >
-                  <el-input
-                    v-model="form.storageSiteIp"
-                    placeholder="请输入IP地址"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item
-                  label="物理地址"
-                  prop="address"
-                  label-width="100px"
-                >
-                  <el-input
-                    v-model="form.address"
-                    placeholder="请输入物理地址"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item
-                  label="播放地址"
-                  prop="storageSiteUrl"
-                  label-width="100px"
-                >
-                  <el-input
-                    v-model="form.storageSiteUrl"
-                    placeholder="请输入播放地址"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="密钥" prop="authKey" label-width="100px">
-                  <el-input v-model="form.authKey" placeholder="请输入密钥" />
-                </el-form-item>
-              </el-col>
-            </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item
+                      label="管理组织"
+                      prop="managerOrgId"
+                    >
+                      <treeselect
+                        v-model="form.managerOrgId"
+                        :options="orgOptions"
+                        placeholder="请选择管理组织"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="管理人员">
+                      <el-select
+                        v-model="form.managerId"
+                        placeholder="请选择"
+                        class="full-width"
+                        clearable
+                        @change="$forceUpdate()"
+                      >
+                        <el-option
+                          v-for="item in userOptions"
+                          :key="item.userId"
+                          :label="item.userName"
+                          :value="item.userId"
+                        />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
 
-            <!-- 硬件配置 -->
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="CPU型号" label-width="100px">
-                  <el-input v-model="form.cpu" placeholder="请输入CPU型号" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="内存容量" label-width="100px">
-                  <el-input-number
-                    v-model="form.memory"
-                    placeholder="单位：GB"
-                    :min="0"
-                    controls-position="right"
-                    class="full-width"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="存储容量" label-width="100px">
-                  <el-input-number
-                    v-model="form.disk"
-                    placeholder="单位：GB"
-                    :min="0"
-                    controls-position="right"
-                    class="full-width"
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
+              <!-- 基础信息 -->
+              <el-collapse-item name="basic" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-document section-icon" />
+                    <span class="section-title">基础信息</span>
+                    <span class="section-badge">3项</span>
+                  </div>
+                </template>
 
-            <!-- 系统信息 -->
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="操作系统" label-width="100px">
-                  <el-input
-                    v-model="form.system"
-                    placeholder="请输入系统名称"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="系统版本" label-width="100px">
-                  <el-input v-model="form.version" placeholder="请输入版本号" />
-                </el-form-item>
-              </el-col>
-            </el-row>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item
+                      label="名称"
+                      prop="storageSiteName"
+                    >
+                      <el-input
+                        v-model="form.storageSiteName"
+                        placeholder="请输入名称"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item
+                      label="编号"
+                      prop="storageSiteNo"
+                    >
+                      <el-input
+                        v-model="form.storageSiteNo"
+                        placeholder="请输入编号"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="品牌">
+                      <el-select v-model="form.brandId" placeholder="请选择" class="full-width">
+                        <el-option
+                          v-for="item in brandOptions"
+                          :key="item.id"
+                          :label="item.brandName"
+                          :value="item.id"
+                        />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
 
-            <!-- 其他信息 -->
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="购置时间" label-width="100px">
-                  <el-date-picker
-                    v-model="form.purchaseDate"
-                    type="datetime"
-                    placeholder="选择购置时间"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    class="full-width"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="备注说明" label-width="100px">
-                  <el-input
-                    v-model="form.remark"
-                    placeholder="请输入备注信息"
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
+              <!-- 设备信息 -->
+              <el-collapse-item name="device" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-setting section-icon" />
+                    <span class="section-title">设备信息</span>
+                    <span class="section-badge">2项</span>
+                  </div>
+                </template>
+
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="设备状态">
+                      <el-radio-group v-model="form.status" class="radio-group">
+                        <el-radio
+                          v-for="dict in statusOptions"
+                          :key="dict.value"
+                          :label="dict.value"
+                        >{{ dict.label }}</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="启用状态">
+                      <el-radio-group v-model="form.openStatus">
+                        <el-radio
+                          v-for="dict in openStatusOptions"
+                          :key="dict.value"
+                          :label="dict.value"
+                        >{{ dict.label }}</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
+
+              <!-- 网络配置 -->
+              <el-collapse-item name="network" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-link section-icon" />
+                    <span class="section-title">网络配置</span>
+                    <span class="section-badge">4项</span>
+                  </div>
+                </template>
+
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item
+                      label="IP地址"
+                      prop="storageSiteIp"
+                    >
+                      <el-input
+                        v-model="form.storageSiteIp"
+                        placeholder="请输入IP地址"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item
+                      label="物理地址"
+                      prop="address"
+                    >
+                      <el-input
+                        v-model="form.address"
+                        placeholder="请输入物理地址"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item
+                      label="播放地址"
+                      prop="storageSiteUrl"
+                    >
+                      <el-input
+                        v-model="form.storageSiteUrl"
+                        placeholder="请输入播放地址"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="密钥" prop="authKey">
+                      <el-input v-model="form.authKey" placeholder="请输入密钥" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
+
+              <!-- 硬件配置 -->
+              <el-collapse-item name="hardware" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-cpu section-icon" />
+                    <span class="section-title">硬件配置</span>
+                    <span class="section-badge">3项</span>
+                  </div>
+                </template>
+
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="CPU型号">
+                      <el-input v-model="form.cpu" placeholder="请输入CPU型号" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="内存容量">
+                      <el-input-number
+                        v-model="form.memory"
+                        placeholder="单位：GB"
+                        :min="0"
+                        controls-position="right"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="存储容量">
+                      <el-input-number
+                        v-model="form.disk"
+                        placeholder="单位：GB"
+                        :min="0"
+                        controls-position="right"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
+
+              <!-- 系统信息 -->
+              <el-collapse-item name="system" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-monitor section-icon" />
+                    <span class="section-title">系统信息</span>
+                    <span class="section-badge">2项</span>
+                  </div>
+                </template>
+
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="操作系统">
+                      <el-input
+                        v-model="form.system"
+                        placeholder="请输入系统名称"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="系统版本">
+                      <el-input v-model="form.version" placeholder="请输入版本号" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
+
+              <!-- 其他信息 -->
+              <el-collapse-item name="other" class="form-section">
+                <template slot="title">
+                  <div class="section-header">
+                    <i class="el-icon-info section-icon" />
+                    <span class="section-title">其他信息</span>
+                    <span class="section-badge">2项</span>
+                  </div>
+                </template>
+
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="购置时间">
+                      <el-date-picker
+                        v-model="form.purchaseDate"
+                        type="datetime"
+                        placeholder="选择购置时间"
+                        value-format="yyyy-MM-dd HH:mm:ss"
+                        class="full-width"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="备注说明">
+                      <el-input
+                        v-model="form.remark"
+                        placeholder="请输入备注信息"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
+
+            </el-collapse>
           </el-form>
 
           <div slot="footer" class="dialog-footer">
-            <el-button type="primary" @click="submitForm">确 定</el-button>
-            <el-button @click="cancel">取 消</el-button>
+            <el-button type="text" class="action-btn tertiary" size="small" @click="cancel">取 消</el-button>
+            <el-button type="primary" size="small" @click="submitForm">确 定</el-button>
           </div>
         </el-dialog>
         <!-- 浏览存储对话框 -->
@@ -617,65 +640,146 @@
           :visible.sync="viewOpen"
           width="800px"
           append-to-body
+          :close-on-click-modal="false"
+          custom-class="detail-dialog"
         >
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="存储编号">{{
-              viewData.storageSiteNo || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="存储名称">{{
-              viewData.storageSiteName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="品牌">{{
-              viewData.brandName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="管理组织">{{
-              viewData.managerOrgFullName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="管理人员">{{
-              viewData.managerName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="启用状态">{{
-              selectDictLabel(openStatusOptions, viewData.openStatus) || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="状态">{{
-              selectDictLabel(statusOptions, viewData.status) || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="IP 地址">{{
-              viewData.storageSiteIp || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="播放地址">{{
-              viewData.storageSiteUrl || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="密钥">{{
-              viewData.authKey || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="物理地址" :span="2">{{
-              viewData.address || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="CPU">{{
-              viewData.cpu || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="内存(GB)">{{
-              viewData.memory || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="存储(GB)">{{
-              viewData.disk || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="操作系统">{{
-              viewData.system || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="版本">{{
-              viewData.version || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="购置时间">{{
-              viewData.purchaseDate ? parseTime(viewData.purchaseDate) : "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="备注" :span="2">{{
-              viewData.remark || "无"
-            }}</el-descriptions-item>
-          </el-descriptions>
+          <el-collapse v-model="activeViewSections" class="form-collapse">
+
+            <!-- 基础信息 -->
+            <el-collapse-item name="basic" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-document section-icon" />
+                  <span class="section-title">基础信息</span>
+                  <span class="section-badge">6项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="存储编号">
+                  <span class="nowrap-text">{{ viewData.storageSiteNo || "-" }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="存储名称">
+                  {{ viewData.storageSiteName || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="品牌">
+                  {{ viewData.brandName || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="管理组织">
+                  {{ viewData.managerOrgFullName || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="管理人员">
+                  {{ viewData.managerName || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="启用状态">
+                  <el-tag
+                    v-if="viewData.openStatus !== undefined"
+                    :type="viewData.openStatus === 1 ? 'success' : 'danger'"
+                    size="small"
+                    effect="dark"
+                  >{{ selectDictLabel(openStatusOptions, viewData.openStatus) }}</el-tag>
+                  <span v-else>-</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="状态">
+                  <el-tag
+                    v-if="viewData.status !== undefined"
+                    :type="viewData.status === 1 ? 'success' : 'danger'"
+                    size="small"
+                    effect="dark"
+                  >{{ selectDictLabel(statusOptions, viewData.status) }}</el-tag>
+                  <span v-else>-</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="购置时间">
+                  {{ viewData.purchaseDate ? parseTime(viewData.purchaseDate) : "-" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 网络配置 -->
+            <el-collapse-item name="network" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-link section-icon" />
+                  <span class="section-title">网络配置</span>
+                  <span class="section-badge">4项</span>
+                </div>
+              </template>
+              <el-descriptions :column="1" border class="section-descriptions">
+                <el-descriptions-item label="IP 地址">
+                  {{ viewData.storageSiteIp || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="播放地址">
+                  {{ viewData.storageSiteUrl || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="密钥">
+                  {{ viewData.authKey || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="物理地址">
+                  {{ viewData.address || "-" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 硬件配置 -->
+            <el-collapse-item name="hardware" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-cpu section-icon" />
+                  <span class="section-title">硬件配置</span>
+                  <span class="section-badge">3项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="CPU型号">
+                  {{ viewData.cpu || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="内存容量">
+                  {{ viewData.memory ? viewData.memory + ' GB' : "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="存储容量">
+                  {{ viewData.disk ? viewData.disk + ' GB' : "-" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 系统信息 -->
+            <el-collapse-item name="system" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-monitor section-icon" />
+                  <span class="section-title">系统信息</span>
+                  <span class="section-badge">2项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="操作系统">
+                  {{ viewData.system || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="系统版本">
+                  {{ viewData.version || "-" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 其他信息 -->
+            <el-collapse-item name="other" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-info section-icon" />
+                  <span class="section-title">其他信息</span>
+                  <span class="section-badge">1项</span>
+                </div>
+              </template>
+              <el-descriptions :column="1" border class="section-descriptions">
+                <el-descriptions-item label="备注">
+                  {{ viewData.remark || "无" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+          </el-collapse>
+
           <div slot="footer" class="dialog-footer">
-            <el-button @click="viewOpen = false">关 闭</el-button>
+            <el-button type="text" class="action-btn tertiary" size="small" @click="viewOpen = false">关 闭</el-button>
           </div>
         </el-dialog>
       </el-card>
@@ -684,23 +788,32 @@
 </template>
 
 <script>
+import BasicLayout from '@/layout/BasicLayout'
+import Pagination from '@/components/Pagination'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import StorageQueryBar from '@/components/StorageQueryBar/index.vue'
+import BatchActionBar from '@/components/BatchActionBar/index.vue'
 import {
   listEquipmentStorage,
   delEquipmentStorage,
-  getEquipmentStorage,
-  getEquipmentStorageConfig,
   addEquipmentStorage,
   updateEquipmentStorage,
   listEquipmentBrand
 } from '@/api/admin/equipment_manage_api'
 import { formatJson } from '@/utils'
 import { orgTreeSelect } from '@/api/admin/sys-org'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { listUser } from '@/api/admin/sys-user'
+
 export default {
   name: 'Storage',
-  components: { Treeselect },
+  components: {
+    BasicLayout,
+    Pagination,
+    Treeselect,
+    StorageQueryBar,
+    BatchActionBar
+  },
   data() {
     return {
       // 遮罩层
@@ -713,13 +826,12 @@ export default {
       selectedStorageMap: {},
       // 防止恢复选中时触发事件循环
       isRestoringSelection: false,
-      // 可否修改
-      UpdateDisabled: true,
-      // 可否删除
-      DeleteDisabled: true,
+      // 全选状态
+      isAllSelected: false,
+      isSelectionIndeterminate: false,
       // 总条数
       total: 0,
-      // 执法仪数据
+      // 存储数据
       StorageList: [],
       // 状态数据字典
       statusOptions: [],
@@ -767,6 +879,10 @@ export default {
       viewOpen: false,
       // 浏览数据
       viewData: {},
+      // 浏览对话框折叠状态
+      activeViewSections: ['basic', 'network'],
+      // 表单折叠状态
+      activeFormSections: ['manage', 'basic'],
       // 组织树选项
       orgOptions: undefined,
       userOptions: undefined,
@@ -967,21 +1083,10 @@ export default {
       }
       this.resetForm('form')
     },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm('queryForm')
-      this.handleQuery()
-    },
     // 取消按钮
     cancel() {
       this.open = false
       this.reset()
-    },
-
-    handleQuery() {
-      this.resetSelected()
-      this.resetPage()
-      this.getList()
     },
 
     /**
@@ -994,11 +1099,14 @@ export default {
     resetSelected() {
       this.selectedStorageMap = {}
       this.selectedStorageRecords = []
+      this.isAllSelected = false
+      this.isSelectionIndeterminate = false
     },
     // pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
     // 每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
     resetPage() {
       this.queryParams.pageIndex = 1
+      this.queryParams.pageSize = 10
     },
 
     /** 开始执行操作 */
@@ -1029,12 +1137,11 @@ export default {
       if (this.isRestoringSelection) {
         return
       }
-      // 以当前页为准增删选中项（实现跨分页记忆）
       const selectedIdSet = new Set(
         (selection || []).map((item) => item && item.id).filter(Boolean)
-      );
+      )
 
-      (this.StorageList || []).forEach((row) => {
+      ;(this.StorageList || []).forEach((row) => {
         const id = row && row.id
         if (!id) return
         if (selectedIdSet.has(id)) {
@@ -1046,6 +1153,88 @@ export default {
       this.selectedStorageRecords = Object.values(
         this.selectedStorageMap
       ).filter(Boolean)
+
+      // 更新全选状态
+      const totalCount = this.StorageList.length
+      const selectedCount = this.selectedStorageRecords.length
+      this.isAllSelected = selectedCount === totalCount && totalCount > 0
+      this.isSelectionIndeterminate = selectedCount > 0 && selectedCount < totalCount
+    },
+
+    /** 批量全选/取消全选 */
+    handleSelectAll(val) {
+      this.isAllSelected = val
+      this.isSelectionIndeterminate = false
+      this.$refs.storageTable.toggleAllSelection()
+    },
+
+    /** 查询栏相关方法 */
+    handleSearch(searchData) {
+      // 合并新的搜索条件
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key]
+      })
+
+      // 删除被清空的搜索字段
+      const searchFields = ['storageSiteNo', 'storageSiteName', 'managerOrgId', 'managerId', 'brandId', 'openStatus', 'status']
+      searchFields.forEach(field => {
+        if (!(field in searchData)) {
+          delete this.queryParams[field]
+        }
+      })
+
+      this.resetPage()
+      this.resetSelected()
+      this.getList()
+    },
+
+    handleQuickSearchReset() {
+      this.handleFilterReset()
+    },
+
+    handleOrgChange(orgId) {
+      // 当组织改变时，清空管理人员选择
+      this.queryParams.managerId = null
+      this.getQueryUser()
+    },
+
+    handleFilterReset() {
+      this.queryParams = {
+        pageIndex: 1,
+        pageSize: 10,
+        storageSiteNo: undefined,
+        storageSiteName: undefined,
+        managerOrgId: undefined,
+        managerId: undefined,
+        status: undefined,
+        brandId: undefined,
+        openStatus: undefined
+      }
+      this.resetPage()
+      this.resetSelected()
+      this.getList()
+    },
+
+    /** 刷新列表 */
+    handleRefresh() {
+      this.getList()
+    },
+
+    /** 列设置对话框打开后的焦点管理 */
+    handleColumnSettingsOpen() {
+      this.$nextTick(() => {
+        const firstCheckbox = document.querySelector(
+          '.column-settings-popover .el-checkbox:first-child .el-checkbox__input'
+        )
+        if (firstCheckbox) {
+          firstCheckbox.focus()
+        }
+      })
+    },
+
+    /** 列设置对话框关闭后的焦点管理 */
+    handleColumnSettingsClose() {
+      // 焦点自动返回触发按钮
     },
 
     restoreSelection() {
@@ -1160,25 +1349,28 @@ export default {
     async handleDelete(row) {
       try {
         var storageIds = []
-        var storageNos = []
+        var storageNames = []
         if (row && row.id !== undefined) {
           storageIds = [row.id]
-          storageNos = [row.storageSiteNo]
+          storageNames = [row.storageSiteName || row.storageSiteNo]
         } else {
           storageIds = this.selectedStorageRecords.map((item) => item.id)
-          storageNos = this.selectedStorageRecords.map(
-            (item) => item.storageSiteNo
+          storageNames = this.selectedStorageRecords.map(
+            (item) => item.storageSiteName || item.storageSiteNo
           )
         }
-        await this.$confirm(
-          '是否确认删除存储编号为"' + storageNos + '"的数据项?',
-          '信息',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'info'
-          }
-        )
+
+        const count = Array.isArray(storageIds) ? storageIds.length : 1
+        const confirmMessage = count > 1
+          ? `是否确认删除选中的 ${count} 条存储记录？此操作不可恢复。`
+          : `是否确认删除存储"${storageNames[0]}"？此操作不可恢复。`
+
+        await this.$confirm(confirmMessage, '确认删除', {
+          confirmButtonText: '删除',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+
         this.startProcessing('正在删除存储...')
         const response = await delEquipmentStorage({ ids: storageIds })
         if (response.code === 200) {
@@ -1216,12 +1408,13 @@ export default {
           Array.isArray(this.selectedStorageRecords) &&
           this.selectedStorageRecords.length > 0
 
+        const count = hasSelection ? this.selectedStorageRecords.length : 0
         const confirmText = hasSelection
-          ? `是否确认导出已勾选的 ${this.selectedStorageRecords.length} 条存储数据？`
+          ? `是否确认导出已勾选的 ${count} 条存储数据？`
           : '是否确认导出所有存储数据项？'
 
-        await this.$confirm(confirmText, '提示', {
-          confirmButtonText: '确定',
+        await this.$confirm(confirmText, '导出确认', {
+          confirmButtonText: '导出',
           cancelButtonText: '取消',
           type: 'info'
         })
@@ -1300,7 +1493,6 @@ export default {
         if (error !== 'cancel') {
           this.msgError('导出失败：' + (error.message || '未知错误'))
         }
-      } finally {
       }
     },
 
@@ -1312,36 +1504,13 @@ export default {
 }
 </script>
 
-<style scoped>
-.column-settings-trigger {
-  text-align: right;
-}
+<!--
+  样式说明：本页面全部使用全局样式
+  全局样式位置：
+  - src/styles/index.scss: .filter-container
+  - src/styles/components/search.scss: .search-section, .quick-search-form, .search-row, .search-item
+  - src/styles/components/dialogs.scss: .edit-dialog, .detail-dialog, .form-collapse
+  - src/styles/components/forms.scss: .section-header, .section-descriptions
+  - src/styles/components/buttons.scss: .action-btn, .search-action-buttons
+-->
 
-.column-settings {
-  max-height: 320px;
-  overflow-y: auto;
-}
-
-.column-settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 8px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #e4e7ed;
-  font-weight: bold;
-}
-
-.column-item {
-  padding: 6px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.column-item:last-child {
-  border-bottom: none;
-}
-
-.column-item .el-checkbox {
-  width: 100%;
-}
-</style>

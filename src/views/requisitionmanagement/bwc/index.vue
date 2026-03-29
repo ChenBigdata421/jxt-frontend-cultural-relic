@@ -2,81 +2,16 @@
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <!--inline 属性被绑定为 true，这意味着该 <el-form> 组件将以内联形式呈现。
-          内联表单通常用于在同一行上显示表单项，而不是像传统表单那样每个表单项都占据一行。
-          这对于需要紧凑布局的表单来说非常有用，尤其是在需要显示多个表单项但空间有限的情况下。-->
-        <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="执法仪编号" prop="bwcNo">
-            <el-input
-              v-model="queryParams.bwcNo"
-              placeholder="请输入执法仪编号"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="执法仪名称" prop="bwcName">
-            <el-input
-              v-model="queryParams.bwcName"
-              placeholder="请输入执法仪名称"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="管理组织" prop="managerOrgId">
-            <treeselect
-              v-model="queryParams.managerOrgId"
-              :options="orgOptions"
-              placeholder="请选择管理组织"
-              style="width: 170px"
-            />
-          </el-form-item>
-          <el-form-item label="管理人员">
-            <el-select
-              v-model="queryParams.managerId"
-              placeholder="请选择管理人员"
-              style="width: 170px"
-              clearable
-              @change="$forceUpdate()"
-            >
-              <el-option
-                v-for="item in userOptions"
-                :key="item.userId"
-                :label="item.userName"
-                :value="item.userId"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="使用状态" prop="useState">
-            <el-select
-              v-model="queryParams.useState"
-              placeholder="使用状态"
-              clearable
-              style="width: 170px"
-            >
-              <el-option
-                v-for="dict in requisitionStatusOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button
-              type="primary"
-              icon="el-icon-search"
-              size="mini"
-              @click="handleQuery"
-            >搜索</el-button>
-            <el-button
-              icon="el-icon-refresh"
-              size="mini"
-              @click="resetQuery"
-            >重置</el-button>
-          </el-form-item>
-        </el-form>
+        <!-- 查询栏组件 -->
+        <BwcQueryBar
+          ref="queryBar"
+          :org-options="orgOptions"
+          :user-options="userOptions"
+          :requisition-status-options="requisitionStatusOptions"
+          @search="handleSearch"
+          @quick-search-reset="handleQuickSearchReset"
+          @org-change="handleOrgChange"
+        />
         <!--orgList 是一个在组件中定义的数组，包含了表格要显示的数据。-->
         <!--row-key 是一个属性，用于指定表格行数据的唯一键。在这里，它指定了 id
           作为每行数据的唯一键。这有助于 Vue 跟踪每行数据的变化，提高渲染性能。-->
@@ -95,46 +30,59 @@
         >
           <el-table-column
             label="操作"
-            align="left"
+            align="center"
             class-name="small-padding fixed-width"
-            width="250"
+            width="280"
             fixed="left"
           >
             <template slot-scope="scope">
-              <el-button
-                v-if="scope.row.useState === 2"
-                v-permisaction="['bwc:requisition']"
-                size="mini"
-                type="text"
-                icon="el-icon-setting"
-                @click="handleRequisition(scope.row)"
-              >领用</el-button>
-              <el-button
-                v-if="
-                  scope.row.useState === 1 &&
-                    userId === scope.row.requisitionerId
-                "
-                v-permisaction="['bwc:return']"
-                size="mini"
-                type="text"
-                icon="el-icon-setting"
-                style="color: #ff0000"
-                @click="handleReturn(scope.row)"
-              >退还</el-button>
-              <el-button
-                v-permisaction="['bwc:info']"
-                size="mini"
-                type="text"
-                icon="el-icon-view"
-                @click="handleView(scope.row)"
-              >执法仪信息</el-button>
-              <el-button
-                v-permisaction="['bwc:requisitionrecord']"
-                size="mini"
-                type="text"
-                icon="el-icon-view"
-                @click="requisitionLog(scope.row.bwcNo)"
-              >领用记录</el-button>
+              <div class="action-buttons">
+                <el-button
+                  v-if="scope.row.useState === 2"
+                  v-permisaction="['bwc:requisition']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-setting"
+                  class="action-btn tertiary"
+                  @click="handleRequisition(scope.row)"
+                >
+                  领用
+                </el-button>
+                <el-button
+                  v-if="
+                    scope.row.useState === 1 &&
+                      userId === scope.row.requisitionerId
+                  "
+                  v-permisaction="['bwc:return']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-refresh-left"
+                  class="action-btn tertiary-danger"
+                  @click="handleReturn(scope.row)"
+                >
+                  退还
+                </el-button>
+                <el-button
+                  v-permisaction="['bwc:info']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >
+                  执法仪信息
+                </el-button>
+                <el-button
+                  v-permisaction="['bwc:requisitionrecord']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="requisitionLog(scope.row.bwcNo)"
+                >
+                  领用记录
+                </el-button>
+              </div>
             </template>
           </el-table-column>
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
@@ -155,7 +103,7 @@
           <el-table-column
             prop="managerOrgFullName"
             label="管理组织"
-            width="300"
+            min-width="150"
           />
           <el-table-column prop="useState" label="领用状态" width="80">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
@@ -172,7 +120,7 @@
           <el-table-column
             prop="requisitionerOrgFullName"
             label="领用者组织"
-            width="300"
+            min-width="150"
           />
         </el-table>
         <pagination
@@ -189,6 +137,7 @@
           width="1200px"
           :close-on-click-modal="false"
           append-to-body
+          custom-class="edit-dialog"
         >
           <RequisitionLogSelector :bwc-no="currentBwcNo" />
         </el-dialog>
@@ -198,69 +147,137 @@
           :visible.sync="ViewOpen"
           width="800px"
           append-to-body
+          :close-on-click-modal="false"
+          custom-class="detail-dialog"
         >
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="执法仪编号">{{
-              viewData.bwcNo || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="执法仪名称">{{
-              viewData.bwcName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="品牌">{{
-              viewData.brandName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="管理组织">{{
-              viewData.managerOrgFullName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="管理人员">{{
-              viewData.managerName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="是否可用">{{
-              selectDictLabel(enableUseOptions, viewData.enableUse) || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="状态">{{
-              selectDictLabel(stateOptions, viewData.status) || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="CPU">{{
-              viewData.cpu || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="内存(G)">{{
-              viewData.memory || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="存储(G)">{{
-              viewData.disk || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="网卡">{{
-              viewData.networkCard || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="USB数量">{{
-              viewData.usbNum || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="操作系统">{{
-              viewData.system || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="版本">{{
-              viewData.version || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="购买时间">{{
-              viewData.purchaseDate ? parseTime(viewData.purchaseDate) : "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="领用状态">{{
-              selectDictLabel(requisitionStatusOptions, viewData.useState) ||
-                "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="领用者">{{
-              viewData.requisitionerName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="领用者组织">{{
-              viewData.requisitionerOrgFullName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="备注" :span="2">{{
-              viewData.remark || "无"
-            }}</el-descriptions-item>
-          </el-descriptions>
+          <el-collapse v-model="activeDetailSections" class="form-collapse">
+
+            <!-- 基础信息 -->
+            <el-collapse-item name="basic" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-document section-icon" />
+                  <span class="section-title">基础信息</span>
+                  <span class="section-badge">5项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="执法仪编号">{{
+                  viewData.bwcNo || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="执法仪名称">{{
+                  viewData.bwcName || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="品牌">{{
+                  viewData.brandName || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="管理组织">{{
+                  viewData.managerOrgFullName || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="管理人员">{{
+                  viewData.managerName || "-"
+                }}</el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 设备信息 -->
+            <el-collapse-item name="device" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-setting section-icon" />
+                  <span class="section-title">设备信息</span>
+                  <span class="section-badge">7项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="CPU">{{
+                  viewData.cpu || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="内存(G)">{{
+                  viewData.memory || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="存储(G)">{{
+                  viewData.disk || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="网卡">{{
+                  viewData.networkCard || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="USB数量">{{
+                  viewData.usbNum || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="操作系统">{{
+                  viewData.system || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="版本">{{
+                  viewData.version || "-"
+                }}</el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 状态信息 -->
+            <el-collapse-item name="status" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-star-on section-icon" />
+                  <span class="section-title">状态信息</span>
+                  <span class="section-badge">3项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="是否可用">{{
+                  selectDictLabel(enableUseOptions, viewData.enableUse) || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="状态">{{
+                  selectDictLabel(stateOptions, viewData.status) || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="领用状态">{{
+                  selectDictLabel(requisitionStatusOptions, viewData.useState) || "-"
+                }}</el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 领用信息 -->
+            <el-collapse-item name="requisition" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-user section-icon" />
+                  <span class="section-title">领用信息</span>
+                  <span class="section-badge">2项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="领用者">{{
+                  viewData.requisitionerName || "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="领用者组织">{{
+                  viewData.requisitionerOrgFullName || "-"
+                }}</el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+            <!-- 其他信息 -->
+            <el-collapse-item name="other" class="detail-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-info section-icon" />
+                  <span class="section-title">其他信息</span>
+                  <span class="section-badge">2项</span>
+                </div>
+              </template>
+              <el-descriptions :column="2" border class="section-descriptions">
+                <el-descriptions-item label="购买时间">{{
+                  viewData.purchaseDate ? parseTime(viewData.purchaseDate) : "-"
+                }}</el-descriptions-item>
+                <el-descriptions-item label="备注" :span="2">{{
+                  viewData.remark || "无"
+                }}</el-descriptions-item>
+              </el-descriptions>
+            </el-collapse-item>
+
+          </el-collapse>
+
           <div slot="footer" class="dialog-footer">
-            <el-button @click="ViewOpen = false">关 闭</el-button>
+            <el-button type="text" class="action-btn tertiary" size="small" @click="ViewOpen = false">关 闭</el-button>
           </div>
         </el-dialog>
       </el-card>
@@ -275,13 +292,13 @@ import {
   bwcReturn
 } from '@/api/admin/bwc_requisition_manage_api'
 import { orgTreeSelect } from '@/api/admin/sys-org'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { listUser } from '@/api/admin/sys-user'
 import RequisitionLogSelector from '@/components/RequisitionLogSelector'
+import BwcQueryBar from '@/components/BwcQueryBar/index.vue'
+
 export default {
   name: 'LawCaremaRequisition',
-  components: { Treeselect, RequisitionLogSelector },
+  components: { RequisitionLogSelector, BwcQueryBar },
   data() {
     return {
       // 遮罩层
@@ -303,6 +320,8 @@ export default {
       ViewOpen: false,
       // 是否显示领用记录对话框
       requisitionLogOpen: false,
+      // 详情对话框折叠状态
+      activeDetailSections: ['basic', 'device', 'status'],
       // 状态数据字典
       stateOptions: [],
       // 是否可用数据字典
@@ -335,18 +354,6 @@ export default {
     },
     orgId() {
       return this.$store.state.user.orgid
-    }
-  },
-  watch: {
-    'queryParams.managerOrgId': function(newVal) {
-      // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
-      if (newVal) {
-        this.queryParams.managerId = null // 清空管理人员选择
-        this.getQueryUser()
-      } else {
-        this.userOptions = []
-        this.queryParams.managerId = undefined
-      }
     }
   },
   created() {
@@ -394,16 +401,6 @@ export default {
           this.userOptions = response.data.list
         }
       )
-    },
-    /** 重置按钮操作
-     * resetForm() 清空表单字段时，managerOrgId 的变化触发了 watch 监听器，watch 会异步清空 managerId 和 userOptions。
-     * 但 resetQuery() 中的 handleQuery() 是同步执行的，导致查询时数据还未完全清空，需要再点一次才能获取完整数据。
-     * $nextTick() 包装 handleQuery()，确保表单重置和 watch 监听器完全执行后再进行查询*/
-    resetQuery() {
-      this.resetForm('queryForm')
-      this.$nextTick(() => {
-        this.handleQuery()
-      })
     },
     handleReturn(row) {
       bwcReturn({ id: row.id }).then((response) => {
@@ -464,6 +461,52 @@ export default {
       this.reset()
     },
     /** 搜索按钮操作 */
+    handleSearch(searchData) {
+      // 合并搜索条件
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key]
+      })
+
+      // 清空被删除的搜索字段
+      const searchFields = ['bwcNo', 'bwcName', 'managerOrgId', 'managerId', 'useState']
+      searchFields.forEach(field => {
+        if (!(field in searchData)) {
+          this.queryParams[field] = undefined
+        }
+      })
+
+      this.queryParams.pageIndex = 1
+      this.getList()
+    },
+    /** 快速搜索重置 */
+    handleQuickSearchReset() {
+      // 重置查询参数
+      this.queryParams = {
+        pageIndex: 1,
+        pageSize: 10,
+        bwcNo: undefined,
+        bwcName: undefined,
+        managerOrgId: undefined,
+        managerId: undefined,
+        useState: undefined
+      }
+      this.userOptions = []
+      this.$nextTick(() => {
+        this.handleQuery()
+      })
+    },
+    /** 管理组织变更 */
+    handleOrgChange(orgId) {
+      this.queryParams.managerOrgId = orgId
+      if (orgId) {
+        this.queryParams.managerId = null
+        this.getQueryUser()
+      } else {
+        this.userOptions = []
+        this.queryParams.managerId = undefined
+      }
+    },
+    /** 搜索按钮操作（保留用于重置后的查询） */
     handleQuery() {
       this.queryParams.pageIndex = 1
       this.getList()
@@ -482,3 +525,14 @@ export default {
   }
 }
 </script>
+
+<!--
+  样式说明：本页面全部使用全局样式
+  全局样式位置：
+  - src/styles/index.scss: .filter-container
+  - src/styles/components/search.scss: .search-section, .quick-search-form, .search-row, .search-item
+  - src/styles/components/dialogs.scss: .edit-dialog, .detail-dialog, .form-collapse
+  - src/styles/components/forms.scss: .section-header, .section-descriptions
+  - src/styles/components/buttons.scss: .action-btn, .search-action-buttons
+-->
+

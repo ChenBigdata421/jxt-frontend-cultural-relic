@@ -1,9 +1,9 @@
 <template>
-  <div class="search-section">
+  <div class="search-input-wrapper">
     <div class="quick-search-form">
-      <div class="search-row">
+      <div class="search-row search-row-5">
         <div class="search-item">
-          <label>警情编号</label>
+          <label class="search-label">警情编号</label>
           <el-input
             v-model="searchForm.code"
             placeholder="请输入警情编号"
@@ -12,7 +12,7 @@
           />
         </div>
         <div class="search-item">
-          <label>警情标题</label>
+          <label class="search-label">警情标题</label>
           <el-input
             v-model="searchForm.title"
             placeholder="请输入警情标题"
@@ -21,7 +21,7 @@
           />
         </div>
         <div class="search-item">
-          <label>报警人姓名</label>
+          <label class="search-label">报警人姓名</label>
           <el-input
             v-model="searchForm.name"
             placeholder="请输入报警人姓名"
@@ -30,7 +30,7 @@
           />
         </div>
         <div class="search-item">
-          <label>状态</label>
+          <label class="search-label">状态</label>
           <el-select
             v-model="searchForm.status"
             placeholder="请选择状态"
@@ -45,7 +45,7 @@
           </el-select>
         </div>
         <div class="search-item">
-          <label>是否关联</label>
+          <label class="search-label">是否关联</label>
           <el-select
             v-model="searchForm.isRelation"
             placeholder="请选择是否关联"

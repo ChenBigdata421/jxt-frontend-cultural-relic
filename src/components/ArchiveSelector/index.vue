@@ -1,7 +1,7 @@
 <template>
   <div class="archive-selector">
     <!-- 新的查询栏组件 -->
-    <div class="query-section">
+    <div class="search-section">
       <ArchiveQueryBar
         ref="queryBar"
         :status-options="statusOptions"

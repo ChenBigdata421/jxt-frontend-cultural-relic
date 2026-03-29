@@ -3,7 +3,7 @@
     <div class="quick-search-form">
       <div class="search-row">
         <div class="search-item">
-          <label>媒体名称</label>
+          <label class="search-label">媒体名称</label>
           <el-input
             v-model="searchForm.mediaName"
             placeholder="请输入媒体名称"
@@ -12,7 +12,7 @@
           />
         </div>
         <div class="search-item">
-          <label>媒体类型</label>
+          <label class="search-label">媒体类型</label>
           <el-select
             v-model="searchForm.mediaCate"
             placeholder="请选择媒体类型"
@@ -27,7 +27,7 @@
           </el-select>
         </div>
         <div class="search-item">
-          <label>是否归档</label>
+          <label class="search-label">是否归档</label>
           <el-select
             v-model="searchForm.isArchived"
             placeholder="请选择是否归档"
@@ -42,7 +42,7 @@
           </el-select>
         </div>
         <div class="search-item">
-          <label>警情号</label>
+          <label class="search-label">警情号</label>
           <el-input
             v-model="searchForm.incidentCode"
             placeholder="请输入警情号"
@@ -108,59 +108,9 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
-@import '@/styles/tokens/index.scss';
+<!--
+  样式说明：本组件全部使用全局样式
+  全局样式位置：
+  - src/styles/components/search.scss: .search-row, .search-item, .search-label
+-->
 
-.search-input-wrapper {
-  width: 100%;
-
-  .quick-search-form {
-    background-color: transparent;
-    padding: 0;
-    border-radius: 0;
-    border: none;
-
-    .search-row {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: $spacing-3;
-      margin-bottom: $spacing-3;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-
-      .search-item {
-        flex: 1;
-        min-width: 180px;
-        display: flex;
-        align-items: center;
-        gap: $spacing-3;
-
-        label {
-          white-space: nowrap;
-          font-size: $font-size-sm;
-          font-weight: $font-weight-medium;
-          color: $law-gray-700;
-          width: 80px;
-          flex-shrink: 0;
-          text-align: right;
-        }
-
-        .time-range-picker {
-          flex: 1;
-          min-width: 300px;
-        }
-      }
-
-      // 使用 ::v-deep 确保样式正确应用到 Element UI 组件
-      ::v-deep .el-input,
-      ::v-deep .el-select {
-        flex: 1;
-        min-width: 0;
-      }
-    }
-  }
-}
-</style>

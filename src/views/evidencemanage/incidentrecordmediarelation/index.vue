@@ -3,18 +3,16 @@
     <template #wrapper>
       <el-card class="box-card">
         <!-- 新的查询栏组件 -->
-        <div class="query-section">
-          <IncidentQueryBar
-            ref="queryBar"
-            :status-options="statusOptions"
-            :relation-status-options="incidentRelationStatusOptions"
-            :org-options="orgOptions"
-            @search="handleSearch"
-            @quick-search-reset="handleQuickSearchReset"
-            @filter-change="handleFilterChange"
-            @filter-reset="handleFilterReset"
-          />
-        </div>
+        <IncidentQueryBar
+          ref="queryBar"
+          :status-options="statusOptions"
+          :relation-status-options="incidentRelationStatusOptions"
+          :org-options="orgOptions"
+          @search="handleSearch"
+          @quick-search-reset="handleQuickSearchReset"
+          @filter-change="handleFilterChange"
+          @filter-reset="handleFilterReset"
+        />
 
         <!-- 主操作栏 -->
         <div class="main-action-bar">
@@ -1513,7 +1511,7 @@ export default {
 @import '@/styles/tokens/index.scss';
 
 /* 本页面使用的样式类已全部在全局样式中定义：
-   - .query-section → src/styles/components/dialogs.scss:358-360
+   - .search-section → src/styles/components/search.scss:6-8
    - .main-action-bar → src/styles/components/dialogs.scss:132-150
    - .action-buttons → src/styles/components/forms.scss:149-172 和 table.scss:77-108
    - .action-btn.* → src/styles/components/buttons.scss

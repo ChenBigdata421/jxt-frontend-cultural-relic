@@ -3,18 +3,17 @@
     <template #wrapper>
       <el-card class="box-card">
         <!-- 新的查询栏组件 -->
-        <div class="query-section">
-          <IncidentQueryBar
-            ref="queryBar"
-            :status-options="statusOptions"
-            :relation-status-options="incidentRelationStatusOptions"
-            :org-options="orgOptions"
-            @search="handleSearch"
-            @quick-search-reset="handleQuickSearchReset"
-            @filter-change="handleFilterChange"
-            @filter-reset="handleFilterReset"
-          />
-        </div>
+        <IncidentQueryBar
+          ref="queryBar"
+          :status-options="statusOptions"
+          :relation-status-options="incidentRelationStatusOptions"
+          :org-options="orgOptions"
+          @search="handleSearch"
+          @quick-search-reset="handleQuickSearchReset"
+          @filter-change="handleFilterChange"
+          @filter-reset="handleFilterReset"
+        />
+
         <!-- 批量操作栏 -->
         <BatchActionBar
           :selected-count="selectedIncidentRecords.length"
@@ -914,13 +913,10 @@ import {
   delIncidentRecordById,
   addIncidentRecord,
   updateIncidentRecord,
-  batchDelIncidentRecord,
-  addIncidentRecordMediaRelations,
-  delIncidentRecordMediaRelations
+  batchDelIncidentRecord
 } from '@/api/evidence/evidence_manage_command_api'
 import {
-  getIncidentRecordList,
-  getIncidentRecordMediaRelationsByIncidentRecord
+  getIncidentRecordList
 } from '@/api/evidence/evidence_manage_query_api'
 import { getEnforceTypeTree } from '@/api/admin/enforcetype'
 import { formatJson } from '@/utils'
@@ -1437,7 +1433,8 @@ export default {
         this.queryParams.status = 3
       } else if (filterData.filterType === 'advanced') {
         // 高级筛选 - 合并筛选参数（移除 filterType，只保留实际的查询条件）
-        const { filterType, ...actualFilterData } = filterData
+        // eslint-disable-next-line no-unused-vars
+        const { filterType: _, ...actualFilterData } = filterData
         Object.assign(this.queryParams, actualFilterData)
 
         // 删除被清空的时间范围字段
@@ -1789,7 +1786,6 @@ export default {
         if (error !== 'cancel') {
           this.msgError('导出失败：' + (error.message || '未知错误'))
         }
-      } finally {
       }
     },
 

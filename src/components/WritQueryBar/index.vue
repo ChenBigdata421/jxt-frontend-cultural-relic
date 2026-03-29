@@ -3,7 +3,7 @@
     <!-- 统一的筛选容器 -->
     <div class="filter-container">
       <!-- 快速搜索区域 -->
-      <div class="query-section">
+      <div class="search-section">
         <SearchInput
           ref="quickSearch"
           :writ-type-options="writTypeOptions"
@@ -14,7 +14,7 @@
       </div>
 
       <!-- 快捷筛选 -->
-      <div class="query-section">
+      <div class="search-section">
         <div class="filter-row">
           <span class="section-label-inline">快捷筛选</span>
           <QuickFilters
@@ -25,7 +25,7 @@
       </div>
 
       <!-- 高级筛选面板 -->
-      <div class="query-section">
+      <div class="search-section">
         <AdvancedFilterPanel
           ref="advancedFilter"
           :org-options="orgOptions"
@@ -141,7 +141,7 @@ export default {
 <!--
   样式说明：本组件全部使用全局样式
   全局样式位置：
-  - src/styles/index.scss: .filter-container, .query-section
+  - src/styles/index.scss: .filter-container
+  - src/styles/components/search.scss: .search-section
   - src/styles/components/forms.scss: .filter-row, .section-label
-  - src/styles/components/dialogs.scss: .query-section
 -->

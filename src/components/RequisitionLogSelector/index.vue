@@ -1,88 +1,40 @@
 <template>
   <div class="requisition-log-selector">
-    <!-- 查询条件 -->
-    <el-form
-      ref="queryForm"
-      :model="queryParams"
-      :inline="true"
-      label-width="120px"
-    >
-      <el-form-item label="领用人组织" prop="requisitionerOrgId">
-        <treeselect
-          v-model="queryParams.requisitionerOrgId"
-          :options="orgOptions"
-          placeholder="请选择领用人组织"
-          style="width: 200px"
-        />
-      </el-form-item>
-      <el-form-item label="领用人" prop="requisitionerId">
-        <el-select
-          v-model="queryParams.requisitionerId"
-          placeholder="请选择领用人"
-          style="width: 200px"
-          clearable
-          filterable
-        >
-          <el-option
-            v-for="user in userOptions"
-            :key="user.userId"
-            :label="user.userName"
-            :value="user.userId"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="领用开始时间">
-        <el-date-picker
-          v-model="requisitionStartTimeRange"
-          type="datetimerange"
-          range-separator="至"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          value-format="yyyy-MM-dd HH:mm:ss"
-          style="width: 360px"
-        />
-      </el-form-item>
-      <el-form-item label="领用结束时间">
-        <el-date-picker
-          v-model="requisitionEndTimeRange"
-          type="datetimerange"
-          range-separator="至"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          value-format="yyyy-MM-dd HH:mm:ss"
-          style="width: 360px"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button
-          type="primary"
-          icon="el-icon-search"
-          @click="handleQuery"
-        >搜索</el-button>
-        <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+    <!-- 查询栏组件 -->
+    <RequisitionLogQueryBar
+      ref="queryBar"
+      :org-options="orgOptions"
+      :user-options="userOptions"
+      @search="handleSearch"
+      @quick-search-reset="handleQuickSearchReset"
+      @filter-change="handleFilterChange"
+      @filter-reset="handleFilterReset"
+      @org-change="handleOrgChange"
+    />
 
     <!-- 数据表格 -->
     <el-table
+      ref="requisitionLogTable"
       v-loading="loading"
       :data="requisitionLogList"
       border
-      style="margin-top: 10px"
+      class="data-table"
     >
-      <el-table-column prop="bwcNo" label="执法仪编号" width="120" />
-      <el-table-column prop="bwcName" label="执法仪名称" width="120" />
-      <el-table-column prop="requisitionerName" label="领用人" width="100" />
+      <el-table-column prop="bwcNo" label="执法仪编号" width="120" align="center" />
+      <el-table-column prop="bwcName" label="执法仪名称" width="150" align="center" show-overflow-tooltip />
+      <el-table-column prop="requisitionerName" label="领用人" width="120" align="center" />
       <el-table-column
         prop="requisitionerOrgName"
         label="领用人组织"
-        min-width="200"
+        min-width="180"
+        align="center"
         show-overflow-tooltip
       />
       <el-table-column
         prop="requisitionStartTime"
         label="领用开始时间"
-        width="160"
+        width="180"
+        align="center"
       >
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.requisitionStartTime) }}</span>
@@ -91,7 +43,8 @@
       <el-table-column
         prop="requisitionEndTime"
         label="领用结束时间"
-        width="160"
+        width="180"
+        align="center"
       >
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.requisitionEndTime) }}</span>
@@ -114,14 +67,12 @@
 import { getBwcLogList } from '@/api/admin/bwc_requisition_manage_api'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import RequisitionLogQueryBar from '@/components/RequisitionLogQueryBar/index.vue'
 
 export default {
   name: 'RequisitionLogSelector',
-  components: { Treeselect },
+  components: { RequisitionLogQueryBar },
   props: {
-    // 执法仪编号（可选，如果传入则只查询该执法仪的记录）
     bwcNo: {
       type: String,
       default: undefined
@@ -129,83 +80,50 @@ export default {
   },
   data() {
     return {
-      // 加载状态
       loading: false,
-      // 领用记录列表
       requisitionLogList: [],
-      // 总条数
       total: 0,
-      // 组织树选项
       orgOptions: [],
-      // 用户选项
       userOptions: [],
-      // 领用开始时间范围
-      requisitionStartTimeRange: null,
-      // 领用结束时间范围
-      requisitionEndTimeRange: null,
-      // 查询参数
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
-        bwcNo: undefined, // 执法仪编号
-        requisitionerId: undefined, // 领用人ID
-        requisitionerOrgId: undefined, // 领用人组织ID
-        requisitionStartTimeBegin: undefined, // 领用开始时间-开始
-        requisitionStartTimeEnd: undefined, // 领用开始时间-结束
-        requisitionEndTimeBegin: undefined, // 领用结束时间-开始
-        requisitionEndTimeEnd: undefined // 领用结束时间-结束
+        bwcNo: undefined,
+        requisitionerId: undefined,
+        requisitionerOrgId: undefined,
+        requisitionStartTimeBegin: undefined,
+        requisitionStartTimeEnd: undefined,
+        requisitionEndTimeBegin: undefined,
+        requisitionEndTimeEnd: undefined
       }
     }
   },
   watch: {
-    // 监听执法仪编号变化
     bwcNo: {
       handler(newVal) {
         this.queryParams.bwcNo = newVal
-        // 重置分页和查询条件
-        this.queryParams.pageIndex = 1
-        this.requisitionStartTimeRange = null
-        this.requisitionEndTimeRange = null
-        this.queryParams.requisitionerId = undefined
-        this.queryParams.requisitionerOrgId = undefined
-        this.queryParams.requisitionStartTimeBegin = undefined
-        this.queryParams.requisitionStartTimeEnd = undefined
-        this.queryParams.requisitionEndTimeBegin = undefined
-        this.queryParams.requisitionEndTimeEnd = undefined
+        this.resetQueryParams()
         if (newVal) {
           this.getList()
         }
       },
       immediate: true
-    },
-    // 监听组织变化，加载该组织下的用户
-    'queryParams.requisitionerOrgId': function(newVal) {
-      if (newVal) {
-        this.queryParams.requisitionerId = undefined
-        this.getUserList()
-      } else {
-        this.userOptions = []
-        this.queryParams.requisitionerId = undefined
-      }
     }
   },
   created() {
     this.getOrgTree()
   },
   mounted() {
-    // 组件挂载时，如果已有 bwcNo，立即查询
     if (this.bwcNo) {
       this.getList()
     }
   },
   methods: {
-    /** 查询组织树 */
     getOrgTree() {
       orgTreeSelect().then((response) => {
         this.orgOptions = response.data
       })
     },
-    /** 查询用户列表 */
     getUserList() {
       if (!this.queryParams.requisitionerOrgId) return
       listUser({ orgId: '/' + this.queryParams.requisitionerOrgId + '/' }).then(
@@ -214,36 +132,9 @@ export default {
         }
       )
     },
-    /** 查询领用记录列表 */
     async getList() {
       this.loading = true
       try {
-        // 处理时间范围
-        if (
-          this.requisitionStartTimeRange &&
-          this.requisitionStartTimeRange.length === 2
-        ) {
-          this.queryParams.requisitionStartTimeBegin =
-            this.requisitionStartTimeRange[0]
-          this.queryParams.requisitionStartTimeEnd =
-            this.requisitionStartTimeRange[1]
-        } else {
-          this.queryParams.requisitionStartTimeBegin = undefined
-          this.queryParams.requisitionStartTimeEnd = undefined
-        }
-
-        if (
-          this.requisitionEndTimeRange &&
-          this.requisitionEndTimeRange.length === 2
-        ) {
-          this.queryParams.requisitionEndTimeBegin =
-            this.requisitionEndTimeRange[0]
-          this.queryParams.requisitionEndTimeEnd =
-            this.requisitionEndTimeRange[1]
-        } else {
-          this.queryParams.requisitionEndTimeBegin = undefined
-          this.queryParams.requisitionEndTimeEnd = undefined
-        }
         const query = this.normalizeQueryParams(this.queryParams)
         const response = await getBwcLogList(query)
         const data = (response && response.data) || {}
@@ -258,19 +149,57 @@ export default {
         this.loading = false
       }
     },
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageIndex = 1
+    handleSearch(searchData) {
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key]
+      })
+      this.resetPage()
       this.getList()
     },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.requisitionStartTimeRange = null
-      this.requisitionEndTimeRange = null
-      this.resetForm('queryForm')
-      this.$nextTick(() => {
-        this.handleQuery()
-      })
+    handleQuickSearchReset() {
+      this.handleFilterReset()
+    },
+    handleFilterChange(filterData) {
+      // 处理高级筛选
+      if (filterData.filterType === 'advanced') {
+        // 高级筛选 - 合并筛选参数
+        Object.keys(filterData).forEach(key => {
+          if (key !== 'filterType') {
+            this.queryParams[key] = filterData[key]
+          }
+        })
+      }
+
+      this.resetPage()
+      this.getList()
+    },
+    handleFilterReset() {
+      this.resetQueryParams()
+      this.resetPage()
+      this.getList()
+    },
+    handleOrgChange(orgId) {
+      if (orgId) {
+        this.queryParams.requisitionerOrgId = orgId
+        this.queryParams.requisitionerId = undefined
+        this.getUserList()
+      } else {
+        this.userOptions = []
+        this.queryParams.requisitionerOrgId = undefined
+        this.queryParams.requisitionerId = undefined
+      }
+    },
+    resetQueryParams() {
+      this.queryParams.pageIndex = 1
+      this.queryParams.requisitionerId = undefined
+      this.queryParams.requisitionerOrgId = undefined
+      this.queryParams.requisitionStartTimeBegin = undefined
+      this.queryParams.requisitionStartTimeEnd = undefined
+      this.queryParams.requisitionEndTimeBegin = undefined
+      this.queryParams.requisitionEndTimeEnd = undefined
+    },
+    resetPage() {
+      this.queryParams.pageIndex = 1
     },
     normalizeQueryParams(params = {}) {
       const query = { ...params }
@@ -285,8 +214,6 @@ export default {
             key === 'requisitionEndTimeEnd') &&
           typeof value === 'string'
         ) {
-          // 将本地时间字符串转换为 ISO 8601 格式（UTC 时间）
-          // 例如: "2024-01-04 08:30:00" -> "2024-01-04T00:30:00.000Z"
           const date = new Date(value)
           if (!isNaN(date.getTime())) {
             query[key] = date.toISOString()
@@ -302,5 +229,9 @@ export default {
 <style scoped>
 .requisition-log-selector {
   padding: 10px;
+}
+
+.data-table {
+  margin-top: 10px;
 }
 </style>

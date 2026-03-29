@@ -2,148 +2,103 @@
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="场地编号" prop="trialNo">
-            <el-input
-              v-model="queryParams.trialNo"
-              placeholder="请输入场地编号"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="场地名称" prop="trialName">
-            <el-input
-              v-model="queryParams.trialName"
-              placeholder="请输入场地名称"
-              clearable
-              style="width: 170px"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="管理组织" prop="managerOrgId">
-            <treeselect
-              v-model="queryParams.managerOrgId"
-              :options="orgOptions"
-              placeholder="请选择管理组织"
-              style="width: 170px"
-            />
-          </el-form-item>
-          <el-form-item label="管理人员" prop="managerId">
-            <el-select
-              v-model="queryParams.managerId"
-              placeholder="请选择管理人员"
-              style="width: 170px"
-              clearable
-              @change="$forceUpdate()"
-            >
-              <el-option
-                v-for="item in userOptions"
-                :key="item.userId"
-                :label="item.userName"
-                :value="item.userId"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="品牌" prop="brandId">
-            <el-select
-              v-model="queryParams.brandId"
-              placeholder="请选择品牌"
-              style="width: 170px"
-              clearable
-            >
-              <el-option
-                v-for="item in brandOptions"
-                :key="item.id"
-                :label="item.brandName"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="状态" prop="status">
-            <el-select
-              v-model="queryParams.status"
-              placeholder="状态"
-              clearable
-              style="width: 170px"
-            >
-              <el-option
-                v-for="dict in statusOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-                style="width: 150px"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
+        <!-- 查询栏 -->
+        <EquipmentQueryBar
+          ref="queryBar"
+          :fields="{
+            no: true,
+            name: true,
+            org: true,
+            user: true,
+            brand: true,
+            status: true
+          }"
+          :labels="{
+            no: '场地编号',
+            name: '场地名称'
+          }"
+          :field-mapping="{
+            no: 'trialNo',
+            name: 'trialName'
+          }"
+          :org-options="orgOptions"
+          :user-options="userOptions"
+          :brand-options="brandOptions"
+          :status-options="statusOptions"
+          @search="handleSearch"
+          @quick-search-reset="handleQuickSearchReset"
+          @org-change="handleOrgChange"
+        />
+
+        <!-- 批量操作栏 -->
+        <BatchActionBar
+          :selected-count="selectedTrialRecords.length"
+          :is-indeterminate="isSelectionIndeterminate"
+          :all-selected="isAllSelected"
+          @select-all-change="handleSelectAll"
+        />
+
+        <!-- 主操作栏 -->
+        <div class="main-action-bar">
+          <div class="left-actions">
             <el-button
+              v-permisaction="['equipment:trial:create']"
               type="primary"
-              icon="el-icon-search"
-              size="mini"
-              @click="handleQuery"
-            >搜索</el-button>
+              icon="el-icon-plus"
+              size="small"
+              @click="handleAdd"
+            >
+              新增场地
+            </el-button>
             <el-button
               icon="el-icon-refresh"
-              size="mini"
-              @click="resetQuery"
-            >重置</el-button>
-          </el-form-item>
-        </el-form>
-
-        <el-row :gutter="10" class="mb8" type="flex" justify="space-between">
-          <el-col :span="18">
-            <el-row :gutter="10">
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['equipment:trial:create']"
-                  type="primary"
-                  icon="el-icon-plus"
-                  size="mini"
-                  @click="handleAdd"
-                >新增</el-button>
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['equipment:trial:edit']"
-                  type="success"
-                  icon="el-icon-edit"
-                  size="mini"
-                  :disabled="selectedTrialRecords.length !== 1"
-                  @click="handleUpdate"
-                >修改</el-button>
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['equipment:trial:remove']"
-                  type="danger"
-                  icon="el-icon-delete"
-                  size="mini"
-                  :disabled="selectedTrialRecords.length === 0"
-                  @click="handleDelete"
-                >删除</el-button>
-              </el-col>
-              <el-col :span="1.5">
-                <el-button
-                  v-permisaction="['equipment:trial:export']"
-                  type="warning"
-                  icon="el-icon-download"
-                  size="mini"
-                  @click="handleExport"
-                >导出</el-button>
-              </el-col>
-            </el-row>
-          </el-col>
-          <el-col :span="6" class="column-settings-trigger">
-            <el-popover placement="bottom-end" width="280" trigger="click">
+              size="small"
+              type="text"
+              class="action-btn tertiary"
+              @click="handleRefresh"
+            >
+              刷新
+            </el-button>
+            <el-button
+              v-permisaction="['equipment:trial:export']"
+              icon="el-icon-download"
+              size="small"
+              class="action-btn secondary"
+              @click="handleExport"
+            >
+              导出
+            </el-button>
+            <el-button
+              v-permisaction="['equipment:trial:remove']"
+              icon="el-icon-delete"
+              size="small"
+              class="action-btn tertiary-danger"
+              :disabled="selectedTrialRecords.length === 0"
+              @click="handleDelete"
+            >
+              删除
+            </el-button>
+          </div>
+          <div class="right-actions">
+            <el-popover
+              ref="columnSettingsPopover"
+              placement="bottom-end"
+              width="280"
+              trigger="click"
+              popper-class="column-settings-popover"
+              :visible-arrow="true"
+            >
               <div class="column-settings">
                 <div class="column-settings-header">
-                  <span>列显示设置</span>
+                  <span class="column-settings-title">列显示设置</span>
                   <el-button
                     type="text"
-                    size="mini"
+                    size="small"
+                    class="column-settings-reset"
                     @click="resetColumns"
-                  >重置</el-button>
+                  >
+                    重置
+                  </el-button>
                 </div>
                 <el-checkbox-group
                   v-model="visibleColumns"
@@ -162,13 +117,18 @@
               </div>
               <el-button
                 slot="reference"
-                size="mini"
+                size="small"
                 icon="el-icon-setting"
-              >列设置</el-button>
+                type="text"
+                class="action-btn tertiary"
+              >
+                列设置
+              </el-button>
             </el-popover>
-          </el-col>
-        </el-row>
+          </div>
+        </div>
 
+        <!-- 场地列表 -->
         <el-table
           ref="trialTable"
           v-loading="loading"
@@ -177,96 +137,111 @@
           @selection-change="handleSelectionChange"
           @sort-change="handleSortChang"
         >
-          <el-table-column type="selection" width="55" align="center" />
+          <el-table-column type="selection" width="60" align="center" />
           <el-table-column
             label="操作"
-            align="left"
+            align="center"
             class-name="small-padding fixed-width"
-            width="200"
+            width="260"
             fixed="left"
           >
             <template slot-scope="scope">
-              <el-button
-                v-permisaction="['equipment:trial:browse']"
-                size="mini"
-                type="text"
-                icon="el-icon-view"
-                @click="handleView(scope.row)"
-              >浏览</el-button>
-              <el-button
-                v-permisaction="['equipment:trial:edit']"
-                size="mini"
-                type="text"
-                icon="el-icon-edit"
-                @click="handleUpdate(scope.row)"
-              >修改</el-button>
-              <el-button
-                v-permisaction="['equipment:trial:remove']"
-                size="mini"
-                type="text"
-                icon="el-icon-delete"
-                @click="handleDelete(scope.row)"
-              >删除</el-button>
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['equipment:trial:browse']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >
+                  浏览
+                </el-button>
+                <el-button
+                  v-permisaction="['equipment:trial:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  v-permisaction="['equipment:trial:remove']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
           <el-table-column
-            v-if="isColumnVisible('trialNo')"
+            v-if="isColumnVisible('no')"
             label="编号"
-            sortable="custom"
+            align="center"
             prop="trialNo"
+            sortable="custom"
             width="120"
           />
           <el-table-column
-            v-if="isColumnVisible('trialName')"
+            v-if="isColumnVisible('name')"
             label="名称"
-            sortable="custom"
+            align="center"
             prop="trialName"
+            sortable="custom"
             min-width="140"
-            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('brandName')"
             label="品牌名称"
+            align="center"
             prop="brandName"
             min-width="140"
-            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('managerName')"
-            prop="managerName"
             label="管理员"
+            align="center"
+            prop="managerName"
             width="120"
           />
           <el-table-column
             v-if="isColumnVisible('managerOrgFullName')"
-            prop="managerOrgFullName"
             label="管理员所在组织"
+            align="center"
+            prop="managerOrgFullName"
             min-width="180"
-            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('trialIp')"
             label="IP"
+            align="center"
             prop="trialIp"
             width="140"
           />
           <el-table-column
             v-if="isColumnVisible('address')"
             label="地址"
+            align="center"
             prop="address"
             min-width="160"
-            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('trialUrl')"
             label="播放地址"
+            align="center"
             prop="trialUrl"
             min-width="160"
-            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('purchaseDate')"
             label="购置时间"
+            align="center"
             prop="purchaseDate"
             width="180"
             sortable="custom"
@@ -278,18 +253,17 @@
           <el-table-column
             v-if="isColumnVisible('version')"
             label="版本号"
+            align="center"
             prop="version"
             width="140"
           />
           <el-table-column
             v-if="isColumnVisible('status')"
             label="状态"
+            align="center"
             width="120"
           >
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
               <el-tag
                 :type="scope.row.status === 1 ? 'success' : 'danger'"
                 disable-transitions
@@ -299,17 +273,13 @@
           <el-table-column
             v-if="isColumnVisible('remark')"
             label="备注"
+            align="center"
             prop="remark"
             min-width="160"
-            :show-overflow-tooltip="true"
           />
         </el-table>
-        <!--v-show和v-if都是Vue的指令，用于控制元素的显示与隐藏。主要区别在于v-show是简单地控制元素的display样式
-  属性来显示或隐藏元素，元素始终会被渲染到DOM中；而v-if是根据条件动态地添加或移除元素，如果条件为假，
-  则元素不会被渲染到DOM中。
-page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定义的props传递方式，通常用于子组件向
-父组件传递数据，而v-model是Vue提供的指令，用于在表单元素和组件上创建双向数据绑定。v-model更适用于
-表单元素的双向绑定，而page.sync通常用于自定义组件间的数据传递。-->
+
+        <!-- 分页 -->
         <pagination
           v-show="total > 0"
           :total="total"
@@ -317,214 +287,348 @@ page.sync和v-model都用于实现双向绑定，但是page.sync是一种自定�
           :limit.sync="queryParams.pageSize"
           @pagination="getList"
         />
+      </el-card>
 
-        <!-- 添加或修改角色配置对话框 -->
-        <el-dialog
-          v-if="open"
-          :title="title"
-          :visible.sync="open"
-          width="500px"
-          :close-on-click-modal="false"
-        >
-          <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+      <!-- 新增/修改对话框 -->
+      <el-dialog
+        :title="title"
+        :visible.sync="open"
+        width="700px"
+        append-to-body
+        :close-on-click-modal="false"
+        custom-class="edit-dialog"
+      >
+        <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+
+          <!-- 使用 el-collapse 实现可折叠分组 -->
+          <el-collapse v-model="activeFormSections" class="form-collapse">
+
             <!-- 管理信息 -->
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="管理组织" prop="managerOrgId">
-                  <treeselect
-                    v-model="form.managerOrgId"
-                    :options="orgOptions"
-                    placeholder="请选择管理组织"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="管理人员">
-                  <el-select
-                    v-model="form.managerId"
-                    placeholder="请选择"
-                    @change="$forceUpdate()"
-                  >
-                    <el-option
-                      v-for="item in userOptions"
-                      :key="item.userId"
-                      :label="item.userName"
-                      :value="item.userId"
+            <el-collapse-item name="manage" class="form-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-user section-icon" />
+                  <span class="section-title">管理信息</span>
+                  <span class="section-badge">2项</span>
+                </div>
+              </template>
+
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="管理组织" prop="managerOrgId">
+                    <treeselect
+                      v-model="form.managerOrgId"
+                      :options="orgOptions"
+                      placeholder="请选择管理组织"
                     />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="管理人员">
+                    <el-select
+                      v-model="form.managerId"
+                      placeholder="请选择"
+                      @change="$forceUpdate()"
+                    >
+                      <el-option
+                        v-for="item in userOptions"
+                        :key="item.userId"
+                        :label="item.userName"
+                        :value="item.userId"
+                      />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
 
             <!-- 基础信息 -->
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="编号" prop="trialNo">
-                  <el-input v-model="form.trialNo" placeholder="请输入编号" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="名称" prop="trialName">
-                  <el-input v-model="form.trialName" placeholder="请输入名称" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="品牌">
-                  <el-select v-model="form.brandId" placeholder="请选择">
-                    <el-option
-                      v-for="item in brandOptions"
-                      :key="item.id"
-                      :label="item.brandName"
-                      :value="item.id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+            <el-collapse-item name="basic" class="form-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-document section-icon" />
+                  <span class="section-title">基础信息</span>
+                  <span class="section-badge">3项</span>
+                </div>
+              </template>
+
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="编号" prop="trialNo">
+                    <el-input v-model="form.trialNo" placeholder="请输入编号" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="名称" prop="trialName">
+                    <el-input v-model="form.trialName" placeholder="请输入名称" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="品牌">
+                    <el-select v-model="form.brandId" placeholder="请选择">
+                      <el-option
+                        v-for="item in brandOptions"
+                        :key="item.id"
+                        :label="item.brandName"
+                        :value="item.id"
+                      />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
 
             <!-- 网络信息 -->
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="IP" prop="trialIp">
-                  <el-input v-model="form.trialIp" placeholder="请输入IP" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="地址" prop="address">
-                  <el-input v-model="form.address" placeholder="请输入地址" />
-                </el-form-item>
-              </el-col>
-            </el-row>
+            <el-collapse-item name="network" class="form-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-connection section-icon" />
+                  <span class="section-title">网络信息</span>
+                  <span class="section-badge">2项</span>
+                </div>
+              </template>
+
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="IP" prop="trialIp">
+                    <el-input v-model="form.trialIp" placeholder="请输入IP" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="地址" prop="address">
+                    <el-input v-model="form.address" placeholder="请输入地址" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
 
             <!-- 扩展信息 -->
-            <el-row :gutter="20">
-              <el-col :span="24">
-                <el-form-item label="播放地址" prop="trialUrl">
-                  <el-input
-                    v-model="form.trialUrl"
-                    placeholder="请输入播放地址"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="24">
-                <el-form-item label="密钥" prop="authKey">
-                  <el-input v-model="form.authKey" placeholder="请输入密钥" />
-                </el-form-item>
-              </el-col>
-            </el-row>
+            <el-collapse-item name="extend" class="form-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-more section-icon" />
+                  <span class="section-title">扩展信息</span>
+                  <span class="section-badge">2项</span>
+                </div>
+              </template>
+
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="播放地址" prop="trialUrl">
+                    <el-input
+                      v-model="form.trialUrl"
+                      placeholder="请输入播放地址"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="24">
+                  <el-form-item label="密钥" prop="authKey">
+                    <el-input v-model="form.authKey" placeholder="请输入密钥" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
 
             <!-- 系统信息 -->
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="版本号" prop="version">
-                  <el-input v-model="form.version" placeholder="请输入版本号" />
-                </el-form-item>
-              </el-col>
-            </el-row>
+            <el-collapse-item name="system" class="form-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-monitor section-icon" />
+                  <span class="section-title">系统信息</span>
+                  <span class="section-badge">1项</span>
+                </div>
+              </template>
+
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="版本号" prop="version">
+                    <el-input v-model="form.version" placeholder="请输入版本号" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
 
             <!-- 状态与备注 -->
-            <el-row>
-              <el-col :span="24">
-                <el-form-item label="状态">
-                  <el-radio-group v-model="form.status">
-                    <el-radio
-                      v-for="dict in statusOptions"
-                      :key="dict.value"
-                      :label="dict.value"
-                    >{{ dict.label }}</el-radio>
-                  </el-radio-group>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="购置时间" label-width="100px">
-                  <el-date-picker
-                    v-model="form.purchaseDate"
-                    type="datetime"
-                    placeholder="选择购置时间"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    class="full-width"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="24">
-                <el-form-item label="备注">
-                  <el-input
-                    v-model="form.remark"
-                    type="textarea"
-                    placeholder="请输入内容"
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </el-form>
+            <el-collapse-item name="status" class="form-section">
+              <template slot="title">
+                <div class="section-header">
+                  <i class="el-icon-info section-icon" />
+                  <span class="section-title">状态与备注</span>
+                  <span class="section-badge">3项</span>
+                </div>
+              </template>
 
-          <div slot="footer" class="dialog-footer">
-            <el-button type="primary" @click="submitForm">确 定</el-button>
-            <el-button @click="cancel">取 消</el-button>
-          </div>
-        </el-dialog>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="状态">
+                    <el-radio-group v-model="form.status">
+                      <el-radio
+                        v-for="dict in statusOptions"
+                        :key="dict.value"
+                        :label="dict.value"
+                      >{{ dict.label }}</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="购置时间">
+                    <el-date-picker
+                      v-model="form.purchaseDate"
+                      type="datetime"
+                      placeholder="选择购置时间"
+                      value-format="yyyy-MM-dd HH:mm:ss"
+                      class="full-width"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="24">
+                  <el-form-item label="备注">
+                    <el-input
+                      v-model="form.remark"
+                      type="textarea"
+                      placeholder="请输入内容"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
 
-        <!-- 浏览试验场对话框 -->
-        <el-dialog
-          title="浏览试验场"
-          :visible.sync="viewOpen"
-          width="800px"
-          append-to-body
-        >
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="试验场编号">{{
-              viewData.trialNo || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="试验场名称">{{
-              viewData.trialName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="品牌">{{
-              viewData.brandName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="管理组织">{{
-              viewData.managerOrgFullName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="管理人员">{{
-              viewData.managerName || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="状态">{{
-              selectDictLabel(statusOptions, viewData.status) || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="IP 地址">{{
-              viewData.trialIp || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="播放地址">{{
-              viewData.trialUrl || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="密钥">{{
-              viewData.authKey || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="物理地址" :span="2">{{
-              viewData.address || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="版本号">{{
-              viewData.version || "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="购置时间">{{
-              viewData.purchaseDate ? parseTime(viewData.purchaseDate) : "-"
-            }}</el-descriptions-item>
-            <el-descriptions-item label="备注" :span="2">{{
-              viewData.remark || "无"
-            }}</el-descriptions-item>
-          </el-descriptions>
-          <div slot="footer" class="dialog-footer">
-            <el-button @click="viewOpen = false">关 闭</el-button>
-          </div>
-        </el-dialog>
-      </el-card>
+          </el-collapse>
+        </el-form>
+
+        <div slot="footer" class="dialog-footer">
+          <el-button type="text" class="action-btn tertiary" size="small" @click="cancel">取 消</el-button>
+          <el-button type="primary" size="small" @click="submitForm">确 定</el-button>
+        </div>
+      </el-dialog>
+
+      <!-- 浏览试验场对话框 -->
+      <el-dialog
+        title="浏览试验场"
+        :visible.sync="viewOpen"
+        width="800px"
+        append-to-body
+        :close-on-click-modal="false"
+        custom-class="detail-dialog"
+      >
+        <el-collapse v-model="activeViewSections" class="form-collapse">
+
+          <!-- 基础信息 -->
+          <el-collapse-item name="basic" class="detail-section">
+            <template slot="title">
+              <div class="section-header">
+                <i class="el-icon-document section-icon" />
+                <span class="section-title">基础信息</span>
+                <span class="section-badge">5项</span>
+              </div>
+            </template>
+            <el-descriptions :column="2" border class="section-descriptions">
+              <el-descriptions-item label="试验场编号">
+                <span class="nowrap-text">{{ viewData.trialNo || "-" }}</span>
+              </el-descriptions-item>
+              <el-descriptions-item label="试验场名称">
+                {{ viewData.trialName || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="品牌">
+                {{ viewData.brandName || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="管理组织">
+                {{ viewData.managerOrgFullName || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="管理人员">
+                {{ viewData.managerName || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="状态">
+                <el-tag
+                  v-if="viewData.status !== undefined"
+                  :type="viewData.status === 1 ? 'success' : 'danger'"
+                  size="small"
+                  effect="dark"
+                >{{ selectDictLabel(statusOptions, viewData.status) }}</el-tag>
+                <span v-else>-</span>
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-collapse-item>
+
+          <!-- 网络配置 -->
+          <el-collapse-item name="network" class="detail-section">
+            <template slot="title">
+              <div class="section-header">
+                <i class="el-icon-link section-icon" />
+                <span class="section-title">网络配置</span>
+                <span class="section-badge">4项</span>
+              </div>
+            </template>
+            <el-descriptions :column="1" border class="section-descriptions">
+              <el-descriptions-item label="IP 地址">
+                {{ viewData.trialIp || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="播放地址">
+                {{ viewData.trialUrl || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="密钥">
+                {{ viewData.authKey || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="物理地址">
+                {{ viewData.address || "-" }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-collapse-item>
+
+          <!-- 系统信息 -->
+          <el-collapse-item name="system" class="detail-section">
+            <template slot="title">
+              <div class="section-header">
+                <i class="el-icon-monitor section-icon" />
+                <span class="section-title">系统信息</span>
+                <span class="section-badge">2项</span>
+              </div>
+            </template>
+            <el-descriptions :column="2" border class="section-descriptions">
+              <el-descriptions-item label="版本号">
+                {{ viewData.version || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="购置时间">
+                {{ viewData.purchaseDate ? parseTime(viewData.purchaseDate) : "-" }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-collapse-item>
+
+          <!-- 其他信息 -->
+          <el-collapse-item name="other" class="detail-section">
+            <template slot="title">
+              <div class="section-header">
+                <i class="el-icon-info section-icon" />
+                <span class="section-title">其他信息</span>
+                <span class="section-badge">1项</span>
+              </div>
+            </template>
+            <el-descriptions :column="1" border class="section-descriptions">
+              <el-descriptions-item label="备注">
+                {{ viewData.remark || "无" }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-collapse-item>
+
+        </el-collapse>
+
+        <div slot="footer" class="dialog-footer">
+          <el-button type="text" class="action-btn tertiary" size="small" @click="viewOpen = false">关 闭</el-button>
+        </div>
+      </el-dialog>
     </template>
   </BasicLayout>
 </template>
 
 <script>
+import BasicLayout from '@/layout/BasicLayout'
+import Pagination from '@/components/Pagination'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import EquipmentQueryBar from '@/components/EquipmentQueryBar/index.vue'
+import BatchActionBar from '@/components/BatchActionBar/index.vue'
 import {
   listEquipmentTrial,
-  getEquipmentTrial,
   delEquipmentTrial,
   addEquipmentTrial,
   updateEquipmentTrial,
@@ -532,123 +636,101 @@ import {
 } from '@/api/admin/equipment_manage_api'
 import { formatJson } from '@/utils'
 import { orgTreeSelect } from '@/api/admin/sys-org'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { listUser } from '@/api/admin/sys-user'
+
 export default {
   name: 'Trial',
-  components: { Treeselect },
+  components: {
+    BasicLayout,
+    Pagination,
+    Treeselect,
+    EquipmentQueryBar,
+    BatchActionBar
+  },
   data() {
     return {
-      // 遮罩层
       loading: true,
       firstLoad: null,
-      // 选中数组
-      trialIds: [],
-      selectedTrialRecords: [],
-      // 使用 Map 存储所有选中的项（跨分页）
-      selectedTrialMap: {},
-      // 防止恢复选中时触发事件循环
-      isRestoringSelection: false,
-      // 总条数
       total: 0,
-      // 角色表格数据
       equipmentTrialList: [],
-      // 列配置
+      statusOptions: [],
+      selectedTrialMap: {},
+      isRestoringSelection: false,
+      selectedTrialRecords: [],
+      isAllSelected: false,
+      isSelectionIndeterminate: false,
       columnOptions: [
-        { prop: 'trialNo', label: '编号', defaultVisible: true },
-        { prop: 'trialName', label: '名称', defaultVisible: true },
-        { prop: 'brandName', label: '品牌名称', defaultVisible: true },
-        { prop: 'managerName', label: '管理员', defaultVisible: true },
-        {
-          prop: 'managerOrgFullName',
-          label: '管理员所在组织',
-          defaultVisible: true
-        },
-        { prop: 'trialIp', label: 'IP', defaultVisible: true },
-        { prop: 'address', label: '地址', defaultVisible: true },
-        { prop: 'trialUrl', label: '播放地址', defaultVisible: false },
-        { prop: 'purchaseDate', label: '购置时间', defaultVisible: false },
-        { prop: 'version', label: '版本号', defaultVisible: false },
-        { prop: 'status', label: '状态', defaultVisible: true },
-        { prop: 'remark', label: '备注', defaultVisible: false }
+        { prop: 'no', field: 'trialNo', label: '编号', fixed: true, defaultVisible: true },
+        { prop: 'name', field: 'trialName', label: '名称', fixed: true, defaultVisible: true },
+        { prop: 'brandName', label: '品牌名称', fixed: false, defaultVisible: true },
+        { prop: 'managerName', label: '管理员', fixed: false, defaultVisible: true },
+        { prop: 'managerOrgFullName', label: '管理员所在组织', fixed: false, defaultVisible: true },
+        { prop: 'trialIp', label: 'IP', fixed: false, defaultVisible: true },
+        { prop: 'address', label: '地址', fixed: false, defaultVisible: true },
+        { prop: 'trialUrl', label: '播放地址', fixed: false, defaultVisible: false },
+        { prop: 'purchaseDate', label: '购置时间', fixed: false, defaultVisible: false },
+        { prop: 'version', label: '版本号', fixed: false, defaultVisible: false },
+        { prop: 'status', label: '状态', fixed: false, defaultVisible: true },
+        { prop: 'remark', label: '备注', fixed: false, defaultVisible: false }
       ],
-      // 可见列
       visibleColumns: [],
-      // 弹出层标题
       title: '',
-      // 是否显示弹出层
       open: false,
       viewOpen: false,
-      // 浏览数据
       viewData: {},
-      // 组织树选项
-      orgOptions: undefined,
-      userOptions: undefined,
-      brandOptions: undefined,
-      // 是否显示弹出层（数据权限）
-      openDataScope: false,
-      isEdit: false,
-      // 状态数据字典
-      statusOptions: [],
-      // 查询参数
+      activeViewSections: ['basic', 'network'],
+      activeFormSections: ['manage', 'basic', 'network'],
+      orgOptions: [],
+      userOptions: [],
+      brandOptions: [],
       queryParams: {
         pageIndex: 1,
         pageSize: 10,
         trialName: undefined,
         trialNo: undefined,
         status: undefined,
-        brandName: undefined,
+        brandId: undefined,
         managerOrgId: undefined,
         managerId: undefined
       },
-      // 表单参数
       form: {
         status: undefined
       },
-      defaultProps: {
-        children: 'children',
-        label: 'label'
-      },
-      // 表单校验
       rules: {
         trialNo: [{ required: true, message: '编号不能为空', trigger: 'blur' }],
         trialName: [
           { required: true, message: '名称不能为空', trigger: 'blur' }
         ]
       },
-      processingInstance: null, // Element UI全局加载动画的实例
-      previousCursor: null // 记录鼠标状态
+      processingInstance: null,
+      previousCursor: null
     }
   },
   watch: {
     'form.managerOrgId': function(newVal) {
-      // 当 form.managerOrgId 更新时，调用 getUser
       if (newVal) {
         if (this.firstLoad !== true) {
-          // 首次打开对话框，不需要清空管理人员
-          this.form.managerId = null // 清空管理人员选择
+          this.form.managerId = null
         }
         this.firstLoad = false
         this.getFormUser()
       }
     },
     'queryParams.managerOrgId': function(newVal) {
-      // 当 queryParams.managerOrgId 更新时，调用 getQueryUser
       if (newVal) {
-        this.queryParams.managerId = null // 清空管理人员选择
+        this.queryParams.managerId = null
         this.getQueryUser()
       }
     }
   },
   created() {
+    this.initVisibleColumns()
     this.getList()
     this.getTreeselect()
     this.getFormBrand()
     this.getDicts('trial_status').then((response) => {
       this.statusOptions = response.data
     })
-    this.initVisibleColumns()
   },
   methods: {
     getDefaultVisibleColumns() {
@@ -673,20 +755,13 @@ export default {
     },
     handleColumnChange(value) {
       this.visibleColumns = value
-      localStorage.setItem(
-        'trial_manage_visible_columns',
-        JSON.stringify(this.visibleColumns)
-      )
+      localStorage.setItem('trial_manage_visible_columns', JSON.stringify(this.visibleColumns))
     },
     resetColumns() {
       this.visibleColumns = this.getDefaultVisibleColumns()
-      localStorage.setItem(
-        'trial_manage_visible_columns',
-        JSON.stringify(this.visibleColumns)
-      )
+      localStorage.setItem('trial_manage_visible_columns', JSON.stringify(this.visibleColumns))
       this.$message.success('已重置为默认显示')
     },
-    /** 查询trial列表 */
     getList() {
       this.loading = true
       const query = this.normalizeQueryParams(this.queryParams)
@@ -695,7 +770,6 @@ export default {
           if (response.code === 200 && response.data) {
             this.equipmentTrialList = response.data.list
             this.total = response.data.count
-            // 分页/查询后回显跨分页选择
             this.restoreSelection()
           } else {
             this.equipmentTrialList = []
@@ -712,12 +786,43 @@ export default {
           this.loading = false
         })
     },
-    // 取消按钮
-    cancel() {
-      this.open = false
-      this.reset()
+    normalizeQueryParams(params = {}) {
+      const query = { ...params }
+      Object.keys(query).forEach((key) => {
+        const value = query[key]
+        if (value === '' || value === null || value === undefined) {
+          delete query[key]
+        }
+      })
+      return query
     },
-    // 表单重置
+    getFormBrand() {
+      listEquipmentBrand().then((response) => {
+        this.brandOptions = response.data.list
+      })
+    },
+    statusFormat(row) {
+      return this.selectDictLabel(this.statusOptions, row.status)
+    },
+    getTreeselect() {
+      orgTreeSelect().then((response) => {
+        this.orgOptions = response.data
+      })
+    },
+    getFormUser() {
+      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(
+        (response) => {
+          this.userOptions = response.data.list
+        }
+      )
+    },
+    getQueryUser() {
+      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(
+        (response) => {
+          this.userOptions = response.data.list
+        }
+      )
+    },
     reset() {
       this.form = {
         managerOrgId: undefined,
@@ -737,140 +842,50 @@ export default {
       }
       this.resetForm('form')
     },
-    // 字典翻译
-    statusFormat(row) {
-      return this.selectDictLabel(this.statusOptions, row.status)
-    },
-    /** 查询组织下拉树结构 */
-    getTreeselect() {
-      orgTreeSelect().then((response) => {
-        this.orgOptions = response.data // 返回数组类型；[id:    label(组织名称):  children []]})，这里将返回所有组织
-      })
-    },
-    getFormUser() {
-      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(
-        (response) => {
-          this.userOptions = response.data.list
-        }
-      )
-    },
-
-    getFormBrand() {
-      listEquipmentBrand().then((response) => {
-        this.brandOptions = response.data.list
-      })
-    },
-
-    getQueryUser() {
-      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(
-        (response) => {
-          this.userOptions = response.data.list
-        }
-      )
-    },
-    /**
-     * 需要清空记录选中状态的场景如下：
-     * 1. 点击搜索按钮时，需要清空记录选中状态
-     * 2. 重置按钮操作时，需要清空记录选中状态
-     * 3. 执行删除、修改、导出时，需要清空记录选中状态
-     * 其他场景下，不需要清空记录选中状态
-     */
     resetSelected() {
       this.selectedTrialMap = {}
       this.selectedTrialRecords = []
     },
-
-    // pageIndex/pageSize 并不在查询表单里，因此 resetForm 并不会重置它们为初始值,所以需要单独重置
-    // 每次执行搜索、重置、删除时，都将分页置为默认值1，尤其如果批量删除后，再次查询后，当前分页可能已经无数据
     resetPage() {
       this.queryParams.pageIndex = 1
     },
-
-    handleQuery() {
-      this.resetSelected()
+    handleSearch(searchData) {
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key]
+      })
+      const quickSearchFields = ['trialNo', 'trialName', 'managerOrgId', 'managerId', 'brandId', 'status']
+      quickSearchFields.forEach(field => {
+        if (!(field in searchData)) {
+          delete this.queryParams[field]
+        }
+      })
       this.resetPage()
+      this.resetSelected()
       this.getList()
     },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm('queryForm')
-      this.handleQuery()
+    handleQuickSearchReset() {
+      this.handleFilterReset()
     },
-
-    /** 开始执行操作 */
-    startProcessing(text) {
-      this.processingInstance = this.$loading({
-        lock: true,
-        text: text,
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.3)'
-      })
-      // 鼠标切换为等待状态
-      this.previousCursor = document.body.style.cursor
-      document.body.style.cursor = 'wait'
-    },
-
-    /** 停止执行操作 */
-    stopProcessing() {
-      if (this.processingInstance) {
-        this.processingInstance.close()
-        this.processingInstance = null
+    handleFilterReset() {
+      this.queryParams = {
+        pageIndex: 1,
+        pageSize: 10,
+        trialName: undefined,
+        trialNo: undefined,
+        status: undefined,
+        brandId: undefined,
+        managerOrgId: undefined,
+        managerId: undefined
       }
-      // 恢复鼠标状态
-      document.body.style.cursor = this.previousCursor
+      this.resetPage()
+      this.resetSelected()
+      this.getList()
     },
-
-    // 多选框选中数据
-    handleSelectionChange(selection) {
-      if (this.isRestoringSelection) {
-        return
-      }
-      // 以当前页为准增删选中项（实现跨分页记忆）
-      const selectedIdSet = new Set(
-        (selection || []).map((item) => item && item.id).filter(Boolean)
-      );
-
-      (this.equipmentTrialList || []).forEach((row) => {
-        const id = row && row.id
-        if (!id) return
-        if (selectedIdSet.has(id)) {
-          this.selectedTrialMap[id] = row
-        } else {
-          delete this.selectedTrialMap[id]
-        }
-      })
-      this.selectedTrialRecords = Object.values(this.selectedTrialMap).filter(
-        Boolean
-      )
+    handleOrgChange(orgId) {
+      // 组织变化时处理
     },
-
-    restoreSelection() {
-      if (this.isRestoringSelection) return
-      if (!this.$refs.trialTable) return
-      if (!this.equipmentTrialList || !this.equipmentTrialList.length) return
-
-      this.isRestoringSelection = true
-      this.$nextTick(() => {
-        try {
-          this.equipmentTrialList.forEach((row) => {
-            const id = row && row.id
-            if (!id) return
-            if (this.selectedTrialMap[id]) {
-              this.$refs.trialTable.toggleRowSelection(row, true)
-            }
-          })
-        } finally {
-          this.isRestoringSelection = false
-        }
-      })
-    },
-    /** 新增按钮操作 */
-    handleAdd() {
-      this.reset()
-      // this.getMenuTreeselect(0)
-      this.open = true
-      this.title = '添加场地'
-      this.isEdit = false
+    handleRefresh() {
+      this.getList()
     },
     handleSortChang(column, prop, order) {
       prop = column.prop
@@ -884,29 +899,92 @@ export default {
       }
       this.getList()
     },
-    /** 修改按钮操作 */
+    startProcessing(text) {
+      this.processingInstance = this.$loading({
+        lock: true,
+        text: text,
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.3)'
+      })
+      this.previousCursor = document.body.style.cursor
+      document.body.style.cursor = 'wait'
+    },
+    stopProcessing() {
+      if (this.processingInstance) {
+        this.processingInstance.close()
+        this.processingInstance = null
+      }
+      document.body.style.cursor = this.previousCursor
+    },
+    handleSelectionChange(selection) {
+      if (this.isRestoringSelection) {
+        return
+      }
+      const selectedIdSet = new Set(
+        (selection || []).map((item) => item && item.id).filter(Boolean)
+      )
+      ;(this.equipmentTrialList || []).forEach((row) => {
+        const id = row && row.id
+        if (!id) return
+        if (selectedIdSet.has(id)) {
+          this.selectedTrialMap[id] = row
+        } else {
+          delete this.selectedTrialMap[id]
+        }
+      })
+      this.selectedTrialRecords = Object.values(this.selectedTrialMap).filter(Boolean)
+      const totalCount = this.equipmentTrialList.length
+      const selectedCount = this.selectedTrialRecords.length
+      this.isAllSelected = selectedCount === totalCount && totalCount > 0
+      this.isSelectionIndeterminate = selectedCount > 0 && selectedCount < totalCount
+    },
+    handleSelectAll(val) {
+      this.isAllSelected = val
+      this.isSelectionIndeterminate = false
+      this.$refs.trialTable.toggleAllSelection()
+    },
+    restoreSelection() {
+      if (this.isRestoringSelection) return
+      if (!this.$refs.trialTable) return
+      if (!this.equipmentTrialList || !this.equipmentTrialList.length) return
+      this.isRestoringSelection = true
+      this.$nextTick(() => {
+        try {
+          this.equipmentTrialList.forEach((row) => {
+            const id = row && row.id
+            if (!id) return
+            if (this.selectedTrialMap[id]) {
+              this.$refs.trialTable.toggleRowSelection(row, true)
+            }
+          })
+        } finally {
+          setTimeout(() => {
+            this.isRestoringSelection = false
+          }, 0)
+        }
+      })
+    },
+    handleAdd() {
+      this.reset()
+      this.open = true
+      this.title = '添加场地'
+    },
     handleUpdate(row) {
       this.reset()
       this.firstLoad = true
-      // 使用对象展开运算符创建新对象
       if (row && row.id !== undefined) {
         this.form = { ...row }
       } else {
-        this.form = this.selectedTrialRecords[0]
-          ? { ...this.selectedTrialRecords[0] }
-          : {}
+        this.form = this.selectedTrialRecords[0] ? { ...this.selectedTrialRecords[0] } : {}
       }
       this.title = '修改场地'
-      this.isEdit = true
       this.open = true
     },
-    /** 浏览按钮操作 */
     handleView(row) {
       this.viewData = row
       this.viewOpen = true
     },
-    /** 提交按钮 */
-    submitForm: function() {
+    submitForm() {
       this.$refs['form'].validate((valid) => {
         if (valid) {
           if (this.form.id !== undefined) {
@@ -914,7 +992,7 @@ export default {
             updateEquipmentTrial(this.form, this.form.id)
               .then(async(response) => {
                 if (response.code === 200) {
-                  await this.delay(1000)
+                  await this.delay(2000)
                   this.resetSelected()
                   this.getList()
                   this.msgSuccess(response.msg)
@@ -934,7 +1012,7 @@ export default {
             addEquipmentTrial(this.form)
               .then(async(response) => {
                 if (response.code === 200) {
-                  await this.delay(1000)
+                  await this.delay(2000)
                   this.getList()
                   this.msgSuccess(response.msg)
                   this.open = false
@@ -952,7 +1030,6 @@ export default {
         }
       })
     },
-    /** 删除按钮操作 */
     async handleDelete(row) {
       try {
         var trialIds = []
@@ -976,7 +1053,7 @@ export default {
         this.startProcessing('正在删除场地...')
         const response = await delEquipmentTrial({ ids: trialIds })
         if (response.code === 200) {
-          await this.delay(1000)
+          await this.delay(2000)
           this.resetSelected()
           this.resetPage()
           this.getList()
@@ -991,94 +1068,63 @@ export default {
         }
       }
     },
-    normalizeQueryParams(params = {}) {
-      const query = { ...params }
-      Object.keys(query).forEach((key) => {
-        const value = query[key]
-        if (value === '' || value === null || value === undefined) {
-          delete query[key]
-        }
-      })
-      return query
+    cancel() {
+      this.open = false
+      this.reset()
     },
-    /** 导出按钮操作 */
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms))
+    },
     async handleExport() {
       try {
-        const hasSelection =
-          Array.isArray(this.selectedTrialRecords) &&
-          this.selectedTrialRecords.length > 0
-
+        const hasSelection = this.selectedTrialRecords.length > 0
         const confirmText = hasSelection
           ? `是否确认导出已勾选的 ${this.selectedTrialRecords.length} 条场地数据？`
           : '是否确认导出所有场地数据项？'
-
         await this.$confirm(confirmText, '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'info'
         })
-
-        const columnOptions = Array.isArray(this.columnOptions)
-          ? this.columnOptions
-          : []
-        const visibleColumns = Array.isArray(this.visibleColumns)
-          ? this.visibleColumns
-          : []
-        const exportColumns = columnOptions.filter((c) =>
-          visibleColumns.includes(c.prop)
-        )
-
+        const columnOptions = Array.isArray(this.columnOptions) ? this.columnOptions : []
+        const visibleColumns = Array.isArray(this.visibleColumns) ? this.visibleColumns : []
+        const exportColumns = columnOptions.filter((c) => visibleColumns.includes(c.prop))
         if (!exportColumns.length) {
           this.msgError('当前未选择任何可导出的列')
           return
         }
-
         const tHeader = exportColumns.map((c) => c.label)
         const filterVal = exportColumns.map((c) => c.field || c.prop)
-
         let list = []
         if (hasSelection) {
           list = this.selectedTrialRecords
         } else {
-          const baseQueryParams = this.normalizeQueryParams(
-            this.queryParams || {}
-          )
+          const baseQueryParams = this.normalizeQueryParams(this.queryParams || {})
           const pageSize = 1000
           let pageIndex = 1
           let total = Infinity
-
           while (list.length < total) {
-            const query = {
-              ...baseQueryParams,
-              pageIndex,
-              pageSize
-            }
+            const query = { ...baseQueryParams, pageIndex, pageSize }
             const resp = await listEquipmentTrial(query)
             if (!resp || resp.code !== 200) {
               throw new Error((resp && resp.msg) || '查询场地列表失败')
             }
-
             const pageList = (resp.data && resp.data.list) || []
             total = (resp.data && resp.data.count) || 0
             list = list.concat(pageList)
-
             if (!pageList.length) {
               break
             }
             pageIndex += 1
           }
         }
-
         const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
           const output = { ...row }
           output.status = this.statusFormat(row)
           output.purchaseDate = this.parseTime(row.purchaseDate)
           return output
         })
-
         const data = formatJson(filterVal, normalizeList)
-
-        // 触发导出（会弹出另存为对话框）
         const excel = await import('@/vendor/Export2Excel')
         excel.export_json_to_excel({
           header: tHeader,
@@ -1091,48 +1137,18 @@ export default {
         if (error !== 'cancel') {
           this.msgError('导出失败：' + (error.message || '未知错误'))
         }
-      } finally {
       }
-    },
-
-    /** 延迟函数 */
-    delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms))
     }
   }
 }
 </script>
 
-<style scoped>
-.column-settings-trigger {
-  text-align: right;
-}
-
-.column-settings {
-  max-height: 320px;
-  overflow-y: auto;
-}
-
-.column-settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 8px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #e4e7ed;
-  font-weight: bold;
-}
-
-.column-item {
-  padding: 6px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.column-item:last-child {
-  border-bottom: none;
-}
-
-.column-item .el-checkbox {
-  width: 100%;
-}
-</style>
+<!--
+  样式说明：本页面全部使用全局样式
+  全局样式位置：
+  - src/styles/index.scss: .filter-container
+  - src/styles/components/search.scss: .search-section, .quick-search-form, .search-row, .search-item
+  - src/styles/components/dialogs.scss: .edit-dialog, .detail-dialog, .form-collapse, .detail-collapse
+  - src/styles/components/forms.scss: .section-header, .section-descriptions, .detail-descriptions
+  - src/styles/components/buttons.scss: .action-btn, .search-action-buttons
+-->

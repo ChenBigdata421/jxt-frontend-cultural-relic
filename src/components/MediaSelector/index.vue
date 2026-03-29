@@ -1,7 +1,7 @@
 <template>
   <div class="media-selector">
     <!-- 新的查询栏组件 -->
-    <div class="query-section">
+    <div class="search-section">
       <MediaQueryBar
         ref="queryBar"
         :media-cate-options="mediaCateOptions"
@@ -1496,7 +1496,7 @@ export default {
 </script>
 
 <style scoped>
-.query-section {
+.search-section {
   margin-bottom: 16px;
 }
 </style>

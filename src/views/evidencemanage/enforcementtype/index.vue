@@ -8,7 +8,7 @@
             <div class="quick-search-form">
               <div class="search-row">
                 <div class="search-item">
-                  <label>执法类型名称</label>
+                  <label class="search-label">执法类型名称</label>
                   <el-input
                     v-model="queryParams.enforcementTypeName"
                     placeholder="请输入执法类型名称"
@@ -17,7 +17,7 @@
                   />
                 </div>
                 <div class="search-item">
-                  <label>执法类型编码</label>
+                  <label class="search-label">执法类型编码</label>
                   <el-input
                     v-model="queryParams.enforcementTypeCode"
                     placeholder="请输入执法类型编码"

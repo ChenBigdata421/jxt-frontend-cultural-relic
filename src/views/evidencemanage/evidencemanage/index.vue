@@ -3,18 +3,17 @@
     <template #wrapper>
       <el-card class="box-card">
         <!-- 新的查询栏组件 -->
-        <div class="query-section">
-          <CaseQueryBar
-            ref="queryBar"
-            :case-type-options="caseTypeOptions"
-            :relation-status-options="caseRelationStatusOptions"
-            :org-options="orgOptions"
-            @search="handleSearch"
-            @quick-search-reset="handleQuickSearchReset"
-            @filter-change="handleFilterChange"
-            @filter-reset="handleFilterReset"
-          />
-        </div>
+        <CaseQueryBar
+          ref="queryBar"
+          :case-type-options="caseTypeOptions"
+          :relation-status-options="caseRelationStatusOptions"
+          :org-options="orgOptions"
+          @search="handleSearch"
+          @quick-search-reset="handleQuickSearchReset"
+          @filter-change="handleFilterChange"
+          @filter-reset="handleFilterReset"
+        />
+
         <!-- 主操作栏 -->
         <div class="main-action-bar">
           <div class="left-actions">

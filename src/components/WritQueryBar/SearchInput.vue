@@ -3,7 +3,7 @@
     <div class="quick-search-form">
       <div class="search-row">
         <div class="search-item">
-          <label>文书编号</label>
+          <label class="search-label">文书编号</label>
           <el-input
             v-model="searchForm.writCode"
             placeholder="请输入文书编号"
@@ -12,7 +12,7 @@
           />
         </div>
         <div class="search-item">
-          <label>文书名称</label>
+          <label class="search-label">文书名称</label>
           <el-input
             v-model="searchForm.writName"
             placeholder="请输入文书名称"
@@ -21,7 +21,7 @@
           />
         </div>
         <div class="search-item">
-          <label>文书类型</label>
+          <label class="search-label">文书类型</label>
           <el-select
             v-model="searchForm.writType"
             placeholder="请选择文书类型"
@@ -36,7 +36,7 @@
           </el-select>
         </div>
         <div class="search-item">
-          <label>关联状态</label>
+          <label class="search-label">关联状态</label>
           <el-select
             v-model="searchForm.isRelation"
             placeholder="请选择是否关联"
@@ -107,61 +107,9 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
-@import '@/styles/tokens/index.scss';
+<!--
+  样式说明：本组件全部使用全局样式
+  全局样式位置：
+  - src/styles/components/search.scss: .search-row, .search-item, .search-label
+-->
 
-.search-input-wrapper {
-  width: 100%;
-
-  .quick-search-form {
-    background-color: transparent;
-    padding: 0;
-    border-radius: 0;
-    border: none;
-
-    .search-row {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: $spacing-3;
-      margin-bottom: $spacing-3;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-
-      .search-item {
-        flex: 1;
-        min-width: 180px;
-        display: flex;
-        align-items: center;
-        gap: $spacing-3;
-
-        label {
-          white-space: nowrap;
-          font-size: $font-size-sm;
-          font-weight: $font-weight-medium;
-          color: $law-gray-700;
-          width: 80px;
-          flex-shrink: 0;
-          text-align: right;
-        }
-      }
-
-      // 使用 ::v-deep 确保样式正确应用到 Element UI 组件
-      ::v-deep .el-input,
-      ::v-deep .el-select {
-        flex: 1;
-        min-width: 0;
-      }
-    }
-  }
-
-  // ========== 注意：通用字体规范已移至全局样式 ==========
-  // 以下字体规范现已定义在 src/styles/components/forms.scss 中：
-  // - 输入框内容、Placeholder、焦点状态
-  // - 下拉列表选项（悬停、选中、禁用）
-  //
-  // 本文件只保留文书页面特有的布局样式。
-}
-</style>

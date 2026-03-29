@@ -3,18 +3,16 @@
     <template #wrapper>
       <el-card class="box-card">
         <!-- 新的查询栏组件 -->
-        <div class="query-section">
-          <WritQueryBar
-            ref="queryBar"
-            :writ-type-options="writTypeOptions"
-            :relation-status-options="relationStatusOptions"
-            :org-options="orgOptions"
-            @search="handleSearch"
-            @quick-search-reset="handleQuickSearchReset"
-            @filter-change="handleFilterChange"
-            @filter-reset="handleFilterReset"
-          />
-        </div>
+        <WritQueryBar
+          ref="queryBar"
+          :writ-type-options="writTypeOptions"
+          :relation-status-options="relationStatusOptions"
+          :org-options="orgOptions"
+          @search="handleSearch"
+          @quick-search-reset="handleQuickSearchReset"
+          @filter-change="handleFilterChange"
+          @filter-reset="handleFilterReset"
+        />
 
         <!-- 批量操作栏 -->
         <BatchActionBar
