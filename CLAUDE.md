@@ -1,165 +1,177 @@
-# CLAUDE.md
+# ClaudeWatch Validation Instructions
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Overview
+This project uses ClaudeWatch for automated validation and enabled mode. The system automatically validates your work after task completion using comprehensive testing and visual analysis.
 
-## Project Overview
+## How It Works
 
-JXT Frontend is a dual-runtime Vue 2 application for digital evidence management. The same codebase serves two distinct modes:
-- **Platform Mode** (`platform.jxt.com`): Tenant Management Station - connects to tenant-service:8010
-- **Business Mode** (`app.jxt.com`): Business Management Station - connects to security-management:8000 + microservices
+1. **Automatic Triggering**: When you complete a task, validation runs automatically via Claude Code hooks
+2. **Visual Analysis**: Captures screenshots and analyzes page structure and content alignment
+3. **Comprehensive Testing**: Tests visual elements, accessibility, performance, forms, APIs, and more
+4. **Multi-viewport**: Tests on desktop, tablet, and mobile viewports
+5. **Detailed Reports**: Saves screenshots, validation results, and technical logs for review
 
-Runtime mode is determined at build time via `VUE_APP_MODE` environment variable.
+{{#if SELF_HEALING}}
+## Self-Healing Features
 
-## Common Development Commands
+The system can automatically fix:
+- Missing alt text on images
+- Console errors and JavaScript issues
+- Broken API endpoints
+- Missing resources (creates placeholders)
+- Performance issues
+- Basic accessibility problems
+
+{{/if}}
+
+## Manual Commands
+
+If needed, you can run validation manually:
 
 ```bash
-# Install dependencies (Node.js v14.16.0+, npm 6.14.11+)
-npm install
+# Run validation tests
+claudewatch validate
 
-# Development server (business mode, default)
-npm run dev
+{{#if SELF_HEALING}}
+# Run self-healing validation (recommended)
+claudewatch self-heal
+{{/if}}
 
-# Development server (platform mode)
-VUE_APP_MODE=platform npm run dev
+# Check system status
+claudewatch status
 
-# Production build
-npm run build:prod
+# View validation reports
+claudewatch report
 
-# Staging build
-npm run build:stage
-
-# Lint code
-npm run lint
-
-# Run unit tests
-npm run test:unit
-
-# Generate new component/view (plop generator)
-npm run new
+# Clean up old files
+claudewatch cleanup
 ```
 
-## Architecture
+## 🚨 CRITICAL: MANDATORY VALIDATION REQUIREMENTS 🚨
 
-### Dual-Runtime Pattern
+### ⚠️ CLAUDE CODE MUST VALIDATE ALL WORK ⚠️
 
-The codebase differentiates between platform and business modes through:
-1. **Configuration keys**: Platform uses `console_app_name`, `console_app_logo`; Business uses `sys_app_name`, `sys_app_logo`
-2. **API endpoints**: Platform uses `/api/v1/configs/frontend`; Business uses `/api/v1/app-config`
-3. **Environment variable**: `process.env.VUE_APP_MODE === "platform"` in code
+**THIS IS NON-NEGOTIABLE. VALIDATION IS REQUIRED FOR ALL TASKS.**
 
-### CQRS Implementation
+ClaudeWatch is installed and MUST be used. You are REQUIRED to validate work:
 
-Evidence management APIs implement Command Query Responsibility Segregation:
-- **Read operations** (GET requests) → `evidence-query:8002`
-- **Write operations** (POST/PUT/DELETE) → `evidence-command:8001`
+1. **After ANY code changes** - MANDATORY: run `claudewatch validate` or `claudewatch self-heal`
+2. **Before marking tasks complete** - MANDATORY: Validation MUST pass before completing work  
+3. **When asked to "test" or "verify"** - MANDATORY: This means run ClaudeWatch validation
+4. **After file edits** - MANDATORY: Always validate changes
+5. **After implementing features** - MANDATORY: Validation required
 
-API files are split accordingly:
-- `src/api/evidence/evidence_manage_query_api.js` - Read operations
-- `src/api/evidence/evidence_manage_command_api.js` - Write operations
+### MANDATORY Commands
 
-### Key Directories
+**After making ANY changes to code, HTML, CSS, or configuration:**
 
-```
-src/
-├── api/                    # API definitions organized by domain
-│   ├── admin/             # Admin system APIs
-│   ├── evidence/          # Evidence management (split query/command)
-│   ├── platform/          # Platform-specific APIs
-│   └── process/           # Workflow APIs
-├── components/            # Reusable components
-│   ├── MediaDetailDialog/ # Media viewer with built-in dictionary management
-│   └── TaskProcessDialog  # Workflow approval interface
-├── layout/                # Layout components
-├── mixins/                # Vue mixins (workflowMixin for workflow logic)
-├── router/                # Vue Router config with dynamic route loading
-├── store/                 # Vuex modules (user, permission, app, etc.)
-├── utils/                 # Utilities (request.js for axios configuration)
-└── views/                 # Page components
+```bash
+# For quick validation
+claudewatch validate
+
+# For automatic fixes (RECOMMENDED)
+claudewatch self-heal
 ```
 
-## Authentication & Authorization
+### Task Management Guidelines
 
-1. JWT token stored in cookies (via `js-cookie`)
-2. Token attached to requests via `Authorization: Bearer {token}` header in `src/utils/request.js`
-3. 401 responses trigger re-login prompt
-4. Dynamic route loading based on user roles via `src/store/modules/permission.js`
+### For ALL Development Tasks
 
-## Component Patterns
+You MUST include validation in your workflow:
 
-### Dictionary Management
-Components like `MediaDetailDialog` manage their own dictionary data using `getDicts()` API. Look for patterns like:
-```javascript
-async loadDictionaryOptions() {
-  const [mediaCateRes, videoClarityRes] = await Promise.all([
-    this.getDicts("evidence_media_type"),
-    this.getDicts("video_clarity"),
-  ]);
-  this.mediaCateOptions = mediaCateRes.data || [];
-}
+1. **Bug Fixes**
+   - MUST run: `claudewatch validate` after fix
+   
+2. **Feature Implementation** 
+   - MUST run: `claudewatch self-heal` after implementation
+   
+3. **UI Changes**
+   - MUST run: `claudewatch validate` to verify changes
+
+### REQUIRED Todo Structure
+
+```
+1. Implement contact form
+2. Add form validation  
+3. Style the form components
+4. ✅ MANDATORY: Run ClaudeWatch validation
+5. ✅ MANDATORY: Fix any validation errors
+6. ✅ MANDATORY: Verify all tests pass
 ```
 
-### Workflow Integration
-Use `workflowMixin` for workflow-related functionality:
-- `startWorkflowInstance(workflowName, inputData, onSuccess, onError)`
-- `loadTaskForProcessing(taskId, onReady)`
-- `submitTaskApproval(formRef, onSuccess)`
-- `submitTaskRejection(formRef, onSuccess)`
+### Validation Rules - NO EXCEPTIONS
 
-The mixin provides intelligent field type detection (date, boolean, number, textarea, email, tel, url, approver) and Chinese label generation from English field names.
+- ❌ NEVER mark a task complete without running validation
+- ❌ NEVER ignore validation failures  
+- ❌ NEVER skip the validation step
+- ✅ ALWAYS run `claudewatch validate` or `claudewatch self-heal`
+- ✅ ALWAYS fix issues found by validation
+- ✅ ALWAYS verify validation passes before completing work
 
-### Media Name Click-to-View
-In workflow history, media names are clickable links that open `MediaDetailDialog`. Pattern:
-```javascript
-async handleMediaNameClick(mediaName) {
-  const response = await GetMediaByName(mediaName);
-  if (response.code === 200 && response.data) {
-    this.currentMediaData = response.data;
-    this.mediaDetailDialogVisible = true;
-  }
-}
-```
+## Configuration
 
-## Request/Response Handling
+Edit `.claudewatch/config.js` to customize:
+- Pages to test
+- Elements to validate
+- Forms to test
+- API endpoints to check
+- Accessibility rules
+- Performance thresholds
 
-- Base API URL from `process.env.VUE_APP_BASE_API` (configured in `.env` files)
-- Request interceptor adds JWT token and `Content-Type: application/json`
-- Response interceptor handles 401, token refresh, and blob responses (file downloads)
-- Standard response format: `{ code: number, msg: string, data: any }`
+### Visual Analysis Features
 
-## Build Configuration
+ClaudeWatch provides comprehensive visual validation:
+- Screenshot capture across all viewports
+- Task completion assessment
+- Layout and structure evaluation
+- Element detection and verification
+- Content alignment analysis
 
-- **Webpack**: Via `@vue/cli-service` with custom config in `vue.config.js`
-- **Code splitting**: Separate chunks for elementUI, libs, and commons
-- **Gzip compression**: Enabled for files >10KB
-- **SVG icons**: Using `svg-sprite-loader` (icons in `src/icons/svg/`)
-- **Images**: url-loader for files <4KB, file-loader for larger
+## Validation Types
 
-## Deployment
+ClaudeWatch checks:
+- ✅ **Visual Analysis** - Screenshot capture and structural analysis
+- ✅ **Visual Elements** - Required page elements exist and function properly
+- ✅ **Task Alignment** - Compares page content against original request
+- ✅ **Accessibility** - Alt text, headings, contrast, keyboard navigation
+- ✅ **Performance** - Load times, Core Web Vitals
+- ✅ **Forms** - Validation, error handling, submission
+- ✅ **APIs** - Health checks, response codes
+- ✅ **Console** - JavaScript errors and warnings
+- ✅ **Links** - Broken link detection
+- ✅ **Mobile** - Responsive design across viewports
 
-Docker deployment uses multi-stage builds in `deploy/dual-runtime/`:
-- Nginx reverse proxy routes based on domain and HTTP method
-- CQRS routing implemented at Nginx level
-- Environment variables configure upstream service addresses
+## Output Files
 
-## State Management (Vuex)
+- `validation-logs/` - Detailed JSON reports
+- `validation-screenshots/` - Screenshots from all viewports
+- `.claudewatch/logs/` - Self-healing logs (if enabled)
 
-Key modules:
-- `user`: Authentication state and user profile
-- `permission`: Dynamic route generation based on roles
-- `app`: UI settings (sidebar, device detection)
-- `tagsView`: Navigation history for tabs
-- `settings`: System configuration
+## Best Practices
 
-## Conventions
+1. **Let validation run automatically** - It's triggered after each task
+2. **Review validation reports** - Check screenshots and logs
+3. **Update configuration** - Customize for your project needs
+4. **Keep server running** - Validation needs a live development server
 
-- **File naming**: PascalCase for components, camelCase for utilities
-- **API organization**: Split by domain and CQRS pattern for evidence APIs
-- **Error handling**: Global interceptor in `request.js`, user-friendly messages
-- **Pre-commit hooks**: Husky + lint-staged runs ESLint with auto-fix
-- **Lazy loading**: Routes use dynamic imports via `loadView()` helper
+## Troubleshooting
 
-## Testing
+If validation fails:
+1. Check that your dev server is running
+2. Review the validation logs in `validation-logs/`
+3. Look at screenshots in `validation-screenshots/`
+4. Update `.claudewatch/config.js` if needed
 
-- Unit tests with Jest (`npm run test:unit`)
-- Test files co-located with components or in `tests/unit/`
-- Vue Test Utils for component testing
+{{#if SELF_HEALING}}
+If self-healing gets stuck:
+1. Check `validation-logs/self-healing-log.json`
+2. Some issues may need manual fixes
+3. Run `claudewatch validate` to see remaining issues
+{{/if}}
+
+## Exit Codes
+
+- **0** = All validations passed ✅
+- **1** = Some validations failed ❌
+
+Remember: ClaudeWatch helps ensure high-quality, accessible, performant code. Trust the process and let it guide improvements!

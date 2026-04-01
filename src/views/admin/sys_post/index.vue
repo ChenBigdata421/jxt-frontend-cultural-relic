@@ -72,38 +72,6 @@
         >
           <el-table-column type="selection" width="60" align="center" />
           <el-table-column
-            label="操作"
-            align="center"
-            class-name="small-padding fixed-width"
-            width="180"
-            fixed="left"
-          >
-            <template slot-scope="scope">
-              <div class="action-buttons">
-                <el-button
-                  v-permisaction="['admin:sysPost:edit']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-edit"
-                  class="action-btn tertiary"
-                  @click="handleUpdate(scope.row)"
-                >
-                  修改
-                </el-button>
-                <el-button
-                  v-permisaction="['admin:sysPost:remove']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-delete"
-                  class="action-btn tertiary-danger"
-                  @click="handleDelete(scope.row)"
-                >
-                  删除
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column
             label="岗位编号"
             align="center"
             prop="postId"
@@ -155,6 +123,38 @@
           >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.createdAt) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="180"
+            fixed="right"
+          >
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['admin:sysPost:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  v-permisaction="['admin:sysPost:remove']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>

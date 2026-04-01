@@ -151,49 +151,6 @@
         >
           <el-table-column type="selection" width="60" align="center" />
           <el-table-column
-            label="操作"
-            align="center"
-            class-name="small-padding fixed-width"
-            width="280"
-            fixed="left"
-          >
-            <template slot-scope="scope">
-              <div class="action-buttons">
-                <el-button
-                  v-permisaction="['admin:sysUser:edit']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-edit"
-                  class="action-btn tertiary"
-                  @click="handleUpdate(scope.row)"
-                >
-                  修改
-                </el-button>
-                <el-button
-                  v-if="scope.row.userId !== 1"
-                  v-permisaction="['admin:sysUser:remove']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-delete"
-                  class="action-btn tertiary-danger"
-                  @click="handleDelete(scope.row)"
-                >
-                  删除
-                </el-button>
-                <el-button
-                  v-permisaction="['admin:sysUser:resetPassword']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-key"
-                  class="action-btn tertiary"
-                  @click="handleResetPwd(scope.row)"
-                >
-                  重置密码
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column
             v-if="isColumnVisible('policeNo')"
             label="警号"
             align="center"
@@ -280,6 +237,49 @@
           >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.createdAt) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="280"
+            fixed="right"
+          >
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['admin:sysUser:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  v-if="scope.row.userId !== 1"
+                  v-permisaction="['admin:sysUser:remove']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+                <el-button
+                  v-permisaction="['admin:sysUser:resetPassword']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-key"
+                  class="action-btn tertiary"
+                  @click="handleResetPwd(scope.row)"
+                >
+                  重置密码
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>

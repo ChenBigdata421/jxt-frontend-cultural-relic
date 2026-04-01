@@ -95,43 +95,6 @@
     >
       <!-- 选择列 (单选和多选都使用checkbox) -->
       <el-table-column type="selection" width="60" align="center" />
-      <!-- 操作列 (仅在非选择模式下显示) -->
-      <el-table-column
-        v-if="!selectionMode"
-        label="操作"
-        width="360"
-        align="center"
-        class-name="small-padding fixed-width"
-        fixed="left"
-      >
-        <template slot-scope="scope">
-          <div class="action-buttons">
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-view"
-              class="action-btn tertiary"
-              @click="handleOperation(scope.row, 'view')"
-            >详情</el-button>
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-edit"
-              class="action-btn tertiary"
-              @click="handleOperation(scope.row, 'edit')"
-            >修改</el-button>
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-delete"
-              class="action-btn tertiary-danger"
-              @click="handleOperation(scope.row, 'delete')"
-            >删除</el-button>
-            <!-- 自定义操作按钮插槽 -->
-            <slot name="operation" :row="scope.row" />
-          </div>
-        </template>
-      </el-table-column>
       <el-table-column
         v-if="isColumnVisible('archiveCode')"
         prop="archiveCode"
@@ -286,6 +249,43 @@
       >
         <template slot-scope="{ row }">
           {{ parseTime(row.updatedAt) }}
+        </template>
+      </el-table-column>
+      <!-- 操作列 (仅在非选择模式下显示) -->
+      <el-table-column
+        v-if="!selectionMode"
+        label="操作"
+        width="360"
+        align="center"
+        class-name="small-padding fixed-width"
+        fixed="right"
+      >
+        <template slot-scope="scope">
+          <div class="action-buttons">
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-view"
+              class="action-btn tertiary"
+              @click="handleOperation(scope.row, 'view')"
+            >详情</el-button>
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-edit"
+              class="action-btn tertiary"
+              @click="handleOperation(scope.row, 'edit')"
+            >修改</el-button>
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-delete"
+              class="action-btn tertiary-danger"
+              @click="handleOperation(scope.row, 'delete')"
+            >删除</el-button>
+            <!-- 自定义操作按钮插槽 -->
+            <slot name="operation" :row="scope.row" />
+          </div>
         </template>
       </el-table-column>
     </el-table>

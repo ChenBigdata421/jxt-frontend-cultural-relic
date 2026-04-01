@@ -113,38 +113,6 @@
           <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
           <!--:formatter 是一个属性绑定（也称为"v-bind"或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column
-            label="操作"
-            align="center"
-            class-name="small-padding fixed-width"
-            width="240"
-            fixed="left"
-          >
-            <template slot-scope="scope">
-              <div class="action-buttons">
-                <el-button
-                  v-permisaction="['incidentrecord:bwc:browse']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-view"
-                  class="action-btn tertiary"
-                  @click="handleView(scope.row)"
-                >
-                  浏览
-                </el-button>
-                <el-button
-                  v-permisaction="['incidentrecord:bwc:link']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-link"
-                  class="action-btn tertiary"
-                  @click="handleLinkMedia(scope.row)"
-                >
-                  已关联媒体
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column
             v-if="isColumnVisible('code')"
             prop="code"
             label="警情号"
@@ -375,6 +343,38 @@
                   selectDictLabel(incidentRelationStatusOptions, row.isRelation)
                 }}
               </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="240"
+            fixed="right"
+          >
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['incidentrecord:bwc:browse']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >
+                  浏览
+                </el-button>
+                <el-button
+                  v-permisaction="['incidentrecord:bwc:link']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-link"
+                  class="action-btn tertiary"
+                  @click="handleLinkMedia(scope.row)"
+                >
+                  已关联媒体
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>

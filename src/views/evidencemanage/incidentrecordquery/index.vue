@@ -151,48 +151,6 @@
           <!--:formatter 是一个属性绑定（也称为"v-bind"或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
           <el-table-column type="selection" width="60" align="center" />
           <el-table-column
-            label="操作"
-            align="center"
-            class-name="small-padding fixed-width"
-            width="240"
-            fixed="left"
-          >
-            <template slot-scope="scope">
-              <div class="action-buttons">
-                <el-button
-                  v-permisaction="['incidentrecord:bwc:browse']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-view"
-                  class="action-btn tertiary"
-                  @click="handleView(scope.row)"
-                >
-                  浏览
-                </el-button>
-                <el-button
-                  v-permisaction="['incidentrecord:bwc:edit']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-edit"
-                  class="action-btn tertiary"
-                  @click="handleUpdate(scope.row)"
-                >
-                  修改
-                </el-button>
-                <el-button
-                  v-permisaction="['incidentrecord:bwc:remove']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-delete"
-                  class="action-btn tertiary-danger"
-                  @click="handleDelete(scope.row)"
-                >
-                  删除
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column
             v-if="isColumnVisible('code')"
             prop="code"
             label="警情号"
@@ -423,6 +381,48 @@
                   selectDictLabel(incidentRelationStatusOptions, row.isRelation)
                 }}
               </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="240"
+            fixed="right"
+          >
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['incidentrecord:bwc:browse']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >
+                  浏览
+                </el-button>
+                <el-button
+                  v-permisaction="['incidentrecord:bwc:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  v-permisaction="['incidentrecord:bwc:remove']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>

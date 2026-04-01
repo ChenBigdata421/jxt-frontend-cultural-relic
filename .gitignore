@@ -2,3 +2,8 @@ node_modules/
 dist/
 .env.development
 .env.development
+
+# ClaudeWatch
+validation-logs/
+validation-screenshots/
+.claudewatch/logs/

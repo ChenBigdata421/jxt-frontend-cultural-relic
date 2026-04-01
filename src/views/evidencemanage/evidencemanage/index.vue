@@ -103,36 +103,6 @@
           border
         >
           <el-table-column
-            label="操作"
-            align="center"
-            class-name="small-padding fixed-width"
-            width="300"
-            fixed="left"
-          >
-            <template slot-scope="scope">
-              <div class="action-buttons">
-                <el-button
-                  size="small"
-                  type="text"
-                  icon="el-icon-link"
-                  class="action-btn tertiary"
-                  @click="handleLinkMedia(scope.row)"
-                >
-                  已关联媒体
-                </el-button>
-                <el-button
-                  size="small"
-                  type="text"
-                  icon="el-icon-edit"
-                  class="action-btn tertiary"
-                  @click="handleEditEvidence(scope.row)"
-                >
-                  编辑证据
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column
             v-if="isColumnVisible('caseCode')"
             label="案件编号"
             align="center"
@@ -249,6 +219,36 @@
           >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.createdAt) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="300"
+            fixed="right"
+          >
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-link"
+                  class="action-btn tertiary"
+                  @click="handleLinkMedia(scope.row)"
+                >
+                  已关联媒体
+                </el-button>
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleEditEvidence(scope.row)"
+                >
+                  编辑证据
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>

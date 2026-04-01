@@ -83,16 +83,18 @@
           border
           :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         >
+          <!-- 执法类型名称列（固定在左侧） -->
+          <el-table-column
+            prop="enforcementTypeName"
+            label="执法类型名称"
+            min-width="180"
+            fixed="left"
+          />
           <!-- 数据列 -->
           <el-table-column
             prop="enforcementTypeCode"
             label="执法类型编码"
             min-width="150"
-          />
-          <el-table-column
-            prop="enforcementTypeName"
-            label="执法类型名称"
-            min-width="180"
           />
           <el-table-column
             prop="enforcementTypeDesc"
@@ -112,8 +114,7 @@
               <span>{{ parseTime(scope.row.createdAt) }}</span>
             </template>
           </el-table-column>
-
-          <!-- 操作列（置于最后一列，固定在右侧） -->
+          <!-- 操作列（最后一列，固定在右侧） -->
           <el-table-column
             label="操作"
             align="center"

@@ -2,7 +2,7 @@
   <el-dialog
     :title="'处理任务 - ' + processForm.taskName"
     :visible.sync="visible"
-    width="1000px"
+    width="667px"
     append-to-body
     custom-class="task-process-dialog"
     :close-on-click-modal="false"
@@ -305,8 +305,8 @@
 
     <div slot="footer" class="dialog-footer enhanced-footer">
       <el-button
-        type="success"
-        class="action-btn approve-btn"
+        type="primary"
+        class="action-btn primary-btn"
         :loading="isSubmitting"
         @click="handleApprove"
       >
@@ -314,15 +314,14 @@
         {{ isFirstStep ? "提交申请" : "通过" }}
       </el-button>
       <el-button
-        type="danger"
-        class="action-btn reject-btn"
+        class="action-btn secondary-btn danger-secondary"
         :loading="isSubmitting"
         @click="handleReject"
       >
         <i class="el-icon-close" />
         {{ isFirstStep ? "撤销" : "驳回" }}
       </el-button>
-      <el-button class="action-btn cancel-btn" @click="handleClose">
+      <el-button class="action-btn tertiary-btn" @click="handleClose">
         取消
       </el-button>
     </div>
@@ -500,11 +499,11 @@ export default {
           } else {
             this.msgError(response.msg || '任务撤销失败')
           }
-          response = await cancelInstance(this.currentInstanceId)
-          if (response.code === 200) {
+          const instanceResponse = await cancelInstance(this.currentInstanceId)
+          if (instanceResponse.code === 200) {
             this.msgSuccess('实例已取消')
           } else {
-            this.msgError(response.msg || '实例取消失败')
+            this.msgError(instanceResponse.msg || '实例取消失败')
           }
         } else {
           await this.submitTaskRejection('taskProcessForm', () => {
@@ -671,11 +670,10 @@ export default {
 <style scoped>
 /* ==================== 任务信息卡片 ==================== */
 .task-info-card {
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  background: #ECEFF1;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 24px;
-  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.1);
 }
 
 .task-info-grid {
@@ -691,9 +689,9 @@ export default {
 }
 
 .task-info-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
-  color: #94A3B8;
+  color: #546E7A;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -701,7 +699,7 @@ export default {
 .task-info-value {
   font-size: 16px;
   font-weight: 600;
-  color: #F8FAFC;
+  color: #1A1A1A;
 }
 
 /* ==================== 优先级徽章 ==================== */
@@ -715,20 +713,20 @@ export default {
 }
 
 .priority-high {
-  background: rgba(220, 38, 38, 0.15);
-  color: #FCA5A5;
+  background: rgba(255, 255, 255, 0.95);
+  color: #DC2626;
   border: 1px solid rgba(220, 38, 38, 0.3);
 }
 
 .priority-medium {
-  background: rgba(234, 179, 8, 0.15);
-  color: #FDE047;
+  background: rgba(255, 255, 255, 0.95);
+  color: #EAB308;
   border: 1px solid rgba(234, 179, 8, 0.3);
 }
 
 .priority-low {
-  background: rgba(148, 163, 184, 0.15);
-  color: #CBD5E1;
+  background: rgba(255, 255, 255, 0.95);
+  color: #64748B;
   border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
@@ -1027,20 +1025,98 @@ export default {
 .form-fields-grid {
   display: grid;
   gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* grid 内的表单项不需要额外的 margin-bottom，由 gap 控制 */
+.form-fields-grid .enhanced-form-item {
+  margin-bottom: 0;
 }
 
 .enhanced-form-item {
   margin-bottom: 20px;
+  display: flex !important;
+  align-items: flex-start !important;
+}
+
+.enhanced-form-item:last-child {
+  margin-bottom: 0;
 }
 
 .enhanced-form-item >>> .el-form-item__label {
+  font-size: 13px;
   font-weight: 500;
-  color: #0F172A;
-  font-size: 14px;
+  color: #546E7A;
+  line-height: 32px !important;
+  height: auto;
+  flex-shrink: 0;
+  padding-right: 8px !important;
 }
 
-.full-width-input {
-  width: 100%;
+/* ==================== 统一所有输入框宽度 ==================== */
+/* 设置所有表单项内容区域为100%宽度 */
+.enhanced-form-item >>> .el-form-item__content {
+  width: calc(100% - 120px); /* 减去label宽度 */
+  line-height: 32px !important;
+}
+
+/* 所有输入组件的基础宽度设置 */
+.full-width-input,
+.enhanced-input,
+.enhanced-textarea,
+.enhanced-form-item >>> .el-input,
+.enhanced-form-item >>> .el-input-number,
+.enhanced-form-item >>> .el-textarea,
+.enhanced-form-item >>> .el-select,
+.enhanced-form-item >>> .vue-treeselect,
+.enhanced-form-item >>> .el-date-editor,
+.enhanced-form-item >>> .el-time-select {
+  width: 100% !important;
+  max-width: 400px !important; /* 限制最大宽度，让右侧留出与标签相等的空间 */
+}
+
+/* 所有输入框内部元素的宽度设置 */
+.enhanced-form-item >>> .el-input__inner,
+.enhanced-form-item >>> .el-textarea__inner,
+.enhanced-form-item >>> .el-input-number .el-input__inner,
+.enhanced-form-item >>> .el-select .el-input__inner,
+.full-width-input >>> .el-input__inner,
+.enhanced-input >>> .el-input__inner,
+.enhanced-textarea >>> .el-textarea__inner {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* 日期选择器特殊处理 */
+.enhanced-form-item >>> .el-date-editor,
+.enhanced-form-item >>> .el-date-editor .el-input__inner,
+.full-width-input.el-date-editor,
+.full-width-input.el-date-editor .el-input__inner {
+  width: 100% !important;
+}
+
+/* 时间选择器特殊处理 */
+.enhanced-form-item >>> .el-time-select,
+.enhanced-form-item >>> .el-time-select .el-input__inner,
+.full-width-input.el-time-select,
+.full-width-input.el-time-select .el-input__inner {
+  width: 100% !important;
+}
+
+/* 数字输入框特殊处理 */
+.enhanced-form-item >>> .el-input-number,
+.full-width-input.el-input-number {
+  width: 100% !important;
+}
+
+.enhanced-form-item >>> .el-input-number .el-input__inner {
+  width: 100% !important;
+}
+
+/* Treeselect 组件宽度 */
+.full-width-input.vue-treeselect,
+.full-width-input.vue-treeselect >>> .vue-treeselect__control {
+  width: 100% !important;
 }
 
 .enhanced-input >>> .el-input__inner {
@@ -1048,6 +1124,8 @@ export default {
   border: 1px solid #CBD5E1;
   transition: all 0.2s ease;
   padding-left: 36px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .enhanced-input >>> .el-input__inner:focus {
@@ -1066,6 +1144,8 @@ export default {
   transition: all 0.2s ease;
   font-family: inherit;
   line-height: 1.6;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .enhanced-textarea >>> .el-textarea__inner:focus {
@@ -1086,47 +1166,94 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 12px 20px;
+  border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease-out;
   min-width: 100px;
   justify-content: center;
 }
 
-.action-btn.approve-btn {
-  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
-  border: none;
+/* ========== Primary Button（主要按钮） ========== */
+.action-btn.primary-btn {
+  background-color: #1A5F7A;
   color: #FFFFFF;
-}
-
-.action-btn.approve-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-}
-
-.action-btn.reject-btn {
-  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
   border: none;
-  color: #FFFFFF;
+  box-shadow: 0 2px 4px rgba(26, 95, 122, 0.2);
 }
 
-.action-btn.reject-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+.action-btn.primary-btn:hover {
+  background-color: #2E86AB;
+  box-shadow: 0 4px 8px rgba(26, 95, 122, 0.3);
+  transform: none;
 }
 
-.action-btn.cancel-btn {
-  background: #FFFFFF;
-  border: 1px solid #CBD5E1;
-  color: #64748B;
+.action-btn.primary-btn:active {
+  background-color: #255A7A;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.action-btn.cancel-btn:hover {
-  border-color: #94A3B8;
-  color: #0F172A;
-  background: #F8FAFC;
+.action-btn.primary-btn:focus {
+  outline: 2px solid #1A5F7A;
+  outline-offset: 2px;
+}
+
+/* ========== Secondary Button（次要按钮 - Danger色） ========== */
+.action-btn.secondary-btn {
+  background-color: rgba(245, 108, 108, 0.1);
+  color: #F56C6C;
+  border: 1px solid rgba(245, 108, 108, 0.3);
+}
+
+.action-btn.secondary-btn:hover {
+  background-color: rgba(245, 108, 108, 0.2);
+  border-color: rgba(245, 108, 108, 0.4);
+  transform: none;
+}
+
+.action-btn.secondary-btn:active {
+  background-color: rgba(245, 108, 108, 0.3);
+}
+
+.action-btn.secondary-btn:focus {
+  outline: 2px solid #F56C6C;
+  outline-offset: 2px;
+}
+
+/* ========== Tertiary Button（三级按钮） ========== */
+.action-btn.tertiary-btn {
+  background-color: transparent;
+  color: #606266;
+  border: none;
+}
+
+.action-btn.tertiary-btn:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: #303133;
+}
+
+.action-btn.tertiary-btn:active {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.action-btn.tertiary-btn:focus {
+  outline: 2px solid #909399;
+  outline-offset: 2px;
+}
+
+/* ========== 禁用状态增强 ========== */
+.action-btn[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.action-btn[disabled]:hover {
+  background-color: initial;
+  color: initial;
+  border-color: initial;
+  box-shadow: initial;
+  transform: none;
 }
 
 /* ==================== 响应式设计 ==================== */

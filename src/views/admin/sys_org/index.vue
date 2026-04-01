@@ -51,12 +51,14 @@
           style="width: 100%"
           :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
         >
-          <!--prop 属性是 <el-table-column> 中一个关键的属性，用于定义表格每一列应该显示数据对象中的哪个字段。-->
-          <!--:formatter 是一个属性绑定（也称为"v-bind"或简写为冒号前缀的语法），它允许将一个方法或函数作为属性值传递给子组件，以便在特定情况下自定义数据的显示方式。-->
-          <el-table-column prop="orgName" label="组织名称" min-width="150" />
+          <!-- 组织名称列（包含展开/折叠功能，固定在左侧） -->
+          <el-table-column prop="orgName" label="组织名称" min-width="200" fixed="left">
+            <template slot-scope="scope">
+              <span>{{ scope.row.orgName }}</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="orgCode" label="组织编码" width="120" />
           <el-table-column prop="leader" label="负责人" width="150" />
-          <!--<el-table-column prop="status" label="状态" :formatter="statusFormat" width="100">在<template slot-scope="scope">中已经调用了statusFormat，这里就不需要了-->
           <el-table-column prop="status" label="状态" width="120">
             <template slot-scope="scope">
               <el-switch
@@ -72,7 +74,8 @@
               <span>{{ parseTime(scope.row.createdAt) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="260">
+          <!-- 操作列（最后一列，固定在右侧） -->
+          <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="260" fixed="right">
             <template slot-scope="scope">
               <div class="action-buttons">
                 <el-button

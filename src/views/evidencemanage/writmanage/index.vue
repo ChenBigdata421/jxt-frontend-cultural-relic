@@ -142,63 +142,6 @@
         >
           <el-table-column type="selection" width="60" align="center" />
           <el-table-column
-            label="操作"
-            align="center"
-            class-name="small-padding fixed-width"
-            width="320"
-            fixed="left"
-          >
-            <template slot-scope="scope">
-              <div class="action-buttons">
-                <el-button
-                  size="small"
-                  type="text"
-                  icon="el-icon-view"
-                  class="action-btn tertiary"
-                  @click="handleView(scope.row)"
-                >
-                  浏览
-                </el-button>
-                <el-button
-                  size="small"
-                  type="text"
-                  icon="el-icon-edit"
-                  class="action-btn tertiary"
-                  @click="handleUpdate(scope.row)"
-                >
-                  修改
-                </el-button>
-                <el-button
-                  size="small"
-                  type="text"
-                  icon="el-icon-delete"
-                  class="action-btn tertiary-danger"
-                  @click="handleDelete(scope.row)"
-                >
-                  删除
-                </el-button>
-                <el-button
-                  size="small"
-                  type="text"
-                  icon="el-icon-star-on"
-                  class="action-btn tertiary"
-                  @click="handleScore(scope.row)"
-                >
-                  评分
-                </el-button>
-                <el-button
-                  size="small"
-                  type="text"
-                  icon="el-icon-link"
-                  class="action-btn tertiary"
-                  @click="handleShowMedia(scope.row)"
-                >
-                  已关联媒体
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column
             v-if="isColumnVisible('writCode')"
             label="文书编号"
             align="center"
@@ -312,6 +255,63 @@
           >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.updatedAt) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="320"
+            fixed="right"
+          >
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >
+                  浏览
+                </el-button>
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-star-on"
+                  class="action-btn tertiary"
+                  @click="handleScore(scope.row)"
+                >
+                  评分
+                </el-button>
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-link"
+                  class="action-btn tertiary"
+                  @click="handleShowMedia(scope.row)"
+                >
+                  已关联媒体
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>

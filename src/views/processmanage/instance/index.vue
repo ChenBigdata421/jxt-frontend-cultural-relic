@@ -1,331 +1,291 @@
 <template>
-  <div class="app-container workflow-instance-container">
-    <!-- 页面标题和统计 -->
-    <div class="page-header">
-      <div class="header-content">
-        <h1 class="page-title">工作流实例管理</h1>
-        <p class="page-subtitle">查看和管理所有工作流实例的执行状态</p>
-      </div>
-      <div class="header-stats">
-        <div class="stat-card">
-          <div class="stat-value">{{ total }}</div>
-          <div class="stat-label">总实例数</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">{{ runningCount }}</div>
-          <div class="stat-label">运行中</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">{{ completedCount }}</div>
-          <div class="stat-label">已完成</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 查询条件卡片 -->
-    <div class="filter-card">
-      <el-form ref="queryForm" :model="queryParams" :inline="true" class="filter-form" label-width="80px">
-        <el-form-item label="工作流" prop="workflowId">
-          <el-select
-            v-model="queryParams.workflowId"
-            placeholder="请选择工作流"
-            clearable
-            class="filter-select"
-          >
-            <el-option
-              v-for="opt in workflowOptions"
-              :key="opt.workflowId"
-              :label="opt.name"
-              :value="opt.workflowId"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-select
-            v-model="queryParams.status"
-            placeholder="请选择状态"
-            clearable
-            class="filter-select"
-          >
-            <el-option label="运行中" value="running">
-              <span class="status-option">
-                <span class="status-dot running" />
-                运行中
-              </span>
-            </el-option>
-            <el-option label="已完成" value="completed">
-              <span class="status-option">
-                <span class="status-dot completed" />
-                已完成
-              </span>
-            </el-option>
-            <el-option label="失败" value="failed">
-              <span class="status-option">
-                <span class="status-dot failed" />
-                失败
-              </span>
-            </el-option>
-            <el-option label="已取消" value="cancelled">
-              <span class="status-option">
-                <span class="status-dot cancelled" />
-                已取消
-              </span>
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item class="filter-actions">
-          <el-button type="primary" icon="el-icon-search" class="search-btn" @click="handleQuery">
-            查询
-          </el-button>
-          <el-button icon="el-icon-refresh" class="reset-btn" @click="resetQuery">
-            重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-
-    <!-- 数据表格 -->
-    <div class="table-container">
-      <el-table
-        v-loading="loading"
-        :data="instanceList"
-        class="enhanced-table"
-        header-row-class-name="table-header"
-        row-class-name="table-row"
-        :empty-text="emptyText"
-        border
-        :resizable="true"
-      >
-        <el-table-column label="操作" align="center" width="180" fixed="left">
-          <template slot-scope="scope">
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-view"
-              @click="handleDetail(scope.row)"
-            >详情</el-button>
-            <el-button
-              v-if="scope.row.status === 'running'"
-              size="small"
-              type="text"
-              icon="el-icon-video-pause"
-              @click="handleCancel(scope.row)"
-            >取消</el-button>
-          </template>
-        </el-table-column>
-        <el-table-column label="实例编号" align="left" prop="instanceNo" min-width="220" show-overflow-tooltip resizable>
-          <template slot-scope="scope">
-            <div class="cell-content">
-              <i class="el-icon-document-copy cell-icon" />
-              <span class="cell-text">{{ scope.row.instanceNo }}</span>
+  <BasicLayout>
+    <template #wrapper>
+      <el-card class="box-card">
+        <!-- 页面标题和统计 -->
+        <div class="page-header">
+          <div class="header-content">
+            <h1 class="page-title">工作流实例管理</h1>
+            <p class="page-subtitle">查看和管理所有工作流实例的执行状态</p>
+          </div>
+          <div class="header-stats">
+            <div class="stat-card">
+              <div class="stat-value">{{ total }}</div>
+              <div class="stat-label">总实例数</div>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column label="工作流" align="left" prop="workflowName" min-width="200" show-overflow-tooltip resizable>
-          <template slot-scope="scope">
-            <div class="cell-content">
-              <i class="el-icon-share cell-icon" />
-              <span class="cell-text">{{ scope.row.workflowName }}</span>
+            <div class="stat-card">
+              <div class="stat-value">{{ runningCount }}</div>
+              <div class="stat-label">运行中</div>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" align="center" prop="status" width="140" resizable>
-          <template slot-scope="scope">
-            <span :class="['status-badge', `status-${scope.row.status}`]">
-              <span class="status-dot" />
-              <span class="status-text">{{ getStatusText(scope.row.status) }}</span>
-            </span>
-          </template>
-        </el-table-column>
-        <el-table-column label="开始时间" align="center" prop="startedAt" width="180" resizable>
-          <template slot-scope="scope">
-            <div class="time-cell">
-              <i class="el-icon-time time-icon" />
+            <div class="stat-card">
+              <div class="stat-value">{{ completedCount }}</div>
+              <div class="stat-label">已完成</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 新的查询栏组件 -->
+        <InstanceQueryBar
+          ref="queryBar"
+          :workflow-options="workflowOptions"
+          @search="handleSearch"
+          @reset="handleReset"
+        />
+
+        <!-- 数据表格 -->
+        <el-table
+          ref="instanceTable"
+          v-loading="loading"
+          :data="instanceList"
+          border
+        >
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="180"
+            fixed="left"
+          >
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleDetail(scope.row)"
+                >
+                  详情
+                </el-button>
+                <el-button
+                  v-if="scope.row.status === 'running'"
+                  size="small"
+                  type="text"
+                  icon="el-icon-video-pause"
+                  class="action-btn tertiary-danger"
+                  @click="handleCancel(scope.row)"
+                >
+                  取消
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="实例编号"
+            align="center"
+            prop="instanceNo"
+            min-width="220"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            label="工作流"
+            align="center"
+            prop="workflowName"
+            min-width="200"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            label="状态"
+            align="center"
+            prop="status"
+            width="140"
+          >
+            <template slot-scope="scope">
+              <span :class="['status-badge', `status-${scope.row.status}`]">
+                <span class="status-dot" />
+                <span class="status-text">{{ getStatusText(scope.row.status) }}</span>
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="开始时间"
+            align="center"
+            prop="startedAt"
+            width="180"
+          >
+            <template slot-scope="scope">
               <span>{{ parseTime(scope.row.startedAt) }}</span>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column label="完成时间" align="center" prop="completedAt" width="180" resizable>
-          <template slot-scope="scope">
-            <div class="time-cell">
-              <i class="el-icon-check time-icon completed" />
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="完成时间"
+            align="center"
+            prop="completedAt"
+            width="180"
+          >
+            <template slot-scope="scope">
               <span>{{ parseTime(scope.row.completedAt) || '-' }}</span>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+            </template>
+          </el-table-column>
+        </el-table>
 
-      <!-- 空状态 -->
-      <div v-if="!loading && instanceList.length === 0" class="empty-state">
-        <i class="el-icon-folder-opened empty-icon" />
-        <p class="empty-text">暂无工作流实例数据</p>
-        <p class="empty-hint">请调整筛选条件或等待新的工作流实例创建</p>
-      </div>
-    </div>
+        <!-- 分页 -->
+        <pagination
+          v-show="total > 0"
+          :total="total"
+          :page.sync="queryParams.pageIndex"
+          :limit.sync="queryParams.pageSize"
+          @pagination="getList"
+        />
+      </el-card>
 
-    <!-- 分页 -->
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      :page.sync="queryParams.pageIndex"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
-
-    <!-- 实例详情抽屉 -->
-    <el-drawer
-      title="工作流实例详情"
-      :visible.sync="detailDrawerVisible"
-      direction="rtl"
-      size="60%"
-      :before-close="handleDrawerClose"
-      custom-class="instance-detail-drawer"
-    >
-      <div v-loading="detailLoading" class="drawer-content">
-        <div class="workflow-detail-container">
-          <!-- 工作流头部信息卡片 -->
-          <div class="task-info-card">
-            <div class="task-info-grid">
-              <div class="task-info-item">
-                <label class="task-info-label">实例编号</label>
-                <div class="task-info-value">{{ instanceData.instanceNo || '-' }}</div>
-              </div>
-              <div class="task-info-item">
-                <label class="task-info-label">工作流名称</label>
-                <div class="task-info-value">{{ instanceData.workflowName || '-' }}</div>
-              </div>
-              <div class="task-info-item">
-                <label class="task-info-label">状态</label>
-                <div class="task-info-value">
-                  <span :class="['status-badge', `status-${instanceData.status}`]">
-                    <span class="status-dot" />
-                    <span class="status-text">{{ getStatusText(instanceData.status) }}</span>
-                  </span>
+      <!-- 实例详情抽屉 -->
+      <el-drawer
+        title="工作流实例详情"
+        :visible.sync="detailDrawerVisible"
+        direction="rtl"
+        size="60%"
+        :before-close="handleDrawerClose"
+        custom-class="instance-detail-drawer"
+      >
+        <div v-loading="detailLoading" class="drawer-content">
+          <div class="workflow-detail-container">
+            <!-- 工作流头部信息卡片 -->
+            <div class="task-info-card">
+              <div class="task-info-grid">
+                <div class="task-info-item">
+                  <label class="task-info-label">实例编号</label>
+                  <div class="task-info-value">{{ instanceData.instanceNo || '-' }}</div>
+                </div>
+                <div class="task-info-item">
+                  <label class="task-info-label">工作流名称</label>
+                  <div class="task-info-value">{{ instanceData.workflowName || '-' }}</div>
+                </div>
+                <div class="task-info-item">
+                  <label class="task-info-label">状态</label>
+                  <div class="task-info-value">
+                    <span :class="['status-badge', `status-${instanceData.status}`]">
+                      <span class="status-dot" />
+                      <span class="status-text">{{ getStatusText(instanceData.status) }}</span>
+                    </span>
+                  </div>
+                </div>
+                <div class="task-info-item">
+                  <label class="task-info-label">创建时间</label>
+                  <div class="task-info-value">{{ parseTime(instanceData.createdAt) }}</div>
+                </div>
+                <div class="task-info-item">
+                  <label class="task-info-label">最后更新</label>
+                  <div class="task-info-value">{{ parseTime(instanceData.updatedAt) }}</div>
+                </div>
+                <div class="task-info-item">
+                  <label class="task-info-label">开始时间</label>
+                  <div class="task-info-value">{{ parseTime(instanceData.startedAt) }}</div>
+                </div>
+                <div class="task-info-item">
+                  <label class="task-info-label">完成时间</label>
+                  <div class="task-info-value">{{ parseTime(instanceData.completedAt) || '-' }}</div>
+                </div>
+                <div class="task-info-item">
+                  <label class="task-info-label">启动人</label>
+                  <div class="task-info-value">{{ instanceData.startedBy || '-' }}</div>
                 </div>
               </div>
-              <div class="task-info-item">
-                <label class="task-info-label">创建时间</label>
-                <div class="task-info-value">{{ parseTime(instanceData.createdAt) }}</div>
-              </div>
-              <div class="task-info-item">
-                <label class="task-info-label">最后更新</label>
-                <div class="task-info-value">{{ parseTime(instanceData.updatedAt) }}</div>
-              </div>
-              <div class="task-info-item">
-                <label class="task-info-label">开始时间</label>
-                <div class="task-info-value">{{ parseTime(instanceData.startedAt) }}</div>
-              </div>
-              <div class="task-info-item">
-                <label class="task-info-label">完成时间</label>
-                <div class="task-info-value">{{ parseTime(instanceData.completedAt) || '-' }}</div>
-              </div>
-              <div class="task-info-item">
-                <label class="task-info-label">启动人</label>
-                <div class="task-info-value">{{ instanceData.startedBy || '-' }}</div>
-              </div>
+            </div>
+
+            <!-- 任务处理历史 -->
+            <div v-if="taskHistory && taskHistory.length > 0" class="history-section">
+              <h3 class="section-title">
+                <i class="el-icon-time" />
+                任务处理历史
+              </h3>
+              <task-history-list :task-history="taskHistory" @show-media-detail="handleShowMediaDetail" />
+            </div>
+
+            <!-- 空状态 -->
+            <div v-else class="empty-timeline">
+              <i class="el-icon-warning-outline empty-icon" />
+              <p class="empty-text">暂无任务处理历史</p>
+              <p class="empty-hint">工作流实例尚未开始处理</p>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="form-actions">
+              <el-button
+                type="primary"
+                icon="el-icon-refresh"
+                class="action-btn approve-btn"
+                @click="refreshDetail"
+              >
+                刷新状态
+              </el-button>
+              <el-button
+                icon="el-icon-close"
+                class="action-btn cancel-btn"
+                @click="handleDrawerClose"
+              >
+                关闭
+              </el-button>
             </div>
           </div>
-
-          <!-- 任务处理历史 -->
-          <div v-if="taskHistory && taskHistory.length > 0" class="history-section">
-            <h3 class="section-title">
-              <i class="el-icon-time" />
-              任务处理历史
-            </h3>
-            <task-history-list :task-history="taskHistory" @show-media-detail="handleShowMediaDetail" />
-          </div>
-
-          <!-- 空状态 -->
-          <div v-else class="empty-timeline">
-            <i class="el-icon-warning-outline empty-icon" />
-            <p class="empty-text">暂无任务处理历史</p>
-            <p class="empty-hint">工作流实例尚未开始处理</p>
-          </div>
-
-          <!-- 操作按钮 -->
-          <div class="form-actions">
-            <el-button
-              type="primary"
-              icon="el-icon-refresh"
-              class="action-btn approve-btn"
-              @click="refreshDetail"
-            >
-              刷新状态
-            </el-button>
-            <el-button
-              icon="el-icon-close"
-              class="action-btn cancel-btn"
-              @click="handleDrawerClose"
-            >
-              关闭
-            </el-button>
-          </div>
         </div>
-      </div>
-    </el-drawer>
+      </el-drawer>
 
-    <!-- 媒体详情对话框 -->
-    <MediaDetailDialog
-      :visible.sync="mediaDetailDialogVisible"
-      :media-data="currentMediaData"
-      @close="handleMediaDetailClose"
-    />
+      <!-- 媒体详情对话框 -->
+      <MediaDetailDialog
+        :visible.sync="mediaDetailDialogVisible"
+        :media-data="currentMediaData"
+        @close="handleMediaDetailClose"
+      />
 
-    <!-- 启动实例对话框 -->
-    <el-dialog
-      title="启动工作流实例"
-      :visible.sync="startOpen"
-      width="650px"
-      append-to-body
-      custom-class="start-instance-dialog"
-    >
-      <el-form ref="startForm" :model="startForm" :rules="startRules" label-width="100px" class="start-form">
-        <el-form-item label="工作流" prop="workflowId">
-          <el-select
-            v-model="workflowId"
-            placeholder="请选择工作流"
-            class="full-width-select"
-            filterable
-          >
-            <el-option
-              v-for="opt in workflowOptions"
-              :key="opt.workflowId"
-              :label="opt.name"
-              :value="opt.workflowId"
+      <!-- 启动实例对话框 -->
+      <el-dialog
+        title="启动工作流实例"
+        :visible.sync="startOpen"
+        width="650px"
+        append-to-body
+        custom-class="start-instance-dialog"
+      >
+        <el-form ref="startForm" :model="startForm" :rules="startRules" label-width="100px" class="start-form">
+          <el-form-item label="工作流" prop="workflowId">
+            <el-select
+              v-model="workflowId"
+              placeholder="请选择工作流"
+              class="full-width-select"
+              filterable
             >
-              <span class="workflow-option">
-                <i class="el-icon-share option-icon" />
-                <span class="option-label">{{ opt.name }}</span>
-              </span>
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="输入数据" prop="input">
-          <el-input
-            v-model="startForm.input"
-            type="textarea"
-            :rows="10"
-            placeholder="请输入输入数据(JSON格式)，例如：{&quot;key&quot;: &quot;value&quot;}"
-            class="json-textarea"
-          />
-          <div class="form-hint">
-            <i class="el-icon-info" />
-            输入数据必须是有效的JSON格式
-          </div>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer enhanced-footer">
-        <el-button class="cancel-btn" @click="cancelStart">取 消</el-button>
-        <el-button type="primary" class="submit-btn" @click="submitStart">
-          <i class="el-icon-video-play" />
-          启动实例
-        </el-button>
-      </div>
-    </el-dialog>
-  </div>
+              <el-option
+                v-for="opt in workflowOptions"
+                :key="opt.workflowId"
+                :label="opt.name"
+                :value="opt.workflowId"
+              >
+                <span class="workflow-option">
+                  <i class="el-icon-share option-icon" />
+                  <span class="option-label">{{ opt.name }}</span>
+                </span>
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="输入数据" prop="input">
+            <el-input
+              v-model="startForm.input"
+              type="textarea"
+              :rows="10"
+              placeholder="请输入输入数据(JSON格式)，例如：{&quot;key&quot;: &quot;value&quot;}"
+              class="json-textarea"
+            />
+            <div class="form-hint">
+              <i class="el-icon-info" />
+              输入数据必须是有效的JSON格式
+            </div>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer enhanced-footer">
+          <el-button class="cancel-btn" @click="cancelStart">取 消</el-button>
+          <el-button type="primary" class="submit-btn" @click="submitStart">
+            <i class="el-icon-video-play" />
+            启动实例
+          </el-button>
+        </div>
+      </el-dialog>
+    </template>
+  </BasicLayout>
 </template>
 
 <script>
+import BasicLayout from '@/layout/BasicLayout'
+import Pagination from '@/components/Pagination'
 import {
   listAllInstances,
   getInstance,
@@ -334,12 +294,16 @@ import {
   cancelInstance
 } from '@/api/process/instance'
 import { listAllWorkflows } from '@/api/process/workflow'
+import InstanceQueryBar from '@/components/InstanceQueryBar/index.vue'
 import TaskHistoryList from '@/components/TaskHistoryList.vue'
 import MediaDetailDialog from '@/components/MediaDetailDialog'
 
 export default {
   name: 'WorkflowInstance',
   components: {
+    BasicLayout,
+    Pagination,
+    InstanceQueryBar,
     TaskHistoryList,
     MediaDetailDialog
   },
@@ -485,6 +449,23 @@ export default {
       this.resetForm('queryForm')
       this.handleQuery()
     },
+    /** 查询栏相关方法 */
+    handleSearch(searchData) {
+      // 合并新的搜索条件
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key]
+      })
+      this.handleQuery()
+    },
+    handleReset() {
+      this.queryParams = {
+        pageIndex: 1,
+        pageSize: 10,
+        workflowId: undefined,
+        status: undefined
+      }
+      this.handleQuery()
+    },
     /** 详情按钮操作 */
     handleDetail(row) {
       // 先清空之前的数据
@@ -518,7 +499,6 @@ export default {
       } catch (error) {
         console.error('获取实例详情失败:', error)
         this.msgError('获取实例详情失败：' + (error.message || '未知错误'))
-      } finally {
       }
     },
 
@@ -665,288 +645,82 @@ export default {
 </script>
 
 <style scoped>
-/* ==================== 容器基础样式 ==================== */
-.workflow-instance-container {
-  padding: 24px;
-  background: #F8FAFC;
-  min-height: calc(100vh - 84px);
-}
-
-/* ==================== 页面头部 ==================== */
+/* ==================== 页面头部样式 ==================== */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  padding: 24px;
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.1);
+  padding: 20px;
+  background: #ECEFF1;
+  border-radius: 12px;
 }
 
 .header-content h1 {
   margin: 0 0 8px 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
-  color: #F8FAFC;
+  color: #0F172A;
 }
 
 .page-subtitle {
   margin: 0;
-  font-size: 14px;
-  color: #94A3B8;
+  font-size: 13px;
+  color: #546E7A;
 }
 
 .header-stats {
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: #FFFFFF;
   border-radius: 12px;
-  padding: 16px 24px;
-  min-width: 120px;
+  padding: 16px 20px;
+  min-width: 100px;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
+  border: 1px solid #E2E8F0;
+  transition: all 0.2s ease;
 }
 
 .stat-card:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #CBD5E1;
 }
 
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: #F8FAFC;
-  margin-bottom: 4px;
+  color: #0F172A;
+  margin-bottom: 8px;
 }
 
 .stat-label {
-  font-size: 12px;
-  color: #94A3B8;
+  font-size: 13px;
+  font-weight: 500;
+  color: #546E7A;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* ==================== 筛选卡片 ==================== */
-.filter-card {
-  background: #FFFFFF;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.filter-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-end;
-}
-
-.filter-select {
-  width: 200px;
-}
-
-.filter-actions {
-  margin-left: auto;
-  margin-bottom: 0 !important;
-}
-
-.search-btn {
-  background: linear-gradient(135deg, #0369A1 0%, #075985 100%);
-  border: none;
-  color: #FFFFFF;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.search-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(3, 105, 161, 0.3);
-}
-
-.reset-btn {
-  border-color: #CBD5E1;
-  color: #64748B;
-  padding: 10px 20px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.reset-btn:hover {
-  border-color: #94A3B8;
-  color: #0F172A;
-  background: #F8FAFC;
-}
-
-/* 状态选项样式 */
-.status-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.status-dot.running {
-  background: #0369A1;
-}
-
-.status-dot.completed {
-  background: #22C55E;
-}
-
-.status-dot.failed {
-  background: #EF4444;
-}
-
-.status-dot.cancelled {
-  background: #94A3B8;
-}
-
-/* ==================== 数据表格 ==================== */
-.table-container {
-  background: #FFFFFF;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.enhanced-table {
-  border: 1px solid #E2E8F0;
-}
-
-.enhanced-table >>> .table-header {
-  background: #F8FAFC;
-}
-
-.enhanced-table >>> .table-header th {
-  background: transparent;
-  border-bottom: 2px solid #E2E8F0;
-  border-right: 1px solid #E2E8F0;
-  color: #475569;
-  font-weight: 600;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 16px 12px;
-}
-
-.enhanced-table >>> .table-header th:last-child {
-  border-right: none;
-}
-
-.enhanced-table >>> .table-row {
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.enhanced-table >>> .table-row:hover {
-  background: #F8FAFC;
-}
-
-.enhanced-table >>> .table-row td {
-  border-bottom: 1px solid #F1F5F9;
-  border-right: 1px solid #F1F5F9;
-  padding: 16px 12px;
-  color: #334155;
-  font-size: 14px;
-}
-
-.enhanced-table >>> .table-row td:last-child {
-  border-right: none;
-}
-
-/* 列宽调整手柄样式 */
-.enhanced-table >>> .el-table__column-resize-proxy {
-  background-color: #0369A1;
-  width: 2px;
-}
-
-.enhanced-table >>> th.is-resizable:hover {
-  cursor: col-resize;
-}
-
-.enhanced-table >>> th.is-resizable:hover::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: #0369A1;
-}
-
-/* 单元格内容样式 */
-.cell-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.cell-icon {
-  color: #94A3B8;
-  font-size: 16px;
-}
-
-.cell-text {
-  color: #0F172A;
-  font-weight: 500;
-}
-
-.time-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: #64748B;
-  font-size: 13px;
-}
-
-.time-icon {
-  color: #94A3B8;
-}
-
-.time-icon.completed {
-  color: #22C55E;
-}
-
-/* 状态徽章 */
+/* ==================== 状态徽章 ==================== */
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 6px;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.5px;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
-.status-dot {
+.status-badge .status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   display: inline-block;
-  flex-shrink: 0;
-}
-
-.status-text {
-  white-space: nowrap;
 }
 
 .status-badge.status-running {
@@ -957,7 +731,6 @@ export default {
 
 .status-badge.status-running .status-dot {
   background: #0369A1;
-  box-shadow: 0 0 0 2px rgba(3, 105, 161, 0.2);
 }
 
 .status-badge.status-completed {
@@ -968,7 +741,6 @@ export default {
 
 .status-badge.status-completed .status-dot {
   background: #22C55E;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
 }
 
 .status-badge.status-failed {
@@ -979,7 +751,6 @@ export default {
 
 .status-badge.status-failed .status-dot {
   background: #EF4444;
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
 .status-badge.status-cancelled {
@@ -990,77 +761,56 @@ export default {
 
 .status-badge.status-cancelled .status-dot {
   background: #64748B;
-  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
 }
 
-/* 操作按钮 */
+/* ==================== 操作按钮样式 ==================== */
 .action-buttons {
   display: flex;
-  gap: 1px;
+  gap: 4px;
   justify-content: center;
   align-items: center;
   flex-wrap: nowrap;
-  white-space: nowrap;
 }
 
 .action-btn {
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.action-btn .btn-text {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
   white-space: nowrap;
 }
 
-.detail-btn {
-  color: #0369A1;
+/* ==================== 响应式设计 ==================== */
+@media (max-width: 1024px) {
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .header-stats {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
-.detail-btn:hover {
-  background: rgba(3, 105, 161, 0.1);
-}
+@media (max-width: 768px) {
+  .page-header {
+    padding: 16px;
+  }
 
-.cancel-btn {
-  color: #EF4444;
-}
+  .header-stats {
+    flex-wrap: wrap;
+  }
 
-.cancel-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-}
+  .stat-card {
+    flex: 1;
+    min-width: 60px;
+    padding: 8px 12px;
+  }
 
-/* 空状态 */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-}
-
-.empty-icon {
-  font-size: 64px;
-  color: #CBD5E1;
-  margin-bottom: 16px;
-}
-
-.empty-text {
-  font-size: 16px;
-  color: #64748B;
-  margin: 0 0 8px 0;
-}
-
-.empty-hint {
-  font-size: 14px;
-  color: #94A3B8;
-  margin: 0;
+  .stat-value {
+    font-size: 20px;
+  }
 }
 
 /* ==================== 抽屉样式 ==================== */
@@ -1077,17 +827,16 @@ export default {
 
 /* ==================== 任务信息卡片 ==================== */
 .task-info-card {
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  background: #ECEFF1;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 24px;
-  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.1);
 }
 
 .task-info-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 24px;
 }
 
 .task-info-item {
@@ -1097,94 +846,17 @@ export default {
 }
 
 .task-info-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
-  color: #94A3B8;
+  color: #546E7A;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .task-info-value {
-  font-size: 14px;
-  font-weight: 500;
-  color: #F8FAFC;
-}
-
-/* ==================== 状态徽章 ==================== */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.status-badge .status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-.status-badge.status-running {
-  background: rgba(3, 105, 161, 0.1);
-  color: #0369A1;
-  border: 1px solid rgba(3, 105, 161, 0.2);
-}
-
-.status-badge.status-running .status-dot {
-  background: #0369A1;
-  box-shadow: 0 0 0 2px rgba(3, 105, 161, 0.2);
-}
-
-.status-badge.status-completed {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22C55E;
-  border: 1px solid rgba(34, 197, 94, 0.2);
-}
-
-.status-badge.status-completed .status-dot {
-  background: #22C55E;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-}
-
-.status-badge.status-failed {
-  background: rgba(239, 68, 68, 0.1);
-  color: #EF4444;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.status-badge.status-failed .status-dot {
-  background: #EF4444;
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-}
-
-.status-badge.status-cancelled {
-  background: rgba(148, 163, 184, 0.1);
-  color: #64748B;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-}
-
-.status-badge.status-cancelled .status-dot {
-  background: #64748B;
-  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
-}
-
-.status-badge.status-pending {
-  background: rgba(234, 179, 8, 0.1);
-  color: #EAB308;
-  border: 1px solid rgba(234, 179, 8, 0.2);
-}
-
-.status-badge.status-pending .status-dot {
-  background: #EAB308;
-  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2);
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A1A;
 }
 
 /* ==================== 章节标题 ==================== */
@@ -1303,58 +975,7 @@ export default {
   background: #94A3B8;
 }
 
-.workflow-meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
-}
-
-.meta-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.meta-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #94A3B8;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.meta-label i {
-  font-size: 14px;
-}
-
-.meta-value {
-  font-size: 14px;
-  color: #F8FAFC;
-  font-weight: 500;
-}
-
-/* 时间线区域 */
-.timeline-section {
-  background: #FFFFFF;
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid #F1F5F9;
-}
-
-/* ==================== 启动对话框 ==================== */
+/* ==================== 启动对话框样式 ==================== */
 .start-instance-dialog >>> .el-dialog__header {
   background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
   color: #F8FAFC;
@@ -1445,90 +1066,16 @@ export default {
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
-.cancel-btn {
-  border-color: #CBD5E1;
-  color: #64748B;
-  padding: 10px 24px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.cancel-btn:hover {
-  border-color: #94A3B8;
-  color: #0F172A;
-  background: #F8FAFC;
-}
-
-/* ==================== 分页组件 ==================== */
-.pagination {
-  display: flex;
-  justify-content: center;
-  padding: 20px 0;
-}
-
-/* ==================== 响应式设计 ==================== */
+/* ==================== 响应式设计 - 抽屉 ==================== */
 @media (max-width: 1024px) {
-  .page-header {
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
-  }
-
-  .header-stats {
-    width: 100%;
-    justify-content: center;
-  }
-
   .task-info-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .workflow-instance-container {
-    padding: 16px;
-  }
-
-  .page-header {
-    padding: 20px;
-  }
-
-  .header-stats {
-    flex-wrap: wrap;
-  }
-
-  .stat-card {
-    flex: 1;
-    min-width: 100px;
-    padding: 12px 16px;
-  }
-
-  .filter-form {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .filter-select {
-    width: 100%;
-  }
-
-  .filter-actions {
-    width: 100%;
-    display: flex;
-    gap: 8px;
-  }
-
-  .filter-actions .el-button {
-    flex: 1;
-  }
-
   .task-info-grid {
     grid-template-columns: 1fr;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-    gap: 4px;
   }
 
   .form-actions {
@@ -1543,29 +1090,13 @@ export default {
     padding: 16px;
   }
 }
-
-/* ==================== 动画 ==================== */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.workflow-instance-container > * {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* ==================== 过渡效果 ==================== */
-.stat-card,
-.filter-card,
-.table-container,
-.timeline-section,
-.workflow-header {
-  transition: all 0.3s ease;
-}
 </style>
+
+<!--
+  样式说明：本页面使用全局样式和局部样式结合
+  全局样式位置：
+  - src/styles/index.scss: .filter-container, .box-card
+  - src/styles/components/search.scss: .search-section, .quick-search-form, .search-row, .search-item
+  - src/styles/components/buttons.scss: .action-btn, .search-action-buttons
+  - src/styles/components/tables.scss: 表格基础样式
+-->

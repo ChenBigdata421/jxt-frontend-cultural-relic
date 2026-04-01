@@ -153,7 +153,7 @@
             align="center"
             class-name="small-padding fixed-width"
             width="220"
-            fixed="left"
+            fixed="right"
           >
             <template slot-scope="scope">
               <div class="action-buttons">

@@ -1,411 +1,412 @@
-﻿<template>
-  <div class="app-container">
-    <!-- 查询条件 -->
-    <el-form ref="queryForm" :model="queryParams" :inline="true" label-width="100px">
-      <el-form-item label="工作流名称" prop="name">
-        <el-input
-          v-model="queryParams.name"
-          placeholder="请输入工作流名称"
-          clearable
-          size="small"
-          @keyup.enter.native="handleQuery"
+<template>
+  <BasicLayout>
+    <template #wrapper>
+      <el-card class="box-card">
+        <!-- 工作流查询栏组件 -->
+        <WorkflowQueryBar
+          ref="queryBar"
+          @search="handleSearch"
+          @reset="handleReset"
         />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="请选择状态"
-          clearable
-          size="small"
-        >
-          <el-option label="草稿" value="draft" />
-          <el-option label="激活" value="active" />
-          <el-option label="已完成" value="completed" />
-          <el-option label="失败" value="failed" />
-          <el-option label="已取消" value="cancelled" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button
-          type="primary"
-          icon="el-icon-search"
-          size="mini"
-          @click="handleQuery"
-        >查询</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
 
-    <!-- 操作按钮 -->
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-        >新增</el-button>
-      </el-col>
-    </el-row>
-
-    <!-- 数据表格 -->
-    <el-table v-loading="loading" :data="workflowList" border>
-      <el-table-column label="工作流编号" align="center" prop="workflowNo" width="280" />
-      <el-table-column label="名称" align="center" prop="name" />
-      <el-table-column
-        label="描述"
-        align="center"
-        prop="description"
-        show-overflow-tooltip
-      />
-      <el-table-column label="状态" align="center" prop="status" width="100">
-        <template slot-scope="scope">
-          <el-tag v-if="scope.row.status === 'draft'" type="info">草稿</el-tag>
-          <el-tag v-else-if="scope.row.status === 'active'" type="success">激活</el-tag>
-          <el-tag v-else-if="scope.row.status === 'frozen'" type="warning">冻结</el-tag>
-          <el-tag
-            v-else-if="scope.row.status === 'completed'"
-            type="primary"
-          >已完成</el-tag>
-          <el-tag v-else-if="scope.row.status === 'failed'" type="danger">失败</el-tag>
-          <el-tag
-            v-else-if="scope.row.status === 'cancelled'"
-            type="warning"
-          >已取消</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="创建时间" align="center" prop="createdAt" width="180">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.createdAt) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="更新时间" align="center" prop="updatedAt" width="180">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.updatedAt) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="操作"
-        align="center"
-        width="350"
-        class-name="small-padding fixed-width"
-      >
-        <template slot-scope="scope">
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-view"
-            @click="handleView(scope.row)"
-          >查看</el-button>
-          <!-- 草稿状态：可以修改、激活、删除 -->
-          <el-button
-            v-if="scope.row.status === 'draft'"
-            size="mini"
-            type="text"
-            icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-          >修改</el-button>
-          <el-button
-            v-if="scope.row.status === 'draft'"
-            size="mini"
-            type="text"
-            icon="el-icon-video-play"
-            @click="handleActivate(scope.row)"
-          >激活</el-button>
-          <el-button
-            v-if="scope.row.status === 'draft'"
-            size="mini"
-            type="text"
-            icon="el-icon-delete"
-            @click="handleDelete(scope.row)"
-          >删除</el-button>
-          <!-- 激活状态：可以启动实例、冻结 -->
-          <el-button
-            v-if="scope.row.status === 'active'"
-            size="mini"
-            type="text"
-            icon="el-icon-video-play"
-            @click="handleStartInstance(scope.row)"
-          >启动实例</el-button>
-          <el-button
-            v-if="scope.row.status === 'active'"
-            size="mini"
-            type="text"
-            icon="el-icon-lock"
-            @click="handleFreeze(scope.row)"
-          >冻结</el-button>
-          <!-- 冻结状态：可以修改、激活 -->
-          <el-button
-            v-if="scope.row.status === 'frozen'"
-            size="mini"
-            type="text"
-            icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-          >修改</el-button>
-          <el-button
-            v-if="scope.row.status === 'frozen'"
-            size="mini"
-            type="text"
-            icon="el-icon-unlock"
-            @click="handleActivate(scope.row)"
-          >激活</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分页 -->
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
-
-    <!-- 添加或修改工作流对话框 -->
-    <el-dialog
-      :title="title"
-      :visible.sync="open"
-      width="1200px"
-      append-to-body
-      :close-on-click-modal="false"
-    >
-      <!-- 查看模式 -->
-      <div v-if="viewMode">
-        <el-form ref="form" :model="form" label-width="100px">
-          <el-row :gutter="20">
-            <el-col :span="8">
-              <el-form-item label="工作流名称">
-                <span>{{ form.name }}</span>
-              </el-form-item>
-            </el-col>
-            <el-col :span="8">
-              <el-form-item label="状态">
-                <el-tag v-if="form.status === 'draft'" type="info">草稿</el-tag>
-                <el-tag v-else-if="form.status === 'active'" type="success">激活</el-tag>
-                <el-tag v-else-if="form.status === 'frozen'" type="warning">冻结</el-tag>
-                <el-tag
-                  v-else-if="form.status === 'completed'"
-                  type="primary"
-                >已完成</el-tag>
-                <el-tag v-else-if="form.status === 'failed'" type="danger">失败</el-tag>
-                <el-tag
-                  v-else-if="form.status === 'cancelled'"
-                  type="warning"
-                >已取消</el-tag>
-              </el-form-item>
-            </el-col>
-            <el-col :span="8">
-              <el-form-item label="创建时间">
-                <span>{{ form.created_at }}</span>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-form-item label="描述">
-            <span>{{ form.description }}</span>
-          </el-form-item>
-        </el-form>
-
-        <!-- 工作流图形展示 -->
-        <div class="workflow-view-section">
-          <div class="section-header">
-            <h4 class="section-title">工作流程图</h4>
+        <!-- 主操作栏 -->
+        <div class="main-action-bar">
+          <div class="left-actions">
             <el-button
               type="primary"
-              size="mini"
-              icon="el-icon-document"
-              @click="showWorkflowJSON"
-            >显示JSON</el-button>
-          </div>
-          <div class="workflow-graph-container">
-            <div v-if="viewSteps.length === 0" class="empty-state">
-              <i class="el-icon-picture" />
-              <p>该工作流暂无流程定义</p>
-            </div>
-            <div v-else class="workflow-tree-view">
-              <div v-if="viewRootIds.length === 0" class="empty-state">
-                <i class="el-icon-warning" />
-                <p>未找到起始节点，请检查 next_steps 引用</p>
-              </div>
-              <div v-else class="roots-row">
-                <view-workflow-node
-                  v-for="rid in viewRootIds"
-                  :key="rid"
-                  :node-id="rid"
-                  :get-node="getViewNodeById"
-                  :get-next-ids="getViewNextIds"
-                  :get-parallel-tasks="getViewParallelTasks"
-                />
-              </div>
-            </div>
+              icon="el-icon-plus"
+              size="small"
+              @click="handleAdd"
+            >
+              新增工作流
+            </el-button>
+            <el-button
+              icon="el-icon-refresh"
+              size="small"
+              type="text"
+              class="action-btn tertiary"
+              @click="handleRefresh"
+            >
+              刷新
+            </el-button>
           </div>
         </div>
-      </div>
 
-      <!-- 新增/编辑模式 - 使用设计器 -->
-      <div v-else>
-        <el-form ref="form" :model="form" :rules="rules" label-width="100px">
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="工作流名称" prop="name">
-                <el-input v-model="form.name" placeholder="请输入工作流名称" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="描述" prop="description">
-                <el-input v-model="form.description" placeholder="请输入描述" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </el-form>
-
-        <!-- 工作流设计器组件 -->
-        <div class="designer-wrapper">
-          <workflow-designer ref="designer" :workflow-data="form" />
-        </div>
-      </div>
-
-      <div slot="footer" class="dialog-footer">
-        <el-button v-if="!viewMode" type="primary" @click="submitForm">确 定</el-button>
-        <el-button @click="cancel">{{ viewMode ? "关 闭" : "取 消" }}</el-button>
-      </div>
-    </el-dialog>
-
-    <!-- 启动实例对话框 -->
-    <el-dialog
-      title="启动工作流实例"
-      :visible.sync="startInstanceOpen"
-      width="800px"
-      append-to-body
-    >
-      <el-form
-        ref="startInstanceForm"
-        :model="startInstanceForm"
-        :rules="startInstanceRules"
-        label-width="120px"
-      >
-        <el-form-item label="工作流名称">
-          <span>{{ currentWorkflow.name }}</span>
-        </el-form-item>
-        <el-form-item label="工作流描述">
-          <span>{{ currentWorkflow.description }}</span>
-        </el-form-item>
-
-        <!-- 任务分配 -->
-        <el-divider>任务分配（可选）</el-divider>
-
-        <el-form-item label="指定用户">
-          <el-select
-            v-model="startInstanceForm.assignee"
-            placeholder="请选择用户（可选）"
-            clearable
-            filterable
-            style="width: 100%"
+        <!-- 数据表格 -->
+        <el-table v-loading="loading" :data="workflowList" border>
+          <el-table-column
+            label="操作"
+            align="center"
+            width="350"
+            class-name="small-padding fixed-width"
+            fixed="left"
           >
-            <el-option
-              v-for="user in userList"
-              :key="user.userId"
-              :label="user.userName + (user.policeNo ? ' (' + user.policeNo + ')' : '')"
-              :value="String(user.userId)"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="候选用户">
-          <el-select
-            v-model="startInstanceForm.candidate_users"
-            placeholder="请选择候选用户（可选）"
-            clearable
-            filterable
-            multiple
-            style="width: 100%"
-          >
-            <el-option
-              v-for="user in userList"
-              :key="user.userId"
-              :label="user.userName + (user.policeNo ? ' (' + user.policeNo + ')' : '')"
-              :value="String(user.userId)"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="候选组">
-          <el-select
-            v-model="startInstanceForm.candidate_groups"
-            placeholder="请选择候选组（可选）"
-            clearable
-            filterable
-            multiple
-            style="width: 100%"
-          >
-            <el-option
-              v-for="role in roleList"
-              :key="role.roleId"
-              :label="role.roleName + ' (' + role.roleKey + ')'"
-              :value="role.roleKey"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="优先级">
-          <el-select
-            v-model="startInstanceForm.priority"
-            placeholder="请选择优先级"
-            clearable
-            style="width: 100%"
-          >
-            <el-option label="高" value="high" />
-            <el-option label="中" value="medium" />
-            <el-option label="低" value="low" />
-          </el-select>
-        </el-form-item>
-
-        <el-divider>输入数据</el-divider>
-
-        <el-form-item label="输入数据" prop="input">
-          <el-input
-            v-model="startInstanceForm.input"
-            type="textarea"
-            :rows="10"
-            placeholder="请输入输入数据(JSON格式)，例如: {&quot;applicant&quot;: &quot;1&quot;, &quot;orderId&quot;: &quot;12345&quot;}"
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >查看</el-button>
+                <!-- 草稿状态：可以修改、激活、删除 -->
+                <el-button
+                  v-if="scope.row.status === 'draft'"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >修改</el-button>
+                <el-button
+                  v-if="scope.row.status === 'draft'"
+                  size="small"
+                  type="text"
+                  icon="el-icon-video-play"
+                  class="action-btn tertiary"
+                  @click="handleActivate(scope.row)"
+                >激活</el-button>
+                <el-button
+                  v-if="scope.row.status === 'draft'"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >删除</el-button>
+                <!-- 激活状态：可以启动实例、冻结 -->
+                <el-button
+                  v-if="scope.row.status === 'active'"
+                  size="small"
+                  type="text"
+                  icon="el-icon-video-play"
+                  class="action-btn tertiary"
+                  @click="handleStartInstance(scope.row)"
+                >启动实例</el-button>
+                <el-button
+                  v-if="scope.row.status === 'active'"
+                  size="small"
+                  type="text"
+                  icon="el-icon-lock"
+                  class="action-btn tertiary"
+                  @click="handleFreeze(scope.row)"
+                >冻结</el-button>
+                <!-- 冻结状态：可以修改、激活 -->
+                <el-button
+                  v-if="scope.row.status === 'frozen'"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >修改</el-button>
+                <el-button
+                  v-if="scope.row.status === 'frozen'"
+                  size="small"
+                  type="text"
+                  icon="el-icon-unlock"
+                  class="action-btn tertiary"
+                  @click="handleActivate(scope.row)"
+                >激活</el-button>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="工作流编号" align="center" prop="workflowNo" min-width="200" />
+          <el-table-column label="名称" align="center" prop="name" min-width="150" />
+          <el-table-column
+            label="描述"
+            align="center"
+            prop="description"
+            min-width="150"
+            show-overflow-tooltip
           />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitStartInstance">确 定</el-button>
-        <el-button @click="cancelStartInstance">取 消</el-button>
-      </div>
-    </el-dialog>
+          <el-table-column label="状态" align="center" prop="status" width="100">
+            <template slot-scope="scope">
+              <el-tag v-if="scope.row.status === 'draft'" type="info">草稿</el-tag>
+              <el-tag v-else-if="scope.row.status === 'active'" type="success">激活</el-tag>
+              <el-tag v-else-if="scope.row.status === 'frozen'" type="warning">冻结</el-tag>
+              <el-tag
+                v-else-if="scope.row.status === 'completed'"
+                type="primary"
+              >已完成</el-tag>
+              <el-tag v-else-if="scope.row.status === 'failed'" type="danger">失败</el-tag>
+              <el-tag
+                v-else-if="scope.row.status === 'cancelled'"
+                type="warning"
+              >已取消</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" align="center" prop="createdAt" width="180">
+            <template slot-scope="scope">
+              <span>{{ parseTime(scope.row.createdAt) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="更新时间" align="center" prop="updatedAt" width="180">
+            <template slot-scope="scope">
+              <span>{{ parseTime(scope.row.updatedAt) }}</span>
+            </template>
+          </el-table-column>
+        </el-table>
 
-    <!-- 显示工作流JSON对话框 -->
-    <el-dialog
-      title="工作流定义 (JSON)"
-      :visible.sync="jsonDialogVisible"
-      width="70%"
-      append-to-body
-    >
-      <div class="json-viewer">
-        <el-input
-          v-model="workflowJSON"
-          type="textarea"
-          :rows="20"
-          readonly
-          class="json-textarea"
+        <!-- 分页 -->
+        <pagination
+          v-show="total > 0"
+          :total="total"
+          :page.sync="queryParams.pageNum"
+          :limit.sync="queryParams.pageSize"
+          @pagination="getList"
         />
-      </div>
-      <div slot="footer" class="dialog-footer">
-        <el-button
-          type="primary"
-          icon="el-icon-document-copy"
-          @click="copyJSON"
-        >复制</el-button>
-        <el-button @click="jsonDialogVisible = false">关闭</el-button>
-      </div>
-    </el-dialog>
-  </div>
+      </el-card>
+
+      <!-- 添加或修改工作流对话框 -->
+      <el-dialog
+        :title="title"
+        :visible.sync="open"
+        width="1200px"
+        append-to-body
+        :close-on-click-modal="false"
+      >
+        <!-- 查看模式 -->
+        <div v-if="viewMode">
+          <el-form ref="form" :model="form" label-width="100px">
+            <el-row :gutter="20">
+              <el-col :span="8">
+                <el-form-item label="工作流名称">
+                  <span>{{ form.name }}</span>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="状态">
+                  <el-tag v-if="form.status === 'draft'" type="info">草稿</el-tag>
+                  <el-tag v-else-if="form.status === 'active'" type="success">激活</el-tag>
+                  <el-tag v-else-if="form.status === 'frozen'" type="warning">冻结</el-tag>
+                  <el-tag
+                    v-else-if="form.status === 'completed'"
+                    type="primary"
+                  >已完成</el-tag>
+                  <el-tag v-else-if="form.status === 'failed'" type="danger">失败</el-tag>
+                  <el-tag
+                    v-else-if="form.status === 'cancelled'"
+                    type="warning"
+                  >已取消</el-tag>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="创建时间">
+                  <span>{{ form.created_at }}</span>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-form-item label="描述">
+              <span>{{ form.description }}</span>
+            </el-form-item>
+          </el-form>
+
+          <!-- 工作流图形展示 -->
+          <div class="workflow-view-section">
+            <div class="section-header">
+              <h4 class="section-title">工作流程图</h4>
+              <el-button
+                type="primary"
+                size="mini"
+                icon="el-icon-document"
+                @click="showWorkflowJSON"
+              >显示JSON</el-button>
+            </div>
+            <div class="workflow-graph-container">
+              <div v-if="viewSteps.length === 0" class="empty-state">
+                <i class="el-icon-picture" />
+                <p>该工作流暂无流程定义</p>
+              </div>
+              <div v-else class="workflow-tree-view">
+                <div v-if="viewRootIds.length === 0" class="empty-state">
+                  <i class="el-icon-warning" />
+                  <p>未找到起始节点，请检查 next_steps 引用</p>
+                </div>
+                <div v-else class="roots-row">
+                  <view-workflow-node
+                    v-for="rid in viewRootIds"
+                    :key="rid"
+                    :node-id="rid"
+                    :get-node="getViewNodeById"
+                    :get-next-ids="getViewNextIds"
+                    :get-parallel-tasks="getViewParallelTasks"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 新增/编辑模式 - 使用设计器 -->
+        <div v-else>
+          <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="工作流名称" prop="name">
+                  <el-input v-model="form.name" placeholder="请输入工作流名称" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="描述" prop="description">
+                  <el-input v-model="form.description" placeholder="请输入描述" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+
+          <!-- 工作流设计器组件 -->
+          <div class="designer-wrapper">
+            <workflow-designer ref="designer" :workflow-data="form" />
+          </div>
+        </div>
+
+        <div slot="footer" class="dialog-footer">
+          <el-button v-if="!viewMode" type="primary" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">{{ viewMode ? "关 闭" : "取 消" }}</el-button>
+        </div>
+      </el-dialog>
+
+      <!-- 启动实例对话框 -->
+      <el-dialog
+        title="启动工作流实例"
+        :visible.sync="startInstanceOpen"
+        width="800px"
+        append-to-body
+      >
+        <el-form
+          ref="startInstanceForm"
+          :model="startInstanceForm"
+          :rules="startInstanceRules"
+          label-width="120px"
+        >
+          <el-form-item label="工作流名称">
+            <span>{{ currentWorkflow.name }}</span>
+          </el-form-item>
+          <el-form-item label="工作流描述">
+            <span>{{ currentWorkflow.description }}</span>
+          </el-form-item>
+
+          <!-- 任务分配 -->
+          <el-divider>任务分配（可选）</el-divider>
+
+          <el-form-item label="指定用户">
+            <el-select
+              v-model="startInstanceForm.assignee"
+              placeholder="请选择用户（可选）"
+              clearable
+              filterable
+              style="width: 100%"
+            >
+              <el-option
+                v-for="user in userList"
+                :key="user.userId"
+                :label="user.userName + (user.policeNo ? ' (' + user.policeNo + ')' : '')"
+                :value="String(user.userId)"
+              />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="候选用户">
+            <el-select
+              v-model="startInstanceForm.candidate_users"
+              placeholder="请选择候选用户（可选）"
+              clearable
+              filterable
+              multiple
+              style="width: 100%"
+            >
+              <el-option
+                v-for="user in userList"
+                :key="user.userId"
+                :label="user.userName + (user.policeNo ? ' (' + user.policeNo + ')' : '')"
+                :value="String(user.userId)"
+              />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="候选组">
+            <el-select
+              v-model="startInstanceForm.candidate_groups"
+              placeholder="请选择候选组（可选）"
+              clearable
+              filterable
+              multiple
+              style="width: 100%"
+            >
+              <el-option
+                v-for="role in roleList"
+                :key="role.roleId"
+                :label="role.roleName + ' (' + role.roleKey + ')'"
+                :value="role.roleKey"
+              />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="优先级">
+            <el-select
+              v-model="startInstanceForm.priority"
+              placeholder="请选择优先级"
+              clearable
+              style="width: 100%"
+            >
+              <el-option label="高" value="high" />
+              <el-option label="中" value="medium" />
+              <el-option label="低" value="low" />
+            </el-select>
+          </el-form-item>
+
+          <el-divider>输入数据</el-divider>
+
+          <el-form-item label="输入数据" prop="input">
+            <el-input
+              v-model="startInstanceForm.input"
+              type="textarea"
+              :rows="10"
+              placeholder="请输入输入数据(JSON格式)，例如: {&quot;applicant&quot;: &quot;1&quot;, &quot;orderId&quot;: &quot;12345&quot;}"
+            />
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="submitStartInstance">确 定</el-button>
+          <el-button @click="cancelStartInstance">取 消</el-button>
+        </div>
+      </el-dialog>
+
+      <!-- 显示工作流JSON对话框 -->
+      <el-dialog
+        title="工作流定义 (JSON)"
+        :visible.sync="jsonDialogVisible"
+        width="70%"
+        append-to-body
+      >
+        <div class="json-viewer">
+          <el-input
+            v-model="workflowJSON"
+            type="textarea"
+            :rows="20"
+            readonly
+            class="json-textarea"
+          />
+        </div>
+        <div slot="footer" class="dialog-footer">
+          <el-button
+            type="primary"
+            icon="el-icon-document-copy"
+            @click="copyJSON"
+          >复制</el-button>
+          <el-button @click="jsonDialogVisible = false">关闭</el-button>
+        </div>
+      </el-dialog>
+    </template>
+  </BasicLayout>
 </template>
 
 <script>
+import BasicLayout from '@/layout/BasicLayout'
+import Pagination from '@/components/Pagination'
+import WorkflowQueryBar from '@/components/WorkflowQueryBar/index.vue'
 import {
   listWorkflows,
   getWorkflow,
@@ -544,6 +545,9 @@ ViewWorkflowNode.components = { ViewWorkflowNode }
 export default {
   name: 'Workflow',
   components: {
+    BasicLayout,
+    Pagination,
+    WorkflowQueryBar,
     WorkflowDesigner,
     ViewWorkflowNode
   },
@@ -681,6 +685,28 @@ export default {
           this.loading = false
         })
     },
+    /** 搜索按钮操作 */
+    handleSearch(searchData) {
+      Object.keys(searchData).forEach(key => {
+        this.queryParams[key] = searchData[key]
+      })
+      this.queryParams.pageNum = 1
+      this.getList()
+    },
+    /** 重置按钮操作 */
+    handleReset() {
+      this.queryParams = {
+        pageNum: 1,
+        pageSize: 10,
+        name: undefined,
+        status: undefined
+      }
+      this.getList()
+    },
+    /** 刷新列表 */
+    handleRefresh() {
+      this.getList()
+    },
     // 取消按钮
     cancel() {
       this.open = false
@@ -700,16 +726,6 @@ export default {
       this.viewMode = false
       this.viewSteps = []
       this.resetForm('form')
-    },
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageNum = 1
-      this.getList()
-    },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm('queryForm')
-      this.handleQuery()
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -1007,7 +1023,7 @@ export default {
             definition: definition
           }
 
-          if (this.form.workflowId != undefined) {
+          if (this.form.workflowId !== undefined) {
             updateWorkflow(this.form.workflowId, data)
               .then((response) => {
                 if (response.code === 200) {
@@ -1173,10 +1189,6 @@ export default {
 </script>
 
 <style lang="scss">
-.app-container {
-  padding: 20px;
-}
-
 .designer-wrapper {
   margin-top: 20px;
   border: 1px solid #dcdfe6;
@@ -1459,4 +1471,12 @@ export default {
     }
   }
 }
+
+/*
+  样式说明：本页面全部使用全局样式
+  全局样式位置：
+  - src/styles/index.scss: .filter-container
+  - src/styles/components/search.scss: .search-section, .quick-search-form, .search-row, .search-item
+  - src/styles/components/buttons.scss: .action-btn, .main-action-bar
+*/
 </style>
