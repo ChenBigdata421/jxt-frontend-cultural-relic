@@ -220,7 +220,7 @@
                 {{ viewData.storageDuration || "-" }} 月
               </el-descriptions-item>
               <el-descriptions-item label="过期时间">
-                {{ parseTime(viewData.expirationTime) || "-" }}
+                {{ formatExpiryTime(viewData.expirationTime) }}
               </el-descriptions-item>
               <el-descriptions-item label="档案描述" :span="2">
                 {{ viewData.description || "-" }}
@@ -486,6 +486,14 @@ export default {
 
     archiveTypeFormat(row) {
       return this.selectDictLabel(this.archiveTypeOptions, row.archiveType)
+    },
+
+    formatExpiryTime(value) {
+      const timeStr = this.parseTime(value)
+      if (timeStr === '2999-01-01 08:00:00' || timeStr === '2999-01-01 00:00:00') {
+        return '永久'
+      }
+      return timeStr || '-'
     },
 
     /** 多选框选中数据 - ArchiveSelector组件已实现跨分页选择 */

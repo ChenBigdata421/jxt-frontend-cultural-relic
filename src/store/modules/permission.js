@@ -35,22 +35,54 @@ function hasPathPermission(paths, route) {
   */
 export function generaMenu(routes, data) {
   data.forEach(item => {
-    const menu = {
-      path: item.path,
-      component: item.component === 'Layout' ? Layout : loadView(item.component),
-      hidden: item.visible !== '0',
-      children: [],
-      name: item.menuName,
-      meta: {
-        title: item.title,
-        icon: item.icon,
-        noCache: item.noCache
+    // 如果子菜单的 component 也是 Layout，将其子路由提升到当前层级，避免嵌套 Layout
+    if (item.component === 'Layout' && item.children && item.children.length > 0) {
+      const nestedLayoutChildren = []
+      item.children.forEach(child => {
+        if (child.component === 'Layout' && child.children && child.children.length > 0) {
+          // 将嵌套 Layout 的子路由提升，路径拼接保持正确
+          child.children.forEach(grandChild => {
+            nestedLayoutChildren.push({
+              ...grandChild,
+              path: child.path + '/' + grandChild.path.replace(/^\//, '')
+            })
+          })
+        } else {
+          nestedLayoutChildren.push(child)
+        }
+      })
+      const menu = {
+        path: item.path,
+        component: Layout,
+        hidden: item.visible !== '0',
+        children: [],
+        name: item.menuName,
+        meta: {
+          title: item.title,
+          icon: item.icon,
+          noCache: item.noCache
+        }
       }
+      generaMenu(menu.children, nestedLayoutChildren)
+      routes.push(menu)
+    } else {
+      const menu = {
+        path: item.path,
+        component: item.component === 'Layout' ? Layout : loadView(item.component),
+        hidden: item.visible !== '0',
+        children: [],
+        name: item.menuName,
+        meta: {
+          title: item.title,
+          icon: item.icon,
+          noCache: item.noCache
+        }
+      }
+      if (item.children) {
+        generaMenu(menu.children, item.children)
+      }
+      routes.push(menu)
     }
-    if (item.children) {
-      generaMenu(menu.children, item.children)
-    }
-    routes.push(menu)
   })
 }
 // @通常是一个在webpack配置中定义的别名，指向源代码的某个目录（例如src目录）。

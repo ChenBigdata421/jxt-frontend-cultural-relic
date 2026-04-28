@@ -322,7 +322,7 @@
         {{ isFirstStep ? "撤销" : "驳回" }}
       </el-button>
       <el-button class="action-btn tertiary-btn" @click="handleClose">
-        取消
+        关闭
       </el-button>
     </div>
 

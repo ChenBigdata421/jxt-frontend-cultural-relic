@@ -278,6 +278,17 @@ server {
         proxy_pass ${DOLLAR}documents_backend;
     }
 
+    # 生命周期管理接口 → 转发到 evidence-command（注入默认租户ID以通过多租户中间件）
+    location ^~ /api/v1/lifecycle {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_set_header Authorization ${DOLLAR}http_authorization;
+        proxy_set_header X-Tenant-ID "1";
+        proxy_pass ${EVIDENCE_COMMAND_UPSTREAM};
+    }
+
     location /api {
         proxy_set_header Host ${DOLLAR}host;
         proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
@@ -318,6 +329,17 @@ server {
         root   /usr/share/nginx/html/platform;
         index  index.html index.htm;
         try_files ${DOLLAR}uri ${DOLLAR}uri/ /index.html;
+    }
+
+    # 生命周期管理接口 → 转发到 evidence-command（注入默认租户ID以通过多租户中间件）
+    location ^~ /api/v1/lifecycle {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_set_header Authorization ${DOLLAR}http_authorization;
+        proxy_set_header X-Tenant-ID "1";
+        proxy_pass ${EVIDENCE_COMMAND_UPSTREAM};
     }
 
     # 平台站仅代理平台后端 API（避免误走业务 /api 兜底）

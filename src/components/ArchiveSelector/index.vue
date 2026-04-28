@@ -173,9 +173,34 @@
         v-if="isColumnVisible('expirationTime')"
         prop="expirationTime"
         label="过期时间"
-        width="160"
+        width="180"
         align="center"
-      />
+      >
+        <template slot-scope="{ row }">
+          {{
+            parseTime(row.expirationTime) === "2999-01-01 08:00:00" ||
+              parseTime(row.expirationTime) === "2999-01-01 00:00:00"
+              ? "永久"
+              : parseTime(row.expirationTime) || "-"
+          }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isColumnVisible('lifecycleStatus')"
+        prop="lifecycleStatus"
+        label="生命周期状态"
+        width="130"
+        align="center"
+      >
+        <template slot-scope="{ row }">
+          <el-tag
+            :type="getLifecycleStatusType(row.lifecycleStatus)"
+            disable-transitions
+          >
+            {{ lifecycleStatusFormat(row) }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column
         v-if="isColumnVisible('status')"
         prop="status"
@@ -373,6 +398,7 @@ export default {
         { prop: 'orgCode', label: '管理部门编码', fixed: false },
         { prop: 'storageDuration', label: '保存期限(月)', fixed: false },
         { prop: 'expirationTime', label: '过期时间', fixed: false },
+        { prop: 'lifecycleStatus', label: '生命周期状态', fixed: false },
         { prop: 'status', label: '状态', fixed: false },
         { prop: 'createUserName', label: '录入人员', fixed: false },
         { prop: 'createUserNo', label: '录入人编号', fixed: false },
@@ -404,6 +430,26 @@ export default {
   methods: {
     statusFormat(row) {
       return this.selectDictLabel(this.statusOptions, row.status)
+    },
+
+    lifecycleStatusFormat(row) {
+      const map = {
+        active: '活跃',
+        archived: '已归档',
+        expired: '已过期',
+        disposed: '已销毁'
+      }
+      return map[row.lifecycleStatus] || row.lifecycleStatus || '-'
+    },
+
+    getLifecycleStatusType(status) {
+      const typeMap = {
+        active: 'success',
+        archived: '',
+        expired: 'warning',
+        disposed: 'danger'
+      }
+      return typeMap[status] || 'info'
     },
 
     archiveTypeFormat(row) {

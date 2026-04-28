@@ -331,6 +331,22 @@
         </template>
       </el-table-column>
       <el-table-column
+        v-if="isColumnVisible('lifecycleStatus')"
+        prop="lifecycleStatus"
+        label="生命周期状态"
+        width="140"
+      >
+        <template slot-scope="{ row }">
+          <el-tag
+            :type="lifecycleStatusTagType(row.lifecycleStatus)"
+            size="small"
+            effect="dark"
+          >
+            {{ lifecycleStatusText(row.lifecycleStatus) }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column
         v-if="isColumnVisible('archiveCode')"
         prop="archiveCode"
         label="档案编号"
@@ -813,6 +829,7 @@ export default {
         },
         { prop: 'isLocked', label: '是否锁定', defaultVisible: false },
         { prop: 'expiryTime', label: '过期时间', defaultVisible: false },
+        { prop: 'lifecycleStatus', label: '生命周期状态', defaultVisible: false },
         { prop: 'archiveCode', label: '档案编号', defaultVisible: false },
         { prop: 'isArchive', label: '是否归档', defaultVisible: false },
         { prop: 'archiveDate', label: '归档时间', defaultVisible: false },
@@ -1270,6 +1287,34 @@ export default {
         .toString()
         .padStart(2, '0')
       return `${hours}:${minutes}:${seconds}`
+    },
+
+    /** 生命周期状态文本映射 */
+    lifecycleStatusText(status) {
+      const map = {
+        active: '活跃',
+        expiring: '即将过期',
+        expired: '已过期',
+        pending_deletion: '待删除',
+        deletion_blocked: '删除阻塞',
+        soft_deleted: '已软删除',
+        physical_deleted: '已物理删除'
+      }
+      return map[status] || status || '-'
+    },
+
+    /** 生命周期状态标签颜色映射 */
+    lifecycleStatusTagType(status) {
+      const map = {
+        active: 'success',
+        expiring: 'warning',
+        expired: 'danger',
+        pending_deletion: 'danger',
+        deletion_blocked: 'warning',
+        soft_deleted: 'info',
+        physical_deleted: 'info'
+      }
+      return map[status] || 'info'
     },
 
     /** 通用 是/否 */
