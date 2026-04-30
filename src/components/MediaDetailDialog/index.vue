@@ -478,7 +478,7 @@ export default {
           this.getDicts('evidence_storage_type'),
           this.getDicts('terminal_type'),
           this.getDicts('relation_status'),
-          this.getDicts('media_importance')
+          this.getDicts('media_important_level')
         ])
 
         this.mediaCateOptions = mediaCateRes.data || []

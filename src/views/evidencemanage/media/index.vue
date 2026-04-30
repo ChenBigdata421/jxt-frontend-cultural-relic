@@ -599,7 +599,7 @@ export default {
     })
 
     // 加载媒体重要级别字典（用于手动标注）
-    this.getDicts('media_importance').then((response) => {
+    this.getDicts('media_important_level').then((response) => {
       this.mediaImportanceOptions = response.data
     })
     this.getDicts('archive_type').then((response) => {
@@ -1225,6 +1225,15 @@ export default {
           out.mediaCate = this.selectDictLabel(this.mediaCateOptions, row.mediaCate)
           out.createdAt = this.parseTime(row.createdAt)
           out.updatedAt = this.parseTime(row.updatedAt)
+          out.captureTime = this.parseTime(row.captureTime)
+          out.captureEndTime = this.parseTime(row.captureEndTime)
+          out.expiryTime = this.parseTime(row.expiryTime) === '2999-01-01 08:00:00' ? '永久' : this.parseTime(row.expiryTime)
+          out.uploadTime = this.parseTime(row.uploadTime)
+          out.acquisitionTime = this.parseTime(row.acquisitionTime)
+          out.archivedAt = this.parseTime(row.archivedAt)
+          out.archiveDate = this.parseTime(row.archivedAt)
+          out.incidentAssociatedAt = this.parseTime(row.incidentAssociatedAt)
+          out.associateTime = this.parseTime(row.associateTime)
           return out
         })
 

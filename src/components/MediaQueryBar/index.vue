@@ -32,6 +32,7 @@
           :storage-type-options="storageTypeOptions"
           :enforce-type-options="enforceTypeOptions"
           :terminal-type-options="terminalTypeOptions"
+          :media-important-level-options="mediaImportantLevelOptions"
           @filter-change="handleAdvancedFilterChange"
           @reset="handleAdvancedFilterReset"
         />
@@ -95,6 +96,10 @@ export default {
       default: () => []
     },
     terminalTypeOptions: {
+      type: Array,
+      default: () => []
+    },
+    mediaImportantLevelOptions: {
       type: Array,
       default: () => []
     }

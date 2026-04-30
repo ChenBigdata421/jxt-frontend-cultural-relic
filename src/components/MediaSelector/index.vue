@@ -10,6 +10,7 @@
         :storage-type-options="storageTypeOptions"
         :enforce-type-options="enforceTypeOptions"
         :terminal-type-options="terminalTypeOptions"
+        :media-important-level-options="mediaImportanceOptions"
         @search="handleSearch"
         @quick-search-reset="handleQuickSearchReset"
         @filter-change="handleFilterChange"
@@ -744,7 +745,9 @@ export default {
         isLocked: undefined,
         terminalType: undefined,
         incidentCode: undefined,
-        recorderNo: undefined
+        recorderNo: undefined,
+        importantLevel: undefined,
+        importantLevelRec: undefined
       },
       // 组织树选项
       orgOptions: undefined,
@@ -924,7 +927,7 @@ export default {
       this.getDicts('terminal_type'),
       this.getDicts('is_non_enforcement_media'),
       this.getDicts('video_clarity'),
-      this.getDicts('media_importance')
+      this.getDicts('media_important_level')
     ])
       .then(
         ([

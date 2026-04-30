@@ -136,6 +136,44 @@
             />
           </div>
         </div>
+
+        <div class="filter-row">
+          <!-- 重要级别（平台） -->
+          <div class="filter-section">
+            <label class="section-label-inline">重要级别(平台)</label>
+            <el-select
+              v-model="filterParams.importantLevel"
+              placeholder="请选择重要级别"
+              clearable
+              class="full-width"
+            >
+              <el-option
+                v-for="dict in mediaImportantLevelOptions"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+              />
+            </el-select>
+          </div>
+
+          <!-- 重要级别（设备） -->
+          <div class="filter-section">
+            <label class="section-label-inline">重要级别(设备)</label>
+            <el-select
+              v-model="filterParams.importantLevelRec"
+              placeholder="请选择重要级别"
+              clearable
+              class="full-width"
+            >
+              <el-option
+                v-for="dict in mediaImportantLevelOptions"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+              />
+            </el-select>
+          </div>
+        </div>
       </el-collapse-item>
     </el-collapse>
   </div>
@@ -167,6 +205,10 @@ export default {
     terminalTypeOptions: {
       type: Array,
       default: () => []
+    },
+    mediaImportantLevelOptions: {
+      type: Array,
+      default: () => []
     }
   },
   data() {
@@ -184,7 +226,9 @@ export default {
         storageType: undefined,
         terminalType: undefined,
         enforceType: undefined,
-        recorderNo: undefined
+        recorderNo: undefined,
+        importantLevel: undefined,
+        importantLevelRec: undefined
       }
     }
   },
@@ -244,7 +288,9 @@ export default {
         storageType: undefined,
         terminalType: undefined,
         enforceType: undefined,
-        recorderNo: undefined
+        recorderNo: undefined,
+        importantLevel: undefined,
+        importantLevelRec: undefined
       }
       this.$emit('reset')
     },
