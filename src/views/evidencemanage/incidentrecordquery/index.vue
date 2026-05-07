@@ -916,7 +916,8 @@ import {
   batchDelIncidentRecord
 } from '@/api/evidence/evidence_manage_command_api'
 import {
-  getIncidentRecordList
+  getIncidentRecordList,
+  getIncidentRecord
 } from '@/api/evidence/evidence_manage_query_api'
 import { getEnforceTypeTree } from '@/api/admin/enforcetype'
 import { formatJson } from '@/utils'
@@ -1561,9 +1562,14 @@ export default {
 
     /** 浏览按钮操作 */
     handleView(row) {
-      this.viewData = { ...(row || {}) }
-      this.ViewOpen = true
-      this.title = '警情信息'
+      const recordId = row.id
+      getIncidentRecord(recordId).then((response) => {
+        if (response.code === 200) {
+          this.viewData = { ...(response.data || {}) }
+          this.ViewOpen = true
+          this.title = '警情信息'
+        }
+      })
     },
     /** 将 form 对象中的时间字段转换为国际标准格式 */
     convertFormTimeToISO(formData = {}) {

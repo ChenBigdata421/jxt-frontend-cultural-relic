@@ -749,6 +749,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import MediaSelector from '@/components/MediaSelector'
 import {
   listWrits,
+  getWrit,
   addWrit,
   updateWrit,
   delWritById,
@@ -1333,8 +1334,13 @@ export default {
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      this.viewData = row
-      this.viewOpen = true
+      const writId = row.id
+      getWrit(writId).then((response) => {
+        if (response.code === 200) {
+          this.viewData = response.data
+          this.viewOpen = true
+        }
+      })
     },
     /** 提交按钮 */
     submitForm() {

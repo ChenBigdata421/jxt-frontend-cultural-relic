@@ -207,10 +207,26 @@
             width="150"
           />
           <el-table-column
+            v-if="isColumnVisible('caseOrgCode')"
+            label="办案单位编码"
+            align="center"
+            prop="caseOrgCode"
+            width="150"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
             v-if="isColumnVisible('procOrgPaths')"
             label="处警单位"
             align="center"
             prop="procOrgPaths"
+            width="150"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('procOrgCode')"
+            label="处警单位编码"
+            align="center"
+            prop="procOrgCode"
             width="150"
             :show-overflow-tooltip="true"
           />
@@ -408,6 +424,16 @@
               </el-row>
               <el-row :gutter="20">
                 <el-col :span="12">
+                  <el-form-item label="办案单位编码" prop="caseOrgCode">
+                    <el-input
+                      v-model="form.caseOrgCode"
+                      placeholder="请输入办案单位编码"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
                   <el-form-item label="处警单位" prop="procOrgId">
                     <treeselect
                       v-model="form.procOrgId"
@@ -419,6 +445,18 @@
                     />
                   </el-form-item>
                 </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="处警单位编码" prop="procOrgCode">
+                    <el-input
+                      v-model="form.procOrgCode"
+                      placeholder="请输入处警单位编码"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="处警人员">
                     <el-select
@@ -677,8 +715,14 @@
               <el-descriptions-item label="办案单位">
                 {{ viewData.caseOrgName || "-" }}
               </el-descriptions-item>
+              <el-descriptions-item label="办案单位编码">
+                {{ viewData.caseOrgCode || "-" }}
+              </el-descriptions-item>
               <el-descriptions-item label="处警单位">
                 {{ viewData.procOrgName || "-" }}
+              </el-descriptions-item>
+              <el-descriptions-item label="处警单位编码">
+                {{ viewData.procOrgCode || "-" }}
               </el-descriptions-item>
               <el-descriptions-item label="处警人员">
                 {{ viewData.processPoliceNames || "-" }}
@@ -742,6 +786,7 @@
 <script>
 import {
   listCases,
+  getCase,
   addCase,
   updateCase,
   delCase,
@@ -876,7 +921,9 @@ export default {
         { prop: 'caseTime', label: '案发时间', defaultVisible: true },
         { prop: 'caseAddress', label: '案发地址', defaultVisible: true },
         { prop: 'caseOrgName', label: '办案单位', defaultVisible: true },
+        { prop: 'caseOrgCode', label: '办案单位编码', defaultVisible: false },
         { prop: 'procOrgPaths', label: '处警单位', defaultVisible: false },
+        { prop: 'procOrgCode', label: '处警单位编码', defaultVisible: false },
         { prop: 'processPoliceNames', label: '处警人员', defaultVisible: true },
         { prop: 'procTime', label: '处警时间', defaultVisible: true },
         { prop: 'isRelation', label: '是否关联', defaultVisible: true },
@@ -891,8 +938,8 @@ export default {
   computed: {
     // 基础信息分组字段数量
     basicFieldCount() {
-      // 案件名称、案件类型、案件流程、办案单位、处警单位、处警人员、接警编号、处警编号、案发地址、接警内容、处警过程描述
-      return 11
+      // 案件名称、案件类型、案件流程、办案单位、办案单位编码、处警单位、处警单位编码、处警人员、接警编号、处警编号、案发地址、接警内容、处警过程描述
+      return 13
     },
     // 时间流程分组字段数量
     timelineFieldCount() {
@@ -911,8 +958,8 @@ export default {
     },
     // 详情对话框 - 组织与人员字段数量
     detailOrganizationFieldCount() {
-      // 办案单位、处警单位、处警人员
-      return 3
+      // 办案单位、办案单位编码、处警单位、处警单位编码、处警人员
+      return 5
     },
     // 详情对话框 - 编号信息字段数量
     detailNumbersFieldCount() {
@@ -1395,7 +1442,7 @@ export default {
     handleUpdate(row) {
       this.reset()
       this.firstLoad = true
-      // 使用对象展开运算符创建新对象
+      // 列表 API 已返回 processPoliceIds（从主表 JSON 列），直接使用行数据
       if (row && row.id !== undefined) {
         this.form = { ...row }
       } else {
@@ -1416,8 +1463,13 @@ export default {
     },
     /** 浏览按钮操作 */
     handleView(row) {
-      this.viewData = row
-      this.viewOpen = true
+      const caseId = row.id
+      getCase(caseId).then((response) => {
+        if (response.code === 200) {
+          this.viewData = response.data
+          this.viewOpen = true
+        }
+      })
     },
     /** 标注按钮操作 */
     handleAnnotate(row) {
@@ -1624,11 +1676,13 @@ export default {
         caseType: undefined,
         caseFlow: undefined,
         caseOrgId: undefined,
+        caseOrgCode: undefined,
         caseTime: undefined,
         receiptIncidentRecordNum: undefined,
         disposalIncidentRecordNum: undefined,
         caseAddress: undefined,
         procOrgId: undefined,
+        procOrgCode: undefined,
         procTime: undefined,
         processPoliceIds: [],
         incidentRecordContext: undefined,

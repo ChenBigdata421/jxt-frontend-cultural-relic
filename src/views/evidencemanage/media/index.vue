@@ -187,6 +187,8 @@
                     placeholder="请选择执法类型"
                     style="width: 520px"
                     clearable
+                    :append-to-body="true"
+                    :z-index="9999"
                   />
                 </el-form-item>
               </el-form>

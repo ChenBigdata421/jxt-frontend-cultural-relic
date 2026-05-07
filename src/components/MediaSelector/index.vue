@@ -439,6 +439,34 @@
         :show-overflow-tooltip="true"
       />
       <el-table-column
+        v-if="isColumnVisible('storageSiteNo')"
+        prop="storageSiteNo"
+        label="存储服务器编号"
+        min-width="180"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('storageSiteName')"
+        prop="storageSiteName"
+        label="存储服务器名称"
+        min-width="180"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('storageSiteIp')"
+        prop="storageSiteIp"
+        label="存储服务器IP地址"
+        min-width="180"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
+        v-if="isColumnVisible('storageSiteUrl')"
+        prop="storageSiteUrl"
+        label="存储服务器HTTP地址"
+        min-width="220"
+        :show-overflow-tooltip="true"
+      />
+      <el-table-column
         v-if="isColumnVisible('storageType')"
         prop="storageType"
         label="存储方式"
@@ -675,7 +703,7 @@
 </template>
 
 <script>
-import { listMedia } from '@/api/evidence/evidence_manage_query_api'
+import { listMedia, getMedia } from '@/api/evidence/evidence_manage_query_api'
 import { getEnforceTypeTree } from '@/api/admin/enforcetype'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
@@ -845,6 +873,10 @@ export default {
         { prop: 'contentType', label: 'MIME类型', defaultVisible: false },
         { prop: 'collectSiteNo', label: '采集站编号', defaultVisible: false },
         { prop: 'collectSiteName', label: '采集站名称', defaultVisible: false },
+        { prop: 'storageSiteNo', label: '存储服务器编号', defaultVisible: false },
+        { prop: 'storageSiteName', label: '存储服务器名称', defaultVisible: false },
+        { prop: 'storageSiteIp', label: '存储服务器IP地址', defaultVisible: false },
+        { prop: 'storageSiteUrl', label: '存储服务器HTTP地址', defaultVisible: false },
         { prop: 'storageType', label: '存储方式', defaultVisible: false },
         {
           prop: 'isSendToStorage',
@@ -1351,8 +1383,16 @@ export default {
 
     /** 浏览媒体详情 */
     handleViewMedia(row) {
-      this.viewMediaData = row
-      this.viewMediaOpen = true
+      getMedia(row.mediaId)
+        .then((response) => {
+          this.viewMediaData = response.data
+          this.viewMediaOpen = true
+        })
+        .catch(() => {
+          // API调用失败时降级使用列表数据
+          this.viewMediaData = row
+          this.viewMediaOpen = true
+        })
     },
 
     /** 浏览警情详情 */

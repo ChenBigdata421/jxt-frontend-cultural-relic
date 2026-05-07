@@ -133,6 +133,17 @@
             <el-descriptions-item label="过期时间">
               {{ formatExpiryTime(mediaData.expiryTime) }}
             </el-descriptions-item>
+            <el-descriptions-item label="生命周期状态">
+              <el-tag
+                v-if="mediaData.lifecycleStatus"
+                :type="lifecycleStatusTagType(mediaData.lifecycleStatus)"
+                size="small"
+                effect="dark"
+              >
+                {{ lifecycleStatusText(mediaData.lifecycleStatus) }}
+              </el-tag>
+              <span v-else>-</span>
+            </el-descriptions-item>
             <el-descriptions-item label="标注内容" :span="2">
               {{ mediaData.comments || "-" }}
             </el-descriptions-item>
@@ -222,6 +233,18 @@
             </el-descriptions-item>
             <el-descriptions-item label="是否通知发送">
               {{ formatYesNo(mediaData.isNoticeSend) }}
+            </el-descriptions-item>
+            <el-descriptions-item label="存储服务器编号">
+              {{ mediaData.storageSiteNo || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="存储服务器名称">
+              {{ mediaData.storageSiteName || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="存储服务器IP">
+              {{ mediaData.storageSiteIp || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="存储服务器地址" :span="2">
+              {{ mediaData.storageSiteUrl || "-" }}
             </el-descriptions-item>
           </el-descriptions>
         </el-collapse-item>
@@ -374,7 +397,7 @@ export default {
     },
     // 执法信息分组字段数量
     enforcementFieldCount() {
-      return 9
+      return 10
     },
     // 档案信息分组字段数量
     archiveFieldCount() {
@@ -386,7 +409,7 @@ export default {
     },
     // 存储信息分组字段数量
     storageFieldCount() {
-      return 5
+      return 9
     },
     // 人员组织分组字段数量
     personnelFieldCount() {
@@ -669,6 +692,34 @@ export default {
       if (value === 1) return '是'
       if (value === 0) return '否'
       return '-'
+    },
+
+    /** 生命周期状态文本映射 */
+    lifecycleStatusText(status) {
+      const map = {
+        active: '活跃',
+        expiring: '即将过期',
+        expired: '已过期',
+        pending_deletion: '待删除',
+        deletion_blocked: '删除阻止',
+        soft_deleted: '已软删除',
+        physical_deleted: '已物理删除'
+      }
+      return map[status] || status || '-'
+    },
+
+    /** 生命周期状态标签颜色映射 */
+    lifecycleStatusTagType(status) {
+      const map = {
+        active: 'success',
+        expiring: 'warning',
+        expired: 'danger',
+        pending_deletion: 'warning',
+        deletion_blocked: 'info',
+        soft_deleted: 'info',
+        physical_deleted: 'danger'
+      }
+      return map[status] || 'info'
     },
 
     formatDuration(value) {
