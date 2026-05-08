@@ -111,7 +111,7 @@
           <el-table-column prop="visible" label="可见" :formatter="visibleFormat" width="80">
             <template slot-scope="scope">
               <el-tag
-                :type="scope.row.visible === '1' ? 'danger' : 'success'"
+                :type="scope.row.visible === 1 ? 'danger' : 'success'"
                 disable-transitions
               >{{ visibleFormat(scope.row) }}</el-tag>
             </template>

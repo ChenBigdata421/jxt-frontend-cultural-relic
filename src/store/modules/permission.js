@@ -54,7 +54,7 @@ export function generaMenu(routes, data) {
       const menu = {
         path: item.path,
         component: Layout,
-        hidden: item.visible !== '0',
+        hidden: item.visible !== 0,
         children: [],
         name: item.menuName,
         meta: {
@@ -69,7 +69,7 @@ export function generaMenu(routes, data) {
       const menu = {
         path: item.path,
         component: item.component === 'Layout' ? Layout : loadView(item.component),
-        hidden: item.visible !== '0',
+        hidden: item.visible !== 0,
         children: [],
         name: item.menuName,
         meta: {
