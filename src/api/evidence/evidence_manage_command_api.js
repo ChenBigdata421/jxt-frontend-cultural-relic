@@ -120,6 +120,67 @@ export function batchUpdateMediaExpiryTime(data) {
   })
 }
 
+// 新增任务
+export function addTask(data) {
+  return request({
+    url: '/api/v1/assignments',
+    method: 'post',
+    data: data
+  })
+}
+
+// 更新任务
+export function updateTask(data, id) {
+  return request({
+    url: '/api/v1/assignments/' + id,
+    method: 'put',
+    data: data
+  })
+}
+
+// 删除任务
+export function delTaskById(id) {
+  return request({
+    url: '/api/v1/assignments/' + id,
+    method: 'delete'
+  })
+}
+
+// 批量删除任务
+export function batchDelTask(data) {
+  return request({
+    url: '/api/v1/assignments/batch',
+    method: 'delete',
+    data: data
+  })
+}
+
+// 新增任务媒体关联关系
+export function addTaskMediaRelations(data) {
+  return request({
+    url: '/api/v1/task-media-relations/batch',
+    method: 'post',
+    data: data
+  })
+}
+
+// 删除任务媒体关联关系
+export function delTaskMediaRelations(id) {
+  return request({
+    url: '/api/v1/task-media-relations/' + id,
+    method: 'delete'
+  })
+}
+
+// 批量删除任务媒体关联关系
+export function batchDelTaskMediaRelations(data) {
+  return request({
+    url: '/api/v1/task-media-relations/batch',
+    method: 'delete',
+    data: data
+  })
+}
+
 // 新增警情媒体关联关系
 export function addIncidentRecordMediaRelations(data) {
   return request({

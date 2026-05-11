@@ -112,6 +112,41 @@ export function getIncidentRecordMediaInfos(query) {
   })
 }
 
+// 查询任务列表
+export function getTaskList(query) {
+  return request({
+    url: '/api/v1/assignments',
+    method: 'get',
+    params: query
+  })
+}
+
+// 根据ID查询任务
+export function getTask(id) {
+  return request({
+    url: '/api/v1/assignments/' + id,
+    method: 'get'
+  })
+}
+
+// 查询任务媒体关联关系列表
+export function getTaskMediaRelationsByTaskId(taskId, query) {
+  return request({
+    url: '/api/v1/task-media-relations/task/' + taskId,
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询任务未关联的媒体列表(带分页)
+export function getUnassociatedMediaByTaskId(taskId, query) {
+  return request({
+    url: '/api/v1/media/task/' + taskId + '/unassociated-media',
+    method: 'get',
+    params: query
+  })
+}
+
 export function GetMediaByName(mediaName) {
   return request({
     url: `/api/v1/media/name/${mediaName}`,

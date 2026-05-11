@@ -58,12 +58,29 @@ map ${DOLLAR}request_method ${DOLLAR}writ_media_relations_backend {
     default ${EVIDENCE_COMMAND_UPSTREAM};
 }
 
+map ${DOLLAR}request_method ${DOLLAR}assignments_backend {
+    GET     ${EVIDENCE_QUERY_UPSTREAM};
+    default ${EVIDENCE_COMMAND_UPSTREAM};
+}
+
+map ${DOLLAR}request_method ${DOLLAR}task_media_relations_backend {
+    GET     ${EVIDENCE_QUERY_UPSTREAM};
+    default ${EVIDENCE_COMMAND_UPSTREAM};
+}
+
 map ${DOLLAR}request_method ${DOLLAR}process_backend {
     default ${PROCESS_MANAGEMENT_UPSTREAM};
 }
 
 map ${DOLLAR}request_method ${DOLLAR}documents_backend {
     default ${FILE_STORAGE_UPSTREAM};
+}
+
+server {
+    listen       80 default_server;
+    listen  [::]:80 default_server;
+    server_name  _;
+    return       444;
 }
 
 server {
@@ -216,6 +233,24 @@ server {
         proxy_pass ${DOLLAR}writ_media_relations_backend;
     }
 
+    location ^~ /api/v1/assignments {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_set_header Authorization ${DOLLAR}http_authorization;
+        proxy_pass ${DOLLAR}assignments_backend;
+    }
+
+    location ^~ /api/v1/task-media-relations {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_set_header Authorization ${DOLLAR}http_authorization;
+        proxy_pass ${DOLLAR}task_media_relations_backend;
+    }
+
     location ^~ /api/v1/workflows {
         proxy_set_header Host ${DOLLAR}host;
         proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
@@ -340,6 +375,52 @@ server {
         proxy_set_header Authorization ${DOLLAR}http_authorization;
         proxy_set_header X-Tenant-ID "1";
         proxy_pass ${EVIDENCE_COMMAND_UPSTREAM};
+    }
+
+    # WebSocket 路由（实时通知）→ 转发到流程管理服务
+    location ^~ /api/v1/ws {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_set_header Authorization ${DOLLAR}http_authorization;
+
+        # WebSocket 特定配置
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade ${DOLLAR}http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+        proxy_send_timeout 86400;
+
+        proxy_pass ${DOLLAR}process_backend;
+    }
+
+    # 流程管理路由 → 转发到 process-management-api
+    location ^~ /api/v1/workflows {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_set_header Authorization ${DOLLAR}http_authorization;
+        proxy_pass ${DOLLAR}process_backend;
+    }
+
+    location ^~ /api/v1/instances {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_set_header Authorization ${DOLLAR}http_authorization;
+        proxy_pass ${DOLLAR}process_backend;
+    }
+
+    location ^~ /api/v1/tasks {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_set_header Authorization ${DOLLAR}http_authorization;
+        proxy_pass ${DOLLAR}process_backend;
     }
 
     # 平台站仅代理平台后端 API（避免误走业务 /api 兜底）

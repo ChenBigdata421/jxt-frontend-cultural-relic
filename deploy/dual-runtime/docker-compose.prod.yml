@@ -1,22 +1,22 @@
 version: "3.8"
 
 services:
-  jxt-frontend-dual:
+  jxt-frontend-cultural-relic-dual:
     # 交付给客户时：将 image 改成你们发布的版本号并从客户仓库/离线 load 获取
-    image: jxt-frontend-dual-nginx:latest
+    image: jxt-frontend-cultural-relic-dual-nginx:latest
     build:
       context: ../..
       dockerfile: deploy/dual-runtime/Dockerfile.dual-runtime
     restart: always
     ports:
-      - "8080:80"
+      - "8081:80"
     environment:
       # 必须传入：用于 nginx 模板中的 ${DOLLAR}host/${DOLLAR}uri 等变量在 envsubst 后还原为 $host/$uri
       DOLLAR: "$"
       # 平台站域名（客户可按实际域名修改）
       PLATFORM_SERVER_NAME: platform.jxt.com
       # 业务站域名（客户可按实际域名修改）
-      BUSINESS_SERVER_NAME: default.jxt.com
+      BUSINESS_SERVER_NAME: cultural_relic.jxt.com
       # *****常见问题，浏览器的代理设置问题，导致无法访问，将以上域名与地址加入"直连/不走代理"
 
       # ====== 平台站后端（tenant-service）======
