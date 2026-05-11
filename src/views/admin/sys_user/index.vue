@@ -329,7 +329,10 @@
                     <treeselect
                       v-model="form.orgId"
                       :options="orgOptions"
+                      :append-to-body="true"
+                      :z-index="3000"
                       placeholder="请选择归属单位"
+                      @select="handleOrgSelect"
                     />
                   </el-form-item>
                 </el-col>
@@ -1018,7 +1021,8 @@ export default {
         if (valid) {
           if (this.form.userId != null) {
             this.startProcessing('正在修改用户...')
-            updateUser(this.form)
+            const { roleName, orgName, orgFullName, postName, orgIds, roleIds, postIds, ...data } = this.form
+            updateUser(data)
               .then(async(response) => {
                 if (response.code === 200) {
                   await this.delay(2000)

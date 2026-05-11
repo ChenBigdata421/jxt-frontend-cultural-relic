@@ -94,17 +94,6 @@ export default {
         if (response.code === 200 && response.data) {
           this.user = response.data
 
-          // 处理性别字段：将数字转换为字符串（1=男，2=女）
-          const sexValue = this.user.sex
-          if (sexValue === 1) {
-            this.$set(this.user, 'sex', '1')
-          } else if (sexValue === 2) {
-            this.$set(this.user, 'sex', '2')
-          } else {
-            // sex为0、undefined、null或其他值时，默认设为"1"（男）
-            this.$set(this.user, 'sex', '1')
-          }
-
           // 确保昵称有值
           if (!this.user.nickName && this.user.userName) {
             this.$set(this.user, 'nickName', this.user.userName)

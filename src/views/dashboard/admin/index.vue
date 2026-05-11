@@ -59,7 +59,7 @@
       </el-col>
     </el-row>
 
-    <el-card :bordered="false" :body-style="{padding: '0'}">
+    <el-card v-if="!isPlatform" :bordered="false" :body-style="{padding: '0'}">
       <div class="salesCard">
         <el-tabs>
           <el-tab-pane label="待办任务">
@@ -294,6 +294,7 @@ export default {
   },
   data() {
     return {
+      isPlatform: process.env.VUE_APP_MODE === 'platform',
       barData,
       barData2,
       rankList,
@@ -328,8 +329,10 @@ export default {
     }
   },
   created() {
-    this.getList()
-    this.getTreeselect()
+    if (!this.isPlatform) {
+      this.getList()
+      this.getTreeselect()
+    }
   },
   methods: {
     getList() {

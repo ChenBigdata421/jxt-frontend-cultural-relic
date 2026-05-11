@@ -11,8 +11,8 @@
     </el-form-item>
     <el-form-item label="性别">
       <el-radio-group v-model="user.sex">
-        <el-radio label="1">男</el-radio>
-        <el-radio label="2">女</el-radio>
+        <el-radio :label="1">男</el-radio>
+        <el-radio :label="2">女</el-radio>
       </el-radio-group>
     </el-form-item>
     <el-form-item>
@@ -60,7 +60,8 @@ export default {
     submit() {
       this.$refs['form'].validate(valid => {
         if (valid) {
-          updateUser(this.user).then(response => {
+          const { roleName, orgName, orgFullName, postName, orgIds, roleIds, postIds, createBy, updateBy, createdAt, updatedAt, ...data } = this.user
+          updateUser(data).then(response => {
             if (response.code === 200) {
               this.msgSuccess(response.msg)
             } else {
