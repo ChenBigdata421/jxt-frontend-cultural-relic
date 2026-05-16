@@ -321,7 +321,7 @@
                       "-"
                   }}
                 </el-descriptions-item>
-                <el-descriptions-item label="警员">
+                <el-descriptions-item label="人员">
                   {{ currentArchivingMedia.policeName || "-" }}
                 </el-descriptions-item>
                 <el-descriptions-item label="单位组织">
@@ -1572,7 +1572,7 @@ export default {
         listUser({ orgId: '/' + node.id + '/' }).then((response) => {
           this.userOptions = response.data.list
         })
-        // 清空警员和执法仪选择
+        // 清空人员和执法仪选择
         this.form.policeId = undefined
         this.form.recorderId = undefined
         this.bwcOptions = []
@@ -1584,10 +1584,10 @@ export default {
       }
     },
 
-    /** 表单-警员选择事件 */
+    /** 表单-人员选择事件 */
     handleFormPoliceSelect(policeId) {
       if (policeId) {
-        // 根据警员ID获取其管理的执法仪列表
+        // 根据人员ID获取其管理的执法仪列表
         getEquipmentBwcList({ managerId: policeId }).then((response) => {
           this.bwcOptions = response.data.list || []
         })

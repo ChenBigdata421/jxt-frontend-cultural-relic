@@ -87,7 +87,7 @@
           </el-table-column>
           <el-table-column
             prop="policeNo"
-            label="警员编号"
+            label="人员编号"
             width="120"
             align="center"
           />

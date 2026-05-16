@@ -508,11 +508,11 @@
       <el-table-column
         v-if="isColumnVisible('policeNo')"
         prop="policeNo"
-        label="警员编号"
+        label="人员编号"
         min-width="160"
         :show-overflow-tooltip="true"
       />
-      <el-table-column v-if="isColumnVisible('policeName')" label="警员姓名" width="120">
+      <el-table-column v-if="isColumnVisible('policeName')" label="人员姓名" width="120">
         <template slot-scope="{ row }">
           {{ formatPoliceName(row) }}
         </template>
@@ -520,7 +520,7 @@
       <el-table-column
         v-if="isColumnVisible('policeIdCard')"
         prop="policeIdCard"
-        label="警员身份证号"
+        label="人员身份证号"
         min-width="200"
         :show-overflow-tooltip="true"
       />
@@ -884,9 +884,9 @@ export default {
           defaultVisible: false
         },
         { prop: 'isNoticeSend', label: '是否通知发送', defaultVisible: false },
-        { prop: 'policeNo', label: '警员编号', defaultVisible: false },
-        { prop: 'policeName', label: '警员姓名', defaultVisible: true },
-        { prop: 'policeIdCard', label: '警员身份证号', defaultVisible: false },
+        { prop: 'policeNo', label: '人员编号', defaultVisible: false },
+        { prop: 'policeName', label: '人员姓名', defaultVisible: true },
+        { prop: 'policeIdCard', label: '人员身份证号', defaultVisible: false },
         { prop: 'orgCode', label: '单位编码', defaultVisible: false },
         { prop: 'orgName', label: '单位名称', defaultVisible: true },
         { prop: 'orgFullName', label: '单位全称', defaultVisible: false },
@@ -928,12 +928,12 @@ export default {
       }
     },
     'queryParams.policeId': function(newVal) {
-      // 当警员选择变化时，清空执法仪选择并重新加载该警员管理的执法仪列表
+      // 当人员选择变化时，清空执法仪选择并重新加载该人员管理的执法仪列表
       if (newVal) {
         this.queryParams.recorderId = undefined
         this.getBwcListByPoliceId(newVal)
       } else {
-        // 如果清空警员选择，则清空执法仪列表
+        // 如果清空人员选择，则清空执法仪列表
         this.bwcOptions = []
         this.queryParams.recorderId = undefined
       }
@@ -1145,7 +1145,7 @@ export default {
       this.userOptions = []
     },
 
-    /** 获取执法仪列表（根据警员ID） */
+    /** 获取执法仪列表（根据人员ID） */
     getBwcListByPoliceId(policeId) {
       if (!policeId) {
         this.bwcOptions = []
@@ -1169,7 +1169,7 @@ export default {
 
     /** 获取执法仪列表（全部） */
     getBwcList() {
-      // 初始化时不加载执法仪列表，等待用户选择警员后再加载
+      // 初始化时不加载执法仪列表，等待用户选择人员后再加载
       this.bwcOptions = []
     },
 
@@ -1284,7 +1284,7 @@ export default {
       })
     },
 
-    /** 格式化警员名称 */
+    /** 格式化人员名称 */
     formatPoliceName(row) {
       return row.policeName || row.userName || '-'
     },

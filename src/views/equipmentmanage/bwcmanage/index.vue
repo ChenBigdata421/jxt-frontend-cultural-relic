@@ -361,6 +361,8 @@
                     <treeselect
                       v-model="form.managerOrgId"
                       :options="orgOptions"
+                      :append-to-body="true"
+                      :z-index="3000"
                       placeholder="请选择管理组织"
                     />
                   </el-form-item>

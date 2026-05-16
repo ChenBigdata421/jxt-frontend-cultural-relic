@@ -54,10 +54,14 @@ export default {
       &:hover {
         color: $law-primary;
       }
+    }
 
-      &.is-active {
-        background-color: $law-primary;
-        border-color: $law-primary;
+    ::v-deep .el-radio-button.is-active .el-radio-button__inner {
+      background-color: $law-primary;
+      border-color: $law-primary;
+      color: $law-primary-contrast;
+
+      &:hover {
         color: $law-primary-contrast;
       }
     }

@@ -56,7 +56,7 @@ export function getWritByWritCode(writCode) {
  * @param {string} data.writName - 文书名称（必填）
  * @param {number} data.writType - 文书类型（必填）
  * @param {number} data.orgId - 组织部门ID（必填）
- * @param {Array<number>} data.policeIds - 警员ID列表（必填）
+ * @param {Array<number>} data.policeIds - 人员ID列表（必填）
  * @returns {Promise}
  */
 export function addWrit(data) {

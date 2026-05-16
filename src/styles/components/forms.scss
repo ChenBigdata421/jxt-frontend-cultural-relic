@@ -346,7 +346,7 @@
   .detail-section {
     margin-bottom: $spacing-4;
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible;
     // 折叠面板内容的内边距由子类控制
     // .form-section 用 $spacing-5 (20px)，.detail-section 用 $spacing-4 (16px)
   }
@@ -359,6 +359,7 @@
   line-height: 1 !important; // 覆盖 Element UI 默认的 line-height: 48px
   background-color: $law-gray-50;
   border: none;
+  border-radius: 8px 8px 0 0;
   padding: 0 $spacing-4 !important; // 无垂直 padding，靠 flex 居中
   display: flex !important;
   align-items: center !important;
@@ -379,6 +380,7 @@
 .form-collapse .form-section .el-collapse-item__wrap,
 .form-collapse .detail-section .el-collapse-item__wrap {
   border: none;
+  border-radius: 0 0 8px 8px;
   background-color: $law-bg-paper;
 }
 

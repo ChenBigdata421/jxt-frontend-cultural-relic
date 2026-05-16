@@ -38,7 +38,7 @@
         <div class="search-item">
           <label class="search-label">关联状态</label>
           <el-select
-            v-model="searchForm.isRelation"
+            v-model="searchForm.writRelation"
             placeholder="请选择是否关联"
             clearable
           >
@@ -74,7 +74,7 @@ export default {
         writCode: undefined,
         writName: undefined,
         writType: undefined,
-        isRelation: undefined
+        writRelation: undefined
       }
     }
   },
@@ -99,7 +99,7 @@ export default {
         writCode: undefined,
         writName: undefined,
         writType: undefined,
-        isRelation: undefined
+        writRelation: undefined
       }
       this.$emit('reset')
     }

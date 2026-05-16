@@ -259,13 +259,13 @@
             </div>
           </template>
           <el-descriptions :column="2" border class="section-descriptions">
-            <el-descriptions-item label="警员编号">
+            <el-descriptions-item label="人员编号">
               {{ mediaData.policeNo || "-" }}
             </el-descriptions-item>
-            <el-descriptions-item label="警员姓名">
+            <el-descriptions-item label="人员姓名">
               {{ mediaData.policeName || "-" }}
             </el-descriptions-item>
-            <el-descriptions-item label="警员身份证号">
+            <el-descriptions-item label="人员身份证号">
               {{ mediaData.policeIdCard || "-" }}
             </el-descriptions-item>
             <el-descriptions-item label="单位编码">

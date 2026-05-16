@@ -69,7 +69,7 @@
           <el-table-column prop="shot_time_start" label="拍摄开始时间" width="100" />
           <el-table-column prop="enfor_no" label="执法业务编号" width="100" />
           <el-table-column prop="enfor_type" label="执法类型" width="100" />
-          <el-table-column prop="police_id" label="警员Id" width="100" />
+          <el-table-column prop="police_id" label="人员Id" width="100" />
           <el-table-column prop="storage_type" label="存储方式" width="100">
             <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
             <template slot-scope="scope">

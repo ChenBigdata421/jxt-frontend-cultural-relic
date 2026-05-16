@@ -178,14 +178,26 @@
             </template>
           </el-table-column>
           <el-table-column
+            v-if="isColumnVisible('orgCode')"
+            label="组织编码"
+            align="center"
+            prop="orgCode"
+          />
+          <el-table-column
+            v-if="isColumnVisible('orgName')"
+            label="组织名称"
+            align="center"
+            prop="orgName"
+          />
+          <el-table-column
             v-if="isColumnVisible('orgPaths')"
-            label="组织部门"
+            label="组织全称"
             align="center"
             prop="orgPaths"
           />
           <el-table-column
             v-if="isColumnVisible('writPoliceNames')"
-            label="警员"
+            label="人员"
             align="center"
             prop="writPoliceNames"
           />
@@ -386,11 +398,11 @@
               </el-row>
               <el-row :gutter="20">
                 <el-col :span="24">
-                  <el-form-item label="警员" prop="writPoliceIds">
+                  <el-form-item label="人员" prop="writPoliceIds">
                     <el-select
                       v-model="form.writPoliceIds"
                       multiple
-                      placeholder="请选择警员"
+                      placeholder="请选择人员"
                       collapse-tags
                       collapse-tags-tooltip
                       class="full-width"
@@ -548,7 +560,7 @@
               <el-descriptions-item label="组织部门" :span="2">
                 {{ viewData.orgPaths || "-" }}
               </el-descriptions-item>
-              <el-descriptions-item label="警员" :span="2">
+              <el-descriptions-item label="人员" :span="2">
                 {{ viewData.writPoliceNames || "-" }}
               </el-descriptions-item>
             </el-descriptions>
@@ -849,8 +861,10 @@ export default {
         { prop: 'writName', label: '文书名称', fixed: false, defaultVisible: true },
         { prop: 'writType', label: '文书类型', fixed: false, defaultVisible: true },
         { prop: 'writTime', label: '开书时间', fixed: false, defaultVisible: true },
-        { prop: 'orgPaths', label: '组织部门', fixed: false, defaultVisible: true },
-        { prop: 'writPoliceNames', label: '警员', fixed: false, defaultVisible: true },
+        { prop: 'orgCode', label: '组织编码', fixed: false, defaultVisible: true },
+        { prop: 'orgName', label: '组织名称', fixed: false, defaultVisible: true },
+        { prop: 'orgPaths', label: '组织全称', fixed: false, defaultVisible: true },
+        { prop: 'writPoliceNames', label: '人员', fixed: false, defaultVisible: true },
         { prop: 'writScore', label: '评分', fixed: false, defaultVisible: false },
         { prop: 'isRelation', label: '关联状态', fixed: false, defaultVisible: true },
         { prop: 'writAddress', label: '文书地址', fixed: false, defaultVisible: false },
@@ -894,7 +908,7 @@ export default {
           { required: true, message: '组织部门不能为空', trigger: 'change' }
         ],
         writPoliceIds: [
-          { required: true, message: '至少选择一名警员', trigger: 'change' }
+          { required: true, message: '至少选择一名人员', trigger: 'change' }
         ]
       },
       // 评分表单校验
@@ -925,7 +939,7 @@ export default {
       // 当组织变化时,加载该组织的用户列表
       if (newVal) {
         if (this.firstLoad !== true) {
-          // 首次打开对话框,不需要清空警员选择
+          // 首次打开对话框,不需要清空人员选择
           this.form.writPoliceIds = []
         }
         this.firstLoad = false
@@ -1073,7 +1087,7 @@ export default {
     /** 新增查询栏相关方法 */
     handleSearch(searchData) {
       // 快速搜索字段列表
-      const quickSearchFields = ['writCode', 'writName', 'writType', 'isRelation']
+      const quickSearchFields = ['writCode', 'writName', 'writType', 'writRelation']
 
       // 高级筛选中的时间范围字段列表
       const timeRangeFields = [
@@ -1129,7 +1143,7 @@ export default {
         // this.queryParams.status = 0;
       } else if (filterData.filterType === 'related') {
         // 已关联
-        this.queryParams.isRelation = 1
+        this.queryParams.writRelation = 1
       } else if (filterData.filterType === 'advanced') {
         // 高级筛选 - 合并筛选参数（移除 filterType，只保留实际的查询条件）
         Object.keys(filterData).forEach(key => {
@@ -1154,7 +1168,7 @@ export default {
         delete this.queryParams.writTimeStart
         delete this.queryParams.writTimeEnd
         delete this.queryParams.createUserId
-        delete this.queryParams.isRelation
+        delete this.queryParams.writRelation
       }
       this.handleQuery()
     },
@@ -1181,7 +1195,7 @@ export default {
         updatedAtEnd: undefined,
         // 清空快捷筛选的字段
         createUserId: undefined,
-        isRelation: undefined
+        writRelation: undefined
       }
       this.handleQuery()
     },

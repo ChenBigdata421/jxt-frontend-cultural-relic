@@ -1,146 +1,173 @@
 <template>
   <div class="dashboard-editor-container">
-    <el-row :gutter="12">
-      <el-col :sm="24" :xs="24" :md="6" :xl="6" :lg="6" :style="{ marginBottom: '12px' }">
-        <chart-card title="总销售额" total="￥126,560">
-          <el-tooltip slot="action" class="item" effect="dark" content="指标说明" placement="top-start">
-            <i class="el-icon-warning-outline" />
-          </el-tooltip>
-          <div>
-            <trend flag="top" style="margin-right: 16px;" rate="12">
-              <span slot="term">周同比</span>
-            </trend>
-            <trend flag="bottom" rate="11">
-              <span slot="term">日同比</span>
-            </trend>
-          </div>
-          <template slot="footer">日均销售额<span>￥ 234.56</span></template>
-        </chart-card>
-      </el-col>
-      <el-col :sm="24" :xs="24" :md="6" :xl="6" :lg="6" :style="{ marginBottom: '12px' }">
-        <chart-card title="访问量" :total="8846">
-          <el-tooltip slot="action" class="item" effect="dark" content="指标说明" placement="top-start">
-            <i class="el-icon-warning-outline" />
-          </el-tooltip>
-          <div>
-            <mini-area />
-          </div>
-          <template slot="footer">日访问量<span> {{ '1234' }}</span></template>
-        </chart-card>
-      </el-col>
-      <el-col :sm="24" :xs="24" :md="6" :xl="6" :lg="6" :style="{ marginBottom: '12px' }">
-        <chart-card title="支付笔数" :total="6560">
-          <el-tooltip slot="action" class="item" effect="dark" content="指标说明" placement="top-start">
-            <i class="el-icon-warning-outline" />
-          </el-tooltip>
-          <div>
-            <mini-bar />
-          </div>
-          <template slot="footer">转化率 <span>60%</span></template>
-        </chart-card>
-      </el-col>
-      <el-col :sm="24" :xs="24" :md="6" :xl="6" :lg="6" :style="{ marginBottom: '12px' }">
-        <chart-card title="运营活动效果" total="78%">
-          <el-tooltip slot="action" class="item" effect="dark" content="指标说明" placement="top-start">
-            <i class="el-icon-warning-outline" />
-          </el-tooltip>
-          <div>
-            <mini-progress color="rgb(19, 194, 194)" :target="80" :percentage="78" height="8px" />
-          </div>
-          <template slot="footer">
-            <trend flag="top" style="margin-right: 16px;" rate="12">
-              <span slot="term">同周比</span>
-            </trend>
-            <trend flag="bottom" rate="80">
-              <span slot="term">日环比</span>
-            </trend>
-          </template>
-        </chart-card>
-      </el-col>
-    </el-row>
+    <!-- 页面头部 -->
+    <dashboard-header
+      :data-as-of="meta.dataAsOf"
+      :partial="meta.partial"
+      :errors="errorLabels"
+      :loading="refreshing"
+      @refresh="handleRefresh"
+    />
 
-    <el-card v-if="!isPlatform" :bordered="false" :body-style="{padding: '0'}">
-      <div class="salesCard">
-        <el-tabs>
-          <el-tab-pane label="待办任务">
-            <!-- 任务列表 -->
-            <el-table
-              v-loading="loading"
-              :data="taskList"
-              border
-              style="margin-top: 16px;"
-            >
-              <el-table-column
-                label="操作"
-                align="center"
-                class-name="small-padding fixed-width"
-                width="300"
-                fixed="left"
+    <!-- 骨架屏：首次加载 -->
+    <template v-if="dashLoading && !overview.summary">
+      <el-row :gutter="12" class="dashboard-section">
+        <el-col v-for="i in 4" :key="'sk-card-'+i" :xs="12" :sm="12" :md="6" :lg="6" :xl="6">
+          <div class="skeleton skeleton--card">
+            <div class="skeleton__line skeleton__line--title" />
+            <div class="skeleton__line skeleton__line--value" />
+            <div class="skeleton__line skeleton__line--short" />
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="12" class="dashboard-section">
+        <el-col :sm="12" :xs="24">
+          <div class="skeleton skeleton--chart" />
+        </el-col>
+        <el-col :sm="12" :xs="24">
+          <div class="skeleton skeleton--chart" />
+        </el-col>
+      </el-row>
+      <el-row :gutter="12" class="dashboard-section">
+        <el-col :sm="12" :xs="24">
+          <div class="skeleton skeleton--chart" />
+        </el-col>
+        <el-col :sm="12" :xs="24">
+          <div class="skeleton skeleton--chart" />
+        </el-col>
+      </el-row>
+      <div v-if="!isPlatform" class="skeleton skeleton--chart skeleton--chart--tall" />
+    </template>
+
+    <!-- 数据区 -->
+    <template v-else>
+      <!-- 汇总卡片 -->
+      <summary-cards :data="overview.summary" :loading="dashLoading" />
+
+      <!-- 第一行：趋势 + 媒体分布 -->
+      <el-row type="flex" :gutter="12" class="dashboard-section">
+        <el-col :sm="12" :xs="24">
+          <trend-chart
+            :data="overview.trend"
+            :loading="dashLoading"
+            :error="!!errorMap.trend"
+            @retry="fetchOverview"
+          />
+        </el-col>
+        <el-col :sm="12" :xs="24">
+          <media-distribution-chart
+            :data="overview.mediaTypeDistribution"
+            :loading="dashLoading"
+            :error="!!errorMap.mediaTypeDistribution"
+            @retry="fetchOverview"
+          />
+        </el-col>
+      </el-row>
+
+      <!-- 第二行：存储 + 媒体覆盖 -->
+      <el-row type="flex" :gutter="12" class="dashboard-section">
+        <el-col :sm="12" :xs="24">
+          <storage-stats-chart
+            :data="overview.storageStats"
+            :loading="dashLoading"
+            :error="!!errorMap.storageStats"
+            @retry="fetchOverview"
+          />
+        </el-col>
+        <el-col :sm="12" :xs="24">
+          <media-coverage-stats
+            :data="overview.mediaCoverageStats"
+            :loading="dashLoading"
+            :error="!!errorMap.mediaCoverageStats"
+            @retry="fetchOverview"
+          />
+        </el-col>
+      </el-row>
+
+      <!-- 待办任务 -->
+      <el-card v-if="!isPlatform" :bordered="false" :body-style="{padding: '0'}">
+        <div class="salesCard">
+          <el-tabs>
+            <el-tab-pane label="待办任务">
+              <!-- 任务列表 -->
+              <el-table
+                v-loading="loading"
+                :data="taskList"
+                border
+                style="margin-top: 16px;"
               >
-                <template slot-scope="scope">
-                  <div class="action-buttons">
-                    <el-button
-                      size="small"
-                      type="text"
-                      icon="el-icon-view"
-                      class="action-btn tertiary"
-                      @click="handleView(scope.row)"
-                    >
-                      查看
-                    </el-button>
-                    <el-button
-                      size="small"
-                      type="text"
-                      icon="el-icon-edit"
-                      class="action-btn tertiary"
-                      @click="handleProcess(scope.row)"
-                    >
-                      处理
-                    </el-button>
-                    <el-button
-                      size="small"
-                      type="text"
-                      icon="el-icon-share"
-                      class="action-btn tertiary"
-                      @click="handleDelegate(scope.row)"
-                    >
-                      转办
-                    </el-button>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="任务编号" align="center" prop="taskNo" min-width="120" />
-              <el-table-column label="任务名称" align="center" prop="taskName" min-width="120" />
-              <el-table-column label="流程名称" align="center" prop="workflowName" min-width="120" />
-              <el-table-column label="优先级" align="center" prop="priority" width="80">
-                <template slot-scope="scope">
-                  <el-tag v-if="scope.row.priority === 'high'" type="danger">高</el-tag>
-                  <el-tag v-else-if="scope.row.priority === 'medium'" type="warning">中</el-tag>
-                  <el-tag v-else type="info">低</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="创建时间" align="center" prop="createdAt" width="160">
-                <template slot-scope="scope">
-                  <span>{{ parseTime(scope.row.createdAt) }}</span>
-                </template>
-              </el-table-column>
-            </el-table>
+                <el-table-column
+                  label="操作"
+                  align="center"
+                  class-name="small-padding fixed-width"
+                  width="300"
+                  fixed="left"
+                >
+                  <template slot-scope="scope">
+                    <div class="action-buttons">
+                      <el-button
+                        size="small"
+                        type="text"
+                        icon="el-icon-view"
+                        class="action-btn tertiary"
+                        @click="handleView(scope.row)"
+                      >
+                        查看
+                      </el-button>
+                      <el-button
+                        size="small"
+                        type="text"
+                        icon="el-icon-edit"
+                        class="action-btn tertiary"
+                        @click="handleProcess(scope.row)"
+                      >
+                        处理
+                      </el-button>
+                      <el-button
+                        size="small"
+                        type="text"
+                        icon="el-icon-share"
+                        class="action-btn tertiary"
+                        @click="handleDelegate(scope.row)"
+                      >
+                        转办
+                      </el-button>
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column label="任务编号" align="center" prop="taskNo" min-width="120" />
+                <el-table-column label="任务名称" align="center" prop="taskName" min-width="120" />
+                <el-table-column label="流程名称" align="center" prop="workflowName" min-width="120" />
+                <el-table-column label="优先级" align="center" prop="priority" width="80">
+                  <template slot-scope="scope">
+                    <el-tag v-if="scope.row.priority === 'high'" type="danger">高</el-tag>
+                    <el-tag v-else-if="scope.row.priority === 'medium'" type="warning">中</el-tag>
+                    <el-tag v-else type="info">低</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="创建时间" align="center" prop="createdAt" width="160">
+                  <template slot-scope="scope">
+                    <span>{{ parseTime(scope.row.createdAt) }}</span>
+                  </template>
+                </el-table-column>
+              </el-table>
 
-            <!-- 分页 -->
-            <pagination
-              v-show="total > 0"
-              :total="total"
-              :page.sync="queryParams.pageNum"
-              :limit.sync="queryParams.pageSize"
-              @pagination="getList"
-            />
-          </el-tab-pane>
-          <el-tab-pane label="系统状态">
-            <el-row />
-          </el-tab-pane>
-        </el-tabs>
-      </div>
-    </el-card>
+              <!-- 分页 -->
+              <pagination
+                v-show="total > 0"
+                :total="total"
+                :page.sync="queryParams.pageNum"
+                :limit.sync="queryParams.pageSize"
+                @pagination="getList"
+              />
+            </el-tab-pane>
+            <el-tab-pane label="系统状态">
+              <el-row />
+            </el-tab-pane>
+          </el-tabs>
+        </div>
+      </el-card>
+    </template>
 
     <!-- 任务详情对话框 -->
     <el-dialog
@@ -246,11 +273,6 @@
 </template>
 
 <script>
-import ChartCard from '@/components/ChartCard'
-import Trend from '@/components/Trend'
-import MiniArea from '@/components/MiniArea'
-import MiniBar from '@/components/MiniBar'
-import MiniProgress from '@/components/MiniProgress'
 import Pagination from '@/components/Pagination'
 import TaskProcessDialog from '@/components/TaskProcessDialog'
 import Treeselect from '@riophae/vue-treeselect'
@@ -258,46 +280,59 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { listMyTodoTasks, getTask, delegateTask } from '@/api/process/task'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
+import { getDashboardOverview } from '@/api/evidence/dashboard'
 
-const barData = []
-const barData2 = []
-for (let i = 0; i < 12; i += 1) {
-  barData.push({
-    x: `${i + 1}月`,
-    y: Math.floor(Math.random() * 1000) + 200
-  })
-  barData2.push({
-    x: `${i + 1}月`,
-    y: Math.floor(Math.random() * 1000) + 200
-  })
-}
+import DashboardHeader from './components/DashboardHeader'
+import SummaryCards from './components/SummaryCards'
+import TrendChart from './components/TrendChart'
+import MediaDistributionChart from './components/MediaDistributionChart'
+import StorageStatsChart from './components/StorageStatsChart'
+import MediaCoverageStats from './components/MediaCoverageStats'
 
-const rankList = []
-for (let i = 0; i < 7; i++) {
-  rankList.push({
-    name: '白鹭岛 ' + (i + 1) + ' 号店',
-    total: 1234.56 - i * 100
-  })
+
+// Section key → 中文标签映射
+const SECTION_LABELS = {
+  summary: '汇总统计',
+  trend: '业务日增量趋势',
+  mediaTypeDistribution: '媒体分布',
+  storageStats: '存储统计',
+  mediaCoverageStats: '媒体覆盖',
 }
 
 export default {
   name: 'DashboardAdmin',
   components: {
-    ChartCard,
-    Trend,
-    MiniArea,
-    MiniBar,
-    MiniProgress,
     Pagination,
     TaskProcessDialog,
-    Treeselect
+    Treeselect,
+    DashboardHeader,
+    SummaryCards,
+    TrendChart,
+    MediaDistributionChart,
+    StorageStatsChart,
+    MediaCoverageStats,
   },
   data() {
     return {
       isPlatform: process.env.VUE_APP_MODE === 'platform',
-      barData,
-      barData2,
-      rankList,
+
+      // ---- 仪表盘数据 ----
+      overview: {
+        summary: null,
+        trend: null,
+        mediaTypeDistribution: null,
+        storageStats: null,
+        mediaCoverageStats: null,
+      },
+      meta: {
+        dataAsOf: '',
+        partial: false
+      },
+      dashLoading: false,
+      refreshing: false,
+      errors: [],
+
+      // ---- 待办任务数据 ----
       loading: true,
       total: 0,
       taskList: [],
@@ -321,6 +356,16 @@ export default {
       }
     }
   },
+  computed: {
+    errorMap() {
+      const map = {}
+      this.errors.forEach(e => { map[e.section] = e })
+      return map
+    },
+    errorLabels() {
+      return this.errors.map(e => SECTION_LABELS[e.section] || e.section)
+    }
+  },
   watch: {
     orgId: function(newVal) {
       if (newVal) {
@@ -329,12 +374,69 @@ export default {
     }
   },
   created() {
+    this.fetchOverview()
     if (!this.isPlatform) {
       this.getList()
       this.getTreeselect()
     }
   },
   methods: {
+    // ---- 仪表盘方法 ----
+    fetchOverview() {
+      this.dashLoading = true
+      this.refreshing = true
+      this.errors = []
+      getDashboardOverview()
+        .then(response => {
+          if (response.code === 200 && response.data) {
+            const data = response.data
+            // 逐 section 赋值
+            const sections = Object.keys(this.overview)
+            sections.forEach(key => {
+              if (data[key] !== undefined && data[key] !== null) {
+                this.$set(this.overview, key, data[key])
+              }
+            })
+            // 读取 meta 信息
+            if (data.meta) {
+              if (data.meta.dataAsOf) {
+                this.meta.dataAsOf = data.meta.dataAsOf
+              }
+              if (data.meta.partial) {
+                this.meta.partial = true
+              }
+            }
+            // 读取部分失败 errors
+            if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+              this.meta.partial = true
+              this.errors = data.errors
+            }
+          } else {
+            // 整体失败
+            const sections = Object.keys(this.overview)
+            sections.forEach(key => {
+              this.errors.push({ section: key })
+            })
+            this.meta.partial = true
+          }
+        })
+        .catch(() => {
+          const sections = Object.keys(this.overview)
+          sections.forEach(key => {
+            this.errors.push({ section: key })
+          })
+          this.meta.partial = true
+        })
+        .finally(() => {
+          this.dashLoading = false
+          this.refreshing = false
+        })
+    },
+    handleRefresh() {
+      this.fetchOverview()
+    },
+
+    // ---- 待办任务方法（完整保留） ----
     getList() {
       this.loading = true
       const params = {
@@ -454,42 +556,133 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/tokens/index.scss';
+
 .dashboard-editor-container {
   padding: 12px;
-  background-color: rgb(240, 242, 245);
+  background-color: $law-bg-page;
   position: relative;
+  min-height: calc(100vh - 84px);
+}
 
-  .github-corner {
-    position: absolute;
-    top: 0;
-    border: 0;
-    right: 0;
+.dashboard-section {
+  margin-bottom: 12px;
+}
+
+// ---- 图表卡片通用样式 ----
+.chart-card--dashboard {
+  background: $law-bg-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  height: 100%;
+  transition: box-shadow $transition-normal;
+
+  &:hover {
+    box-shadow: $shadow-lg;
   }
 
-  .chart-wrapper {
-    background: #fff;
-    padding: 16px 16px 0;
-    margin-bottom: 32px;
+  &__header {
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: $law-gray-900;
+  }
+
+  &__body {
+    position: relative;
   }
 }
 
-::v-deep .el-tabs__item{
-   padding-left: 16px!important;
-   height: 50px;
-   line-height: 50px;
-}
+// ---- 骨架屏 ----
+.skeleton {
+  background: $law-bg-card;
+  border-radius: $radius-md;
+  margin-bottom: 12px;
 
-@media (max-width:1024px) {
-  .chart-wrapper {
-    padding: 8px;
+  &--card {
+    padding: 16px 20px;
+    height: 120px;
+  }
+
+  &--chart {
+    height: 340px;
+  }
+
+  &--chart--tall {
+    height: 200px;
+  }
+
+  &__line {
+    background: linear-gradient(90deg, #ECEFF1 25%, #F5F5F5 50%, #ECEFF1 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    border-radius: 4px;
+    margin-bottom: 12px;
+
+    &--title {
+      width: 40%;
+      height: 14px;
+    }
+
+    &--value {
+      width: 60%;
+      height: 26px;
+      margin-top: 12px;
+    }
+
+    &--short {
+      width: 30%;
+      height: 10px;
+      margin-top: 16px;
+    }
   }
 }
 
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// ---- 待办任务 tabs ----
+::v-deep .el-tabs__item {
+  padding-left: 16px !important;
+  height: 50px;
+  line-height: 50px;
+}
+
+// ---- 对话框代码块 ----
 pre {
   background-color: #f5f5f5;
   padding: 10px;
   border-radius: 4px;
   max-height: 300px;
   overflow: auto;
+}
+
+// ---- 响应式 ----
+@media (max-width: 768px) {
+  .dashboard-editor-container {
+    padding: 8px;
+  }
+  .chart-card--dashboard {
+    padding: 12px 14px;
+  }
+}
+
+@media print {
+  .dashboard-editor-container {
+    padding: 0;
+    background: #fff;
+  }
+  .chart-card--dashboard {
+    box-shadow: none;
+    border: 1px solid #E0E0E0;
+  }
 }
 </style>

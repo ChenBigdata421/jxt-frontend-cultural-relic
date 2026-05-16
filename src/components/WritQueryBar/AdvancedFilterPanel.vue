@@ -50,12 +50,12 @@
             />
           </div>
 
-          <!-- 警员 -->
+          <!-- 人员 -->
           <div class="filter-section">
-            <label class="section-label-inline">警员</label>
+            <label class="section-label-inline">人员</label>
             <el-select
               v-model="filterParams.writPoliceIds"
-              placeholder="请选择警员"
+              placeholder="请选择人员"
               clearable
               multiple
               collapse-tags
@@ -143,7 +143,7 @@ export default {
       // 等待用户点击"搜索"按钮
     },
     handleOrgChange(orgId) {
-      // 当组织变化时，清空警员选择并加载该组织下的人员
+      // 当组织变化时，清空人员选择并加载该组织下的人员
       this.filterParams.writPoliceIds = []
       if (orgId) {
         this.loadUserOptions(orgId)

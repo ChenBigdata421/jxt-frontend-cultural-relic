@@ -882,7 +882,7 @@
           <el-descriptions-item label="拍摄时间">{{
             parseTime(viewMediaData.shotTime)
           }}</el-descriptions-item>
-          <el-descriptions-item label="拍摄警员">{{
+          <el-descriptions-item label="拍摄人员">{{
             viewMediaData.policeName
           }}</el-descriptions-item>
           <el-descriptions-item label="所属组织">{{
@@ -2150,7 +2150,7 @@ export default {
         this.uploadForm.deviceCode === '' ||
         this.uploadForm.policeCode === ''
       ) {
-        this.msgError('请输入设备编号和警员编号、存储服务器编号')
+        this.msgError('请输入设备编号和人员编号、存储服务器编号')
         return
       }
       // 检查是否选择了文件

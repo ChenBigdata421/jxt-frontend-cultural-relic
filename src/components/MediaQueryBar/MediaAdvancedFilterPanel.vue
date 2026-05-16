@@ -52,12 +52,12 @@
             />
           </div>
 
-          <!-- 拍摄警员 -->
+          <!-- 拍摄人员 -->
           <div class="filter-section">
-            <label class="section-label-inline">拍摄警员</label>
+            <label class="section-label-inline">拍摄人员</label>
             <el-select
               v-model="filterParams.policeId"
-              placeholder="请选择拍摄警员"
+              placeholder="请选择拍摄人员"
               clearable
               filterable
               class="full-width"

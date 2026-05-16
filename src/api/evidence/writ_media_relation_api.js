@@ -44,7 +44,7 @@ export function getUnassociatedMediaByWritId(writId, query) {
  * @param {Object} data - 关联数据
  * @param {string} data.writId - 文书ID（必填）
  * @param {string} data.mediaId - 媒体ID（必填）
- * @param {number} data.policeId - 警员ID
+ * @param {number} data.policeId - 人员ID
  * @returns {Promise}
  */
 export function createWritMediaRelation(data) {
@@ -60,7 +60,7 @@ export function createWritMediaRelation(data) {
  * @param {Object} data - 批量关联数据
  * @param {string} data.writId - 文书ID（必填）
  * @param {Array<string>} data.mediaIds - 媒体ID列表（必填）
- * @param {number} data.policeId - 警员ID
+ * @param {number} data.policeId - 人员ID
  * @returns {Promise}
  */
 export function batchCreateWritMediaRelation(data) {

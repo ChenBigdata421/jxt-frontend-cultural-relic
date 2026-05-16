@@ -88,7 +88,7 @@
           />
           <el-table-column prop="enfor_no" label="执法业务编号" width="100" />
           <el-table-column prop="enfor_type" label="执法类型" width="100" />
-          <el-table-column prop="police_id" label="警员Id" width="100" />
+          <el-table-column prop="police_id" label="人员Id" width="100" />
           <el-table-column prop="storage_type" label="存储方式" width="120">
             <template slot-scope="{ row }">
               {{ selectDictLabel(storage_type_options, row.storage_type) }}
