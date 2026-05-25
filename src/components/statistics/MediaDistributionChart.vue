@@ -1,7 +1,7 @@
 <template>
   <div class="chart-card--dashboard">
     <div class="chart-card--dashboard__header">
-      <h3 class="chart-card--dashboard__title">存储统计</h3>
+      <h3 class="chart-card--dashboard__title">媒体类型分布</h3>
     </div>
     <div class="chart-card--dashboard__body">
       <chart-empty
@@ -9,10 +9,15 @@
         :loading="loading"
         :empty="isEmpty"
         :error="error"
-        error-msg="存储统计数据加载失败"
+        error-msg="媒体分布数据加载失败"
         @retry="$emit('retry')"
       />
-      <div v-else ref="chartEl" :aria-label="ariaLabel" class="chart-container" />
+      <div
+        v-else
+        ref="chartEl"
+        :aria-label="ariaLabel"
+        class="chart-container"
+      />
     </div>
   </div>
 </template>
@@ -21,9 +26,9 @@
 import echarts from 'echarts'
 import resize from './mixins/resize'
 import ChartEmpty from './ChartEmpty'
-import { formatFileSizeFromKB } from '@/utils/dashboard'
+import { addThousandSeparator } from '@/utils/dashboard'
 
-// mediaCate → 名称/颜色
+// mediaCate 值 → 颜色/名称映射（后端 MediaCate int 枚举）
 const mediaCateMap = {
   1: { name: '视频', color: '#1A5F7A' },
   2: { name: '音频', color: '#2E7D32' },
@@ -33,7 +38,7 @@ const mediaCateMap = {
 }
 
 export default {
-  name: 'StorageStatsChart',
+  name: 'MediaDistributionChart',
   components: { ChartEmpty },
   mixins: [resize],
   props: {
@@ -57,10 +62,11 @@ export default {
   },
   computed: {
     isEmpty() {
-      return !this.loading && !this.error && (!this.data || !this.data.totalSizeBytes)
+      const items = this.data && this.data.items
+      return !this.loading && !this.error && (!items || items.length === 0)
     },
     ariaLabel() {
-      return '存储统计环形图，展示各媒体类型的存储空间占用'
+      return '媒体类型分布环形图，展示各类型媒体文件的占比'
     }
   },
   watch: {
@@ -94,24 +100,27 @@ export default {
       this.initChart()
       if (!this.chart) return
 
-      const byType = this.data.byMediaType || []
-      const chartData = byType.map(t => {
-        const mapping = mediaCateMap[t.mediaCate] || { name: t.name || '未知', color: '#90A4AE' }
+      const items = (this.data && this.data.items) || []
+      const total = items.reduce((sum, d) => sum + (d.count || 0), 0)
+
+      const chartData = items.map(d => {
+        const mapping = mediaCateMap[d.mediaCate] || { name: d.name || '未知', color: '#90A4AE' }
         return {
           name: mapping.name,
-          value: t.sizeBytes || 0,
-          count: t.count || 0,
+          value: d.count || 0,
           itemStyle: { color: mapping.color }
         }
       })
-
-      const total = chartData.reduce((s, d) => s + d.value, 0)
 
       const option = {
         tooltip: {
           trigger: 'item',
           formatter(p) {
-            return p.name + '：<b>' + formatFileSizeFromKB(p.value) + '</b>（' + p.percent + '%）'
+            return (
+              '<div style="font-weight:600;margin-bottom:4px;">' + p.name + '</div>' +
+              '<div>数量：<b>' + addThousandSeparator(p.value) + '</b></div>' +
+              '<div>占比：<b>' + p.percent + '%</b></div>'
+            )
           }
         },
         legend: {
@@ -122,7 +131,7 @@ export default {
             const item = chartData.find(d => d.name === name)
             if (!item) return name
             const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0
-            return name + '  ' + formatFileSizeFromKB(item.value) + '  ' + pct + '%'
+            return name + '  ' + addThousandSeparator(item.value) + '  ' + pct + '%'
           }
         },
         series: [{
@@ -130,28 +139,13 @@ export default {
           radius: ['45%', '70%'],
           center: ['35%', '50%'],
           avoidLabelOverlap: false,
-          label: {
-            show: true,
-            position: 'center',
-            formatter() {
-              return '{total|' + formatFileSizeFromKB(total) + '}\n{label|总存储}'
-            },
-            rich: {
-              total: {
-                fontSize: 18,
-                fontWeight: 'bold',
-                color: '#212121',
-                lineHeight: 28
-              },
-              label: {
-                fontSize: 12,
-                color: '#757575',
-                lineHeight: 20
-              }
-            }
-          },
+          label: { show: false },
           emphasis: {
-            label: { show: true }
+            label: {
+              show: true,
+              fontSize: 14,
+              fontWeight: 'bold'
+            }
           },
           labelLine: { show: false },
           data: chartData
@@ -166,10 +160,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/tokens/index.scss';
-
 .chart-container {
   width: 100%;
-  height: 240px;
+  height: 300px;
 }
 </style>

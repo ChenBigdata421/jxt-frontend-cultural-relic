@@ -80,6 +80,10 @@ Vue.use(VueDND)
 
 import 'remixicon/fonts/remixicon.css'
 
+import echarts from 'echarts'
+import jxtTheme from '@/styles/echarts-theme'
+echarts.registerTheme('jxt', jxtTheme)
+
 console.info(`欢迎使用go-admin，谢谢您对我们的支持，在使用过程中如果有什么问题，
 请访问https://github.com/go-admin-team/go-admin 或者
  https://github.com/go-admin-team/go-admin-ui 向我们反馈，

@@ -28,14 +28,6 @@
           <div class="skeleton skeleton--chart" />
         </el-col>
       </el-row>
-      <el-row :gutter="12" class="dashboard-section">
-        <el-col :sm="12" :xs="24">
-          <div class="skeleton skeleton--chart" />
-        </el-col>
-        <el-col :sm="12" :xs="24">
-          <div class="skeleton skeleton--chart" />
-        </el-col>
-      </el-row>
       <div v-if="!isPlatform" class="skeleton skeleton--chart skeleton--chart--tall" />
     </template>
 
@@ -59,26 +51,6 @@
             :data="overview.mediaTypeDistribution"
             :loading="dashLoading"
             :error="!!errorMap.mediaTypeDistribution"
-            @retry="fetchOverview"
-          />
-        </el-col>
-      </el-row>
-
-      <!-- 第二行：存储 + 媒体覆盖 -->
-      <el-row type="flex" :gutter="12" class="dashboard-section">
-        <el-col :sm="12" :xs="24">
-          <storage-stats-chart
-            :data="overview.storageStats"
-            :loading="dashLoading"
-            :error="!!errorMap.storageStats"
-            @retry="fetchOverview"
-          />
-        </el-col>
-        <el-col :sm="12" :xs="24">
-          <media-coverage-stats
-            :data="overview.mediaCoverageStats"
-            :loading="dashLoading"
-            :error="!!errorMap.mediaCoverageStats"
             @retry="fetchOverview"
           />
         </el-col>
@@ -280,23 +252,19 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { listMyTodoTasks, getTask, delegateTask } from '@/api/process/task'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
-import { getDashboardOverview } from '@/api/evidence/dashboard'
+import { getStatisticsDashboard } from '@/api/evidence/statistics'
 
 import DashboardHeader from './components/DashboardHeader'
 import SummaryCards from './components/SummaryCards'
 import TrendChart from './components/TrendChart'
 import MediaDistributionChart from './components/MediaDistributionChart'
-import StorageStatsChart from './components/StorageStatsChart'
-import MediaCoverageStats from './components/MediaCoverageStats'
 
 
 // Section key → 中文标签映射
 const SECTION_LABELS = {
   summary: '汇总统计',
-  trend: '业务日增量趋势',
+  trend: '媒体日采集量趋势',
   mediaTypeDistribution: '媒体分布',
-  storageStats: '存储统计',
-  mediaCoverageStats: '媒体覆盖',
 }
 
 export default {
@@ -309,8 +277,6 @@ export default {
     SummaryCards,
     TrendChart,
     MediaDistributionChart,
-    StorageStatsChart,
-    MediaCoverageStats,
   },
   data() {
     return {
@@ -321,8 +287,6 @@ export default {
         summary: null,
         trend: null,
         mediaTypeDistribution: null,
-        storageStats: null,
-        mediaCoverageStats: null,
       },
       meta: {
         dataAsOf: '',
@@ -386,7 +350,7 @@ export default {
       this.dashLoading = true
       this.refreshing = true
       this.errors = []
-      getDashboardOverview()
+      getStatisticsDashboard({ view: 'admin', days: 30 })
         .then(response => {
           if (response.code === 200 && response.data) {
             const data = response.data

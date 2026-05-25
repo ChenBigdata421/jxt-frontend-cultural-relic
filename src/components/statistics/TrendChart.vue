@@ -29,17 +29,19 @@ import ChartEmpty from './ChartEmpty'
 import { buildTooltipTitle, buildTooltipRow } from '@/utils/dashboard'
 
 const SERIES_COLORS = {
+  case: '#1A5F7A',
   media: '#2E7D32',
+  incidentRecord: '#0277BD',
   writ: '#F57C00',
-  archive: '#7B1FA2',
-  task: '#C62828'
+  archive: '#7B1FA2'
 }
 
 const SERIES_DEFAULT_SELECTED = {
+  '案件': true,
   '媒体': true,
-  '任务': true,
+  '警情': true,
   '文书': true,
-  '归档': true
+  '归档': false
 }
 
 export default {
@@ -70,7 +72,7 @@ export default {
       return !this.loading && !this.error && (!this.data || !this.data.labels || this.data.labels.length === 0)
     },
     ariaLabel() {
-      return '媒体日采集量趋势折线图，展示媒体采集数据的近期走势'
+      return '业务日增量趋势折线图，展示案件、媒体、证据等数据的近期走势'
     }
   },
   watch: {
@@ -104,7 +106,7 @@ export default {
       this.initChart()
       if (!this.chart) return
 
-      const EXCLUDED_KEYS = ['case', 'incidentRecord']
+      const EXCLUDED_KEYS = ['task']
       const labels = this.data.labels || []
       const seriesArr = (this.data.series || []).filter(s => !EXCLUDED_KEYS.includes(s.key))
 
@@ -166,6 +168,6 @@ export default {
 
 .chart-container {
   width: 100%;
-  height: 240px;
+  height: 300px;
 }
 </style>

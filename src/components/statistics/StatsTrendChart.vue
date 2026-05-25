@@ -9,6 +9,7 @@
         :loading="loading"
         :empty="isEmpty"
         :error="error"
+        empty-text="暂无趋势数据"
         error-msg="趋势数据加载失败"
         @retry="$emit('retry')"
       />
@@ -24,29 +25,23 @@
 
 <script>
 import echarts from 'echarts'
-import resize from './mixins/resize'
-import ChartEmpty from './ChartEmpty'
+import resize from '@/components/statistics/mixins/resize'
+import ChartEmpty from '@/components/statistics/ChartEmpty'
 import { buildTooltipTitle, buildTooltipRow } from '@/utils/dashboard'
 
-const SERIES_COLORS = {
-  media: '#2E7D32',
-  writ: '#F57C00',
-  archive: '#7B1FA2',
-  task: '#C62828'
-}
-
-const SERIES_DEFAULT_SELECTED = {
-  '媒体': true,
-  '任务': true,
-  '文书': true,
-  '归档': true
-}
+// 系列名 → 颜色映射（按设计文档 jxt 主题色系）
+const SERIES_PALETTE = [
+  '#1A5F7A', '#2E7D32', '#F57C00', '#0277BD', '#7B1FA2', '#00897B'
+]
 
 export default {
-  name: 'TrendChart',
+  name: 'StatsTrendChart',
   components: { ChartEmpty },
   mixins: [resize],
   props: {
+    /**
+     * 趋势数据：{ labels: [], series: [{ name, key?, data: [] }] }
+     */
     data: {
       type: Object,
       default: () => ({})
@@ -70,7 +65,7 @@ export default {
       return !this.loading && !this.error && (!this.data || !this.data.labels || this.data.labels.length === 0)
     },
     ariaLabel() {
-      return '媒体日采集量趋势折线图，展示媒体采集数据的近期走势'
+      return '统计趋势折线图，展示采集量、关联量、归档量等指标的时间变化'
     }
   },
   watch: {
@@ -85,6 +80,9 @@ export default {
         this.$nextTick(() => this.updateChart())
       }
     }
+  },
+  mounted() {
+    this.$nextTick(() => this.updateChart())
   },
   beforeDestroy() {
     if (this.chart) {
@@ -104,20 +102,35 @@ export default {
       this.initChart()
       if (!this.chart) return
 
-      const EXCLUDED_KEYS = ['case', 'incidentRecord']
       const labels = this.data.labels || []
-      const seriesArr = (this.data.series || []).filter(s => !EXCLUDED_KEYS.includes(s.key))
+      const seriesArr = this.data.series || []
 
-      const series = seriesArr.map(s => ({
-        name: s.name,
-        type: 'line',
-        data: s.data || [],
-        itemStyle: { color: SERIES_COLORS[s.key] || '#90A4AE' },
-        lineStyle: { color: SERIES_COLORS[s.key] || '#90A4AE', width: 2 },
-        smooth: 0.3,
-        symbol: 'circle',
-        symbolSize: 6
-      }))
+      const series = seriesArr.map((s, idx) => {
+        const color = SERIES_PALETTE[idx % SERIES_PALETTE.length]
+        // hex → rgba 辅助
+        const hexToRgba = (hex, alpha) => {
+          const r = parseInt(hex.slice(1, 3), 16)
+          const g = parseInt(hex.slice(3, 5), 16)
+          const b = parseInt(hex.slice(5, 7), 16)
+          return `rgba(${r},${g},${b},${alpha})`
+        }
+        return {
+          name: s.name,
+          type: 'line',
+          data: s.data || [],
+          itemStyle: { color },
+          lineStyle: { color, width: 2 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: hexToRgba(color, 0.35) },
+              { offset: 1, color: hexToRgba(color, 0) }
+            ])
+          },
+          smooth: 0.3,
+          symbol: 'circle',
+          symbolSize: 6
+        }
+      })
 
       const option = {
         tooltip: {
@@ -133,8 +146,7 @@ export default {
         },
         legend: {
           data: seriesArr.map(s => s.name),
-          bottom: 0,
-          selected: SERIES_DEFAULT_SELECTED
+          bottom: 0
         },
         grid: {
           left: 40,
@@ -164,8 +176,36 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/tokens/index.scss';
 
+.chart-card--dashboard {
+  background: $law-bg-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+  padding: 16px 20px;
+  height: 100%;
+  transition: box-shadow $transition-normal;
+
+  &:hover {
+    box-shadow: $shadow-lg;
+  }
+
+  &__header {
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: $law-gray-900;
+  }
+
+  &__body {
+    position: relative;
+  }
+}
+
 .chart-container {
   width: 100%;
-  height: 240px;
+  height: 300px;
 }
 </style>

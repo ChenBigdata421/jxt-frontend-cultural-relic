@@ -16,7 +16,7 @@ export function addThousandSeparator(num) {
 }
 
 /**
- * 格式化文件大小
+ * 格式化文件大小（输入单位为字节）
  * @param {number} bytes
  * @returns {string}
  */
@@ -26,6 +26,19 @@ export function formatFileSize(bytes) {
   const k = 1024
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + units[i]
+}
+
+/**
+ * 格式化文件大小（输入单位为 KB）
+ * @param {number} kilobytes
+ * @returns {string}
+ */
+export function formatFileSizeFromKB(kilobytes) {
+  if (!kilobytes || kilobytes === 0) return '0 KB'
+  const units = ['KB', 'MB', 'GB', 'TB']
+  const k = 1024
+  const i = Math.floor(Math.log(kilobytes) / Math.log(k))
+  return (kilobytes / Math.pow(k, i)).toFixed(1) + ' ' + units[i]
 }
 
 /**
