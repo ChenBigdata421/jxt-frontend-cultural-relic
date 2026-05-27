@@ -129,6 +129,14 @@ export function getTask(id) {
   })
 }
 
+// 根据任务编号查询任务
+export function getTaskByCode(code) {
+  return request({
+    url: '/api/v1/assignments/code/' + code,
+    method: 'get'
+  })
+}
+
 // 查询任务媒体关联关系列表
 export function getTaskMediaRelationsByTaskId(taskId, query) {
   return request({

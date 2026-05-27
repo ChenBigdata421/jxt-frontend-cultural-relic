@@ -286,7 +286,7 @@
                 icon="el-icon-plus"
                 size="mini"
                 @click="handleOpenMediaSelector"
-              >追加新媒体</el-button>
+              >追加媒体</el-button>
             </el-col>
             <el-col :span="1.5">
               <el-button
@@ -505,13 +505,13 @@
               <el-descriptions-item label="创建用户">
                 {{ viewData.createUserName || "-" }}
               </el-descriptions-item>
-              <el-descriptions-item label="创建用户警号">
+              <el-descriptions-item label="创建用户编号">
                 {{ viewData.createUserNo || "-" }}
               </el-descriptions-item>
               <el-descriptions-item label="更新用户">
                 {{ viewData.updateUserName || "-" }}
               </el-descriptions-item>
-              <el-descriptions-item label="更新用户警号">
+              <el-descriptions-item label="更新用户编号">
                 {{ viewData.updateUserNo || "-" }}
               </el-descriptions-item>
             </el-descriptions>

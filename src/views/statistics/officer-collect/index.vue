@@ -2,7 +2,7 @@
   <div class="officer-collect-container">
     <!-- 页面头部：筛选条件 -->
     <div class="officer-collect__header">
-      <h2 class="officer-collect__title">警员采集统计</h2>
+      <h2 class="officer-collect__title">人员采集统计</h2>
       <div class="officer-collect__filters">
         <!-- 时间筛选 -->
         <el-date-picker
@@ -27,26 +27,6 @@
           no-results-text="未找到匹配机构"
           class="officer-collect__org-select"
         />
-        <!-- 警员筛选 -->
-        <el-select
-          v-model="policeIds"
-          multiple
-          filterable
-          remote
-          reserve-keyword
-          placeholder="请输入警员姓名搜索"
-          :remote-method="searchOfficers"
-          :loading="officerSearchLoading"
-          size="small"
-          class="officer-collect__police-select"
-        >
-          <el-option
-            v-for="item in officerOptions"
-            :key="item.userId"
-            :label="item.userName + '(' + item.policeNo + ')'"
-            :value="item.userId"
-          />
-        </el-select>
         <el-button
           type="primary"
           icon="el-icon-search"
@@ -189,7 +169,7 @@ export default {
     chartTitle() {
       const metricLabel = METRIC_LABELS[this.activeMetric] || this.activeMetric
       const dimLabel = this.currentDimension ? '（' + (DIMENSION_LABELS[this.currentDimension] || '') + '）' : ''
-      return '警员' + metricLabel + ' TOP10' + dimLabel
+      return '人员采集' + metricLabel + ' TOP10' + dimLabel
     }
   },
   created() {
@@ -430,7 +410,7 @@ export default {
       try {
         const excel = await import('@/vendor/Export2Excel')
 
-        let tHeader = ['警员姓名']
+        let tHeader = ['人员姓名']
         let dimensionName = ''
         if (dimension) {
           dimensionName = DIMENSION_LABELS[dimension] || dimension
@@ -463,7 +443,7 @@ export default {
         excel.export_json_to_excel({
           header: tHeader,
           data: data,
-          filename: '警员采集统计_' + dateStr,
+          filename: '人员采集统计_' + dateStr,
           autoWidth: true,
           bookType: 'xlsx'
         })

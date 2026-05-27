@@ -154,7 +154,7 @@
             <el-select
               v-model="delegateForm.targetId"
               :options="userOptions"
-              placeholder="请选择处警人员"
+              placeholder="请选择人员"
               style="width: 170px"
               clearable
             >

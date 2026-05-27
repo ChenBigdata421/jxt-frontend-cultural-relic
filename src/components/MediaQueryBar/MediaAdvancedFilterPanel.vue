@@ -92,40 +92,6 @@
             </el-select>
           </div>
 
-          <!-- 终端类型 -->
-          <div class="filter-section">
-            <label class="section-label-inline">终端类型</label>
-            <el-select
-              v-model="filterParams.terminalType"
-              placeholder="请选择终端类型"
-              clearable
-              class="full-width"
-            >
-              <el-option
-                v-for="dict in terminalTypeOptions"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </div>
-        </div>
-
-        <div class="filter-row">
-          <!-- 执法类型 -->
-          <div class="filter-section enforce-type-section">
-            <label class="section-label-inline">执法类型</label>
-            <treeselect
-              v-model="filterParams.enforceType"
-              :options="enforceTypeOptions"
-              :normalizer="normalizeEnforceType"
-              placeholder="请选择执法类型"
-              :append-to-body="true"
-              :open-on-focus="false"
-              :editable="false"
-            />
-          </div>
-
           <!-- 执法仪编号 -->
           <div class="filter-section">
             <label class="section-label-inline">执法仪编号</label>
@@ -202,10 +168,6 @@ export default {
       type: Array,
       default: () => []
     },
-    terminalTypeOptions: {
-      type: Array,
-      default: () => []
-    },
     mediaImportantLevelOptions: {
       type: Array,
       default: () => []
@@ -224,7 +186,6 @@ export default {
         orgId: undefined,
         policeId: undefined,
         storageType: undefined,
-        terminalType: undefined,
         enforceType: undefined,
         recorderNo: undefined,
         importantLevel: undefined,
@@ -286,7 +247,6 @@ export default {
         orgId: undefined,
         policeId: undefined,
         storageType: undefined,
-        terminalType: undefined,
         enforceType: undefined,
         recorderNo: undefined,
         importantLevel: undefined,
@@ -295,7 +255,15 @@ export default {
       this.$emit('reset')
     },
     getFilterData() {
-      const data = { ...this.filterParams }
+      const data = {}
+
+      // 过滤掉 undefined/null/空值，防止覆盖快速搜索中的同名参数
+      Object.keys(this.filterParams).forEach(key => {
+        const value = this.filterParams[key]
+        if (value !== undefined && value !== null && value !== '') {
+          data[key] = value
+        }
+      })
 
       // 处理时间范围 - 移除字段名中的 'Range' 部分
       this.timeRanges.forEach(range => {

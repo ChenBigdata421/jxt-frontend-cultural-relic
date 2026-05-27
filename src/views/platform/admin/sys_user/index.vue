@@ -49,7 +49,7 @@
           <el-table-column type="selection" width="55" align="center" />
           <el-table-column label="ID" prop="userId" width="90" />
           <el-table-column label="登录名" prop="userName" min-width="140" :show-overflow-tooltip="true" />
-          <el-table-column label="警号" prop="policeNo" min-width="120" :show-overflow-tooltip="true" />
+          <el-table-column label="编号" prop="policeNo" min-width="120" :show-overflow-tooltip="true" />
           <el-table-column label="手机号" prop="phone" min-width="140" :show-overflow-tooltip="true" />
           <el-table-column label="邮箱" prop="email" min-width="180" :show-overflow-tooltip="true" />
           <el-table-column label="状态" prop="status" width="90" />
@@ -67,8 +67,8 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="警号" prop="policeNo">
-                  <el-input v-model="form.policeNo" placeholder="请输入警号" />
+                <el-form-item label="编号" prop="policeNo">
+                  <el-input v-model="form.policeNo" placeholder="请输入编号" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">

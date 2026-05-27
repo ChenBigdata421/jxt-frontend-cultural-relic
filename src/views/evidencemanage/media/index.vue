@@ -177,32 +177,6 @@
               </div>
             </el-tab-pane>
 
-            <el-tab-pane label="执法类型" name="enforceType">
-              <el-form label-width="120px">
-                <el-form-item label="执法类型">
-                  <treeselect
-                    v-model="manualMarkForm.enforceType"
-                    :options="enforceTypeLabel"
-                    :normalizer="normalizeEnforceType"
-                    placeholder="请选择执法类型"
-                    style="width: 520px"
-                    clearable
-                    :append-to-body="true"
-                    :z-index="9999"
-                  />
-                </el-form-item>
-              </el-form>
-              <div class="dialog-footer" style="text-align: right">
-                <el-button type="text" class="tertiary" size="small" @click="manualMarkDialogVisible = false">关 闭</el-button>
-                <el-button
-                  type="primary"
-                  size="small"
-                  :loading="manualMarkSubmitting"
-                  @click="submitManualMarkEnforceType"
-                >确 定</el-button>
-              </div>
-            </el-tab-pane>
-
             <el-tab-pane label="标注内容" name="comments">
               <el-form label-width="120px">
                 <el-form-item label="标注内容">
@@ -445,7 +419,6 @@
 <script>
 import {
   batchMarkMediaNoEnforcementStatus,
-  batchUpdateMediaEnforceType,
   batchUpdateMediaIsLocked,
   batchUpdateMediaImportanceLevel,
   batchUpdateMediaComments,
@@ -461,7 +434,6 @@ import {
   getDeleteApprovalStatus,
   submitDeleteApplyRecord
 } from '@/api/evidence/delete_approval_api'
-import { getEnforceTypeTree } from '@/api/admin/enforcetype'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
 import { getEquipmentBwcList } from '@/api/admin/equipment_manage_api'
@@ -474,8 +446,6 @@ import ImageViewerDialog from '@/components/ImageViewerDialog'
 import TextViewerDialog from '@/components/TextViewerDialog'
 import TaskProcessDialog from '@/components/TaskProcessDialog'
 import workflowMixin from '@/mixins/workflowMixin'
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { formatJson } from '@/utils'
 
 export default {
@@ -487,8 +457,7 @@ export default {
     VideoPlayerDialog,
     ImageViewerDialog,
     TextViewerDialog,
-    TaskProcessDialog,
-    Treeselect
+    TaskProcessDialog
   },
   mixins: [workflowMixin],
   data() {
@@ -508,7 +477,6 @@ export default {
       manualMarkForm: {
         importantLevel: undefined,
         importanceReason: '',
-        enforceType: undefined,
         comments: '',
         expiryMode: 'fixed', // fixed | forever | custom
         fixedDays: 30,
@@ -517,8 +485,6 @@ export default {
       },
       // 媒体重要级别字典
       mediaImportanceOptions: [],
-      // 执法类型树
-      enforceTypeLabel: [],
       // 是否显示下载文件类型选择对话框
       downloadDialogVisible: false,
       // 下载审批相关
@@ -593,7 +559,6 @@ export default {
   },
   created() {
     this.getTreeselect()
-    this.getEnforceTypeTreeselect()
 
     // 加载媒体类型字典（用于表单）
     this.getDicts('evidence_media_type').then((response) => {
@@ -632,30 +597,6 @@ export default {
       if (this.processingInstance) {
         this.processingInstance.close()
         this.processingInstance = null
-      }
-    },
-
-    /** 获取执法类型树形数据 */
-    getEnforceTypeTreeselect() {
-      getEnforceTypeTree()
-        .then((response) => {
-          this.enforceTypeLabel = response.data.list || response.data || []
-        })
-        .catch(() => {
-          // 如果树形接口不存在，设置为空数组
-          this.enforceTypeLabel = []
-        })
-    },
-
-    /** 执法类型数据结构转换 当你的数据格式与 vue-treeselect 默认期望的格式不一致时，使用 normalizer 进行格式转换*/
-    normalizeEnforceType(node) {
-      if (node.children && !node.children.length) {
-        delete node.children
-      }
-      return {
-        id: node.id, // 将你数据中的 node.id 映射为 vue-treeselect 的id
-        label: node.enforcementTypeName || node.label || '未知', // 将你数据中的 node.enforcementTypeName 映射为 vue-treeselect 的label
-        children: node.children // 将你的数据中的 children 映射为 children
       }
     },
 
@@ -994,41 +935,6 @@ export default {
         })
         .catch((error) => {
           this.msgError('批量更新重要级别失败：' + (error.message || '未知错误'))
-        })
-        .finally(() => {
-          this.manualMarkSubmitting = false
-          this.stopProcessing()
-        })
-    },
-
-    submitManualMarkEnforceType() {
-      if (this.mediaIds.length === 0) {
-        this.msgError('请至少选择一条媒体数据')
-        return
-      }
-      if (
-        this.manualMarkForm.enforceType === undefined ||
-        this.manualMarkForm.enforceType === null
-      ) {
-        this.msgError('请选择执法类型')
-        return
-      }
-      this.manualMarkSubmitting = true
-      this.startProcessing('正在更新执法类型...')
-      batchUpdateMediaEnforceType({
-        ids: this.mediaIds,
-        enforcementType: this.manualMarkForm.enforceType
-      })
-        .then(async(response) => {
-          if (response && response.code === 200) {
-            await this.refreshMediaListWithDelay()
-            this.msgSuccess('批量更新执法类型成功')
-          } else {
-            this.msgError((response && response.msg) || '批量更新执法类型失败')
-          }
-        })
-        .catch((error) => {
-          this.msgError('批量更新执法类型失败：' + (error.message || '未知错误'))
         })
         .finally(() => {
           this.manualMarkSubmitting = false

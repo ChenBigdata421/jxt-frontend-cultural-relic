@@ -8,6 +8,8 @@
           ref="quickSearch"
           :media-cate-options="mediaCateOptions"
           :is-archived-options="isArchivedOptions"
+          :append-status-options="appendStatusOptions"
+          :terminal-type-options="terminalTypeOptions"
           @search="handleQuickSearch"
           @reset="handleQuickSearchReset"
         />
@@ -31,7 +33,6 @@
           :org-options="orgOptions"
           :storage-type-options="storageTypeOptions"
           :enforce-type-options="enforceTypeOptions"
-          :terminal-type-options="terminalTypeOptions"
           :media-important-level-options="mediaImportantLevelOptions"
           @filter-change="handleAdvancedFilterChange"
           @reset="handleAdvancedFilterReset"
@@ -100,6 +101,10 @@ export default {
       default: () => []
     },
     mediaImportantLevelOptions: {
+      type: Array,
+      default: () => []
+    },
+    appendStatusOptions: {
       type: Array,
       default: () => []
     }

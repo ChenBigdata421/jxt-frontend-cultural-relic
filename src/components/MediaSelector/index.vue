@@ -11,6 +11,7 @@
         :enforce-type-options="enforceTypeOptions"
         :terminal-type-options="terminalTypeOptions"
         :media-important-level-options="mediaImportanceOptions"
+        :append-status-options="appendStatusOptions"
         @search="handleSearch"
         @quick-search-reset="handleQuickSearchReset"
         @filter-change="handleFilterChange"
@@ -104,75 +105,11 @@
         align="center"
         :reserve-selection="true"
       />
-      <!-- 操作列 (仅在非选择模式下显示) -->
-      <el-table-column
-        v-if="!selectionMode"
-        label="操作"
-        width="350"
-        align="center"
-        class-name="small-padding fixed-width"
-        fixed="right"
-      >
-        <template slot-scope="scope">
-          <div class="action-buttons">
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-folder-add"
-              class="action-btn tertiary"
-              @click="handleOperation(scope.row, 'edit')"
-            >一键归档</el-button>
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-view"
-              class="action-btn tertiary"
-              @click="handleOperation(scope.row, 'view')"
-            >浏览</el-button>
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-video-play"
-              class="action-btn tertiary"
-              @click="handleOperation(scope.row, 'play')"
-            >播放</el-button>
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-document-copy"
-              class="action-btn tertiary"
-              @click="handleOperation(scope.row, 'copy')"
-            >复制地址</el-button>
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-delete"
-              class="action-btn tertiary-danger"
-              @click="handleOperation(scope.row, 'delete')"
-            >删除</el-button>
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-download"
-              class="action-btn secondary"
-              @click="handleOperation(scope.row, 'download')"
-            >下载</el-button>
-            <el-button
-              v-if="scope.row.mediaCate === 3"
-              size="small"
-              type="text"
-              icon="el-icon-location"
-              class="action-btn tertiary"
-              @click="handleOperation(scope.row, 'track')"
-            >视频轨迹</el-button>
-          </div>
-        </template>
-      </el-table-column>
       <el-table-column
         v-if="isColumnVisible('mediaName')"
         prop="mediaName"
         label="媒体名称"
-        min-width="160"
+        width="160"
         sortable="custom"
         :show-overflow-tooltip="true"
       />
@@ -265,22 +202,6 @@
         width="110"
       />
       <el-table-column
-        v-if="isColumnVisible('isNonEnforcementMedia')"
-        prop="isNonEnforcementMedia"
-        label="是否执法媒体"
-        width="140"
-      >
-        <template slot-scope="{ row }">
-          <el-tag
-            :type="row.isNonEnforcementMedia === 0 ? 'success' : 'info'"
-            size="small"
-            effect="dark"
-          >
-            {{ selectDictLabel(isNonEnforcementMediaOptions, row.isNonEnforcementMedia) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column
         v-if="isColumnVisible('comments')"
         prop="comments"
         label="标注内容"
@@ -291,13 +212,6 @@
         v-if="isColumnVisible('sequence')"
         prop="sequence"
         label="视频序列标识"
-        min-width="180"
-        :show-overflow-tooltip="true"
-      />
-      <el-table-column
-        v-if="isColumnVisible('enforcementTypeName')"
-        prop="enforcementTypeName"
-        label="执法类型名称"
         min-width="180"
         :show-overflow-tooltip="true"
       />
@@ -568,36 +482,36 @@
         :show-overflow-tooltip="true"
       />
       <el-table-column
-        v-if="isColumnVisible('incidentCode')"
-        prop="incidentCode"
-        label="警情号"
+        v-if="isColumnVisible('taskCode')"
+        prop="taskCode"
+        label="任务号"
         min-width="160"
         :show-overflow-tooltip="true"
       >
         <template slot-scope="{ row }">
           <el-button
-            v-if="row.incidentCode"
+            v-if="row.taskCode"
             type="text"
             size="mini"
-            @click="handleViewIncident(row)"
-          >{{ row.incidentCode }}</el-button>
+            @click="handleViewTask(row)"
+          >{{ row.taskCode }}</el-button>
           <span v-else>-</span>
         </template>
       </el-table-column>
       <el-table-column
         v-if="isColumnVisible('isAssociated')"
-        prop="isIncidentAssociated"
-        label="是否关联"
+        prop="isTaskAssociated"
+        label="是否追加"
         width="120"
         align="center"
       >
         <template slot-scope="{ row }">
           <el-tag
-            :type="row.isIncidentAssociated === 1 ? 'success' : 'info'"
+            :type="row.isTaskAssociated === 1 ? 'success' : 'info'"
             size="small"
             effect="dark"
           >
-            {{ selectDictLabel(relationStatusOptions, row.isIncidentAssociated) }}
+            {{ selectDictLabel(appendStatusOptions, row.isTaskAssociated) }}
           </el-tag>
         </template>
       </el-table-column>
@@ -652,6 +566,70 @@
           {{ parseTime(row.acquisitionTime) }}
         </template>
       </el-table-column>
+      <!-- 操作列 (仅在非选择模式下显示) -->
+      <el-table-column
+        v-if="!selectionMode"
+        label="操作"
+        width="220"
+        align="center"
+        class-name="small-padding fixed-width"
+        :fixed="actionFixed ? 'right' : false"
+      >
+        <template slot-scope="scope">
+          <div class="action-buttons">
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-view"
+              class="action-btn tertiary"
+              @click="handleOperation(scope.row, 'view')"
+            >浏览</el-button>
+            <el-button
+              size="small"
+              type="text"
+              icon="el-icon-video-play"
+              class="action-btn tertiary"
+              @click="handleOperation(scope.row, 'play')"
+            >播放</el-button>
+            <el-dropdown
+              trigger="click"
+              @command="command => handleOperation(scope.row, command)"
+            >
+              <el-button
+                size="small"
+                type="text"
+                class="action-btn tertiary"
+              >
+                更多<i class="el-icon-arrow-down el-icon--right" />
+              </el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item
+                  icon="el-icon-folder-add"
+                  command="edit"
+                >一键归档</el-dropdown-item>
+                <el-dropdown-item
+                  icon="el-icon-document-copy"
+                  command="copy"
+                >复制地址</el-dropdown-item>
+                <el-dropdown-item
+                  icon="el-icon-download"
+                  command="download"
+                ><span class="secondary-badge">下载</span></el-dropdown-item>
+                <el-dropdown-item
+                  v-if="scope.row.mediaCate === 3"
+                  icon="el-icon-location"
+                  command="track"
+                >视频轨迹</el-dropdown-item>
+                <el-dropdown-item
+                  icon="el-icon-delete"
+                  command="delete"
+                  class="danger-dropdown-item"
+                >删除</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+          </div>
+        </template>
+      </el-table-column>
     </el-table>
 
     <!-- 分页 -->
@@ -669,41 +647,64 @@
       :media-data="viewMediaData"
     />
 
-    <!-- 警情详情对话框 -->
+    <!-- 任务详情对话框 -->
     <el-dialog
-      title="警情详情"
-      :visible.sync="viewIncidentOpen"
+      title="任务详情"
+      :visible.sync="viewTaskOpen"
       width="800px"
       append-to-body
       :close-on-click-modal="false"
       custom-class="detail-dialog"
     >
-      <el-descriptions :column="2" border class="section-descriptions">
-        <el-descriptions-item label="警情编号">{{
-          viewIncidentData.incidentCode || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="报警人">{{
-          viewIncidentData.incidentName || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="处警人" :span="2">{{
-          viewIncidentData.incedentProcessPoliceNames || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="接警时间">{{
-          parseTime(viewIncidentData.incidentReceiveTime) || "-"
-        }}</el-descriptions-item>
-        <el-descriptions-item label="报警内容" :span="2">{{
-          viewIncidentData.incidentContext || "-"
-        }}</el-descriptions-item>
-      </el-descriptions>
+      <div v-loading="viewTaskLoading">
+        <el-descriptions :column="2" border class="section-descriptions">
+          <el-descriptions-item label="任务编号">{{
+            viewTaskData.code || "-"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="任务名称">{{
+            viewTaskData.name || "-"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="任务类型">{{
+            viewTaskData.type === 0 ? '考古挖掘' : viewTaskData.type === 1 ? '文物修复' : '-'
+          }}</el-descriptions-item>
+          <el-descriptions-item label="任务状态">{{
+            { 0: '未开始', 1: '已开始', 2: '已结束', 3: '已终止' }[viewTaskData.status] || '-'
+          }}</el-descriptions-item>
+          <el-descriptions-item label="负责人">{{
+            viewTaskData.picNames || "-"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="所属单位">{{
+            viewTaskData.orgName || "-"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{
+            parseTime(viewTaskData.createTime) || "-"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="开始时间">{{
+            parseTime(viewTaskData.startTime) || "-"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="结束时间">{{
+            parseTime(viewTaskData.endTime) || "-"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="任务地址" :span="2">{{
+            viewTaskData.address || "-"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="任务内容" :span="2">{{
+            viewTaskData.context || "-"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="任务结果" :span="2">{{
+            viewTaskData.result || "-"
+          }}</el-descriptions-item>
+        </el-descriptions>
+      </div>
       <div slot="footer" class="dialog-footer">
-        <el-button type="text" class="action-btn tertiary" size="small" @click="viewIncidentOpen = false">关闭</el-button>
+        <el-button type="text" class="action-btn tertiary" size="small" @click="viewTaskOpen = false">关闭</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { listMedia, getMedia } from '@/api/evidence/evidence_manage_query_api'
+import { listMedia, getMedia, getTaskByCode } from '@/api/evidence/evidence_manage_query_api'
 import { getEnforceTypeTree } from '@/api/admin/enforcetype'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
@@ -739,6 +740,9 @@ export default {
   },
   data() {
     return {
+      // 操作列是否需要固定（仅在列溢出时启用）
+      actionFixed: false,
+      checkingActionFixed: false,
       // 遮罩层
       loading: true,
       // 选中数组
@@ -769,10 +773,11 @@ export default {
         enforceType: undefined,
         mediaName: undefined,
         isArchived: undefined,
+        isTaskAssociated: undefined,
         isNonEnforcementMedia: undefined,
         isLocked: undefined,
         terminalType: undefined,
-        incidentCode: undefined,
+        taskCode: undefined,
         recorderNo: undefined,
         importantLevel: undefined,
         importantLevelRec: undefined
@@ -803,15 +808,17 @@ export default {
       videoClarityOptions: [],
       mediaImportanceOptions: [],
       // 关联状态选项
-      relationStatusOptions: [],
+      appendStatusOptions: [],
       // 媒体详情对话框
       viewMediaOpen: false,
       // 媒体详情数据
       viewMediaData: {},
-      // 警情详情对话框
-      viewIncidentOpen: false,
-      // 警情详情数据
-      viewIncidentData: {},
+      // 任务详情对话框
+      viewTaskOpen: false,
+      // 任务详情数据
+      viewTaskData: {},
+      // 任务详情加载状态
+      viewTaskLoading: false,
       // 列配置选项
       columnOptions: [
         {
@@ -846,18 +853,8 @@ export default {
         },
         { prop: 'width', label: '图片宽度', defaultVisible: false },
         { prop: 'height', label: '图片高度', defaultVisible: false },
-        {
-          prop: 'isNonEnforcementMedia',
-          label: '是否执法媒体',
-          defaultVisible: true
-        },
         { prop: 'comments', label: '标注内容', defaultVisible: false },
         { prop: 'sequence', label: '视频序列标识', defaultVisible: false },
-        {
-          prop: 'enforcementTypeName',
-          label: '执法类型名称',
-          defaultVisible: false
-        },
         { prop: 'isLocked', label: '是否锁定', defaultVisible: false },
         { prop: 'expiryTime', label: '过期时间', defaultVisible: false },
         { prop: 'lifecycleStatus', label: '生命周期状态', defaultVisible: false },
@@ -893,10 +890,10 @@ export default {
         { prop: 'orgJc', label: '单位简称', defaultVisible: false },
         { prop: 'terminalType', label: '终端类型', defaultVisible: false },
         { prop: 'recorderNo', label: '执法仪编号', defaultVisible: false },
-        { prop: 'incidentCode', label: '警情号', defaultVisible: false },
+        { prop: 'taskCode', label: '任务号', defaultVisible: false },
         {
           prop: 'isAssociated',
-          label: '是否关联',
+          label: '是否追加',
           fixed: true,
           defaultVisible: true
         },
@@ -953,7 +950,7 @@ export default {
       this.getDicts('evidence_media_type'),
       this.getDicts('evidence_storage_type'),
       this.getDicts('is_archived'),
-      this.getDicts('relation_status'),
+      this.getDicts('media_append_status'),
       this.getDicts('is_send_to_storage'),
       this.getDicts('is_locked'),
       this.getDicts('terminal_type'),
@@ -966,7 +963,7 @@ export default {
           mediaCateRes,
           storageTypeRes,
           isArchivedRes,
-          relationStatusRes,
+          appendStatusRes,
           isSendToStorageRes,
           isLockedRes,
           terminalTypeRes,
@@ -977,7 +974,7 @@ export default {
           this.mediaCateOptions = mediaCateRes.data
           this.storageTypeOptions = storageTypeRes.data
           this.isArchivedOptions = isArchivedRes.data
-          this.relationStatusOptions = relationStatusRes.data
+          this.appendStatusOptions = appendStatusRes.data
           this.isSendToStorageOptions = isSendToStorageRes.data
           this.isLockedOptions = isLockedRes.data
           this.terminalTypeOptions = terminalTypeRes.data
@@ -996,8 +993,63 @@ export default {
         this.getList()
       })
   },
+  mounted() {
+    this.checkActionFixed()
+    this._resizeHandler = () => this.checkActionFixed()
+    window.addEventListener('resize', this._resizeHandler)
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this._resizeHandler)
+    clearTimeout(this.actionFixedTimer)
+  },
   methods: {
     selectDictLabel,
+
+    /** 检测表格列是否溢出，动态决定操作列是否 fixed */
+    async checkActionFixed() {
+      if (this.checkingActionFixed) return
+      this.checkingActionFixed = true
+      try {
+        await this.$nextTick()
+        const table = this.$refs.mediaTable
+        if (!table) return
+
+        this.actionFixed = false
+        await this.$nextTick()
+        if (table.doLayout) table.doLayout()
+        await this.$nextTick()
+
+        const bodyWrapper = table.$el.querySelector('.el-table__body-wrapper')
+        const needFixed = bodyWrapper
+          ? bodyWrapper.scrollWidth > bodyWrapper.clientWidth
+          : false
+
+        if (this.actionFixed !== needFixed) {
+          this.actionFixed = needFixed
+        }
+
+        await this.$nextTick()
+        if (table.doLayout) table.doLayout()
+      } finally {
+        this.checkingActionFixed = false
+      }
+    },
+
+    scheduleCheckActionFixed() {
+      clearTimeout(this.actionFixedTimer)
+      this.actionFixedTimer = setTimeout(() => {
+        this.checkActionFixed()
+      }, 50)
+    },
+
+    refreshTableLayout() {
+      this.$nextTick(() => {
+        if (this.$refs.mediaTable && this.$refs.mediaTable.doLayout) {
+          this.$refs.mediaTable.doLayout()
+        }
+        this.scheduleCheckActionFixed()
+      })
+    },
 
     getRowKey(row) {
       return row && row.mediaId
@@ -1065,6 +1117,7 @@ export default {
         'media_selector_visible_columns',
         JSON.stringify(this.visibleColumns)
       )
+      this.refreshTableLayout()
     },
 
     /** 重置列显示 */
@@ -1075,6 +1128,7 @@ export default {
         JSON.stringify(this.visibleColumns)
       )
       this.$message.success('已重置为默认显示')
+      this.refreshTableLayout()
     },
 
     normalizeQueryParams(params = {}) {
@@ -1127,6 +1181,7 @@ export default {
         })
         .finally(() => {
           this.loading = false
+          this.scheduleCheckActionFixed()
         })
     },
 
@@ -1395,10 +1450,28 @@ export default {
         })
     },
 
-    /** 浏览警情详情 */
-    handleViewIncident(row) {
-      this.viewIncidentData = row
-      this.viewIncidentOpen = true
+    /** 浏览任务详情 */
+    handleViewTask(row) {
+      if (!row.taskCode) return
+      this.viewTaskLoading = true
+      this.viewTaskData = {}
+      this.viewTaskOpen = true
+      getTaskByCode(row.taskCode)
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            this.viewTaskData = response.data
+          } else {
+            this.viewTaskData = { code: row.taskCode }
+            this.$message.warning(response.msg || '查询任务信息失败')
+          }
+        })
+        .catch(() => {
+          this.viewTaskData = { code: row.taskCode }
+          this.$message.error('查询任务信息失败')
+        })
+        .finally(() => {
+          this.viewTaskLoading = false
+        })
     },
 
     /** 操作按钮 */
@@ -1453,7 +1526,9 @@ export default {
         'captureTimeEnd',
         'mediaCate',
         'isArchived',
-        'incidentCode'
+        'isTaskAssociated',
+        'terminalType',
+        'taskCode'
       ]
 
       // 高级筛选中的时间范围字段列表
@@ -1553,10 +1628,11 @@ export default {
         enforceType: undefined,
         mediaName: undefined,
         isArchived: undefined,
+        isTaskAssociated: undefined,
         isNonEnforcementMedia: undefined,
         isLocked: undefined,
         terminalType: undefined,
-        incidentCode: undefined,
+        taskCode: undefined,
         recorderNo: undefined
       }
       this.handleQuery()
@@ -1586,5 +1662,25 @@ export default {
 <style scoped>
 .search-section {
   margin-bottom: 16px;
+}
+</style>
+
+<style>
+/* 下拉菜单项样式（不能用 scoped，因为 dropdown-menu 是挂载到 body 的） */
+.secondary-badge {
+  display: inline-block;
+  background-color: rgba(26, 95, 122, 0.1);
+  color: #1A5F7A;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.el-dropdown-menu__item.danger-dropdown-item {
+  color: #F56C6C;
+}
+
+.el-dropdown-menu__item.danger-dropdown-item:hover {
+  background-color: rgba(245, 108, 108, 0.1);
+  color: #F56C6C;
 }
 </style>

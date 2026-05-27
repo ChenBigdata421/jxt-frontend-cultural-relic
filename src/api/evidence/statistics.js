@@ -38,10 +38,10 @@ export function getOrgCollectStats(params) {
   })
 }
 
-// ==================== 警员采集统计 ====================
+// ==================== 人员采集统计 ====================
 
 /**
- * 获取警员采集统计数据
+ * 获取人员采集统计数据
  * @param {Object} params - { startDate, endDate, policeIds, orgIds, metric, dimension }
  *   metric: 'media_count'(默认) | 'file_size_sum' | 'video_duration' | 'audio_duration'
  *   dimension: '' | 'media_cate' | 'enforcement_type' | 'important_level'
@@ -90,10 +90,10 @@ export function getDeviceCollectStats(params) {
   })
 }
 
-// ==================== 警员关联统计 ====================
+// ==================== 人员关联统计 ====================
 
 /**
- * 获取警员关联统计数据
+ * 获取人员关联统计数据
  * @param {Object} params - { startDate, endDate, orgIds, policeIds, metric }
  *   metric: 'task_relation_rate'(默认) | 'case_relation_rate' | 'alarm_relation_rate'
  * @returns {Promise}
@@ -122,10 +122,10 @@ export function getOrgRelationStats(params) {
   })
 }
 
-// ==================== 警员归档统计 ====================
+// ==================== 人员归档统计 ====================
 
 /**
- * 获取警员归档统计数据
+ * 获取人员归档统计数据
  * @param {Object} params - { startDate, endDate, orgIds, policeIds, metric }
  *   metric: 'archive_rate'(默认)
  * @returns {Promise}

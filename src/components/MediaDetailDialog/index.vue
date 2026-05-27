@@ -110,17 +110,11 @@
           <template slot="title">
             <div class="section-header">
               <i class="el-icon-user section-icon" />
-              <span class="section-title">执法信息</span>
+              <span class="section-title">业务信息</span>
               <span class="section-badge">{{ enforcementFieldCount }}项</span>
             </div>
           </template>
           <el-descriptions :column="2" border class="section-descriptions">
-            <el-descriptions-item label="执法类型">
-              {{ mediaData.enforcementTypeName || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="是否执法媒体">
-              {{ selectDictLabel(isNonEnforcementMediaOptions, mediaData.isNonEnforcementMedia) || "-" }}
-            </el-descriptions-item>
             <el-descriptions-item label="重要级别(平台)">
               {{ selectDictLabel(mediaImportanceOptions, mediaData.importantLevel) || "-" }}
             </el-descriptions-item>
@@ -288,19 +282,16 @@
           <template slot="title">
             <div class="section-header">
               <i class="el-icon-link section-icon" />
-              <span class="section-title">关联信息</span>
+              <span class="section-title">任务信息</span>
               <span class="section-badge">{{ relationFieldCount }}项</span>
             </div>
           </template>
           <el-descriptions :column="2" border class="section-descriptions">
-            <el-descriptions-item label="警情号">
-              {{ mediaData.incidentCode || "-" }}
+            <el-descriptions-item label="任务编号">
+              {{ mediaData.taskCode || "-" }}
             </el-descriptions-item>
-            <el-descriptions-item label="是否关联">
-              {{ selectDictLabel(relationStatusOptions, mediaData.isIncidentAssociated) || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="关联时间">
-              {{ parseTime(mediaData.incidentAssociatedAt) }}
+            <el-descriptions-item label="追加时间">
+              {{ parseTime(mediaData.taskAssociatedAt) }}
             </el-descriptions-item>
           </el-descriptions>
         </el-collapse-item>
@@ -397,7 +388,7 @@ export default {
     },
     // 执法信息分组字段数量
     enforcementFieldCount() {
-      return 10
+      return 8
     },
     // 档案信息分组字段数量
     archiveFieldCount() {
@@ -417,7 +408,7 @@ export default {
     },
     // 关联信息分组字段数量
     relationFieldCount() {
-      return 3
+      return 2
     },
     // 系统信息分组字段数量
     systemFieldCount() {

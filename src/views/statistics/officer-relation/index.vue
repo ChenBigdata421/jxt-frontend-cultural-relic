@@ -2,7 +2,7 @@
   <div class="officer-relation-container">
     <!-- 页面头部：筛选条件 -->
     <div class="officer-relation__header">
-      <h2 class="officer-relation__title">警员追加统计</h2>
+      <h2 class="officer-relation__title">人员追加统计</h2>
       <div class="officer-relation__filters">
         <!-- 时间筛选 -->
         <el-date-picker
@@ -27,14 +27,14 @@
           no-results-text="未找到匹配机构"
           class="officer-relation__org-select"
         />
-        <!-- 警员筛选 -->
+        <!-- 人员筛选 -->
         <el-select
           v-model="policeIds"
           multiple
           filterable
           remote
           reserve-keyword
-          placeholder="请输入警员姓名搜索"
+          placeholder="请输入人员姓名搜索"
           :remote-method="searchOfficers"
           :loading="officerSearchLoading"
           size="small"
@@ -159,7 +159,7 @@ export default {
     },
     chartTitle() {
       const metricLabel = METRIC_LABELS[this.activeMetric] || this.activeMetric
-      return '警员' + metricLabel + ' TOP10'
+      return '人员' + metricLabel + ' TOP10'
     }
   },
   created() {
@@ -363,7 +363,7 @@ export default {
       try {
         const excel = await import('@/vendor/Export2Excel')
         const metricLabel = METRIC_LABELS[this.activeMetric] || this.activeMetric
-        const tHeader = ['警员姓名', metricLabel]
+        const tHeader = ['人员姓名', metricLabel]
         const data = officerNames.map((name, idx) => {
           const val = series.length > 0 ? series[0].data[idx] : 0
           return [name, this.formatValue(val)]
@@ -373,7 +373,7 @@ export default {
         excel.export_json_to_excel({
           header: tHeader,
           data: data,
-          filename: '警员追加统计_' + dateStr,
+          filename: '人员追加统计_' + dateStr,
           autoWidth: true,
           bookType: 'xlsx'
         })

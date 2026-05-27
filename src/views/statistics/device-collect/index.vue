@@ -175,7 +175,7 @@ export default {
     chartTitle() {
       const metricLabel = METRIC_LABELS[this.activeMetric] || this.activeMetric
       const dimLabel = this.currentDimension ? '（' + (DIMENSION_LABELS[this.currentDimension] || '') + '）' : ''
-      return '设备' + metricLabel + ' TOP10' + dimLabel
+      return '设备采集' + metricLabel + ' TOP10' + dimLabel
     }
   },
   created() {

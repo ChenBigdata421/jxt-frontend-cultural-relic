@@ -217,7 +217,7 @@
           <el-table-column
             v-if="isColumnVisible('createUserNo')"
             prop="createUserNo"
-            label="创建用户警号"
+            label="创建用户编号"
             width="150"
           />
           <el-table-column
@@ -229,7 +229,7 @@
           <el-table-column
             v-if="isColumnVisible('updateUserNo')"
             prop="updateUserNo"
-            label="更新用户警号"
+            label="更新用户编号"
             width="150"
           />
           <el-table-column
@@ -650,13 +650,13 @@
                 <el-descriptions-item label="创建用户">
                   {{ viewData.createUserName || "-" }}
                 </el-descriptions-item>
-                <el-descriptions-item label="创建用户警号">
+                <el-descriptions-item label="创建用户编号">
                   {{ viewData.createUserNo || "-" }}
                 </el-descriptions-item>
                 <el-descriptions-item label="更新用户">
                   {{ viewData.updateUserName || "-" }}
                 </el-descriptions-item>
-                <el-descriptions-item label="更新用户警号">
+                <el-descriptions-item label="更新用户编号">
                   {{ viewData.updateUserNo || "-" }}
                 </el-descriptions-item>
               </el-descriptions>
@@ -784,9 +784,9 @@ export default {
         { prop: 'orgCode', label: '组织编码', defaultVisible: false },
         { prop: 'orgJc', label: '组织简称', defaultVisible: false },
         { prop: 'createUserName', label: '创建用户', defaultVisible: false },
-        { prop: 'createUserNo', label: '创建用户警号', defaultVisible: false },
+        { prop: 'createUserNo', label: '创建用户编号', defaultVisible: false },
         { prop: 'updateUserName', label: '更新用户', defaultVisible: false },
-        { prop: 'updateUserNo', label: '更新用户警号', defaultVisible: false },
+        { prop: 'updateUserNo', label: '更新用户编号', defaultVisible: false },
         { prop: 'createTime', label: '创建时间', defaultVisible: true },
         { prop: 'startTime', label: '开始时间', defaultVisible: true },
         { prop: 'endTime', label: '结束时间', defaultVisible: false },

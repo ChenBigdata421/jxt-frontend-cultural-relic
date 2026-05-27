@@ -42,13 +42,34 @@
           </el-select>
         </div>
         <div class="search-item">
-          <label class="search-label">警情号</label>
-          <el-input
-            v-model="searchForm.incidentCode"
-            placeholder="请输入警情号"
+          <label class="search-label">是否追加</label>
+          <el-select
+            v-model="searchForm.isTaskAssociated"
+            placeholder="请选择是否追加"
             clearable
-            @keyup.enter.native="handleSearch"
-          />
+          >
+            <el-option
+              v-for="dict in appendStatusOptions"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            />
+          </el-select>
+        </div>
+        <div class="search-item">
+          <label class="search-label">终端类型</label>
+          <el-select
+            v-model="searchForm.terminalType"
+            placeholder="请选择终端类型"
+            clearable
+          >
+            <el-option
+              v-for="dict in terminalTypeOptions"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            />
+          </el-select>
         </div>
       </div>
     </div>
@@ -66,6 +87,14 @@ export default {
     isArchivedOptions: {
       type: Array,
       default: () => []
+    },
+    appendStatusOptions: {
+      type: Array,
+      default: () => []
+    },
+    terminalTypeOptions: {
+      type: Array,
+      default: () => []
     }
   },
   data() {
@@ -74,6 +103,8 @@ export default {
         mediaName: undefined,
         mediaCate: undefined,
         isArchived: undefined,
+        isTaskAssociated: undefined,
+        terminalType: undefined,
         incidentCode: undefined
       }
     }
@@ -100,6 +131,8 @@ export default {
         mediaName: undefined,
         mediaCate: undefined,
         isArchived: undefined,
+        isTaskAssociated: undefined,
+        terminalType: undefined,
         incidentCode: undefined
       }
       this.$emit('reset')

@@ -179,7 +179,7 @@ export default {
     },
     chartTitle() {
       const metricLabel = METRIC_LABELS[this.activeMetric] || this.activeMetric
-      const dimLabel = DIMENSION_LABELS[this.activeDimension] || ''
+      const dimLabel = '（' + DIMENSION_LABELS[this.activeDimension] + '）'|| ''
       return metricLabel + '分布' + dimLabel
     }
   },
