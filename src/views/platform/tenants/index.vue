@@ -89,6 +89,7 @@
         </el-row>
 
         <el-table
+          ref="table"
           v-loading="loading"
           :data="list"
           border
@@ -130,47 +131,59 @@
           <el-table-column
             label="更新时间"
             prop="updatedAt"
-            width="160"
+            width="180"
             :show-overflow-tooltip="true"
           />
-          <el-table-column label="操作" width="220" fixed="right">
+          <el-table-column label="操作" width="220" class-name="small-padding fixed-width" :fixed="actionFixed ? 'right' : false">
             <template slot-scope="scope">
-              <el-button
-                v-permisaction="['platform:tenants:status']"
-                size="mini"
-                type="text"
-                icon="el-icon-view"
-                @click="handlePrecheck(scope.row)"
-              >检查</el-button>
-              <el-button
-                v-permisaction="['platform:tenants:status']"
-                size="mini"
-                type="text"
-                icon="el-icon-circle-check"
-                :disabled="scope.row && scope.row.status === 'active'"
-                @click="handleActivate(scope.row)"
-              >激活</el-button>
-              <el-button
-                v-permisaction="['platform:tenants:status']"
-                size="mini"
-                type="text"
-                icon="el-icon-refresh"
-                @click="handleChangeStatus(scope.row)"
-              >状态</el-button>
-              <el-button
-                v-permisaction="['platform:tenants:config']"
-                size="mini"
-                type="text"
-                icon="el-icon-setting"
-                @click="openTenantConfig(scope.row)"
-              >配置</el-button>
-              <el-button
-                v-permisaction="['platform:tenants:edit']"
-                size="mini"
-                type="text"
-                icon="el-icon-edit"
-                @click="handleUpdate(scope.row)"
-              >编辑</el-button>
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['platform:tenants:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >编辑</el-button>
+                <el-button
+                  v-permisaction="['platform:tenants:status']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handlePrecheck(scope.row)"
+                >检查</el-button>
+                <el-dropdown
+                  trigger="click"
+                  @command="(command) => handleTenantCommand(scope.row, command)"
+                >
+                  <el-button
+                    size="small"
+                    type="text"
+                    class="action-btn tertiary"
+                  >
+                    更多<i class="el-icon-arrow-down el-icon--right" />
+                  </el-button>
+                  <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item
+                      v-permisaction="['platform:tenants:status']"
+                      icon="el-icon-circle-check"
+                      command="activate"
+                      :disabled="scope.row && scope.row.status === 'active'"
+                    >激活</el-dropdown-item>
+                    <el-dropdown-item
+                      v-permisaction="['platform:tenants:status']"
+                      icon="el-icon-refresh"
+                      command="status"
+                    >状态</el-dropdown-item>
+                    <el-dropdown-item
+                      v-permisaction="['platform:tenants:config']"
+                      icon="el-icon-setting"
+                      command="config"
+                    >配置</el-dropdown-item>
+                  </el-dropdown-menu>
+                </el-dropdown>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -473,9 +486,11 @@ import {
 } from '@/api/platform/tenants'
 import ServiceDatabaseConfig from './ServiceDatabaseConfig.vue'
 import MultiFtpConfig from './MultiFtpConfig.vue'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'PlatformTenants',
+  mixins: [actionColumnMixin],
   components: {
     ServiceDatabaseConfig,
     MultiFtpConfig
@@ -553,6 +568,20 @@ export default {
     this.getList()
   },
   methods: {
+    /** 操作列下拉命令路由 */
+    handleTenantCommand(row, command) {
+      switch (command) {
+        case 'activate':
+          this.handleActivate(row)
+          break
+        case 'status':
+          this.handleChangeStatus(row)
+          break
+        case 'config':
+          this.openTenantConfig(row)
+          break
+      }
+    },
     normalizeQueryParams(params = {}) {
       const query = { ...params }
       Object.keys(query).forEach((key) => {
@@ -582,6 +611,7 @@ export default {
         this.msgError('获取租户列表失败：' + (e.message || '未知错误'))
       } finally {
         this.loading = false
+        this.scheduleCheckActionFixed()
       }
     },
     handleSelectionChange(selection) {

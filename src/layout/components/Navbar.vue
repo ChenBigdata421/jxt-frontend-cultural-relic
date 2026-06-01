@@ -196,13 +196,16 @@ export default {
     display: inline-flex;
     align-items: center;
     margin-left: $spacing-4;
+    margin-right: $spacing-8; // 32px：确保菜单与右侧时间区域有足够的视觉间距
     // 防止换行
     white-space: nowrap;
     flex-shrink: 1;
     min-width: 0;
-    // 添加最大宽度限制和溢出处理
-    max-width: 60%;
-    overflow: hidden;
+    // 限制最大宽度，留出右侧区域空间
+    max-width: calc(100% - 480px);
+    // 不使用 overflow: hidden，避免截断"更多菜单"文字
+    // 可见菜单数量由 JS (setVisibleNumber) 动态控制
+    overflow: visible;
   }
 
   .errLog-container {

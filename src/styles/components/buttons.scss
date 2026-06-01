@@ -171,3 +171,14 @@
     min-width: 72px;
   }
 }
+
+// ========== 下拉菜单危险项样式 ==========
+// dropdown-menu 挂载在 body 上，scoped 样式无效，必须使用全局样式
+.el-dropdown-menu__item.danger-dropdown-item {
+  color: #F56C6C;
+}
+
+.el-dropdown-menu__item.danger-dropdown-item:hover {
+  background-color: rgba(245, 108, 108, 0.1);
+  color: #F56C6C;
+}

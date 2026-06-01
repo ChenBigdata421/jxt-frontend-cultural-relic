@@ -1,32 +1,46 @@
 <template>
-  <el-menu
-    :default-active="activeMenu"
-    mode="horizontal"
-    @select="handleSelect"
-  >
-    <template v-for="(item, index) in topMenus">
-      <el-menu-item
-        v-if="index < visibleNumber"
-        :key="index"
-        :index="item.path"
-      ><svg-icon :icon-class="item.meta.icon" />
-        {{ item.meta.title }}</el-menu-item>
-    </template>
-
-    <!-- 顶部菜单超出数量折叠 -->
-    <!--title插槽是el-submenu组件的插槽-->
-    <el-submenu v-if="topMenus.length > visibleNumber" index="more">
-      <template slot="title">更多菜单</template>
+  <div class="top-nav-wrapper">
+    <el-menu
+      :default-active="activeMenu"
+      mode="horizontal"
+      @select="handleSelect"
+    >
       <template v-for="(item, index) in topMenus">
         <el-menu-item
-          v-if="index >= visibleNumber"
+          v-if="index < visibleNumber"
           :key="index"
           :index="item.path"
         ><svg-icon :icon-class="item.meta.icon" />
           {{ item.meta.title }}</el-menu-item>
       </template>
-    </el-submenu>
-  </el-menu>
+
+      <!-- 顶部菜单超出数量折叠 -->
+      <!--title插槽是el-submenu组件的插槽-->
+      <el-submenu v-if="topMenus.length > visibleNumber" index="more">
+        <template slot="title">更多菜单</template>
+        <template v-for="(item, index) in topMenus">
+          <el-menu-item
+            v-if="index >= visibleNumber"
+            :key="index"
+            :index="item.path"
+          ><svg-icon :icon-class="item.meta.icon" />
+            {{ item.meta.title }}</el-menu-item>
+        </template>
+      </el-submenu>
+    </el-menu>
+
+    <div ref="measureMenu" class="top-nav-measure" aria-hidden="true">
+      <div
+        v-for="(item, index) in topMenus"
+        :key="index"
+        class="measure-menu-item"
+      >
+        <svg-icon :icon-class="item.meta.icon" />
+        {{ item.meta.title }}
+      </div>
+      <div ref="measureMore" class="measure-menu-item measure-more-item">更多菜单</div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -174,31 +188,22 @@ export default {
     setVisibleNumber() {
       // 等待 DOM 更新完成后再计算
       this.$nextTick(() => {
-        const navbar = document.querySelector('.navbar')
-        if (!navbar) return
+        const menuContainer = this.$el
+        if (!menuContainer) return
 
         const totalMenus = this.topMenus.length
         if (totalMenus === 0) return
 
         // 获取导航栏的可用宽度
-        const navbarWidth = navbar.getBoundingClientRect().width
-        const navbarStyle = window.getComputedStyle(navbar)
-        const paddingX = parseFloat(navbarStyle.paddingLeft) + parseFloat(navbarStyle.paddingRight)
+        // 减去右侧安全间距，确保菜单与右侧时间区域保持足够距离
+        // 配合 Navbar 中 .breadcrumb-container 的 margin-right(32px) 共同保证视觉间距
+        const RIGHT_MARGIN = 48
+        const availableWidth = menuContainer.getBoundingClientRect().width - RIGHT_MARGIN
 
-        // 汉堡菜单宽度
-        const hamburgerWidth = 48
-        // 右侧菜单预估宽度（全屏图标 + 铃铛图标 + 用户下拉菜单 + 间距）
-        const rightMenuWidth = 48 + 48 + 180 + 16
+        const measureMenu = this.$refs.measureMenu
+        if (!measureMenu) return
 
-        // 可用于菜单的宽度
-        const availableWidth = navbarWidth - paddingX - hamburgerWidth - rightMenuWidth - 100 // 100px 为面包屑预留空间
-
-        // 获取菜单项的实际宽度（排除"更多菜单"子菜单）
-        const menuItemNodes = Array.from(this.$el.children).filter(item => {
-          // 排除"更多菜单"（el-submenu），只计算普通菜单项（el-menu-item）
-          return item.classList.contains('el-menu-item')
-        })
-
+        const menuItemNodes = Array.from(measureMenu.querySelectorAll('.measure-menu-item:not(.measure-more-item)'))
         if (menuItemNodes.length === 0) {
           // 如果没有普通菜单项，可能是首次渲染还未完成，稍后重试
           if (!this.isInitialized) {
@@ -208,37 +213,32 @@ export default {
         }
 
         // 计算所有普通菜单项的总宽度
-        const totalMenuWidth = menuItemNodes.reduce((total, item) => {
+        const itemWidths = menuItemNodes.map((item) => {
           const width = item.getBoundingClientRect().width
-          return total + (width > 0 ? width : 80) // 如果宽度为0，使用默认值80px
-        }, 0)
+          return width > 0 ? width : 80
+        })
+        const totalMenuWidth = itemWidths.reduce((total, width) => total + width, 0)
 
-        // "更多菜单"的宽度：使用固定的安全宽度
-        // 包含文字"更多菜单"(约80px) + 向下箭头(约25px) + padding(约40px) + margin(约20px) + 安全余量(约35px)
-        const moreMenuWidth = 200 // 固定宽度，确保完整显示
+        // "更多菜单"的宽度：测量实际宽度，并加上下拉箭头的额外空间
+        // el-submenu 会额外渲染一个箭头图标(~16px) + padding(~20px)
+        const ARROW_AND_PADDING = 36
+        const measuredMoreWidth = this.$refs.measureMore
+          ? this.$refs.measureMore.getBoundingClientRect().width
+          : 0
+        const moreMenuWidth = (measuredMoreWidth > 0 ? measuredMoreWidth : 80) + ARROW_AND_PADDING
 
-        // 计算平均每个菜单项的宽度
-        const avgMenuWidth = totalMenuWidth / menuItemNodes.length
-
-        // 判断：如果所有菜单项总宽度超过可用宽度的 80%，就显示"更多菜单"
-        // 使用 80% 阈值是为了更早显示"更多菜单"，避免菜单被挤压
-        // 注意：这里使用平均宽度 * 总菜单数来估算全部菜单的宽度
-        const estimatedTotalWidth = avgMenuWidth * totalMenus
-
-        if (estimatedTotalWidth > availableWidth * 0.80) {
+        if (totalMenuWidth > availableWidth) {
           // 需要显示"更多菜单"，计算可以显示多少个菜单项
-          // 可用于菜单项的宽度（减去"更多菜单"的宽度和安全余量）
-          const availableForMenus = availableWidth - moreMenuWidth - 40 // 40px 安全余量
-
-          // 计算可以显示的菜单项数量
-          let visibleCount = Math.floor(availableForMenus / avgMenuWidth)
-
-          // 确保至少显示 1 个菜单项
-          visibleCount = Math.max(1, visibleCount)
-
-          // 确保不超过总菜单数
-          visibleCount = Math.min(visibleCount, totalMenus)
-
+          // 可用于菜单项的宽度（减去"更多菜单"的宽度）
+          const availableForMenus = availableWidth - moreMenuWidth
+          let visibleCount = 0
+          let usedWidth = 0
+          for (let index = 0; index < itemWidths.length; index++) {
+            if (usedWidth + itemWidths[index] > availableForMenus) break
+            usedWidth += itemWidths[index]
+            visibleCount++
+          }
+          visibleCount = Math.max(1, Math.min(visibleCount, totalMenus - 1))
           this.visibleNumber = visibleCount
         } else {
           // 空间足够，显示所有菜单项，不需要"更多菜单"
@@ -278,6 +278,46 @@ export default {
 // ============================================
 // JXT 数字证据管理平台 - 顶部一级菜单样式
 // ============================================
+
+.top-nav-wrapper {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.top-nav-measure {
+  position: absolute;
+  left: -99999px;
+  top: -99999px;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.measure-menu-item {
+  height: $law-nav-height;
+  line-height: $law-nav-height;
+  padding: $nav-item-padding;
+  margin: 0 $nav-item-gap;
+  @include text-base;
+  font-weight: $font-weight-medium;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  .svg-icon {
+    margin-right: $spacing-2;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+  }
+}
 
 .el-menu--horizontal {
   border-bottom: none !important;

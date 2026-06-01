@@ -139,11 +139,115 @@
         >
           <el-table-column type="selection" width="60" align="center" />
           <el-table-column
+            v-if="isColumnVisible('no')"
+            label="编号"
+            align="center"
+            prop="trialNo"
+            sortable="custom"
+            width="120"
+          />
+          <el-table-column
+            v-if="isColumnVisible('name')"
+            label="名称"
+            align="center"
+            prop="trialName"
+            sortable="custom"
+            min-width="140"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('brandName')"
+            label="品牌名称"
+            align="center"
+            prop="brandName"
+            min-width="120"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('managerName')"
+            label="管理员"
+            align="center"
+            prop="managerName"
+            width="120"
+          />
+          <el-table-column
+            v-if="isColumnVisible('managerOrgFullName')"
+            label="管理员所在组织"
+            align="center"
+            prop="managerOrgFullName"
+            min-width="180"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('trialIp')"
+            label="IP"
+            align="center"
+            prop="trialIp"
+            width="140"
+          />
+          <el-table-column
+            v-if="isColumnVisible('address')"
+            label="地址"
+            align="center"
+            prop="address"
+            min-width="160"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('trialUrl')"
+            label="播放地址"
+            align="center"
+            prop="trialUrl"
+            min-width="160"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('purchaseDate')"
+            label="购置时间"
+            align="center"
+            prop="purchaseDate"
+            width="180"
+            sortable="custom"
+          >
+            <template slot-scope="{ row }">
+              {{ parseTime(row.purchaseDate) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('version')"
+            label="版本号"
+            align="center"
+            prop="version"
+            min-width="120"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
+            v-if="isColumnVisible('status')"
+            label="状态"
+            align="center"
+            width="120"
+          >
+            <template slot-scope="scope">
+              <el-tag
+                :type="scope.row.status === 1 ? 'success' : 'danger'"
+                disable-transitions
+              >{{ statusFormat(scope.row) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="isColumnVisible('remark')"
+            label="备注"
+            align="center"
+            prop="remark"
+            min-width="160"
+            :show-overflow-tooltip="true"
+          />
+          <el-table-column
             label="操作"
             align="center"
             class-name="small-padding fixed-width"
             width="260"
-            fixed="right"
+            :fixed="actionFixed ? 'right' : false"
           >
             <template slot-scope="scope">
               <div class="action-buttons">
@@ -180,103 +284,6 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column
-            v-if="isColumnVisible('no')"
-            label="编号"
-            align="center"
-            prop="trialNo"
-            sortable="custom"
-            width="120"
-          />
-          <el-table-column
-            v-if="isColumnVisible('name')"
-            label="名称"
-            align="center"
-            prop="trialName"
-            sortable="custom"
-            min-width="140"
-          />
-          <el-table-column
-            v-if="isColumnVisible('brandName')"
-            label="品牌名称"
-            align="center"
-            prop="brandName"
-            min-width="140"
-          />
-          <el-table-column
-            v-if="isColumnVisible('managerName')"
-            label="管理员"
-            align="center"
-            prop="managerName"
-            width="120"
-          />
-          <el-table-column
-            v-if="isColumnVisible('managerOrgFullName')"
-            label="管理员所在组织"
-            align="center"
-            prop="managerOrgFullName"
-            min-width="180"
-          />
-          <el-table-column
-            v-if="isColumnVisible('trialIp')"
-            label="IP"
-            align="center"
-            prop="trialIp"
-            width="140"
-          />
-          <el-table-column
-            v-if="isColumnVisible('address')"
-            label="地址"
-            align="center"
-            prop="address"
-            min-width="160"
-          />
-          <el-table-column
-            v-if="isColumnVisible('trialUrl')"
-            label="播放地址"
-            align="center"
-            prop="trialUrl"
-            min-width="160"
-          />
-          <el-table-column
-            v-if="isColumnVisible('purchaseDate')"
-            label="购置时间"
-            align="center"
-            prop="purchaseDate"
-            width="180"
-            sortable="custom"
-          >
-            <template slot-scope="{ row }">
-              {{ parseTime(row.purchaseDate) }}
-            </template>
-          </el-table-column>
-          <el-table-column
-            v-if="isColumnVisible('version')"
-            label="版本号"
-            align="center"
-            prop="version"
-            width="140"
-          />
-          <el-table-column
-            v-if="isColumnVisible('status')"
-            label="状态"
-            align="center"
-            width="120"
-          >
-            <template slot-scope="scope">
-              <el-tag
-                :type="scope.row.status === 1 ? 'success' : 'danger'"
-                disable-transitions
-              >{{ statusFormat(scope.row) }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column
-            v-if="isColumnVisible('remark')"
-            label="备注"
-            align="center"
-            prop="remark"
-            min-width="160"
-          />
         </el-table>
 
         <!-- 分页 -->
@@ -637,9 +644,11 @@ import {
 import { formatJson } from '@/utils'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'Trial',
+  mixins: [actionColumnMixin],
   components: {
     BasicLayout,
     Pagination,
@@ -703,7 +712,8 @@ export default {
         ]
       },
       processingInstance: null,
-      previousCursor: null
+      previousCursor: null,
+      tableRef: 'trialTable'
     }
   },
   watch: {
@@ -756,11 +766,13 @@ export default {
     handleColumnChange(value) {
       this.visibleColumns = value
       localStorage.setItem('trial_manage_visible_columns', JSON.stringify(this.visibleColumns))
+      this.refreshTableLayout()
     },
     resetColumns() {
       this.visibleColumns = this.getDefaultVisibleColumns()
       localStorage.setItem('trial_manage_visible_columns', JSON.stringify(this.visibleColumns))
       this.$message.success('已重置为默认显示')
+      this.refreshTableLayout()
     },
     getList() {
       this.loading = true
@@ -784,6 +796,7 @@ export default {
         })
         .finally(() => {
           this.loading = false
+          this.scheduleCheckActionFixed()
         })
     },
     normalizeQueryParams(params = {}) {

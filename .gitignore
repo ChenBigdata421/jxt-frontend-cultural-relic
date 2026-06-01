@@ -7,3 +7,4 @@ dist/
 validation-logs/
 validation-screenshots/
 .claudewatch/logs/
+.gstack/

@@ -141,48 +141,6 @@
         >
           <el-table-column type="selection" width="60" align="center" />
           <el-table-column
-            label="操作"
-            align="center"
-            class-name="small-padding fixed-width"
-            width="260"
-            fixed="right"
-          >
-            <template slot-scope="scope">
-              <div class="action-buttons">
-                <el-button
-                  v-permisaction="['equipment:bwc:browse']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-view"
-                  class="action-btn tertiary"
-                  @click="handleView(scope.row)"
-                >
-                  浏览
-                </el-button>
-                <el-button
-                  v-permisaction="['equipment:bwc:edit']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-edit"
-                  class="action-btn tertiary"
-                  @click="handleUpdate(scope.row)"
-                >
-                  修改
-                </el-button>
-                <el-button
-                  v-permisaction="['equipment:bwc:remove']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-delete"
-                  class="action-btn tertiary-danger"
-                  @click="handleDelete(scope.row)"
-                >
-                  删除
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column
             v-if="isColumnVisible('no')"
             label="编号"
             align="center"
@@ -197,13 +155,15 @@
             prop="bwcName"
             sortable="custom"
             min-width="140"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('brandName')"
             label="品牌"
             align="center"
             prop="brandName"
-            width="140"
+            min-width="120"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('managerName')"
@@ -218,6 +178,7 @@
             align="center"
             prop="managerOrgFullName"
             min-width="180"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('enableUse')"
@@ -256,49 +217,53 @@
             label="CPU"
             align="center"
             prop="cpu"
-            width="140"
+            min-width="120"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('memory')"
             label="内存(G)"
             align="center"
             prop="memory"
-            width="140"
+            width="100"
           />
           <el-table-column
             v-if="isColumnVisible('disk')"
             label="存储(G)"
             align="center"
             prop="disk"
-            width="140"
+            width="100"
           />
           <el-table-column
             v-if="isColumnVisible('networkCard')"
             label="网卡"
             align="center"
             prop="networkCard"
-            min-width="160"
+            min-width="140"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('usbNum')"
             label="USB数量"
             align="center"
             prop="usbNum"
-            width="120"
+            width="100"
           />
           <el-table-column
             v-if="isColumnVisible('system')"
             label="操作系统"
             align="center"
             prop="system"
-            min-width="160"
+            min-width="140"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('version')"
             label="版本"
             align="center"
             prop="version"
-            width="140"
+            min-width="120"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('buyTime')"
@@ -318,7 +283,50 @@
             align="center"
             prop="remark"
             min-width="160"
+            :show-overflow-tooltip="true"
           />
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="260"
+            :fixed="actionFixed ? 'right' : false"
+          >
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['equipment:bwc:browse']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >
+                  浏览
+                </el-button>
+                <el-button
+                  v-permisaction="['equipment:bwc:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  v-permisaction="['equipment:bwc:remove']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
         </el-table>
 
         <!-- 分页 -->
@@ -740,9 +748,11 @@ import {
 import { formatJson } from '@/utils'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'LawCarema',
+  mixins: [actionColumnMixin],
   components: {
     BasicLayout,
     Pagination,
@@ -807,7 +817,8 @@ export default {
         no: [{ required: true, message: '编号不能为空', trigger: 'blur' }]
       },
       processingInstance: null,
-      previousCursor: null
+      previousCursor: null,
+      tableRef: 'bwcTable'
     }
   },
   watch: {
@@ -863,11 +874,13 @@ export default {
     handleColumnChange(value) {
       this.visibleColumns = value
       localStorage.setItem('bwc_manage_visible_columns', JSON.stringify(this.visibleColumns))
+      this.refreshTableLayout()
     },
     resetColumns() {
       this.visibleColumns = this.getDefaultVisibleColumns()
       localStorage.setItem('bwc_manage_visible_columns', JSON.stringify(this.visibleColumns))
       this.$message.success('已重置为默认显示')
+      this.refreshTableLayout()
     },
     getList() {
       this.loading = true
@@ -891,6 +904,7 @@ export default {
         })
         .finally(() => {
           this.loading = false
+          this.scheduleCheckActionFixed()
         })
     },
     normalizeQueryParams(params = {}) {

@@ -2,6 +2,7 @@
   <div class="dashboard-editor-container">
     <!-- 页面头部 -->
     <dashboard-header
+      v-if="!isPlatform"
       :data-as-of="meta.dataAsOf"
       :partial="meta.partial"
       :errors="errorLabels"
@@ -10,7 +11,7 @@
     />
 
     <!-- 骨架屏：首次加载 -->
-    <template v-if="dashLoading && !overview.summary">
+    <template v-if="!isPlatform && dashLoading && !overview.summary">
       <el-row :gutter="12" class="dashboard-section">
         <el-col v-for="i in 4" :key="'sk-card-'+i" :xs="12" :sm="12" :md="6" :lg="6" :xl="6">
           <div class="skeleton skeleton--card">
@@ -28,11 +29,11 @@
           <div class="skeleton skeleton--chart" />
         </el-col>
       </el-row>
-      <div v-if="!isPlatform" class="skeleton skeleton--chart skeleton--chart--tall" />
+      <div class="skeleton skeleton--chart skeleton--chart--tall" />
     </template>
 
     <!-- 数据区 -->
-    <template v-else>
+    <template v-if="!isPlatform">
       <!-- 汇总卡片 -->
       <summary-cards :data="overview.summary" :loading="dashLoading" />
 
@@ -338,8 +339,8 @@ export default {
     }
   },
   created() {
-    this.fetchOverview()
     if (!this.isPlatform) {
+      this.fetchOverview()
       this.getList()
       this.getTreeselect()
     }

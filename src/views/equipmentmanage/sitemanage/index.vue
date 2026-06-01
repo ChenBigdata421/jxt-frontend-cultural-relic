@@ -143,48 +143,6 @@
         >
           <el-table-column type="selection" width="60" align="center" />
           <el-table-column
-            label="操作"
-            align="center"
-            class-name="small-padding fixed-width"
-            width="260"
-            fixed="right"
-          >
-            <template slot-scope="scope">
-              <div class="action-buttons">
-                <el-button
-                  v-permisaction="['equipment:site:browse']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-view"
-                  class="action-btn tertiary"
-                  @click="handleView(scope.row)"
-                >
-                  浏览
-                </el-button>
-                <el-button
-                  v-permisaction="['equipment:site:edit']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-edit"
-                  class="action-btn tertiary"
-                  @click="handleUpdate(scope.row)"
-                >
-                  修改
-                </el-button>
-                <el-button
-                  v-permisaction="['equipment:site:remove']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-delete"
-                  class="action-btn tertiary-danger"
-                  @click="handleDelete(scope.row)"
-                >
-                  删除
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column
             v-if="isColumnVisible('collectSiteNo')"
             label="编号"
             align="center"
@@ -279,28 +237,29 @@
             label="CPU"
             align="center"
             prop="cpu"
-            width="140"
+            min-width="120"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('memory')"
             label="内存(G)"
             align="center"
             prop="memory"
-            width="140"
+            width="100"
           />
           <el-table-column
             v-if="isColumnVisible('disk')"
             label="存储(G)"
             align="center"
             prop="disk"
-            width="140"
+            width="100"
           />
           <el-table-column
             v-if="isColumnVisible('usbNum')"
             label="USB数量"
             align="center"
             prop="usbNum"
-            width="120"
+            width="100"
           />
           <el-table-column
             v-if="isColumnVisible('system')"
@@ -315,7 +274,8 @@
             label="版本"
             align="center"
             prop="version"
-            width="120"
+            min-width="100"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('purchaseDate')"
@@ -337,6 +297,48 @@
             min-width="160"
             :show-overflow-tooltip="true"
           />
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="260"
+            :fixed="actionFixed ? 'right' : false"
+          >
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['equipment:site:browse']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handleView(scope.row)"
+                >
+                  浏览
+                </el-button>
+                <el-button
+                  v-permisaction="['equipment:site:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  v-permisaction="['equipment:site:remove']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
         </el-table>
 
         <!-- 分页 -->
@@ -803,9 +805,11 @@ import {
 import { formatJson } from '@/utils'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'Site',
+  mixins: [actionColumnMixin],
   components: {
     BasicLayout,
     Pagination,
@@ -916,7 +920,8 @@ export default {
       },
       blurWhileExport: false, // 标记页面失去焦点的状态
       processingInstance: null, // Element UI全局加载动画的实例
-      previousCursor: null // 记录鼠标状态
+      previousCursor: null, // 记录鼠标状态
+      tableRef: 'siteTable'
     }
   },
   watch: {
@@ -976,6 +981,7 @@ export default {
         })
         .finally(() => {
           this.loading = false
+          this.scheduleCheckActionFixed()
         })
     },
 
@@ -1484,6 +1490,7 @@ export default {
     handleColumnChange(value) {
       this.visibleColumns = value
       localStorage.setItem('site_manage_visible_columns', JSON.stringify(this.visibleColumns))
+      this.refreshTableLayout()
     },
 
     /** 重置列配置 */
@@ -1491,6 +1498,7 @@ export default {
       this.visibleColumns = this.getDefaultVisibleColumns()
       localStorage.setItem('site_manage_visible_columns', JSON.stringify(this.visibleColumns))
       this.$message.success('已重置为默认显示')
+      this.refreshTableLayout()
     },
 
     /** 列设置对话框打开后的焦点管理 */

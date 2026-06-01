@@ -145,15 +145,17 @@
             v-if="isColumnVisible('code')"
             prop="code"
             label="任务编号"
-            width="160"
+            min-width="160"
             sortable="custom"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('name')"
             prop="name"
             label="任务名称"
-            width="140"
+            min-width="160"
             sortable="custom"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('type')"
@@ -212,31 +214,35 @@
             v-if="isColumnVisible('createUserName')"
             prop="createUserName"
             label="创建用户"
-            width="140"
+            min-width="120"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('createUserNo')"
             prop="createUserNo"
             label="创建用户编号"
-            width="150"
+            min-width="140"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('updateUserName')"
             prop="updateUserName"
             label="更新用户"
-            width="140"
+            min-width="120"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('updateUserNo')"
             prop="updateUserNo"
             label="更新用户编号"
-            width="150"
+            min-width="140"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('createTime')"
             prop="createTime"
             label="创建时间"
-            width="170"
+            width="180"
           >
             <template slot-scope="{ row }">
               {{ parseTime(row.createTime) }}
@@ -246,7 +252,7 @@
             v-if="isColumnVisible('startTime')"
             prop="startTime"
             label="开始时间"
-            width="170"
+            width="180"
           >
             <template slot-scope="{ row }">
               {{ parseTime(row.startTime) }}
@@ -256,7 +262,7 @@
             v-if="isColumnVisible('endTime')"
             prop="endTime"
             label="结束时间"
-            width="170"
+            width="180"
           >
             <template slot-scope="{ row }">
               {{ parseTime(row.endTime) }}
@@ -289,8 +295,8 @@
             label="操作"
             align="center"
             class-name="small-padding fixed-width"
-            width="240"
-            fixed="right"
+            width="220"
+            :fixed="actionFixed ? 'right' : false"
           >
             <template slot-scope="scope">
               <div class="action-buttons">
@@ -690,9 +696,11 @@ import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import AssignmentQueryBar from '@/components/AssignmentQueryBar'
 import BatchActionBar from '@/components/BatchActionBar/index.vue'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'TaskQuery',
+  mixins: [actionColumnMixin],
   components: {
     Treeselect,
     AssignmentQueryBar,
@@ -700,6 +708,7 @@ export default {
   },
   data() {
     return {
+      tableRef: 'taskTable',
       // 遮罩层
       loading: true,
       // 总条数
@@ -912,6 +921,7 @@ export default {
         })
         .finally(() => {
           this.loading = false
+          this.scheduleCheckActionFixed()
         })
     },
 

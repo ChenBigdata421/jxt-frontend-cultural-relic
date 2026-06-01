@@ -72,11 +72,6 @@ map ${DOLLAR}request_method ${DOLLAR}process_backend {
     default ${PROCESS_MANAGEMENT_UPSTREAM};
 }
 
-map ${DOLLAR}request_method ${DOLLAR}dashboard_backend {
-    GET     ${EVIDENCE_QUERY_UPSTREAM};
-    default ${EVIDENCE_QUERY_UPSTREAM};
-}
-
 map ${DOLLAR}request_method ${DOLLAR}documents_backend {
     default ${FILE_STORAGE_UPSTREAM};
 }
@@ -117,13 +112,14 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
+    # 仪表盘概览接口 → 转发到 evidence-query
     location ^~ /api/v1/dashboard {
         proxy_set_header Host ${DOLLAR}host;
         proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
         proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
         proxy_set_header Authorization ${DOLLAR}http_authorization;
-        proxy_pass ${DOLLAR}dashboard_backend;
+        proxy_pass ${EVIDENCE_QUERY_UPSTREAM};
     }
 
     # 统计分析接口 → 转发到 evidence-query（只读）
@@ -342,14 +338,74 @@ server {
         proxy_pass ${DOLLAR}documents_backend;
     }
 
-    # 生命周期管理接口 → 转发到 evidence-command
-    location ^~ /api/v1/lifecycle {
+    # WVP 报警管理 API → 转发到 WVP 容器
+    location ^~ /api/alarm/ {
         proxy_set_header Host ${DOLLAR}host;
         proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
         proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
-        proxy_set_header Authorization ${DOLLAR}http_authorization;
-        proxy_pass ${EVIDENCE_COMMAND_UPSTREAM};
+        proxy_pass ${WVP_UPSTREAM};
+    }
+
+    # WVP 通用通道 API → 转发到 WVP 容器（含端口改写，play 接口返回 ZLM 内部端口）
+    location ^~ /api/common/ {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_set_header Accept-Encoding "";
+        sub_filter ":80/rtp/" ":${ZLM_PORT}/rtp/";
+        sub_filter_once off;
+        sub_filter_types application/json;
+        proxy_pass ${WVP_UPSTREAM};
+    }
+
+    # WVP 视频监控 API → 转发到 WVP 容器
+    location ^~ /api/device/ {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_pass ${WVP_UPSTREAM};
+    }
+
+    # WVP play API — rewrite ZLM stream URLs from Docker port 80 to host port
+    location ^~ /api/play/ {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_set_header Accept-Encoding "";
+        sub_filter ":80/rtp/" ":${ZLM_PORT}/rtp/";
+        sub_filter_once off;
+        sub_filter_types application/json;
+        proxy_pass ${WVP_UPSTREAM};
+    }
+
+    # WVP 行政区划 API → 转发到 WVP 容器
+    location ^~ /api/region/ {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_pass ${WVP_UPSTREAM};
+    }
+
+    # WVP 业务分组 API → 转发到 WVP 容器
+    location ^~ /api/group/ {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_pass ${WVP_UPSTREAM};
+    }
+
+    location ^~ /api/server/ {
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+        proxy_pass ${WVP_UPSTREAM};
     }
 
     location /api {
@@ -404,17 +460,6 @@ server {
         proxy_pass ${EVIDENCE_COMMAND_UPSTREAM};
     }
 
-    # 统计分析配置接口 → 转发到 evidence-query
-    location ^~ /api/v1/statistics {
-        proxy_set_header Host ${DOLLAR}host;
-        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
-        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
-        proxy_set_header Authorization ${DOLLAR}http_authorization;
-        proxy_read_timeout 300s;
-        proxy_pass ${EVIDENCE_QUERY_UPSTREAM};
-    }
-
     # WebSocket 路由（实时通知）→ 转发到流程管理服务
     location ^~ /api/v1/ws {
         proxy_set_header Host ${DOLLAR}host;
@@ -430,34 +475,6 @@ server {
         proxy_read_timeout 86400;
         proxy_send_timeout 86400;
 
-        proxy_pass ${DOLLAR}process_backend;
-    }
-
-    # 流程管理路由 → 转发到 process-management-api
-    location ^~ /api/v1/workflows {
-        proxy_set_header Host ${DOLLAR}host;
-        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
-        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
-        proxy_set_header Authorization ${DOLLAR}http_authorization;
-        proxy_pass ${DOLLAR}process_backend;
-    }
-
-    location ^~ /api/v1/instances {
-        proxy_set_header Host ${DOLLAR}host;
-        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
-        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
-        proxy_set_header Authorization ${DOLLAR}http_authorization;
-        proxy_pass ${DOLLAR}process_backend;
-    }
-
-    location ^~ /api/v1/tasks {
-        proxy_set_header Host ${DOLLAR}host;
-        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
-        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
-        proxy_set_header Authorization ${DOLLAR}http_authorization;
         proxy_pass ${DOLLAR}process_backend;
     }
 

@@ -66,78 +66,84 @@
           </el-col>
         </el-row>
 
-        <el-table v-loading="loading" :data="tableList" @selection-change="handleSelectionChange">
+        <el-table ref="table" v-loading="loading" :data="tableList" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="55" />
-          <el-table-column label="序号" align="center" prop="tableId" width="50px" />
+          <el-table-column label="序号" align="center" prop="tableId" width="50" />
           <el-table-column
             label="表名称"
             align="center"
             prop="tableName"
             :show-overflow-tooltip="true"
-            width="130"
+            min-width="140"
           />
           <el-table-column
             label="菜单名称"
             align="center"
             prop="tableComment"
             :show-overflow-tooltip="true"
-            width="130"
+            min-width="140"
           />
           <el-table-column
             label="模型名称"
             align="center"
             prop="className"
             :show-overflow-tooltip="true"
-            width="130"
+            min-width="140"
           />
-          <el-table-column label="创建时间" align="center" prop="createdAt" width="165">
+          <el-table-column label="创建时间" align="center" prop="createdAt" width="180">
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.createdAt) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+          <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="220" :fixed="actionFixed ? 'right' : false">
             <template slot-scope="scope">
-              <el-button
-                type="text"
-                size="small"
-                icon="el-icon-edit"
-                @click="handleEditTable(scope.row)"
-              >编辑</el-button>
-              <el-button
-                type="text"
-                size="small"
-                icon="el-icon-view"
-                @click="handlePreview(scope.row)"
-              >预览</el-button>
-              <el-button
-                slot="reference"
-                type="text"
-                size="small"
-                icon="el-icon-view"
-                @click="handleToProject(scope.row)"
-              >代码生成</el-button>
-
-              <el-button
-                slot="reference"
-                type="text"
-                size="small"
-                icon="el-icon-view"
-                @click="handleToDB(scope.row)"
-              >生成配置</el-button>
-              <el-button
-                slot="reference"
-                type="text"
-                size="small"
-                icon="el-icon-view"
-                @click="handleToApiFile(scope.row)"
-              >生成迁移脚本</el-button>
-              <el-button
-                slot="reference"
-                type="text"
-                size="small"
-                icon="el-icon-delete"
-                @click="handleSingleDelete(scope.row)"
-              >删除</el-button>
+              <div class="action-buttons">
+                <el-button
+                  type="text"
+                  size="small"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleEditTable(scope.row)"
+                >编辑</el-button>
+                <el-button
+                  type="text"
+                  size="small"
+                  icon="el-icon-view"
+                  class="action-btn tertiary"
+                  @click="handlePreview(scope.row)"
+                >预览</el-button>
+                <el-dropdown
+                  trigger="click"
+                  @command="(command) => handleGenCommand(scope.row, command)"
+                >
+                  <el-button
+                    size="small"
+                    type="text"
+                    class="action-btn tertiary"
+                  >
+                    更多<i class="el-icon-arrow-down el-icon--right" />
+                  </el-button>
+                  <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item
+                      icon="el-icon-view"
+                      command="genCode"
+                    >代码生成</el-dropdown-item>
+                    <el-dropdown-item
+                      icon="el-icon-view"
+                      command="genConfig"
+                    >生成配置</el-dropdown-item>
+                    <el-dropdown-item
+                      icon="el-icon-view"
+                      command="genMigration"
+                    >生成迁移脚本</el-dropdown-item>
+                    <el-dropdown-item
+                      icon="el-icon-delete"
+                      command="delete"
+                      class="danger-dropdown-item"
+                    >删除</el-dropdown-item>
+                  </el-dropdown-menu>
+                </el-dropdown>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -191,6 +197,7 @@ import importTable from './importTable'
 import { downLoadFile } from '@/utils/zipdownload'
 import { codemirror } from 'vue-codemirror'
 import 'codemirror/theme/material-palenight.css'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 require('codemirror/mode/javascript/javascript')
 import 'codemirror/mode/javascript/javascript'
@@ -199,6 +206,7 @@ import 'codemirror/mode/vue/vue'
 
 export default {
   name: 'Gen',
+  mixins: [actionColumnMixin],
   components: { importTable, codemirror },
   data() {
     return {
@@ -256,6 +264,23 @@ export default {
     }
   },
   methods: {
+    /** 操作列下拉命令路由 */
+    handleGenCommand(row, command) {
+      switch (command) {
+        case 'genCode':
+          this.handleToProject(row)
+          break
+        case 'genConfig':
+          this.handleToDB(row)
+          break
+        case 'genMigration':
+          this.handleToApiFile(row)
+          break
+        case 'delete':
+          this.handleSingleDelete(row)
+          break
+      }
+    },
     /** 查询表集合 */
     getList() {
       this.loading = true
@@ -263,6 +288,7 @@ export default {
         this.tableList = response.data.list
         this.total = response.data.count
         this.loading = false
+        this.scheduleCheckActionFixed()
       }
       )
     },

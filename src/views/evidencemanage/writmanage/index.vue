@@ -146,20 +146,26 @@
             label="文书编号"
             align="center"
             prop="writCode"
+            min-width="200"
             sortable="custom"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('writName')"
             label="文书名称"
             align="center"
             prop="writName"
+            min-width="160"
             sortable="custom"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('writType')"
             label="文书类型"
             align="center"
             prop="writType"
+            width="120"
+            :show-overflow-tooltip="true"
           >
             <template slot-scope="scope">
               {{ writTypeFormat(scope.row) }}
@@ -182,36 +188,46 @@
             label="组织编码"
             align="center"
             prop="orgCode"
+            min-width="140"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('orgName')"
             label="组织名称"
             align="center"
             prop="orgName"
+            min-width="160"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('orgPaths')"
             label="组织全称"
             align="center"
             prop="orgPaths"
+            min-width="200"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('writPoliceNames')"
             label="人员"
             align="center"
             prop="writPoliceNames"
+            min-width="140"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('writScore')"
             label="评分"
             align="center"
             prop="writScore"
+            width="80"
           />
           <el-table-column
             v-if="isColumnVisible('isRelation')"
             label="关联状态"
             align="center"
             prop="isRelation"
+            width="100"
           >
             <template slot-scope="scope">
               <el-tag
@@ -228,24 +244,32 @@
             label="文书地址"
             align="center"
             prop="writAddress"
+            min-width="200"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('writSource')"
             label="文书来源"
             align="center"
             prop="writSource"
+            width="120"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('scoreDesc')"
             label="评分说明"
             align="center"
             prop="scoreDesc"
+            min-width="200"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('writDesc')"
             label="文书描述"
             align="center"
             prop="writDesc"
+            min-width="200"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('createdAt')"
@@ -273,8 +297,8 @@
             label="操作"
             align="center"
             class-name="small-padding fixed-width"
-            width="320"
-            fixed="right"
+            width="220"
+            :fixed="actionFixed ? 'right' : false"
           >
             <template slot-scope="scope">
               <div class="action-buttons">
@@ -284,45 +308,41 @@
                   icon="el-icon-view"
                   class="action-btn tertiary"
                   @click="handleView(scope.row)"
-                >
-                  浏览
-                </el-button>
+                >浏览</el-button>
                 <el-button
                   size="small"
                   type="text"
                   icon="el-icon-edit"
                   class="action-btn tertiary"
                   @click="handleUpdate(scope.row)"
+                >修改</el-button>
+                <el-dropdown
+                  trigger="click"
+                  @command="(command) => handleActionCommand(scope.row, command)"
                 >
-                  修改
-                </el-button>
-                <el-button
-                  size="small"
-                  type="text"
-                  icon="el-icon-delete"
-                  class="action-btn tertiary-danger"
-                  @click="handleDelete(scope.row)"
-                >
-                  删除
-                </el-button>
-                <el-button
-                  size="small"
-                  type="text"
-                  icon="el-icon-star-on"
-                  class="action-btn tertiary"
-                  @click="handleScore(scope.row)"
-                >
-                  评分
-                </el-button>
-                <el-button
-                  size="small"
-                  type="text"
-                  icon="el-icon-link"
-                  class="action-btn tertiary"
-                  @click="handleShowMedia(scope.row)"
-                >
-                  已关联媒体
-                </el-button>
+                  <el-button
+                    size="small"
+                    type="text"
+                    class="action-btn tertiary"
+                  >
+                    更多<i class="el-icon-arrow-down el-icon--right" />
+                  </el-button>
+                  <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item
+                      icon="el-icon-star-on"
+                      command="score"
+                    >评分</el-dropdown-item>
+                    <el-dropdown-item
+                      icon="el-icon-link"
+                      command="media"
+                    >已关联媒体</el-dropdown-item>
+                    <el-dropdown-item
+                      icon="el-icon-delete"
+                      command="delete"
+                      class="danger-dropdown-item"
+                    >删除</el-dropdown-item>
+                  </el-dropdown-menu>
+                </el-dropdown>
               </div>
             </template>
           </el-table-column>
@@ -672,20 +692,22 @@
             @selection-change="handleMediaRelationsSelectionChange"
           >
             <el-table-column type="selection" width="55" align="center" />
-            <el-table-column label="文书编号" align="center" prop="writCode" />
-            <el-table-column label="媒体名称" align="center" prop="mediaName" />
-            <el-table-column label="媒体类型" align="center" prop="mediaCate">
+            <el-table-column label="文书编号" align="center" prop="writCode" min-width="160" :show-overflow-tooltip="true" />
+            <el-table-column label="媒体名称" align="center" prop="mediaName" min-width="160" :show-overflow-tooltip="true" />
+            <el-table-column label="媒体类型" align="center" prop="mediaCate" width="120" :show-overflow-tooltip="true">
               <template slot-scope="scope">
                 {{ mediaCateFormat(scope.row) }}
               </template>
             </el-table-column>
-            <el-table-column label="关联人" align="center" prop="policeName" />
+            <el-table-column label="关联人" align="center" prop="policeName" min-width="120" :show-overflow-tooltip="true" />
             <el-table-column
               label="关联人组织"
               align="center"
               prop="orgFullName"
+              min-width="160"
+              :show-overflow-tooltip="true"
             />
-            <el-table-column label="关联时间" align="center" prop="createdAt">
+            <el-table-column label="关联时间" align="center" prop="createdAt" width="180">
               <template slot-scope="scope">
                 <span>{{ parseTime(scope.row.createdAt) }}</span>
               </template>
@@ -780,9 +802,11 @@ import { listUser } from '@/api/admin/sys-user'
 import { formatJson } from '@/utils'
 import WritQueryBar from '@/components/WritQueryBar/index.vue'
 import BatchActionBar from '@/components/BatchActionBar/index.vue'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'WritManage',
+  mixins: [actionColumnMixin],
   components: {
     BasicLayout,
     Pagination,
@@ -793,6 +817,7 @@ export default {
   },
   data() {
     return {
+      tableRef: 'writTable',
       // 遮罩层
       loading: true,
       relationLoading: false,
@@ -962,6 +987,20 @@ export default {
     })
   },
   methods: {
+    /** 操作列下拉命令路由 */
+    handleActionCommand(row, command) {
+      switch (command) {
+        case 'score':
+          this.handleScore(row)
+          break
+        case 'media':
+          this.handleShowMedia(row)
+          break
+        case 'delete':
+          this.handleDelete(row)
+          break
+      }
+    },
     writTypeFormat(row) {
       return this.selectDictLabel(this.writTypeOptions, row.writType)
     },
@@ -997,6 +1036,7 @@ export default {
         })
         .finally(() => {
           this.loading = false
+          this.scheduleCheckActionFixed()
         })
     },
     /** 获取组织树 */
@@ -1534,6 +1574,7 @@ export default {
         'writ_manage_visible_columns',
         JSON.stringify(value)
       )
+      this.refreshTableLayout()
     },
     /** 重置列配置 */
     resetColumns() {
@@ -1546,6 +1587,7 @@ export default {
         JSON.stringify(this.visibleColumns)
       )
       this.$message.success('已重置为默认显示')
+      this.refreshTableLayout()
     },
 
     /** 列设置对话框打开后的焦点管理 */

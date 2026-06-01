@@ -109,7 +109,7 @@
         v-if="isColumnVisible('mediaName')"
         prop="mediaName"
         label="媒体名称"
-        width="160"
+        min-width="160"
         sortable="custom"
         :show-overflow-tooltip="true"
       />
@@ -265,7 +265,8 @@
         v-if="isColumnVisible('archiveCode')"
         prop="archiveCode"
         label="档案编号"
-        width="140"
+        min-width="140"
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('isArchive')"
@@ -394,11 +395,9 @@
         v-if="isColumnVisible('isSendToStorage')"
         prop="isSendToStorage"
         label="上传至存储"
-        width="150"
+        width="120"
+        align="center"
       >
-        <template slot-scope="{ row }">
-          {{ formatSendStatus(row.isSendToStorage) }}
-        </template>
         <template slot-scope="{ row }">
           <el-tag
             :type="row.isSendToStorage === 1 ? 'success' : 'info'"
@@ -426,7 +425,7 @@
         min-width="160"
         :show-overflow-tooltip="true"
       />
-      <el-table-column v-if="isColumnVisible('policeName')" label="人员姓名" width="120">
+      <el-table-column v-if="isColumnVisible('policeName')" label="人员姓名" min-width="120" :show-overflow-tooltip="true">
         <template slot-scope="{ row }">
           {{ formatPoliceName(row) }}
         </template>
@@ -712,9 +711,11 @@ import { getEquipmentBwcByManagerId } from '@/api/admin/equipment_manage_api'
 import { selectDictLabel } from '@/utils/costum'
 import MediaDetailDialog from '@/components/MediaDetailDialog'
 import MediaQueryBar from '@/components/MediaQueryBar/index.vue'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'MediaSelector',
+  mixins: [actionColumnMixin],
   components: { MediaDetailDialog, MediaQueryBar },
   props: {
     // 是否为选择模式（用于对话框中的媒体选择）
@@ -740,9 +741,7 @@ export default {
   },
   data() {
     return {
-      // 操作列是否需要固定（仅在列溢出时启用）
-      actionFixed: false,
-      checkingActionFixed: false,
+      tableRef: 'mediaTable',
       // 遮罩层
       loading: true,
       // 选中数组
@@ -994,62 +993,11 @@ export default {
       })
   },
   mounted() {
-    this.checkActionFixed()
-    this._resizeHandler = () => this.checkActionFixed()
-    window.addEventListener('resize', this._resizeHandler)
   },
   beforeDestroy() {
-    window.removeEventListener('resize', this._resizeHandler)
-    clearTimeout(this.actionFixedTimer)
   },
   methods: {
     selectDictLabel,
-
-    /** 检测表格列是否溢出，动态决定操作列是否 fixed */
-    async checkActionFixed() {
-      if (this.checkingActionFixed) return
-      this.checkingActionFixed = true
-      try {
-        await this.$nextTick()
-        const table = this.$refs.mediaTable
-        if (!table) return
-
-        this.actionFixed = false
-        await this.$nextTick()
-        if (table.doLayout) table.doLayout()
-        await this.$nextTick()
-
-        const bodyWrapper = table.$el.querySelector('.el-table__body-wrapper')
-        const needFixed = bodyWrapper
-          ? bodyWrapper.scrollWidth > bodyWrapper.clientWidth
-          : false
-
-        if (this.actionFixed !== needFixed) {
-          this.actionFixed = needFixed
-        }
-
-        await this.$nextTick()
-        if (table.doLayout) table.doLayout()
-      } finally {
-        this.checkingActionFixed = false
-      }
-    },
-
-    scheduleCheckActionFixed() {
-      clearTimeout(this.actionFixedTimer)
-      this.actionFixedTimer = setTimeout(() => {
-        this.checkActionFixed()
-      }, 50)
-    },
-
-    refreshTableLayout() {
-      this.$nextTick(() => {
-        if (this.$refs.mediaTable && this.$refs.mediaTable.doLayout) {
-          this.$refs.mediaTable.doLayout()
-        }
-        this.scheduleCheckActionFixed()
-      })
-    },
 
     getRowKey(row) {
       return row && row.mediaId
@@ -1673,14 +1621,5 @@ export default {
   color: #1A5F7A;
   padding: 2px 8px;
   border-radius: 3px;
-}
-
-.el-dropdown-menu__item.danger-dropdown-item {
-  color: #F56C6C;
-}
-
-.el-dropdown-menu__item.danger-dropdown-item:hover {
-  background-color: rgba(245, 108, 108, 0.1);
-  color: #F56C6C;
 }
 </style>

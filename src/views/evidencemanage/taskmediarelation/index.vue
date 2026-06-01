@@ -107,15 +107,17 @@
             v-if="isColumnVisible('code')"
             prop="code"
             label="任务编号"
-            width="160"
+            min-width="160"
             sortable="custom"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('name')"
             prop="name"
             label="任务名称"
-            width="140"
+            min-width="160"
             sortable="custom"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('type')"
@@ -167,13 +169,14 @@
             v-if="isColumnVisible('createUserName')"
             prop="createUserName"
             label="创建用户"
-            width="140"
+            min-width="120"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('createTime')"
             prop="createTime"
             label="创建时间"
-            width="170"
+            width="180"
           >
             <template slot-scope="{ row }">
               {{ parseTime(row.createTime) }}
@@ -183,7 +186,7 @@
             v-if="isColumnVisible('startTime')"
             prop="startTime"
             label="开始时间"
-            width="170"
+            width="180"
           >
             <template slot-scope="{ row }">
               {{ parseTime(row.startTime) }}
@@ -193,7 +196,7 @@
             v-if="isColumnVisible('endTime')"
             prop="endTime"
             label="结束时间"
-            width="170"
+            width="180"
           >
             <template slot-scope="{ row }">
               {{ parseTime(row.endTime) }}
@@ -226,8 +229,8 @@
             label="操作"
             align="center"
             class-name="small-padding fixed-width"
-            width="240"
-            fixed="right"
+            width="220"
+            :fixed="actionFixed ? 'right' : false"
           >
             <template slot-scope="scope">
               <div class="action-buttons">
@@ -312,16 +315,18 @@
               prop="taskCode"
               label="任务编号"
               align="center"
+              min-width="160"
+              :show-overflow-tooltip="true"
             />
-            <el-table-column prop="mediaName" label="媒体名称" />
-            <el-table-column prop="mediaCate" label="媒体类别" align="center">
+            <el-table-column prop="mediaName" label="媒体名称" min-width="160" :show-overflow-tooltip="true" />
+            <el-table-column prop="mediaCate" label="媒体类别" width="120" align="center">
               <template slot-scope="{ row }">
                 {{ selectDictLabel(mediaCateOptions, row.mediaCate) }}
               </template>
             </el-table-column>
-            <el-table-column prop="policeName" label="追加人" align="center" />
-            <el-table-column prop="orgFullName" label="追加人组织" />
-            <el-table-column prop="createdAt" label="追加时间" align="center">
+            <el-table-column prop="policeName" label="追加人" width="120" align="center" :show-overflow-tooltip="true" />
+            <el-table-column prop="orgFullName" label="追加人组织" min-width="160" :show-overflow-tooltip="true" />
+            <el-table-column prop="createdAt" label="追加时间" width="180" align="center">
               <template slot-scope="{ row }">
                 {{ parseTime(row.relationTime || row.createdAt) }}
               </template>
@@ -540,15 +545,18 @@ import {
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import MediaSelector from '@/components/MediaSelector'
 import AssignmentQueryBar from '@/components/AssignmentQueryBar'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'TaskMediaRelation',
+  mixins: [actionColumnMixin],
   components: {
     MediaSelector,
     AssignmentQueryBar
   },
   data() {
     return {
+      tableRef: 'taskTable',
       // 遮罩层
       loading: true,
       // 总条数
@@ -868,6 +876,7 @@ export default {
         this.taskList = response.data.list
         this.total = response.data.count
         this.loading = false
+        this.scheduleCheckActionFixed()
       })
     },
 

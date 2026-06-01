@@ -99,18 +99,18 @@
         v-if="isColumnVisible('archiveCode')"
         prop="archiveCode"
         label="档案编号"
-        width="180"
+        min-width="180"
         align="center"
         sortable="custom"
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('archiveTitle')"
         prop="archiveTitle"
         label="档案标题"
-        width="200"
+        min-width="200"
         sortable="custom"
-        :resizable="false"
-        show-overflow-tooltip
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('archiveType')"
@@ -129,31 +129,30 @@
         v-if="isColumnVisible('description')"
         prop="description"
         label="档案描述"
-        width="220"
-        :resizable="false"
-        show-overflow-tooltip
+        min-width="200"
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('orgName')"
         prop="orgName"
         label="管理部门"
-        width="150"
+        min-width="150"
         align="center"
-        show-overflow-tooltip
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('orgJc')"
         prop="orgJc"
         label="管理部门简称"
-        width="150"
-        show-overflow-tooltip
+        min-width="140"
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('orgCode')"
         prop="orgCode"
         label="管理部门编码"
-        width="200"
-        show-overflow-tooltip
+        min-width="160"
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('orgId')"
@@ -189,7 +188,7 @@
         v-if="isColumnVisible('lifecycleStatus')"
         prop="lifecycleStatus"
         label="生命周期状态"
-        width="130"
+        width="120"
         align="center"
       >
         <template slot-scope="{ row }">
@@ -222,43 +221,46 @@
         v-if="isColumnVisible('createUserName')"
         prop="createUserName"
         label="录入人员"
-        width="120"
+        min-width="120"
         align="center"
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('createUserNo')"
         prop="createUserNo"
         label="录入人编号"
-        width="160"
+        min-width="140"
         align="center"
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('updateUserName')"
         prop="updateUserName"
         label="更新人员"
-        width="120"
+        min-width="120"
         align="center"
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('updateUserNo')"
         prop="updateUserNo"
         label="更新人编号"
-        width="160"
+        min-width="140"
         align="center"
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('remarks')"
         prop="remarks"
         label="备注信息"
-        width="220"
-        :resizable="false"
-        show-overflow-tooltip
+        min-width="200"
+        :show-overflow-tooltip="true"
       />
       <el-table-column
         v-if="isColumnVisible('createdAt')"
         prop="createdAt"
         label="录入时间"
-        width="160"
+        width="180"
         align="center"
       >
         <template slot-scope="{ row }">
@@ -269,7 +271,7 @@
         v-if="isColumnVisible('updatedAt')"
         prop="updatedAt"
         label="更新时间"
-        width="160"
+        width="180"
         align="center"
       >
         <template slot-scope="{ row }">
@@ -283,7 +285,7 @@
         width="360"
         align="center"
         class-name="small-padding fixed-width"
-        fixed="right"
+        :fixed="actionFixed ? 'right' : false"
       >
         <template slot-scope="scope">
           <div class="action-buttons">
@@ -329,9 +331,11 @@
 <script>
 import { listArchives } from '@/api/evidence/archive_api'
 import ArchiveQueryBar from '@/components/ArchiveQueryBar/index.vue'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'ArchiveSelector',
+  mixins: [actionColumnMixin],
   components: { ArchiveQueryBar },
   props: {
     // 是否为选择模式（用于对话框中的档案选择）
@@ -357,6 +361,7 @@ export default {
   },
   data() {
     return {
+      tableRef: 'archiveTable',
       // 遮罩层
       loading: true,
 
@@ -482,6 +487,7 @@ export default {
         })
         .finally(() => {
           this.loading = false
+          this.scheduleCheckActionFixed()
         })
     },
 

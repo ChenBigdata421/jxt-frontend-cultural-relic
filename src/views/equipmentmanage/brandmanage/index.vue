@@ -122,44 +122,13 @@
         >
           <el-table-column type="selection" width="60" align="center" />
           <el-table-column
-            label="操作"
-            align="center"
-            class-name="small-padding fixed-width"
-            width="200"
-            fixed="right"
-          >
-            <template slot-scope="scope">
-              <div class="action-buttons">
-                <el-button
-                  v-permisaction="['equipment:brand:edit']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-edit"
-                  class="action-btn tertiary"
-                  @click="handleUpdate(scope.row)"
-                >
-                  修改
-                </el-button>
-                <el-button
-                  v-permisaction="['equipment:brand:remove']"
-                  size="small"
-                  type="text"
-                  icon="el-icon-delete"
-                  class="action-btn tertiary-danger"
-                  @click="handleDelete(scope.row)"
-                >
-                  删除
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column
             v-if="isColumnVisible('brandName')"
             label="名称"
             align="center"
             prop="brandName"
             sortable="custom"
             min-width="140"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('hardware')"
@@ -168,6 +137,7 @@
             prop="hardware"
             sortable="custom"
             min-width="140"
+            :show-overflow-tooltip="true"
           />
           <el-table-column
             v-if="isColumnVisible('state')"
@@ -206,6 +176,38 @@
           >
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.updatedAt) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            align="center"
+            class-name="small-padding fixed-width"
+            width="200"
+            :fixed="actionFixed ? 'right' : false"
+          >
+            <template slot-scope="scope">
+              <div class="action-buttons">
+                <el-button
+                  v-permisaction="['equipment:brand:edit']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-edit"
+                  class="action-btn tertiary"
+                  @click="handleUpdate(scope.row)"
+                >
+                  修改
+                </el-button>
+                <el-button
+                  v-permisaction="['equipment:brand:remove']"
+                  size="small"
+                  type="text"
+                  icon="el-icon-delete"
+                  class="action-btn tertiary-danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -309,9 +311,11 @@ import {
   updateEquipmentBrand
 } from '@/api/admin/equipment_manage_api'
 import { formatJson } from '@/utils'
+import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'Brand',
+  mixins: [actionColumnMixin],
   components: {
     BasicLayout,
     Pagination,
@@ -370,7 +374,8 @@ export default {
         brandName: [{ required: true, message: '品牌名称不能为空', trigger: 'blur' }]
       },
       processingInstance: null,
-      previousCursor: null
+      previousCursor: null,
+      tableRef: 'brandTable'
     }
   },
   created() {
@@ -405,6 +410,7 @@ export default {
         })
         .finally(() => {
           this.loading = false
+          this.scheduleCheckActionFixed()
         })
     },
 
@@ -722,6 +728,7 @@ export default {
     /** 列显示变更 */
     handleColumnChange(value) {
       localStorage.setItem('brand_manage_visible_columns', JSON.stringify(value))
+      this.refreshTableLayout()
     },
 
     /** 重置列配置 */
@@ -731,6 +738,7 @@ export default {
         .map((item) => item.prop)
       localStorage.setItem('brand_manage_visible_columns', JSON.stringify(this.visibleColumns))
       this.$message.success('已重置为默认显示')
+      this.refreshTableLayout()
     },
 
     /** 延迟函数 */

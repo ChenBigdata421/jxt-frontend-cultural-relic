@@ -62,7 +62,6 @@
         <el-radio-group v-model="activeDimension" size="small" @change="handleDimensionChange">
           <el-radio-button label="">全部</el-radio-button>
           <el-radio-button label="media_cate">媒体类型</el-radio-button>
-          <el-radio-button label="enforcement_type">执法类型</el-radio-button>
           <el-radio-button label="important_level">重要级别</el-radio-button>
         </el-radio-group>
       </div>
@@ -121,7 +120,6 @@ const METRIC_LABELS = {
 
 const DIMENSION_LABELS = {
   media_cate: '按媒体类型',
-  enforcement_type: '按执法类型',
   important_level: '按重要级别'
 }
 

@@ -155,7 +155,6 @@ const SECTION_LABELS = {
   mediaTypeDistribution: '媒体分布',
   storageStats: '存储统计',
   mediaCoverageStats: '媒体覆盖',
-  enforcementTypeDistribution: '执法类型分布',
   orgRanking: '部门排名',
   officerStats: '执法人员统计',
   complianceOverview: '合规总览',
@@ -183,7 +182,6 @@ export default {
         storageStats: null,
         mediaCoverageStats: null,
         orgRanking: null,
-        enforcementTypeDistribution: null,
         officerStats: null,
         complianceOverview: null,
         alertSummary: null
