@@ -186,7 +186,7 @@
     .column-settings-reset {
       font-size: $font-size-sm;          // 13px
       font-weight: $font-weight-normal;   // 400
-      color: $law-primary;               // #1A5F7A
+      color: $law-primary;               // #725A45
       padding: 4px 8px;
       min-height: 32px;
 
@@ -423,7 +423,7 @@
   // 标题样式 - 与对话框标题保持一致，使用深黑色
   ::v-deep .el-drawer__header {
     .el-drawer__title {
-      color: #1A1A1A !important;  // 强制使用深黑色，与对话框标题一致
+      color: $law-gray-900 !important;  // 使用设计令牌，与对话框标题一致
     }
   }
 }
@@ -441,7 +441,7 @@
   // 标题样式 - 与对话框标题保持一致，使用深黑色
   ::v-deep .el-drawer__header {
     .el-drawer__title {
-      color: #1A1A1A !important;  // 强制使用深黑色，与对话框标题一致
+      color: $law-gray-900 !important;  // 使用设计令牌，与对话框标题一致
     }
   }
 }

@@ -29,7 +29,7 @@ import ChartEmpty from './ChartEmpty'
 import { buildTooltipTitle, buildTooltipRow } from '@/utils/dashboard'
 
 const SERIES_COLORS = {
-  case: '#1A5F7A',
+  case: '#725A45',
   media: '#2E7D32',
   incidentRecord: '#0277BD',
   writ: '#F57C00',

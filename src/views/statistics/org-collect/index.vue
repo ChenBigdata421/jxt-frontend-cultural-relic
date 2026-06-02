@@ -108,7 +108,7 @@ import { addThousandSeparator, formatFileSizeFromKB } from '@/utils/dashboard'
 import { getOrgCollectStats } from '@/api/evidence/statistics'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 
-const PALETTE = ['#1A5F7A', '#2E7D32', '#F57C00', '#0277BD', '#7B1FA2', '#C62828', '#00838F', '#4E342E']
+const PALETTE = ['#725A45', '#2E7D32', '#E67E22', '#2980B9', '#7B1FA2', '#C0392B', '#00897B', '#8D6E63']
 
 const METRIC_LABELS = {
   media_count: '媒体数量',

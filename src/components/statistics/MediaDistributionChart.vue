@@ -30,7 +30,7 @@ import { addThousandSeparator } from '@/utils/dashboard'
 
 // mediaCate 值 → 颜色/名称映射（后端 MediaCate int 枚举）
 const mediaCateMap = {
-  1: { name: '视频', color: '#1A5F7A' },
+  1: { name: '视频', color: '#725A45' },
   2: { name: '音频', color: '#2E7D32' },
   3: { name: '图片', color: '#F57C00' },
   4: { name: '文档', color: '#0277BD' },

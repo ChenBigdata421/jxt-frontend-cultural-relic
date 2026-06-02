@@ -25,7 +25,7 @@ import { formatFileSizeFromKB } from '@/utils/dashboard'
 
 // mediaCate → 名称/颜色
 const mediaCateMap = {
-  1: { name: '视频', color: '#1A5F7A' },
+  1: { name: '视频', color: '#725A45' },
   2: { name: '音频', color: '#2E7D32' },
   3: { name: '图片', color: '#F57C00' },
   4: { name: '文档', color: '#0277BD' },

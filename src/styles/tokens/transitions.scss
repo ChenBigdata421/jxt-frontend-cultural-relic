@@ -1,42 +1,43 @@
 // ============================================
 // JXT 数字证据管理平台 - 过渡动画系统
 // ============================================
+// 所有微交互控制在 150-250ms，遵守 prefers-reduced-motion
 
 // ============================================
 // 过渡时间
 // ============================================
-$transition-fast: 150ms;         // 快速交互（按钮悬停）
-$transition-base: 250ms;         // 标准交互（菜单展开）
-$transition-normal: 300ms;       // 复杂动画（页面切换）
-$transition-slow: 350ms;         // 慢速动画（模态框）
+$transition-fast: 150ms;         // 快速交互（按钮 hover/active、输入框聚焦）
+$transition-base: 200ms;         // 标准交互（下拉展开/收起、对话框出现、页面切换）
+$transition-normal: 250ms;       // 复杂动画（侧边栏折叠/展开）
+$transition-slow: 300ms;         // 慢速动画（预留）
 
 // ============================================
 // 缓动函数
 // ============================================
-$ease-out: cubic-bezier(0, 0, 0.2, 1);
-$ease-in: cubic-bezier(0.4, 0, 1, 1);
-$ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+$ease-out: ease-out;              // 进入动画（自然）
+$ease-in: ease-in;                // 退出动画
+$ease-in-out: ease-in-out;        // 双向动画
 $ease-sharp: cubic-bezier(0.4, 0, 0.6, 1);
 
 // ============================================
 // 预设过渡
 // ============================================
-$transition-all: all $transition-base $ease-in-out;
+$transition-all: all $transition-base $ease-out;
 $transition-color: color $transition-fast $ease-out;
 $transition-background: background-color $transition-fast $ease-out;
 $transition-border: border-color $transition-fast $ease-out;
-$transition-shadow: box-shadow $transition-base $ease-in-out;
-$transition-transform: transform $transition-base $ease-in-out;
-$transition-opacity: opacity $transition-base $ease-in-out;
+$transition-shadow: box-shadow $transition-base $ease-out;
+$transition-transform: transform $transition-normal $ease-in-out;
+$transition-opacity: opacity $transition-base $ease-out;
 
 // ============================================
 // 组件特定过渡
 // ============================================
 $transition-button: all $transition-fast $ease-out;
 $transition-input: border-color $transition-fast $ease-out, box-shadow $transition-fast $ease-out;
-$transition-menu: all $transition-base $ease-in-out;
-$transition-modal: all $transition-slow $ease-in-out;
-$transition-dropdown: all $transition-base $ease-in-out;
+$transition-menu: all $transition-normal $ease-in-out;
+$transition-modal: all $transition-base $ease-out;
+$transition-dropdown: all $transition-base $ease-out;
 
 // ============================================
 // 过渡 Mixins

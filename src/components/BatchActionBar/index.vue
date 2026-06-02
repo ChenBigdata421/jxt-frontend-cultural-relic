@@ -66,20 +66,20 @@ export default {
 // ========== Secondary Button 样式 ==========
 .action-btn {
   &.secondary {
-    background-color: rgba(26, 95, 122, 0.1);
-    color: #1A5F7A;
+    background-color: rgba(114, 90, 69, 0.1);
+    color: $law-primary;
     border: none;
 
     &:hover {
-      background-color: rgba(26, 95, 122, 0.2);
+      background-color: rgba(114, 90, 69, 0.2);
     }
 
     &:active {
-      background-color: rgba(26, 95, 122, 0.3);
+      background-color: rgba(114, 90, 69, 0.3);
     }
 
     &:focus {
-      outline: 2px solid #1A5F7A;
+      outline: 2px solid $law-primary;
       outline-offset: 2px;
     }
 

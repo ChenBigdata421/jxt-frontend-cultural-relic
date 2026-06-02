@@ -670,7 +670,7 @@ export default {
 <style scoped>
 /* ==================== 任务信息卡片 ==================== */
 .task-info-card {
-  background: #ECEFF1;
+  background: #F4F5F7;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 24px;
@@ -691,7 +691,7 @@ export default {
 .task-info-label {
   font-size: 14px;
   font-weight: 500;
-  color: #546E7A;
+  color: #737679;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -699,7 +699,7 @@ export default {
 .task-info-value {
   font-size: 16px;
   font-weight: 600;
-  color: #1A1A1A;
+  color: var(--law-gray-900, #1A1B1C);
 }
 
 /* ==================== 优先级徽章 ==================== */
@@ -1046,7 +1046,7 @@ export default {
 .enhanced-form-item >>> .el-form-item__label {
   font-size: 13px;
   font-weight: 500;
-  color: #546E7A;
+  color: #737679;
   line-height: 32px !important;
   height: auto;
   flex-shrink: 0;
@@ -1177,32 +1177,32 @@ export default {
 
 /* ========== Primary Button（主要按钮） ========== */
 .action-btn.primary-btn {
-  background-color: #1A5F7A;
+  background-color: var(--law-primary, #725A45);
   color: #FFFFFF;
   border: none;
-  box-shadow: 0 2px 4px rgba(26, 95, 122, 0.2);
+  box-shadow: 0 2px 4px rgba(114, 90, 69, 0.2);
 }
 
 .action-btn.primary-btn:hover {
-  background-color: #2E86AB;
-  box-shadow: 0 4px 8px rgba(26, 95, 122, 0.3);
+  background-color: var(--law-primary-600, #5E4938);
+  box-shadow: 0 4px 8px rgba(114, 90, 69, 0.3);
   transform: none;
 }
 
 .action-btn.primary-btn:active {
-  background-color: #255A7A;
+  background-color: var(--law-primary-700, #4C3B2E);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .action-btn.primary-btn:focus {
-  outline: 2px solid #1A5F7A;
+  outline: 2px solid var(--law-primary, #725A45);
   outline-offset: 2px;
 }
 
 /* ========== Secondary Button（次要按钮 - Danger色） ========== */
 .action-btn.secondary-btn {
   background-color: rgba(245, 108, 108, 0.1);
-  color: #F56C6C;
+  color: var(--law-danger, #C0392B);
   border: 1px solid rgba(245, 108, 108, 0.3);
 }
 
@@ -1217,20 +1217,20 @@ export default {
 }
 
 .action-btn.secondary-btn:focus {
-  outline: 2px solid #F56C6C;
+  outline: 2px solid var(--law-danger, #C0392B);
   outline-offset: 2px;
 }
 
 /* ========== Tertiary Button（三级按钮） ========== */
 .action-btn.tertiary-btn {
   background-color: transparent;
-  color: #606266;
+  color: var(--law-gray-600, #5A5C5F);
   border: none;
 }
 
 .action-btn.tertiary-btn:hover {
   background-color: rgba(0, 0, 0, 0.04);
-  color: #303133;
+  color: var(--law-gray-800, #2C2D2F);
 }
 
 .action-btn.tertiary-btn:active {
@@ -1238,7 +1238,7 @@ export default {
 }
 
 .action-btn.tertiary-btn:focus {
-  outline: 2px solid #909399;
+  outline: 2px solid var(--law-gray-400, #9EA1A4);
   outline-offset: 2px;
 }
 

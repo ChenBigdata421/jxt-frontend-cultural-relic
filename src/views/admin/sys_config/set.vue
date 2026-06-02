@@ -11,7 +11,7 @@
                     <el-input v-model="form.sys_app_name" placeholder="请输入系统名称" clearable :style="{width: '100%'}" />
                   </el-form-item>
                   <el-form-item label="系统logo" prop="sys_app_logo" required>
-                    <img v-if="form.sys_app_logo" :src="form.sys_app_logo" class="el-upload el-upload--picture-card" style="float:left">
+                    <img v-if="logoPreviewUrl" :src="logoPreviewUrl" class="el-upload el-upload--picture-card" style="float:left">
                     <el-upload ref="sys_app_logo" :headers="headers" :file-list="sys_app_logofileList" :action="sys_app_logoAction" style="float:left" :before-upload="sys_app_logoBeforeUpload" list-type="picture-card" :show-file-list="false" :on-success="uploadSuccess">
                       <i class="el-icon-plus" />
                     </el-upload>
@@ -65,6 +65,7 @@ export default {
       configList: [],
       formConf: {},
       headers: { 'Authorization': 'Bearer ' + getToken() },
+      logoPreviewUrl: '',
       form: {
         sys_app_name: undefined,
         sys_app_logo: null,
@@ -153,7 +154,14 @@ export default {
       console.log('response:', response)
       // 使用相对路径，让nginx处理静态文件
       this.form.sys_app_logo = response.data.full_path
+      this.logoPreviewUrl = this.getLogoPreviewUrl(response.data.full_path)
       console.log(response.data.full_path)
+    },
+    getLogoPreviewUrl(url) {
+      if (!url) {
+        return ''
+      }
+      return url + (url.indexOf('?') === -1 ? '?' : '&') + 't=' + Date.now()
     },
     /** 查询参数列表 */
     getList() {
@@ -162,6 +170,7 @@ export default {
         this.configList = response.data
         this.loading = false
         this.form = this.configList
+        this.logoPreviewUrl = this.form.sys_app_logo
         // this.sys_app_logofileList = [this.configList.sys_app_logo]
         // this.fillFormData(this.elForm, this.configList)
         // 更新表单

@@ -69,7 +69,7 @@ const CARD_DEFS = [
     key: 'totalMedia',
     label: '总采集量',
     icon: 'el-icon-film',
-    color: '#1A5F7A',
+    color: '#725A45',
     format: 'number'
   },
   {
@@ -275,7 +275,7 @@ export default {
       color: #3D8B40;
     }
     &--down {
-      color: #C62828;
+      color: $law-danger;
     }
     &--neutral {
       color: $law-gray-500;

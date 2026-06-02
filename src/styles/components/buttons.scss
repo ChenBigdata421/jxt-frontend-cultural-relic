@@ -36,20 +36,20 @@
 
   // ========== Secondary Button 样式 ==========
   &.secondary {
-    background-color: rgba(26, 95, 122, 0.1);
-    color: #1A5F7A;
+    background-color: rgba($law-primary, 0.1);
+    color: $law-primary;
     border: none;
 
     &:hover {
-      background-color: rgba(26, 95, 122, 0.2);
+      background-color: rgba($law-primary, 0.2);
     }
 
     &:active {
-      background-color: rgba(26, 95, 122, 0.3);
+      background-color: rgba($law-primary, 0.3);
     }
 
     &:focus {
-      outline: 2px solid #1A5F7A;
+      outline: 2px solid $law-primary;
       outline-offset: 2px;
     }
 
@@ -62,12 +62,12 @@
   // ========== Tertiary Button 样式 ==========
   &.tertiary {
     background-color: transparent;
-    color: #606266;
+    color: $law-gray-600;
     border: none;
 
     &:hover {
       background-color: rgba(0, 0, 0, 0.04);
-      color: #303133;
+      color: $law-gray-800;
     }
 
     &:active {
@@ -75,7 +75,7 @@
     }
 
     &:focus {
-      outline: 2px solid #909399;
+      outline: 2px solid $law-gray-400;
       outline-offset: 2px;
     }
 
@@ -89,12 +89,12 @@
 // ========== 独立的 Tertiary 样式（用于对话框按钮等）==========
 .tertiary {
   background-color: transparent !important;
-  color: #606266 !important;
+  color: $law-gray-600 !important;
   border: none !important;
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.04) !important;
-    color: #303133 !important;
+    color: $law-gray-800 !important;
   }
 
   &:active {
@@ -102,7 +102,7 @@
   }
 
   &:focus {
-    outline: 2px solid #909399;
+    outline: 2px solid $law-gray-400;
     outline-offset: 2px;
   }
 
@@ -115,20 +115,20 @@
 // ========== Tertiary Danger Button 样式 ==========
 .action-btn.tertiary-danger {
   background-color: transparent;
-  color: #F56C6C; // 危险色
+  color: $law-danger;
   border: none;
 
   &:hover {
-    background-color: rgba(245, 108, 108, 0.1);
-    color: #F56C6C;
+    background-color: rgba($law-danger, 0.1);
+    color: $law-danger;
   }
 
   &:active {
-    background-color: rgba(245, 108, 108, 0.2);
+    background-color: rgba($law-danger, 0.2);
   }
 
   &:focus {
-    outline: 2px solid #F56C6C;
+    outline: 2px solid $law-danger;
     outline-offset: 2px;
   }
 
@@ -153,12 +153,12 @@
     font-size: $font-size-xs;
     border-radius: 4px;
     min-width: 72px;
-    background-color: #1A5F7A;
-    border-color: #1A5F7A;
+    background-color: $law-primary;
+    border-color: $law-primary;
 
     &:hover {
-      background-color: #2E86AB;
-      border-color: #2E86AB;
+      background-color: $law-primary-600;
+      border-color: $law-primary-600;
     }
   }
 
@@ -175,10 +175,10 @@
 // ========== 下拉菜单危险项样式 ==========
 // dropdown-menu 挂载在 body 上，scoped 样式无效，必须使用全局样式
 .el-dropdown-menu__item.danger-dropdown-item {
-  color: #F56C6C;
+  color: $law-danger;
 }
 
 .el-dropdown-menu__item.danger-dropdown-item:hover {
-  background-color: rgba(245, 108, 108, 0.1);
-  color: #F56C6C;
+  background-color: rgba($law-danger, 0.1);
+  color: $law-danger;
 }

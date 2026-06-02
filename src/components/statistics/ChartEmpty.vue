@@ -57,7 +57,7 @@ export default {
   min-height: 200px;
   width: 100%;
   text-align: center;
-  color: #909399;
+  color: var(--law-gray-400, #9EA1A4);
   font-size: 14px;
 
   i {
@@ -72,7 +72,7 @@ export default {
     align-items: center;
     i {
       font-size: 28px;
-      color: #1A5F7A;
+      color: #725A45;
       margin-bottom: 8px;
     }
     span {
@@ -102,7 +102,7 @@ export default {
   &__msg {
     margin: 4px 0;
     font-size: 13px;
-    color: #909399;
+    color: var(--law-gray-400, #9EA1A4);
   }
 }
 </style>

@@ -77,12 +77,12 @@ export default {
   .screenfull-icon {
     width: 20px;
     height: 20px;
-    fill: #1A5F7A;
+    fill: #725A45;
     transition: fill 0.3s;
   }
 
   &:hover .screenfull-icon {
-    fill: #0D47A1;
+    fill: #4C3B2E;
   }
 }
 </style>

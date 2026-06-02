@@ -1,22 +1,22 @@
 // ============================================
 // JXT 数字证据管理平台 - 色彩系统
 // ============================================
-// 基于司法权威和科技感的配色方案
-// 体现专业性、权威性、安全性
+// 基于朱砂褐（文物鉴定）的配色方案
+// 体现专业性、权威性、文化底蕴
 
 // ============================================
-// 主色 - 司法蓝（权威、专业、可靠）
+// 主色 - 朱砂褐（权威、专业、文化）
 // ============================================
-$law-primary-50: #E3F2FD;
-$law-primary-100: #BBDEFB;
-$law-primary-200: #90CAF9;
-$law-primary-300: #64B5F6;
-$law-primary-400: #42A5F5;
-$law-primary-500: #1A5F7A;     // 主蓝色 - 用于主要操作、导航激活
-$law-primary-600: #1565C0;
-$law-primary-700: #0D47A1;
-$law-primary-800: #0D3B4D;     // 深蓝色 - 用于强调、层级
-$law-primary-900: #0A2D3A;
+$law-primary-50: #F2EEEB;
+$law-primary-100: #DFD7D0;
+$law-primary-200: #C4B5A9;
+$law-primary-300: #A38E7D;
+$law-primary-400: #8A7562;
+$law-primary-500: #725A45;     // 主褐色 - 用于主要操作、导航激活
+$law-primary-600: #5E4938;
+$law-primary-700: #4C3B2E;
+$law-primary-800: #33271D;     // 深褐色 - 用于强调、层级
+$law-primary-900: #221912;
 
 // 主色别名（向后兼容）
 $law-primary: $law-primary-500;
@@ -25,10 +25,10 @@ $law-primary-dark: $law-primary-800;
 $law-primary-contrast: #FFFFFF;
 
 // ============================================
-// 辅助色 - 司法灰蓝（稳重、专业）
+// 辅助色 - 暖灰（稳重、专业）
 // ============================================
 $law-secondary: #455A64;       // 灰蓝色 - 用于次要元素
-$law-accent: #0D47A1;          // 强调蓝 - 用于重要提示
+$law-accent: #4C3B2E;          // 强调褐 - 用于重要提示
 
 // ============================================
 // 功能色
@@ -39,68 +39,74 @@ $law-success-light: #4CAF50;
 $law-success-bg: #E8F5E9;
 
 // 警告 - 待处理、注意
-$law-warning: #F57C00;         // 深橙色
-$law-warning-light: #FF9800;
+$law-warning: #E67E22;         // 深橙色
+$law-warning-light: #F39C12;
 $law-warning-bg: #FFF3E0;
 
 // 危险 - 删除、异常、紧急
-$law-danger: #C62828;          // 深红色（警示感）
-$law-danger-light: #EF5350;
-$law-danger-bg: #FFEBEE;
+$law-danger: #C0392B;          // 深红色（警示感）
+$law-danger-light: #E74C3C;
+$law-danger-bg: #FDEDEC;
 
 // 信息 - 一般提示
-$law-info: #0277BD;            // 深蓝色
-$law-info-light: #03A9F4;
-$law-info-bg: #E1F5FE;
+$law-info: #2980B9;            // 深蓝色
+$law-info-light: #3498DB;
+$law-info-bg: #EBF5FB;
 
 // ============================================
-// 中性色阶梯（用于文本、边框、背景）
+// 中性色阶梯（用于文本、边框、背景）- 暖灰
 // ============================================
-$law-gray-50: #ECEFF1;         // 最浅背景
-$law-gray-100: #F5F5F5;        // 页面背景
-$law-gray-200: #B0BEC5;        // 分割线
-$law-gray-300: #E0E0E0;        // 边框
-$law-gray-400: #78909C;        // 禁用状态
-$law-gray-500: #546E7A;        // 次要文本
-$law-gray-600: #757575;        // 辅助文本
-$law-gray-700: #616161;        // 正文
-$law-gray-800: #424242;        // 标题
-$law-gray-900: #212121;        // 最重要标题
+$law-gray-50: #F4F5F7;         // 最浅背景
+$law-gray-100: #EBECEd;        // 页面背景（暖灰）
+$law-gray-200: #D1D3D6;        // 分割线
+$law-gray-300: #B8BABC;        // 边框
+$law-gray-400: #9EA1A4;        // 禁用状态
+$law-gray-500: #737679;        // 次要文本
+$law-gray-600: #5A5C5F;        // 辅助文本
+$law-gray-700: #424345;        // 正文
+$law-gray-800: #2C2D2F;        // 标题
+$law-gray-900: #1A1B1C;        // 最重要标题
 
 // ============================================
 // 背景色
 // ============================================
-$law-bg-page: #F5F7FA;         // 页面背景（浅蓝灰）
+$law-bg-page: #F4F5F7;         // 页面背景（浅暖灰）
 $law-bg-card: #FFFFFF;         // 卡片背景
 $law-bg-paper: #FFFFFF;        // 纸张背景（向后兼容别名）
-$law-bg-sidebar: #001529;      // 侧边栏背景（深蓝黑）
+$law-bg-sidebar: #33271D;      // 侧边栏背景（深褐）
 $law-bg-header: #FFFFFF;       // 顶部栏背景
-$law-bg-overlay: rgba(0, 0, 0, 0.55); // 模态框遮罩
+$law-bg-overlay: rgba(34, 25, 18, 0.55); // 模态框遮罩
 
 // ============================================
 // 状态色 - 用于表格状态列
 // ============================================
-$law-status-archived: #607D8B;  // 已归档 - 灰蓝
-$law-status-completed: #4CAF50; // 已结案 - 绿色
-$law-status-processing: #FF9800;// 处理中 - 橙色
-$law-status-pending: #2196F3;   // 待处理 - 蓝色
-$law-status-rejected: #C62828;  // 已驳回 - 红色
+$law-status-archived: #737679;  // 已归档 - 铅灰（中性色阶梯 Gray 500）
+$law-status-completed: #2E7D32; // 已完成 - 深绿（与功能色成功一致）
+$law-status-processing: #2980B9;// 进行中 - 深蓝（与功能色信息一致）
+$law-status-pending: #E67E22;   // 待处理 - 深橙（与功能色警告一致）
+$law-status-rejected: #C0392B;  // 已驳回 - 深红（与功能色危险一致）
 $law-status-review: #7B1FA2;    // 待审核 - 紫色
 
 // ============================================
 // 优先级色
 // ============================================
-$law-priority-urgent: #C62828;  // 紧急
-$law-priority-high: #F57C00;    // 高
-$law-priority-medium: #0277BD;  // 中
+$law-priority-urgent: #C0392B;  // 紧急
+$law-priority-high: #E67E22;    // 高
+$law-priority-medium: #2980B9;  // 中
 $law-priority-low: #607D8B;     // 低
 
 // ============================================
 // 登录页专用色
 // ============================================
-$law-login-bg-start: #1A5F7A;   // 渐变起始色
-$law-login-bg-end: #0D3B4D;     // 渐变结束色
+$law-login-bg-start: #725A45;   // 渐变起始色
+$law-login-bg-end: #221912;     // 渐变结束色
 $law-login-card-bg: rgba(255, 255, 255, 0.95); // 登录卡片背景
+
+// ============================================
+// 品牌金
+// ============================================
+$law-gold: #B8860B;
+$law-gold-light: #DAA520;
 
 // ============================================
 // 导航色
@@ -110,30 +116,30 @@ $law-nav-bg: #FFFFFF;
 $law-nav-border: #E0E0E0;
 $law-nav-text: #616161;
 $law-nav-text-hover: #212121;
-$law-nav-text-active: #1A5F7A;
-$law-nav-indicator: #1A5F7A;
-$law-nav-hover-bg: rgba(26, 95, 122, 0.06);
+$law-nav-text-active: #725A45;
+$law-nav-indicator: #725A45;
+$law-nav-hover-bg: rgba(114, 90, 69, 0.06);
 
 // 侧边栏导航（深色主题）
 $law-sidebar-width: 220px;
 $law-sidebar-collapsed-width: 64px;
-$law-sidebar-bg: #001529;
+$law-sidebar-bg: #33271D;
 $law-sidebar-border: rgba(255, 255, 255, 0.08);
 $law-sidebar-text: rgba(255, 255, 255, 0.65);
 $law-sidebar-text-hover: rgba(255, 255, 255, 0.85);
 $law-sidebar-text-active: #FFFFFF;
-$law-sidebar-active-bg: #1A5F7A;
+$law-sidebar-active-bg: #725A45;
 $law-sidebar-hover-bg: rgba(255, 255, 255, 0.06);
-$law-sidebar-submenu-bg: #000C17;
+$law-sidebar-submenu-bg: #2A1F16;
 
 // 侧边栏导航（浅色主题）
 $law-sidebar-light-bg: #FFFFFF;
-$law-sidebar-light-border: #E0E0E0;
-$law-sidebar-light-text: #616161;
-$law-sidebar-light-text-hover: #212121;
-$law-sidebar-light-text-active: #1A5F7A;
-$law-sidebar-light-active-bg: rgba(26, 95, 122, 0.1);
-$law-sidebar-light-hover-bg: #F5F5F5;
+$law-sidebar-light-border: #B8BABC;
+$law-sidebar-light-text: #424345;
+$law-sidebar-light-text-hover: #1A1B1C;
+$law-sidebar-light-text-active: #725A45;
+$law-sidebar-light-active-bg: rgba(114, 90, 69, 0.1);
+$law-sidebar-light-hover-bg: #EBECEd;
 
 // ============================================
 // 导出为 CSS 变量（用于 Vue 组件中）
@@ -143,6 +149,8 @@ $law-sidebar-light-hover-bg: #F5F5F5;
   --law-primary: #{$law-primary};
   --law-primary-light: #{$law-primary-light};
   --law-primary-dark: #{$law-primary-dark};
+  --law-primary-600: #{$law-primary-600};
+  --law-primary-700: #{$law-primary-700};
 
   // 功能色
   --law-success: #{$law-success};
@@ -175,4 +183,56 @@ $law-sidebar-light-hover-bg: #F5F5F5;
   --law-status-pending: #{$law-status-pending};
   --law-status-rejected: #{$law-status-rejected};
   --law-status-review: #{$law-status-review};
+
+  // ============================================
+  // JXT 设计规范别名（--jxt-* 前缀）
+  // 渐进式迁移：新页面使用 --jxt-*，旧页面继续使用 --law-*
+  // ============================================
+  --jxt-primary: #{$law-primary};
+  --jxt-primary-light: #{$law-primary-light};
+  --jxt-primary-dark: #{$law-primary-dark};
+  --jxt-primary-50: #{$law-primary-50};
+  --jxt-primary-100: #{$law-primary-100};
+  --jxt-primary-600: #{$law-primary-600};
+  --jxt-primary-700: #{$law-primary-700};
+
+  --jxt-success: #{$law-success};
+  --jxt-warning: #{$law-warning};
+  --jxt-danger: #{$law-danger};
+  --jxt-info: #{$law-info};
+
+  --jxt-gold: #{$law-gold};
+  --jxt-gold-light: #{$law-gold-light};
+
+  --jxt-bg-page: #{$law-bg-page};
+  --jxt-bg-card: #{$law-bg-card};
+  --jxt-bg-sidebar: #{$law-bg-sidebar};
+
+  --jxt-text-primary: #{$law-gray-800};
+  --jxt-text-heading: #{$law-gray-900};
+  --jxt-text-body: #{$law-gray-600};
+  --jxt-text-secondary: #{$law-gray-500};
+  --jxt-text-placeholder: #{$law-gray-400};
+  --jxt-text-disabled: #{$law-gray-300};
+
+  --jxt-border: #{$law-gray-200};
+  --jxt-border-light: #{$law-gray-100};
+
+  --jxt-radius-sm: 4px;
+  --jxt-radius-md: 6px;
+  --jxt-radius-lg: 8px;
+
+  --jxt-shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03);
+  --jxt-shadow-md: 0 4px 6px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.03);
+  --jxt-shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.03);
+
+  --jxt-duration-fast: 150ms;
+  --jxt-duration-normal: 200ms;
+  --jxt-duration-slow: 250ms;
+  --jxt-easing-out: ease-out;
+  --jxt-easing-in-out: ease-in-out;
+
+  --jxt-font-base: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif;
+  --jxt-font-heading: "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+  --jxt-font-number: "SF Mono", "Roboto Mono", Consolas, monospace;
 }

@@ -292,7 +292,7 @@
 
 // 抽屉头部样式 - 覆盖 Element UI 默认的灰色 #72767b
 .el-drawer__header {
-  color: #1A1A1A !important;  // 深黑色，与对话框标题一致
+  color: var(--law-gray-900, #1A1B1C) !important;  // 深黑标题色，与对话框标题一致
 }
 
 .delete-popconfirm{

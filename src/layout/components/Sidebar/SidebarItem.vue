@@ -8,7 +8,7 @@
       </app-link>
     </template>
 
-    <el-submenu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body :style="{ backgroundColor: '#77797d' }">
+    <el-submenu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body :style="{ backgroundColor: '#4C3B2E' }">
       <template slot="title">
         <item v-if="item.meta" :icon="item.meta && item.meta.icon" :title="item.meta.title" />
       </template>

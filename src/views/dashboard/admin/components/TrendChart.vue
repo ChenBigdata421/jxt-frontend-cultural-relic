@@ -30,9 +30,9 @@ import { buildTooltipTitle, buildTooltipRow } from '@/utils/dashboard'
 
 const SERIES_COLORS = {
   media: '#2E7D32',
-  writ: '#F57C00',
+  writ: '#E67E22',
   archive: '#7B1FA2',
-  task: '#C62828'
+  task: '#C0392B'
 }
 
 const SERIES_DEFAULT_SELECTED = {

@@ -5,15 +5,19 @@
 // ============================================
 // 字体家族
 // ============================================
-// 中文字体优先，确保专业感
-$font-family-base: "SF Pro Text", "PingFang SC", "Hiragino Sans GB",
-                   "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+// 正文/界面字体 - 系统字体优先，零加载开销
+$font-family-base: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+                   "Noto Sans SC", Arial, sans-serif;
 
-// 数字字体（用于数据展示）
-$font-family-number: "SF Mono", "Roboto Mono", "Consolas", monospace;
+// 标题字体（宋体/衬线体暗示历史感与文化底蕴）
+$font-family-heading: "Noto Serif SC", "Source Han Serif SC", "STSong",
+                      "SimSun", Georgia, serif;
+
+// 数字字体（用于数据展示、表格数字列对齐）
+$font-family-number: "SF Mono", "Roboto Mono", "Cascadia Code", Consolas, monospace;
 
 // 代码字体
-$font-family-code: "SF Mono", Monaco, "Consolas", "Liberation Mono", "Courier New", monospace;
+$font-family-code: "SF Mono", "Cascadia Code", Consolas, "Courier New", monospace;
 
 // ============================================
 // 字体大小阶梯 - 基于 1.25 倍率的完美比例

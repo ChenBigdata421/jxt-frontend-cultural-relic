@@ -65,21 +65,21 @@ export default {
     gap: $spacing-2;
     font-size: 13px;
     font-weight: $font-weight-medium;
-    color: #1A5F7A; // 与铃铛颜色保持一致
+    color: #725A45; // 与铃铛颜色保持一致
     white-space: nowrap;
 
     .date-part {
-      color: #1A5F7A;
+      color: #725A45;
     }
 
     .separator {
-      color: #1A5F7A;
+      color: #725A45;
       opacity: 0.5;
       margin: 0 $spacing-1;
     }
 
     .time-part {
-      color: #1A5F7A;
+      color: #725A45;
       font-family: 'Consolas', 'Monaco', monospace; // 使用等宽字体显示时间
       font-weight: $font-weight-semibold;
     }

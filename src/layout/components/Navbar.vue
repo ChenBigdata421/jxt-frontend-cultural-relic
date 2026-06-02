@@ -311,7 +311,7 @@ export default {
         .user-name {
           font-size: 14px;
           font-weight: $font-weight-medium;
-          color: #1A5F7A;
+          color: $law-primary;
           line-height: 1.2;
           max-width: 100px;
           overflow: hidden;
@@ -328,7 +328,7 @@ export default {
           .user-name {
             font-size: 13px;
             font-weight: $font-weight-medium;
-            color: #1A5F7A;
+            color: $law-primary;
             line-height: 1.2;
             max-width: 100px;
             overflow: hidden;

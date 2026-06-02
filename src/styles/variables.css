@@ -1,13 +1,13 @@
 :export {
-  menuActiveText: #409EFF;
+  menuActiveText: #725A45;
   subMenuActiveText: #f4f4f5;
-  menuBg: #001529;
-  menuHover: #000c17;
+  menuBg: #33271D;
+  menuHover: #2A1F16;
   menuLightBg: #ffffff;
-  menuLightHover: #f0f1f5;
-  subMenuBg: #000c17;
-  subMenuHover: #001528;
-  sideBarWidth: 210px;
+  menuLightHover: #EBECEd;
+  subMenuBg: #2A1F16;
+  subMenuHover: #33271D;
+  sideBarWidth: 220px;
   sidebarTitle: #ffffff;
-  sidebarLightTitle: #001529;
+  sidebarLightTitle: #33271D;
 }

@@ -129,19 +129,19 @@
     display: inline-block;
 
     &.pending {
-      background-color: #909399;
+      background-color: $law-status-pending;
     }
 
     &.processing {
-      background-color: #409eff;
+      background-color: $law-status-processing;
     }
 
     &.completed {
-      background-color: #67c23a;
+      background-color: $law-status-completed;
     }
 
     &.archived {
-      background-color: #e6a23c;
+      background-color: $law-status-archived;
     }
   }
 

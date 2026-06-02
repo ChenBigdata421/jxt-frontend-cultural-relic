@@ -165,10 +165,10 @@ export default {
 .task-id {
   font-family: 'Courier New', monospace;
   font-size: 12px;
-  color: #607D8B;
+  color: var(--law-gray-500, #737679);
 }
 
 .text-muted {
-  color: #909399;
+  color: var(--law-gray-400, #9EA1A4);
 }
 </style>

@@ -1617,8 +1617,8 @@ export default {
 /* 下拉菜单项样式（不能用 scoped，因为 dropdown-menu 是挂载到 body 的） */
 .secondary-badge {
   display: inline-block;
-  background-color: rgba(26, 95, 122, 0.1);
-  color: #1A5F7A;
+  background-color: rgba(114, 90, 69, 0.1);
+  color: #725A45;
   padding: 2px 8px;
   border-radius: 3px;
 }

@@ -545,7 +545,7 @@ export default {
   position: relative;
   min-height: 500px;
   padding: $spacing-10;
-  background: rgba(26, 95, 122, 0.25);
+  background: rgba(114, 90, 69, 0.25);
   backdrop-filter: blur(10px);
   color: #fff;
 
@@ -560,19 +560,19 @@ export default {
   }
 
   .img {
-    width: 240px;
-    height: 90px;
+    width: 480px;
+    height: 180px;
     border-radius: $radius-sm;
     object-fit: contain;
     margin-bottom: $spacing-6;
   }
 
   .title {
-    @include text-base;
+    @include text-3xl;
     text-align: center;
     color: #fff;
     letter-spacing: 2px;
-    font-weight: $font-weight-semibold;
+    font-weight: $font-weight-bold;
   }
 }
 

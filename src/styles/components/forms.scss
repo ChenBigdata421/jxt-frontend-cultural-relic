@@ -41,7 +41,7 @@
 .vue-treeselect__label {
   font-size: 14px !important;
   font-weight: 400 !important;
-  color: #1A1A1A !important;
+  color: $law-gray-900 !important;
   line-height: 1.5 !important;
 }
 
@@ -49,19 +49,19 @@
 .vue-treeselect__option--highlight .vue-treeselect__label,
 .vue-treeselect__option--highlight:hover .vue-treeselect__label {
   font-weight: 400 !important;
-  color: #1A1A1A !important;
-  background-color: rgba(26, 95, 122, 0.08) !important;
+  color: $law-gray-900 !important;
+  background-color: rgba($law-primary, 0.08) !important;
 }
 
 // 树节点选中状态
 .vue-treeselect__option--selected .vue-treeselect__label {
   font-weight: 500 !important;
-  color: #1A5F7A !important;
+  color: $law-primary !important;
 }
 
 // 树节点禁用状态
 .vue-treeselect__option--disabled .vue-treeselect__label {
-  color: #78909C !important;
+  color: $law-gray-400 !important;
   cursor: not-allowed !important;
   opacity: 0.6 !important;
 }
@@ -70,7 +70,7 @@
 .vue-treeselect__placeholder {
   font-size: 13px !important;
   font-weight: 400 !important;
-  color: #78909C !important;
+  color: $law-gray-400 !important;
 }
 
 // 当有选中值时，确保 placeholder 隐藏
@@ -82,7 +82,7 @@
 .vue-treeselect__single-value {
   font-size: 14px !important;
   font-weight: 400 !important;
-  color: #1A1A1A !important;
+  color: $law-gray-900 !important;
   line-height: 1.5 !important;
 }
 
@@ -90,14 +90,14 @@
 .vue-treeselect__multi-value-item {
   font-size: 13px !important;
   font-weight: 400 !important;
-  color: #1A1A1A !important;
+  color: $law-gray-900 !important;
 }
 
 // Treeselect 控制区域（输入框）样式
 .vue-treeselect__control {
   font-size: 14px !important;
   font-weight: 400 !important;
-  color: #1A1A1A !important;
+  color: $law-gray-900 !important;
   line-height: 1.5 !important;
 }
 
@@ -186,7 +186,7 @@
 
   &:focus {
     color: $law-gray-900;          // 焦点时保持深色
-    border-color: $law-primary;    // 边框变主色 #1A5F7A
+    border-color: $law-primary;    // 边框变主色 #725A45
   }
 }
 
@@ -523,7 +523,7 @@
   .el-form-item__error {
     font-size: $font-size-xs;            // 12px
     font-weight: $font-weight-normal;    // 400
-    color: $law-danger;                  // #C62828
+    color: $law-danger;                  // #C0392B
     line-height: $line-height-normal;    // 1.5
   }
 }

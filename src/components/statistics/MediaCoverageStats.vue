@@ -49,7 +49,7 @@ import ChartEmpty from './ChartEmpty'
 import { addThousandSeparator } from '@/utils/dashboard'
 
 const colorMap = {
-  archived: '#1A5F7A',
+  archived: '#725A45',
   case: '#2E7D32',
   incident: '#F57C00',
   locked: '#0277BD',
@@ -87,7 +87,7 @@ export default {
       return addThousandSeparator(val)
     },
     getColor(key) {
-      return colorMap[key] || '#1A5F7A'
+      return colorMap[key] || '#725A45'
     }
   }
 }

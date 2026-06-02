@@ -54,7 +54,7 @@
         justify-content: center;
 
         &.active {
-          color: $law-primary;              // #1A5F7A 执法主题色 ✓
+          color: $law-primary;              // #725A45 朱砂褐主题色 ✓
           background-color: rgba($law-primary, 0.1);
           font-weight: $font-weight-semibold; // 600 - 激活状态加粗
         }

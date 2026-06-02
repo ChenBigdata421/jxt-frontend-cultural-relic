@@ -31,7 +31,7 @@ import { buildTooltipTitle, buildTooltipRow } from '@/utils/dashboard'
 
 // 系列名 → 颜色映射（按设计文档 jxt 主题色系）
 const SERIES_PALETTE = [
-  '#1A5F7A', '#2E7D32', '#F57C00', '#0277BD', '#7B1FA2', '#00897B'
+  '#725A45', '#2E7D32', '#F57C00', '#0277BD', '#7B1FA2', '#00897B'
 ]
 
 export default {

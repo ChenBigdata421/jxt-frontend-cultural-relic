@@ -293,8 +293,8 @@ export default {
 
 // Element UI Badge 样式覆盖 - 使用全局样式避免深度选择器问题
 .notification-badge >>> .el-badge__content {
-  background-color: #F56C6C;
-  border-color: #F56C6C;
+  background-color: $law-danger;
+  border-color: $law-danger;
   font-weight: bold;
   box-shadow: 0 2px 8px rgba(245, 108, 108, 0.4);
   animation: pulse-badge 2s ease-in-out infinite;
@@ -308,7 +308,7 @@ export default {
   .bell-icon {
     width: 22px;
     height: 22px;
-    fill: #1A5F7A;
+    fill: $law-primary;
     transition: all $transition-base;
   }
 
@@ -316,7 +316,7 @@ export default {
     background: transparent;
 
     .bell-icon {
-      fill: #0D47A1;
+      fill: $law-primary-700;
       transform: scale(1.1);
     }
   }
@@ -392,17 +392,17 @@ export default {
   display: flex;
   align-items: flex-start;
   padding: 15px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid $law-gray-100;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color $transition-base;
 }
 
 .notification-item:hover {
-  background-color: #f5f7fa;
+  background-color: $law-gray-50;
 }
 
 .notification-item.unread {
-  background-color: #ecf5ff;
+  background-color: $law-primary-50;
 }
 
 .notification-icon {
@@ -423,17 +423,17 @@ export default {
 .notification-title {
   font-weight: bold;
   margin-bottom: 5px;
-  color: #303133;
+  color: $law-gray-800;
 }
 
 .notification-desc {
-  color: #606266;
+  color: $law-gray-600;
   margin-bottom: 5px;
   font-size: 14px;
 }
 
 .notification-time {
-  color: #909399;
+  color: $law-gray-400;
   font-size: 12px;
 }
 

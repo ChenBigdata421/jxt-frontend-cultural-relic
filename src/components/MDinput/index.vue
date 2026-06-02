@@ -214,8 +214,8 @@ export default {
   $color-white: white;
   $color-grey: #9E9E9E;
   $color-grey-light: #E0E0E0;
-  $color-blue: #2196F3;
-  $color-red: #F44336;
+  $color-blue: var(--law-info, #2980B9);
+  $color-red: var(--law-danger, #C0392B);
   $color-black: black;
   // Base clases:
   %base-bar-pseudo {
