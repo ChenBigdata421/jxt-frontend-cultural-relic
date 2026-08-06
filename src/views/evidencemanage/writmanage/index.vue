@@ -221,6 +221,7 @@
             align="center"
             prop="writScore"
             width="80"
+            sortable="custom"
           />
           <el-table-column
             v-if="isColumnVisible('isRelation')"

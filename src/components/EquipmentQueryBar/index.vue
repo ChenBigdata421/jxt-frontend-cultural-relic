@@ -15,6 +15,11 @@
           :status-options="statusOptions"
           :enable-use-options="enableUseOptions"
           :open-status-options="openStatusOptions"
+          :lifecycle-status-options="lifecycleStatusOptions"
+          :operability-status-options="operabilityStatusOptions"
+          :assignment-status-options="assignmentStatusOptions"
+          :runtime-status-options="runtimeStatusOptions"
+          :bwc-type-options="bwcTypeOptions"
           @search="handleQuickSearch"
           @reset="handleQuickSearchReset"
           @org-change="handleOrgChange"
@@ -91,6 +96,26 @@ export default {
       default: () => []
     },
     openStatusOptions: {
+      type: Array,
+      default: () => []
+    },
+    lifecycleStatusOptions: {
+      type: Array,
+      default: () => []
+    },
+    operabilityStatusOptions: {
+      type: Array,
+      default: () => []
+    },
+    assignmentStatusOptions: {
+      type: Array,
+      default: () => []
+    },
+    runtimeStatusOptions: {
+      type: Array,
+      default: () => []
+    },
+    bwcTypeOptions: {
       type: Array,
       default: () => []
     }

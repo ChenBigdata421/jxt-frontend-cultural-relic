@@ -382,13 +382,13 @@ export default {
           }
         },
         legend: hasDimension
-          ? { data: chartSeries.map(s => s.name), bottom: 0 }
+          ? { data: chartSeries.map(s => s.name), top: 0 }
           : undefined,
         grid: {
           left: 60,
           right: 30,
-          top: 20,
-          bottom: hasDimension ? 40 : 20
+          top: hasDimension ? 40 : 20,
+          bottom: 20
         },
         xAxis: {
           type: 'category',

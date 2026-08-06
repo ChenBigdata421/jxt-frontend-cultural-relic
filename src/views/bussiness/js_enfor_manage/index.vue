@@ -28,16 +28,6 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="是否执法视频">
-            <el-select v-model="queryParams.bool_enfor" placeholder="是否执法视频" clearable style="width: 170px;">
-              <el-option
-                v-for="dict in bool_enfor_options"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </el-form-item>
           <el-form-item>
             <el-button
               class="filter-item"
@@ -89,17 +79,6 @@
               <el-tag
                 disable-transitions
               >{{ media_cate_format(scope.row) }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="bool_enfor" label="是否是执法视频" width="120">
-            <!--作用域插槽实际上就是被使用的插槽向使用者传递信息，scope是一个对象，封装了来自el-table-column组件返回的信息-->
-            <template slot-scope="scope">
-              <!--这是一个条件表达式，用于动态设置 <el-tag> 的类型。如果 status 等于 1，则标签的类型为 'danger'（通常显示为红色），
-                否则为 'success'（通常显示为绿色）。-->
-              <el-tag
-                :type="scope.row.bool_enfor === 1 ? 'success' : 'danger'"
-                disable-transitions
-              >{{ bool_enfor_format(scope.row) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="organization_id" label="单位组织Id" width="100" />

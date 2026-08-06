@@ -105,6 +105,50 @@
             />
           </el-select>
         </div>
+        <!-- New BWC filter fields -->
+        <div v-if="fields.keyword" class="search-item">
+          <label class="search-label">{{ keywordLabel }}</label>
+          <el-input
+            v-model="searchForm.keyword"
+            :placeholder="`请输入${keywordLabel}`"
+            clearable
+            @keyup.enter.native="handleSearch"
+          />
+        </div>
+        <div v-if="fields.lifecycleStatus" class="search-item">
+          <label class="search-label">生命周期状态</label>
+          <el-select v-model="searchForm.lifecycleStatus" placeholder="生命周期状态" clearable>
+            <el-option v-for="dict in lifecycleStatusOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
+          </el-select>
+        </div>
+        <div v-if="fields.operabilityStatus" class="search-item">
+          <label class="search-label">可用性</label>
+          <el-select v-model="searchForm.operabilityStatus" placeholder="可用性" clearable>
+            <el-option v-for="dict in operabilityStatusOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
+          </el-select>
+        </div>
+        <div v-if="fields.assignmentStatus" class="search-item">
+          <label class="search-label">分配状态</label>
+          <el-select v-model="searchForm.assignmentStatus" placeholder="分配状态" clearable>
+            <el-option v-for="dict in assignmentStatusOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
+          </el-select>
+        </div>
+        <div v-if="fields.runtimeStatus" class="search-item">
+          <label class="search-label">运行状态</label>
+          <el-select v-model="searchForm.runtimeStatus" placeholder="运行状态" clearable>
+            <el-option v-for="dict in runtimeStatusOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
+          </el-select>
+        </div>
+        <div v-if="fields.bwcType" class="search-item">
+          <label class="search-label">执法仪类型</label>
+          <el-select v-model="searchForm.bwcType" placeholder="执法仪类型" clearable>
+            <el-option v-for="dict in bwcTypeOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
+          </el-select>
+        </div>
+        <div v-if="fields.vendor" class="search-item">
+          <label class="search-label">供应商</label>
+          <el-input v-model="searchForm.vendor" placeholder="请输入供应商" clearable @keyup.enter.native="handleSearch" />
+        </div>
       </div>
     </div>
   </div>
@@ -131,7 +175,14 @@ export default {
         brand: true,
         status: true,
         enableUse: false,
-        openStatus: false
+        openStatus: false,
+        keyword: false,
+        lifecycleStatus: false,
+        operabilityStatus: false,
+        assignmentStatus: false,
+        runtimeStatus: false,
+        bwcType: false,
+        vendor: false
       })
     },
     // 标签配置
@@ -139,7 +190,8 @@ export default {
       type: Object,
       default: () => ({
         no: '编号',
-        name: '名称'
+        name: '名称',
+        keyword: '关键词'
       })
     },
     // 选项数据
@@ -167,6 +219,26 @@ export default {
       type: Array,
       default: () => []
     },
+    lifecycleStatusOptions: {
+      type: Array,
+      default: () => []
+    },
+    operabilityStatusOptions: {
+      type: Array,
+      default: () => []
+    },
+    assignmentStatusOptions: {
+      type: Array,
+      default: () => []
+    },
+    runtimeStatusOptions: {
+      type: Array,
+      default: () => []
+    },
+    bwcTypeOptions: {
+      type: Array,
+      default: () => []
+    },
     // 表单字段映射
     fieldMapping: {
       type: Object,
@@ -183,7 +255,14 @@ export default {
         brandId: undefined,
         status: undefined,
         enableUse: undefined,
-        openStatus: undefined
+        openStatus: undefined,
+        keyword: undefined,
+        lifecycleStatus: undefined,
+        operabilityStatus: undefined,
+        assignmentStatus: undefined,
+        runtimeStatus: undefined,
+        bwcType: undefined,
+        vendor: undefined
       }
     }
   },
@@ -193,6 +272,9 @@ export default {
     },
     nameLabel() {
       return this.labels.name || '名称'
+    },
+    keywordLabel() {
+      return this.labels.keyword || '关键词'
     }
   },
   methods: {
@@ -222,7 +304,14 @@ export default {
         brandId: undefined,
         status: undefined,
         enableUse: undefined,
-        openStatus: undefined
+        openStatus: undefined,
+        keyword: undefined,
+        lifecycleStatus: undefined,
+        operabilityStatus: undefined,
+        assignmentStatus: undefined,
+        runtimeStatus: undefined,
+        bwcType: undefined,
+        vendor: undefined
       }
       this.$emit('reset')
     },

@@ -51,13 +51,6 @@
               @click="onManualMark"
             >手动标注</el-button>
             <el-button
-              icon="el-icon-close"
-              size="small"
-              type="text"
-              class="action-btn tertiary-danger"
-              @click="onNoMark"
-            >标注不是执法视频</el-button>
-            <el-button
               icon="el-icon-setting"
               size="small"
               type="text"
@@ -96,30 +89,6 @@
             >保存列头</el-button>
           </template>
         </MediaSelector>
-
-        <!-- 标注不是执法视频确认对话框 -->
-        <el-dialog
-          title="标注不是执法视频"
-          :visible.sync="noMarkDialogVisible"
-          width="400px"
-          custom-class="edit-dialog"
-          :close-on-click-modal="false"
-          append-to-body
-        >
-          <div style="text-align: center; padding: 20px">
-            <i class="el-icon-warning" style="font-size: 48px; color: #e6a23c" />
-            <p style="margin-top: 20px; font-size: 16px">
-              确认将选中的媒体标注为非执法视频吗？
-            </p>
-            <p style="color: #909399; font-size: 14px">
-              已选中 {{ mediaIds.length }} 条媒体
-            </p>
-          </div>
-          <div slot="footer" class="dialog-footer">
-            <el-button type="text" class="tertiary" size="small" @click="noMarkDialogVisible = false">否</el-button>
-            <el-button type="primary" size="small" @click="confirmNoMark">是</el-button>
-          </div>
-        </el-dialog>
 
         <!-- 手动标注对话框 -->
         <el-dialog

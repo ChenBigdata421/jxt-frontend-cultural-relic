@@ -535,6 +535,13 @@ export default {
         this.processForm.formData[field] = orgName
       }
 
+      // 手动清除该字段的验证错误，因为 treeselect 不会触发 Element UI 的 blur 事件
+      this.$nextTick(() => {
+        if (this.$refs.taskProcessForm) {
+          this.$refs.taskProcessForm.clearValidate(`formData.${field}`)
+        }
+      })
+
       // 调用获取组织负责人的API
       this.getOrgLeaderInfo(orgId, field)
     },

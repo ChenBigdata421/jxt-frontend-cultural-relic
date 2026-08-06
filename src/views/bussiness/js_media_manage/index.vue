@@ -38,21 +38,6 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="是否执法视频">
-            <el-select
-              v-model="queryParams.bool_enfor"
-              placeholder="是否执法视频"
-              clearable
-              style="width: 170px"
-            >
-              <el-option
-                v-for="dict in bool_enfor_options"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </el-form-item>
           <el-form-item>
             <el-button
               class="filter-item"
@@ -97,11 +82,6 @@
           <el-table-column prop="media_cate" label="媒体类型" width="120">
             <template slot-scope="{ row }">
               {{ selectDictLabel(media_cate_options, row.media_cate) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="bool_enfor" label="是否是执法视频" width="140">
-            <template slot-scope="{ row }">
-              {{ selectDictLabel(bool_enfor_options, row.bool_enfor) }}
             </template>
           </el-table-column>
           <el-table-column

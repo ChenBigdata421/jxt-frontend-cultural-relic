@@ -47,6 +47,38 @@ export function delEquipmentBwc(data) {
   })
 }
 
+export function batchRetireBwc(data) {
+  return request({
+    url: '/api/v1/equipment/bwc/batch-retire',
+    method: 'post',
+    data: data
+  })
+}
+
+export function batchRevokeBwc(data) {
+  return request({
+    url: '/api/v1/equipment/bwc/batch-revoke',
+    method: 'post',
+    data: data
+  })
+}
+
+export function batchRepairBwc(data) {
+  return request({
+    url: '/api/v1/equipment/bwc/batch-repair',
+    method: 'post',
+    data: data
+  })
+}
+
+export function batchRepairCompleteBwc(data) {
+  return request({
+    url: '/api/v1/equipment/bwc/batch-repair-complete',
+    method: 'post',
+    data: data
+  })
+}
+
 // 场地API
 export function listEquipmentTrial(query) {
   return request({

@@ -6,27 +6,24 @@
         <EquipmentQueryBar
           ref="queryBar"
           :fields="{
-            no: true,
-            name: true,
+            keyword: true,
             org: true,
             user: true,
-            brand: true,
-            status: true,
-            enableUse: true
+            lifecycleStatus: true,
+            operabilityStatus: true,
+            assignmentStatus: true,
+            bwcType: true,
+            vendor: true
           }"
-          :labels="{
-            no: '执法仪编号',
-            name: '执法仪名称'
-          }"
-          :field-mapping="{
-            no: 'bwcNo',
-            name: 'bwcName'
-          }"
+          :labels="{ keyword: '关键词' }"
+          :field-mapping="{ keyword: 'keyword' }"
           :org-options="orgOptions"
           :user-options="userOptions"
-          :brand-options="brandOptions"
-          :status-options="statusOptions"
-          :enable-use-options="enableUseOptions"
+          :lifecycle-status-options="lifecycleStatusOptions"
+          :operability-status-options="operabilityStatusOptions"
+          :assignment-status-options="assignmentStatusOptions"
+          :runtime-status-options="runtimeStatusOptions"
+          :bwc-type-options="bwcTypeOptions"
           @search="handleSearch"
           @quick-search-reset="handleQuickSearchReset"
           @org-change="handleOrgChange"
@@ -130,6 +127,22 @@
           </div>
         </div>
 
+        <!-- Batch Lifecycle Toolbar -->
+        <div v-if="selectedBwcRecords.length > 0" class="batch-lifecycle-toolbar">
+          <el-alert
+            v-if="ineligibleCount > 0"
+            :title="'已选中 ' + selectedBwcRecords.length + ' 项，其中 ' + ineligibleCount + ' 项为终态不可操作'"
+            type="warning"
+            :closable="false"
+            show-icon
+            style="margin-bottom: 8px"
+          />
+          <el-button size="mini" type="warning" :loading="batchLoading" :disabled="!canBatchRetire" @click="openBatchDialog('retire')">批量退役</el-button>
+          <el-button size="mini" type="danger" :loading="batchLoading" :disabled="!canBatchRevoke" @click="openBatchDialog('revoke')">批量吊销</el-button>
+          <el-button size="mini" type="warning" :loading="batchLoading" :disabled="!canBatchRepair" @click="openBatchDialog('repair')">批量报修</el-button>
+          <el-button size="mini" type="success" :loading="batchLoading" :disabled="!canBatchRepairComplete" @click="openBatchDialog('repairComplete')">批量修复完成</el-button>
+        </div>
+
         <!-- 执法仪列表 -->
         <el-table
           ref="bwcTable"
@@ -140,151 +153,43 @@
           @sort-change="handleSortChang"
         >
           <el-table-column type="selection" width="60" align="center" />
-          <el-table-column
-            v-if="isColumnVisible('no')"
-            label="编号"
-            align="center"
-            prop="bwcNo"
-            sortable="custom"
-            width="120"
-          />
-          <el-table-column
-            v-if="isColumnVisible('name')"
-            label="名称"
-            align="center"
-            prop="bwcName"
-            sortable="custom"
-            min-width="140"
-            :show-overflow-tooltip="true"
-          />
-          <el-table-column
-            v-if="isColumnVisible('brandName')"
-            label="品牌"
-            align="center"
-            prop="brandName"
-            min-width="120"
-            :show-overflow-tooltip="true"
-          />
-          <el-table-column
-            v-if="isColumnVisible('managerName')"
-            label="管理员"
-            align="center"
-            prop="managerName"
-            width="120"
-          />
-          <el-table-column
-            v-if="isColumnVisible('managerOrgFullName')"
-            label="管理员所在组织"
-            align="center"
-            prop="managerOrgFullName"
-            min-width="180"
-            :show-overflow-tooltip="true"
-          />
-          <el-table-column
-            v-if="isColumnVisible('enableUse')"
-            label="是否可用"
-            align="center"
-            prop="enableUse"
-            width="120"
-          >
+          <el-table-column v-if="isColumnVisible('deviceNo')" label="设备编号" align="center" prop="deviceNo" sortable="custom" min-width="120" :show-overflow-tooltip="true" />
+          <el-table-column v-if="isColumnVisible('deviceName')" label="设备名称" align="center" prop="deviceName" sortable="custom" min-width="140" :show-overflow-tooltip="true" />
+          <el-table-column v-if="isColumnVisible('bwcType')" label="执法仪类型" align="center" prop="bwcType" min-width="120">
             <template slot-scope="scope">
-              <el-tag
-                :type="scope.row.enableUse === 1 ? 'success' : 'danger'"
-                disable-transitions
-              >
-                {{ enableUseFormat(scope.row) }}
-              </el-tag>
+              {{ scope.row.bwcType || scope.row.deviceType || '-' }}
             </template>
           </el-table-column>
-          <el-table-column
-            v-if="isColumnVisible('state')"
-            label="状态"
-            align="center"
-            prop="status"
-            width="120"
-          >
+          <el-table-column v-if="isColumnVisible('vendor')" label="供应商" align="center" prop="vendor" min-width="120" :show-overflow-tooltip="true" />
+          <el-table-column v-if="isColumnVisible('model')" label="型号" align="center" prop="model" min-width="120" :show-overflow-tooltip="true" />
+          <el-table-column v-if="isColumnVisible('lifecycleStatus')" label="生命周期" align="center" prop="lifecycleStatus" width="100">
             <template slot-scope="scope">
-              <el-tag
-                :type="scope.row.status === 1 ? 'success' : 'danger'"
-                disable-transitions
-              >
-                {{ statusFormat(scope.row) }}
-              </el-tag>
+              <device-status-tag type="lifecycle" :value="scope.row.lifecycleStatus" />
             </template>
           </el-table-column>
-          <el-table-column
-            v-if="isColumnVisible('cpu')"
-            label="CPU"
-            align="center"
-            prop="cpu"
-            min-width="120"
-            :show-overflow-tooltip="true"
-          />
-          <el-table-column
-            v-if="isColumnVisible('memory')"
-            label="内存(G)"
-            align="center"
-            prop="memory"
-            width="100"
-          />
-          <el-table-column
-            v-if="isColumnVisible('disk')"
-            label="存储(G)"
-            align="center"
-            prop="disk"
-            width="100"
-          />
-          <el-table-column
-            v-if="isColumnVisible('networkCard')"
-            label="网卡"
-            align="center"
-            prop="networkCard"
-            min-width="140"
-            :show-overflow-tooltip="true"
-          />
-          <el-table-column
-            v-if="isColumnVisible('usbNum')"
-            label="USB数量"
-            align="center"
-            prop="usbNum"
-            width="100"
-          />
-          <el-table-column
-            v-if="isColumnVisible('system')"
-            label="操作系统"
-            align="center"
-            prop="system"
-            min-width="140"
-            :show-overflow-tooltip="true"
-          />
-          <el-table-column
-            v-if="isColumnVisible('version')"
-            label="版本"
-            align="center"
-            prop="version"
-            min-width="120"
-            :show-overflow-tooltip="true"
-          />
-          <el-table-column
-            v-if="isColumnVisible('buyTime')"
-            label="购买时间"
-            align="center"
-            prop="purchaseDate"
-            width="180"
-            sortable="custom"
-          >
+          <el-table-column v-if="isColumnVisible('operabilityStatus')" label="可用性" align="center" prop="operabilityStatus" width="100">
             <template slot-scope="scope">
-              {{ parseTime(scope.row.purchaseDate) }}
+              <device-status-tag type="operability" :value="scope.row.operabilityStatus" />
             </template>
           </el-table-column>
-          <el-table-column
-            v-if="isColumnVisible('remark')"
-            label="备注"
-            align="center"
-            prop="remark"
-            min-width="160"
-            :show-overflow-tooltip="true"
-          />
+          <el-table-column v-if="isColumnVisible('assignmentStatus')" label="分配状态" align="center" prop="assignmentStatus" width="100">
+            <template slot-scope="scope">
+              <device-status-tag type="assignment" :value="scope.row.assignmentStatus" />
+            </template>
+          </el-table-column>
+          <el-table-column v-if="isColumnVisible('runtimeStatus')" label="运行状态" align="center" prop="runtimeStatus" width="100">
+            <template slot-scope="scope">
+              <device-status-tag type="runtime" :value="scope.row.runtimeStatus" />
+            </template>
+          </el-table-column>
+          <el-table-column v-if="isColumnVisible('managerName')" label="管理人" align="center" prop="managerName" min-width="100" :show-overflow-tooltip="true" />
+          <el-table-column v-if="isColumnVisible('managerOrgName')" label="管理人组织" align="center" prop="managerOrgName" min-width="160" show-overflow-tooltip />
+          <el-table-column v-if="isColumnVisible('storageCapacity')" label="存储(GB)" align="center" prop="storageCapacity" width="100">
+            <template slot-scope="scope">
+              {{ scope.row.storageCapacity || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column v-if="isColumnVisible('remark')" label="备注" align="center" prop="remark" min-width="120" show-overflow-tooltip />
           <el-table-column
             label="操作"
             align="center"
@@ -333,396 +238,258 @@
         <pagination
           v-show="total > 0"
           :total="total"
-          :page.sync="queryParams.pageIndex"
+          :page.sync="queryParams.pageNum"
           :limit.sync="queryParams.pageSize"
           @pagination="getList"
         />
       </el-card>
 
+      <!-- Batch Lifecycle Dialog -->
+      <el-dialog :title="batchDialogTitle" :visible.sync="batchDialogVisible" width="400px" append-to-body @opened="onBatchDialogOpened">
+        <el-form>
+          <el-form-item label="原因" :required="batchDialogReasonRequired">
+            <el-input ref="batchReasonInput" v-model="batchDialogReason" type="textarea" :rows="3" :placeholder="batchDialogReasonRequired ? '请输入原因' : '选填'" />
+          </el-form-item>
+        </el-form>
+        <div slot="footer">
+          <el-button @click="batchDialogVisible = false">取消</el-button>
+          <el-button type="primary" :disabled="batchDialogReasonRequired && !batchDialogReason" @click="executeBatchAction">确定</el-button>
+        </div>
+      </el-dialog>
+
+      <!-- Batch Result Dialog -->
+      <el-dialog title="批量操作结果" :visible.sync="batchResultDialogVisible" width="500px" append-to-body>
+        <div v-if="batchResult">
+          <p>成功: {{ batchResult.successIds ? batchResult.successIds.length : 0 }} 项</p>
+          <div v-if="batchResult.failedItems && batchResult.failedItems.length > 0">
+            <p>失败: {{ batchResult.failedItems.length }} 项</p>
+            <el-table :data="batchResult.failedItems" size="small">
+              <el-table-column prop="id" label="设备ID" width="100" />
+              <el-table-column prop="reason" label="失败原因" />
+            </el-table>
+          </div>
+        </div>
+        <div slot="footer">
+          <el-button type="primary" @click="batchResultDialogVisible = false">确定</el-button>
+        </div>
+      </el-dialog>
+
       <!-- 新增/修改对话框 -->
-      <el-dialog
-        :title="title"
-        :visible.sync="open"
-        width="700px"
-        append-to-body
-        :close-on-click-modal="false"
-        custom-class="edit-dialog"
-      >
-        <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+      <el-dialog :title="dialogTitle" :visible.sync="open" :width="form.bwcType === '5G' ? '800px' : '700px'" append-to-body :close-on-click-modal="false" custom-class="edit-dialog">
+        <el-form ref="form" :model="form" :rules="formRules" label-width="120px">
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="设备名称" prop="deviceName">
+                <el-input v-model="form.deviceName" placeholder="请输入设备名称" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="设备编号" prop="deviceNo">
+                <el-input v-model="form.deviceNo" placeholder="请输入设备编号" :disabled="dialogStatus === 'update'" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="资产编号">
+                <el-input v-model="form.assetNo" placeholder="请输入资产编号" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="供应商">
+                <el-input v-model="form.vendor" placeholder="请输入供应商" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="型号">
+                <el-input v-model="form.model" placeholder="请输入型号" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="执法仪类型" prop="bwcType">
+                <el-radio-group v-model="form.bwcType" :disabled="dialogStatus === 'update'">
+                  <el-radio v-for="opt in bwcTypeOptions" :key="opt.value" :label="opt.value">{{ opt.label }}</el-radio>
+                </el-radio-group>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="存储容量(GB)">
+                <el-input-number v-model="form.storageCapacity" :min="1" :precision="0" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="摄像头分辨率">
+                <el-input v-model="form.cameraResolution" placeholder="请输入摄像头分辨率" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="固件版本">
+                <el-input v-model="form.firmwareVersion" placeholder="请输入固件版本" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="质保到期日">
+                <el-date-picker v-model="form.warrantyExpiry" type="date" value-format="yyyy-MM-dd" placeholder="请选择" style="width: 100%" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="购买日期">
+                <el-date-picker v-model="form.purchaseDate" type="date" value-format="yyyy-MM-dd" placeholder="请选择" style="width: 100%" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="管理组织" prop="managerOrgId">
+                <treeselect v-model="form.managerOrgId" :options="orgOptions" placeholder="请选择管理组织" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="管理人员">
+                <el-select v-model="form.managerId" placeholder="请选择管理人员" filterable>
+                  <el-option v-for="item in userOptions" :key="item.userId" :label="item.userName || item.nickName" :value="item.userId" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="24">
+              <el-form-item label="备注">
+                <el-input v-model="form.remark" type="textarea" :rows="3" />
+              </el-form-item>
+            </el-col>
+          </el-row>
 
-          <!-- 使用 el-collapse 实现可折叠分组 -->
-          <el-collapse v-model="activeFormSections" class="form-collapse">
-
-            <!-- 管理信息 -->
-            <el-collapse-item name="manage" class="form-section">
-              <template slot="title">
-                <div class="section-header">
-                  <i class="el-icon-user section-icon" />
-                  <span class="section-title">管理信息</span>
-                  <span class="section-badge">2项</span>
-                </div>
-              </template>
-
+          <!-- GB28181 终端配置 (仅 5G 设备) -->
+          <el-collapse-transition>
+            <div v-if="form.bwcType === '5G'">
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <div class="section-header" style="margin: 12px 0 8px 120px; font-weight: 600; color: #303133;">
+                    GB28181 终端配置
+                  </div>
+                </el-col>
+              </el-row>
               <el-row :gutter="20">
                 <el-col :span="12">
-                  <el-form-item label="管理组织" prop="managerOrgId">
-                    <treeselect
-                      v-model="form.managerOrgId"
-                      :options="orgOptions"
-                      :append-to-body="true"
-                      :z-index="3000"
-                      placeholder="请选择管理组织"
-                    />
-                  </el-form-item>
-                </el-col>
-                <el-col :span="12">
-                  <el-form-item label="管理人员">
-                    <el-select
-                      v-model="form.managerId"
-                      placeholder="请选择"
-                      @change="$forceUpdate()"
-                    >
-                      <el-option
-                        v-for="item in userOptions"
-                        :key="item.userId"
-                        :label="item.userName"
-                        :value="item.userId"
-                      />
-                    </el-select>
+                  <el-form-item label="SIP 设备编号" prop="gb28181Id">
+                    <el-input v-model="form.gb28181Id" placeholder="20 位数字 SIP 设备编号" maxlength="20" :disabled="dialogStatus === 'update'" />
                   </el-form-item>
                 </el-col>
               </el-row>
-            </el-collapse-item>
-
-            <!-- 基础信息 -->
-            <el-collapse-item name="basic" class="form-section">
-              <template slot="title">
-                <div class="section-header">
-                  <i class="el-icon-document section-icon" />
-                  <span class="section-title">基础信息</span>
-                  <span class="section-badge">3项</span>
-                </div>
-              </template>
-
               <el-row :gutter="20">
                 <el-col :span="12">
-                  <el-form-item label="名称" prop="bwcName">
-                    <el-input v-model="form.bwcName" placeholder="请输入名称" />
-                  </el-form-item>
-                </el-col>
-                <el-col :span="12">
-                  <el-form-item label="编号" prop="bwcNo">
+                  <el-form-item label="SIP 认证密码" prop="sipPassword">
                     <el-input
-                      v-model="form.bwcNo"
-                      placeholder="请输入编号"
-                      :disabled="title === '修改执法仪'"
-                    />
-                  </el-form-item>
-                </el-col>
-              </el-row>
-              <el-row :gutter="20">
-                <el-col :span="12">
-                  <el-form-item label="品牌">
-                    <el-select v-model="form.brandId" placeholder="请选择">
-                      <el-option
-                        v-for="item in brandOptions"
-                        :key="item.id"
-                        :label="item.brandName"
-                        :value="item.id"
-                      />
-                    </el-select>
-                  </el-form-item>
-                </el-col>
-              </el-row>
-            </el-collapse-item>
-
-            <!-- 状态信息 -->
-            <el-collapse-item name="status" class="form-section">
-              <template slot="title">
-                <div class="section-header">
-                  <i class="el-icon-info section-icon" />
-                  <span class="section-title">状态信息</span>
-                  <span class="section-badge">2项</span>
-                </div>
-              </template>
-
-              <el-row :gutter="20">
-                <el-col :span="12">
-                  <el-form-item label="是否可用">
-                    <el-radio-group v-model="form.enableUse">
-                      <el-radio
-                        v-for="dict in enableUseOptions"
-                        :key="dict.value"
-                        :label="dict.value"
-                      >{{ dict.label }}</el-radio>
-                    </el-radio-group>
-                  </el-form-item>
-                </el-col>
-                <el-col :span="12">
-                  <el-form-item label="状态">
-                    <el-radio-group v-model="form.status">
-                      <el-radio
-                        v-for="dict in statusOptions"
-                        :key="dict.value"
-                        :label="dict.value"
-                      >{{ dict.label }}</el-radio>
-                    </el-radio-group>
-                  </el-form-item>
-                </el-col>
-              </el-row>
-            </el-collapse-item>
-
-            <!-- 硬件配置 -->
-            <el-collapse-item name="hardware" class="form-section">
-              <template slot="title">
-                <div class="section-header">
-                  <i class="el-icon-setting section-icon" />
-                  <span class="section-title">硬件配置</span>
-                  <span class="section-badge">5项</span>
-                </div>
-              </template>
-
-              <el-row :gutter="20">
-                <el-col :span="12">
-                  <el-form-item label="CPU">
-                    <el-input v-model="form.cpu" placeholder="请输入CPU" />
-                  </el-form-item>
-                </el-col>
-                <el-col :span="12">
-                  <el-form-item label="内存(G)">
-                    <el-input-number
-                      v-model="form.memory"
-                      placeholder="请输入内存大小"
-                    />
-                  </el-form-item>
-                </el-col>
-              </el-row>
-              <el-row :gutter="20">
-                <el-col :span="12">
-                  <el-form-item label="存储(G)">
-                    <el-input-number
-                      v-model="form.disk"
-                      placeholder="请输入磁盘大小"
-                    />
-                  </el-form-item>
-                </el-col>
-                <el-col :span="12">
-                  <el-form-item label="网卡">
-                    <el-input
-                      v-model="form.networkCard"
-                      placeholder="请输入网卡型号"
-                    />
-                  </el-form-item>
-                </el-col>
-              </el-row>
-              <el-row :gutter="20">
-                <el-col :span="12">
-                  <el-form-item label="USB数量">
-                    <el-input-number v-model="form.usbNum" />
-                  </el-form-item>
-                </el-col>
-              </el-row>
-            </el-collapse-item>
-
-            <!-- 系统信息 -->
-            <el-collapse-item name="system" class="form-section">
-              <template slot="title">
-                <div class="section-header">
-                  <i class="el-icon-monitor section-icon" />
-                  <span class="section-title">系统信息</span>
-                  <span class="section-badge">2项</span>
-                </div>
-              </template>
-
-              <el-row :gutter="20">
-                <el-col :span="12">
-                  <el-form-item label="操作系统">
-                    <el-input
-                      v-model="form.system"
-                      placeholder="操作系统"
-                      maxlength="20"
-                    />
-                  </el-form-item>
-                </el-col>
-                <el-col :span="12">
-                  <el-form-item label="版本">
-                    <el-input
-                      v-model="form.version"
-                      placeholder="版本"
-                      maxlength="20"
-                    />
-                  </el-form-item>
-                </el-col>
-              </el-row>
-            </el-collapse-item>
-
-            <!-- 其他信息 -->
-            <el-collapse-item name="other" class="form-section">
-              <template slot="title">
-                <div class="section-header">
-                  <i class="el-icon-more section-icon" />
-                  <span class="section-title">其他信息</span>
-                  <span class="section-badge">2项</span>
-                </div>
-              </template>
-
-              <el-row :gutter="20">
-                <el-col :span="12">
-                  <el-form-item label="购置时间">
-                    <el-date-picker
-                      v-model="form.purchaseDate"
-                      type="datetime"
-                      placeholder="请输入购置时间"
-                      format="yyyy-MM-dd HH:mm:ss"
-                      value-format="yyyy-MM-dd HH:mm:ss"
-                      class="full-width"
+                      v-model="form.sipPassword"
+                      type="password"
+                      show-password
+                      :disabled="dialogStatus === 'update'"
+                      placeholder="留空则自动生成密码"
+                      maxlength="128"
                     />
                   </el-form-item>
                 </el-col>
               </el-row>
               <el-row :gutter="20">
                 <el-col :span="24">
-                  <el-form-item label="备注">
-                    <el-input v-model="form.remark" />
+                  <div style="margin: 4px 0 8px 120px; font-size: 13px; color: #909399;">基础设置</div>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="字符编码">
+                    <el-select v-model="form.terminalExt.charset" style="width: 100%">
+                      <el-option v-for="opt in charsetOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="流传输模式">
+                    <el-select v-model="form.terminalExt.streamMode" style="width: 100%">
+                      <el-option v-for="opt in streamModeOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+                    </el-select>
                   </el-form-item>
                 </el-col>
               </el-row>
-            </el-collapse-item>
-
-          </el-collapse>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="SDP 流接收 IP">
+                    <el-input v-model="form.terminalExt.sdpIp" placeholder="可选，如 192.168.1.100" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="流媒体服务器 ID">
+                    <el-input v-model="form.terminalExt.mediaServerId" placeholder="默认 auto" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <div style="margin: 4px 0 8px 120px; font-size: 13px; color: #909399;">高级设置</div>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="SSRC 校验">
+                    <el-checkbox v-model="form.terminalExt.ssrcCheck">启用</el-checkbox>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="地理坐标系">
+                    <el-select v-model="form.terminalExt.geoCoordSys" style="width: 100%">
+                      <el-option v-for="opt in geoCoordSysOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="作为消息通道">
+                    <el-checkbox v-model="form.terminalExt.asMessageChannel">启用</el-checkbox>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="应答后推广播">
+                    <el-checkbox v-model="form.terminalExt.broadcastPushAfterAck">启用</el-checkbox>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="心跳间隔 (秒)">
+                    <el-input-number v-model="form.terminalExt.heartbeatInterval" :min="1" :max="3600" style="width: 100%" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="心跳超时次数">
+                    <el-input-number v-model="form.terminalExt.heartbeatCount" :min="1" :max="30" style="width: 100%" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </div>
+          </el-collapse-transition>
         </el-form>
-
         <div slot="footer" class="dialog-footer">
           <el-button type="text" class="action-btn tertiary" size="small" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="small" @click="submitForm">确 定</el-button>
+          <el-button type="primary" size="small" :loading="submitLoading" @click="submitForm">确 定</el-button>
         </div>
       </el-dialog>
 
       <!-- 浏览对话框 -->
-      <el-dialog
-        title="浏览执法仪"
-        :visible.sync="viewOpen"
-        width="800px"
-        append-to-body
-        :close-on-click-modal="false"
-        custom-class="detail-dialog"
-      >
-        <el-collapse v-model="activeDetailSections" class="form-collapse">
-
-          <!-- 基础信息 -->
-          <el-collapse-item name="basic" class="detail-section">
-            <template slot="title">
-              <div class="section-header">
-                <i class="el-icon-document section-icon" />
-                <span class="section-title">基础信息</span>
-                <span class="section-badge">5项</span>
-              </div>
-            </template>
-            <el-descriptions :column="2" border class="section-descriptions">
-              <el-descriptions-item label="执法仪编号">{{
-                viewData.bwcNo || '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="执法仪名称">{{
-                viewData.bwcName || '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="品牌">{{
-                viewData.brandName || '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="管理组织">{{
-                viewData.managerOrgFullName || '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="管理人员">{{
-                viewData.managerName || '-'
-              }}</el-descriptions-item>
-            </el-descriptions>
-          </el-collapse-item>
-
-          <!-- 状态信息 -->
-          <el-collapse-item name="status" class="detail-section">
-            <template slot="title">
-              <div class="section-header">
-                <i class="el-icon-star-on section-icon" />
-                <span class="section-title">状态信息</span>
-                <span class="section-badge">2项</span>
-              </div>
-            </template>
-            <el-descriptions :column="2" border class="section-descriptions">
-              <el-descriptions-item label="是否可用">{{
-                selectDictLabel(enableUseOptions, viewData.enableUse) || '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="状态">{{
-                selectDictLabel(statusOptions, viewData.status) || '-'
-              }}</el-descriptions-item>
-            </el-descriptions>
-          </el-collapse-item>
-
-          <!-- 硬件配置 -->
-          <el-collapse-item name="hardware" class="detail-section">
-            <template slot="title">
-              <div class="section-header">
-                <i class="el-icon-setting section-icon" />
-                <span class="section-title">硬件配置</span>
-                <span class="section-badge">5项</span>
-              </div>
-            </template>
-            <el-descriptions :column="2" border class="section-descriptions">
-              <el-descriptions-item label="CPU">{{
-                viewData.cpu || '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="内存(G)">{{
-                viewData.memory || '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="存储(G)">{{
-                viewData.disk || '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="网卡">{{
-                viewData.networkCard || '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="USB数量">{{
-                viewData.usbNum || '-'
-              }}</el-descriptions-item>
-            </el-descriptions>
-          </el-collapse-item>
-
-          <!-- 系统信息 -->
-          <el-collapse-item name="system" class="detail-section">
-            <template slot="title">
-              <div class="section-header">
-                <i class="el-icon-monitor section-icon" />
-                <span class="section-title">系统信息</span>
-                <span class="section-badge">2项</span>
-              </div>
-            </template>
-            <el-descriptions :column="2" border class="section-descriptions">
-              <el-descriptions-item label="操作系统">{{
-                viewData.system || '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="版本">{{
-                viewData.version || '-'
-              }}</el-descriptions-item>
-            </el-descriptions>
-          </el-collapse-item>
-
-          <!-- 其他信息 -->
-          <el-collapse-item name="other" class="detail-section">
-            <template slot="title">
-              <div class="section-header">
-                <i class="el-icon-info section-icon" />
-                <span class="section-title">其他信息</span>
-                <span class="section-badge">2项</span>
-              </div>
-            </template>
-            <el-descriptions :column="2" border class="section-descriptions">
-              <el-descriptions-item label="购买时间">{{
-                viewData.purchaseDate ? parseTime(viewData.purchaseDate) : '-'
-              }}</el-descriptions-item>
-              <el-descriptions-item label="备注" :span="2">{{
-                viewData.remark || '无'
-              }}</el-descriptions-item>
-            </el-descriptions>
-          </el-collapse-item>
-
-        </el-collapse>
+      <el-dialog title="设备详情" :visible.sync="viewOpen" width="800px" append-to-body :close-on-click-modal="false" custom-class="detail-dialog">
+        <div v-loading="viewLoading">
+          <device-info-panel v-if="viewData && viewData.deviceUid" :device="viewData" />
+          <div v-else-if="!viewLoading" style="text-align:center;color:#999">未找到设备信息</div>
+        </div>
         <div slot="footer" class="dialog-footer">
           <el-button type="text" class="action-btn tertiary" size="small" @click="viewOpen = false">关 闭</el-button>
         </div>
@@ -740,85 +507,237 @@ import EquipmentQueryBar from '@/components/EquipmentQueryBar/index.vue'
 import BatchActionBar from '@/components/BatchActionBar/index.vue'
 import {
   getEquipmentBwcList,
-  delEquipmentBwc,
+  getEquipmentBwc,
   addEquipmentBwc,
   updateEquipmentBwc,
-  listEquipmentBrand
+  delEquipmentBwc,
+  batchRetireBwc,
+  batchRevokeBwc,
+  batchRepairBwc,
+  batchRepairCompleteBwc
 } from '@/api/admin/equipment_manage_api'
 import { formatJson } from '@/utils'
 import { orgTreeSelect } from '@/api/admin/sys-org'
 import { listUser } from '@/api/admin/sys-user'
+import {
+  LifecycleStatusLabels,
+  OperabilityStatusLabels,
+  AssignmentStatusLabels,
+  RuntimeStatusLabels,
+  BWCType,
+  BWCTypeLabels,
+  enumToOptions,
+  enumValueToOptions
+} from '@/constants/deviceStatus'
+import DeviceStatusTag from '@/components/DeviceStatusTag/index.vue'
+import DeviceInfoPanel from '@/components/DeviceInfoPanel/index.vue'
 import actionColumnMixin from '@/mixins/actionColumnMixin'
 
 export default {
   name: 'LawCarema',
-  mixins: [actionColumnMixin],
   components: {
     BasicLayout,
     Pagination,
     Treeselect,
     EquipmentQueryBar,
-    BatchActionBar
+    BatchActionBar,
+    DeviceStatusTag,
+    DeviceInfoPanel
   },
+  mixins: [actionColumnMixin],
   data() {
     return {
       loading: true,
-      firstLoad: null,
+      submitLoading: false,
+      viewLoading: false,
+      exportLoading: false,
       total: 0,
       bwcList: [],
-      statusOptions: [],
-      enableUseOptions: [],
       selectedBwcMap: {},
       isRestoringSelection: false,
       selectedBwcRecords: [],
       isAllSelected: false,
       isSelectionIndeterminate: false,
+
+      // Status options from constants
+      lifecycleStatusOptions: enumToOptions(LifecycleStatusLabels),
+      operabilityStatusOptions: enumToOptions(OperabilityStatusLabels),
+      assignmentStatusOptions: enumToOptions(AssignmentStatusLabels),
+      runtimeStatusOptions: enumToOptions(RuntimeStatusLabels),
+      bwcTypeOptions: enumValueToOptions(BWCType, BWCTypeLabels),
+      charsetOptions: [
+        { label: 'GB2312', value: 'GB2312' },
+        { label: 'UTF-8', value: 'UTF-8' }
+      ],
+      streamModeOptions: [
+        { label: 'TCP 被动', value: 'TCP-PASSIVE' },
+        { label: 'UDP', value: 'UDP' },
+        { label: 'TCP 主动', value: 'TCP-ACTIVE' }
+      ],
+      geoCoordSysOptions: [
+        { label: 'WGS84', value: 'WGS84' },
+        { label: 'GCJ02', value: 'GCJ02' }
+      ],
+
+      // Column options
+      columnStorageKey: 'bwc_manage_visible_columns_v2',
       columnOptions: [
-        { prop: 'no', field: 'bwcNo', label: '编号', fixed: true, defaultVisible: true },
-        { prop: 'name', field: 'bwcName', label: '名称', fixed: true, defaultVisible: true },
-        { prop: 'managerName', label: '管理员', fixed: false, defaultVisible: true },
-        { prop: 'managerOrgFullName', label: '管理员所在组织', fixed: false, defaultVisible: true },
-        { prop: 'brandName', label: '品牌', fixed: false, defaultVisible: true },
-        { prop: 'enableUse', label: '是否可用', fixed: false, defaultVisible: true },
-        { prop: 'state', field: 'status', label: '状态', fixed: false, defaultVisible: true },
-        { prop: 'cpu', label: 'CPU', fixed: false, defaultVisible: false },
-        { prop: 'memory', label: '内存(G)', fixed: false, defaultVisible: false },
-        { prop: 'disk', label: '存储(G)', fixed: false, defaultVisible: false },
-        { prop: 'networkCard', label: '网卡', fixed: false, defaultVisible: false },
-        { prop: 'usbNum', label: 'USB数量', fixed: false, defaultVisible: false },
-        { prop: 'system', label: '操作系统', fixed: false, defaultVisible: false },
-        { prop: 'version', label: '版本', fixed: false, defaultVisible: false },
-        { prop: 'buyTime', field: 'purchaseDate', label: '购买时间', fixed: false, defaultVisible: false },
-        { prop: 'remark', label: '备注', fixed: false, defaultVisible: false }
+        { prop: 'deviceNo', field: 'deviceNo', label: '设备编号', fixed: true, defaultVisible: true },
+        { prop: 'deviceName', field: 'deviceName', label: '设备名称', fixed: true, defaultVisible: true },
+        { prop: 'bwcType', field: 'bwcType', label: '执法仪类型', fixed: false, defaultVisible: true },
+        { prop: 'vendor', field: 'vendor', label: '供应商', fixed: false, defaultVisible: true },
+        { prop: 'model', field: 'model', label: '型号', fixed: false, defaultVisible: true },
+        { prop: 'lifecycleStatus', field: 'lifecycleStatus', label: '生命周期', fixed: false, defaultVisible: true },
+        { prop: 'operabilityStatus', field: 'operabilityStatus', label: '可用性', fixed: false, defaultVisible: false },
+        { prop: 'assignmentStatus', field: 'assignmentStatus', label: '分配状态', fixed: false, defaultVisible: true },
+        { prop: 'runtimeStatus', field: 'runtimeStatus', label: '运行状态', fixed: false, defaultVisible: false },
+        { prop: 'managerName', field: 'managerName', label: '管理人', fixed: false, defaultVisible: true },
+        { prop: 'managerOrgName', field: 'managerOrgName', label: '管理人组织', fixed: false, defaultVisible: true },
+        { prop: 'storageCapacity', field: 'storageCapacity', label: '存储(GB)', fixed: false, defaultVisible: false },
+        { prop: 'remark', field: 'remark', label: '备注', fixed: false, defaultVisible: false }
       ],
       visibleColumns: [],
-      title: '',
+
+      // Dialog state
+      dialogStatus: '',
+      dialogTitle: '',
       open: false,
       viewOpen: false,
       viewData: {},
-      activeFormSections: ['manage', 'basic', 'status'],
-      activeDetailSections: ['basic', 'status'],
       orgOptions: [],
       userOptions: [],
-      brandOptions: [],
+
+      // Query params - match backend PhysicalDeviceGetPageReq
       queryParams: {
-        pageIndex: 1,
+        pageNum: 1,
         pageSize: 10,
-        bwcNo: undefined,
-        bwcName: undefined,
-        managerOrgId: undefined,
+        deviceType: undefined,
+        keyword: undefined,
+        lifecycleStatus: undefined,
+        operabilityStatus: undefined,
+        assignmentStatus: undefined,
+        runtimeStatus: undefined,
+        vendor: undefined,
+        bwcType: undefined,
         managerId: undefined,
-        brandId: undefined,
-        status: undefined,
-        enableUse: undefined
+        managerOrgId: undefined,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
       },
-      form: {},
-      rules: {
-        no: [{ required: true, message: '编号不能为空', trigger: 'blur' }]
+
+      // Form
+      form: {
+        deviceName: undefined,
+        deviceNo: undefined,
+        deviceType: '标准',
+        assetNo: undefined,
+        vendor: undefined,
+        model: undefined,
+        managerId: undefined,
+        managerOrgId: undefined,
+        remark: undefined,
+        bwcType: '标准',
+        storageCapacity: undefined,
+        cameraResolution: undefined,
+        firmwareVersion: undefined,
+        warrantyExpiry: undefined,
+        purchaseDate: undefined,
+        gb28181Id: '',
+        sipPassword: '',
+        terminalExt: {
+          charset: 'GB2312',
+          streamMode: 'TCP-PASSIVE',
+          sdpIp: '',
+          mediaServerId: 'auto',
+          ssrcCheck: false,
+          geoCoordSys: 'WGS84',
+          asMessageChannel: false,
+          broadcastPushAfterAck: false,
+          heartbeatInterval: 60,
+          heartbeatCount: 3
+        }
       },
+
+      // Batch operations
+      batchDialogVisible: false,
+      batchDialogTitle: '',
+      batchDialogReason: '',
+      batchDialogReasonRequired: false,
+      batchDialogAction: null,
+      batchResultDialogVisible: false,
+      batchResult: null,
+      batchLoading: false,
+
       processingInstance: null,
       previousCursor: null,
+      firstLoad: null,
+      // 操作列动态固定：覆盖 mixin 默认的 'table'
       tableRef: 'bwcTable'
+    }
+  },
+  computed: {
+    formRules: function() {
+      var rules = {
+        deviceName: [{ required: true, message: '请输入设备名称', trigger: 'blur' }],
+        deviceNo: [{ required: true, message: '请输入设备编号', trigger: 'blur' }],
+        bwcType: [{ required: true, message: '请选择执法仪类型', trigger: 'change' }]
+      }
+      if (this.form.bwcType === '5G') {
+        rules.gb28181Id = [
+          { required: true, message: '请输入 SIP 设备编号', trigger: 'blur' },
+          { pattern: /^\d{20}$/, message: 'SIP 设备编号必须为 20 位数字', trigger: 'blur' }
+        ]
+        rules.sipPassword = [
+          {
+            validator: function(rule, value, callback) {
+              if (!value) { callback(); return }
+              if (value.length < 8 || value.length > 128) {
+                callback(new Error('密码需 8-128 位字符'))
+                return
+              }
+              if (!/^[\x00-\x7F]+$/.test(value)) {
+                callback(new Error('密码仅支持 ASCII 字符'))
+                return
+              }
+              if (!/[a-zA-Z]/.test(value) || !/[0-9]/.test(value)) {
+                callback(new Error('密码需同时包含字母和数字'))
+                return
+              }
+              callback()
+            },
+            trigger: 'blur'
+          }
+        ]
+      }
+      return rules
+    },
+    ineligibleCount() {
+      var terminalStates = ['已回收', '已吊销']
+      return this.selectedBwcRecords.filter(function(r) {
+        return terminalStates.indexOf(r.lifecycleStatus) >= 0
+      }).length
+    },
+    canBatchRetire() {
+      var eligible = ['活动中', '修理中']
+      return this.selectedBwcRecords.length > 0 && this.selectedBwcRecords.every(function(r) {
+        return eligible.indexOf(r.lifecycleStatus) >= 0
+      })
+    },
+    canBatchRevoke() {
+      var eligible = ['活动中', '修理中']
+      return this.selectedBwcRecords.length > 0 && this.selectedBwcRecords.every(function(r) {
+        return eligible.indexOf(r.lifecycleStatus) >= 0
+      })
+    },
+    canBatchRepair() {
+      return this.selectedBwcRecords.length > 0 && this.selectedBwcRecords.every(function(r) {
+        return r.lifecycleStatus === '活动中'
+      })
+    },
+    canBatchRepairComplete() {
+      return this.selectedBwcRecords.length > 0 && this.selectedBwcRecords.every(function(r) {
+        return r.lifecycleStatus === '修理中'
+      })
     }
   },
   watch: {
@@ -836,192 +755,199 @@ export default {
         this.queryParams.managerId = null
         this.getQueryUser()
       }
+    },
+    'form.bwcType': function(val) {
+      if (val === '5G') {
+        this.form.gb28181Id = ''
+        this.form.sipPassword = ''
+        this.form.terminalExt = {
+          charset: 'GB2312',
+          streamMode: 'TCP-PASSIVE',
+          sdpIp: '',
+          mediaServerId: 'auto',
+          ssrcCheck: false,
+          geoCoordSys: 'WGS84',
+          asMessageChannel: false,
+          broadcastPushAfterAck: false,
+          heartbeatInterval: 60,
+          heartbeatCount: 3
+        }
+      } else {
+        this.form.gb28181Id = ''
+        this.form.sipPassword = ''
+        this.form.terminalExt = null
+      }
+      this.$nextTick(function() {
+        if (this.$refs.form) {
+          this.$refs.form.clearValidate()
+        }
+      }.bind(this))
     }
   },
   created() {
     this.initVisibleColumns()
     this.getList()
     this.getTreeselect()
-    this.getFormBrand()
-    this.getDicts('bwc_status').then((response) => {
-      this.statusOptions = response.data
-    })
-    this.getDicts('enableuse_state').then((response) => {
-      this.enableUseOptions = response.data
-    })
   },
   methods: {
     getDefaultVisibleColumns() {
       return this.columnOptions
-        .filter((item) => item.defaultVisible !== false)
-        .map((item) => item.prop)
+        .filter(function(item) { return item.defaultVisible !== false })
+        .map(function(item) { return item.prop })
     },
     initVisibleColumns() {
-      const saved = localStorage.getItem('bwc_manage_visible_columns')
-      if (saved) {
-        try {
+      try {
+        var saved = localStorage.getItem(this.columnStorageKey)
+        if (saved) {
           this.visibleColumns = JSON.parse(saved)
           return
-        } catch (error) {
-          console.warn('解析列配置失败，使用默认列', error)
         }
+      } catch (e) {
+        console.warn('Column settings corrupted, using defaults')
       }
       this.visibleColumns = this.getDefaultVisibleColumns()
     },
     isColumnVisible(prop) {
-      return this.visibleColumns.includes(prop)
+      return this.visibleColumns.indexOf(prop) >= 0
     },
     handleColumnChange(value) {
       this.visibleColumns = value
-      localStorage.setItem('bwc_manage_visible_columns', JSON.stringify(this.visibleColumns))
+      try {
+        localStorage.setItem(this.columnStorageKey, JSON.stringify(this.visibleColumns))
+      } catch (e) {
+        // localStorage full or unavailable - ignore
+      }
       this.refreshTableLayout()
     },
     resetColumns() {
       this.visibleColumns = this.getDefaultVisibleColumns()
-      localStorage.setItem('bwc_manage_visible_columns', JSON.stringify(this.visibleColumns))
+      try {
+        localStorage.setItem(this.columnStorageKey, JSON.stringify(this.visibleColumns))
+      } catch (e) {
+        // ignore
+      }
       this.$message.success('已重置为默认显示')
-      this.refreshTableLayout()
     },
     getList() {
       this.loading = true
-      const query = this.normalizeQueryParams(this.queryParams)
-      getEquipmentBwcList(query)
-        .then((response) => {
-          if (response.code === 200 && response.data) {
-            this.bwcList = response.data.list
-            this.total = response.data.count
-            this.restoreSelection()
-          } else {
-            this.bwcList = []
-            this.total = 0
-            this.msgError(response.msg || '获取执法仪列表失败')
-          }
-        })
-        .catch((error) => {
+      var query = this.normalizeQueryParams(this.queryParams)
+      getEquipmentBwcList(query).then(function(response) {
+        if (response.code === 200 && response.data) {
+          this.bwcList = response.data.list || []
+          this.total = response.data.count || response.data.total || 0
+          this.restoreSelection()
+        } else {
           this.bwcList = []
           this.total = 0
-          this.msgError('查询执法仪列表失败：' + (error.message || '未知错误'))
-        })
-        .finally(() => {
-          this.loading = false
-          this.scheduleCheckActionFixed()
-        })
+          this.msgError(response.msg || '获取列表失败')
+        }
+      }.bind(this)).catch(function(error) {
+        this.bwcList = []
+        this.total = 0
+        this.msgError('查询失败：' + (error.message || '未知错误'))
+      }.bind(this)).finally(function() {
+        this.loading = false
+        this.scheduleCheckActionFixed()
+      }.bind(this))
     },
-    normalizeQueryParams(params = {}) {
-      const query = { ...params }
-      Object.keys(query).forEach((key) => {
-        const value = query[key]
+    normalizeQueryParams(params) {
+      if (!params) params = {}
+      var query = Object.assign({}, params)
+      Object.keys(query).forEach(function(key) {
+        var value = query[key]
         if (value === '' || value === null || value === undefined) {
           delete query[key]
         }
       })
       return query
     },
-    getFormBrand() {
-      listEquipmentBrand().then((response) => {
-        this.brandOptions = response.data.list
-      })
-    },
-    statusFormat(row) {
-      return this.selectDictLabel(this.statusOptions, row.status)
-    },
-    enableUseFormat(row) {
-      return this.selectDictLabel(this.enableUseOptions, row.enableUse)
-    },
     getTreeselect() {
-      orgTreeSelect().then((response) => {
+      orgTreeSelect().then(function(response) {
         this.orgOptions = response.data
-      })
+      }.bind(this))
     },
     getFormUser() {
-      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(
-        (response) => {
-          this.userOptions = response.data.list
-        }
-      )
+      listUser({ orgId: '/' + this.form.managerOrgId + '/' }).then(function(response) {
+        this.userOptions = response.data.list
+      }.bind(this))
     },
     getQueryUser() {
-      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(
-        (response) => {
-          this.userOptions = response.data.list
-        }
-      )
-    },
-    reset() {
-      this.form = {
-        managerOrgId: undefined,
-        managerId: undefined,
-        bwcName: undefined,
-        bwcNo: undefined,
-        enableUse: undefined,
-        status: undefined,
-        cpu: undefined,
-        memory: undefined,
-        disk: undefined,
-        networkCard: undefined,
-        usbNum: undefined,
-        system: undefined,
-        version: undefined,
-        purchaseDate: undefined,
-        remark: undefined
-      }
-      this.resetForm('form')
+      listUser({ orgId: '/' + this.queryParams.managerOrgId + '/' }).then(function(response) {
+        this.userOptions = response.data.list
+      }.bind(this))
     },
     resetSelected() {
       this.selectedBwcMap = {}
       this.selectedBwcRecords = []
     },
-    resetPage() {
-      this.queryParams.pageIndex = 1
-    },
     handleSearch(searchData) {
-      Object.keys(searchData).forEach(key => {
-        this.queryParams[key] = searchData[key]
-      })
-      const quickSearchFields = ['bwcNo', 'bwcName', 'managerOrgId', 'managerId', 'brandId', 'status', 'enableUse']
-      quickSearchFields.forEach(field => {
-        if (!(field in searchData)) {
-          delete this.queryParams[field]
-        }
-      })
-      this.resetPage()
+      // Reset all query params to defaults first
+      var resetParams = {
+        keyword: undefined,
+        lifecycleStatus: undefined,
+        operabilityStatus: undefined,
+        assignmentStatus: undefined,
+        runtimeStatus: undefined,
+        vendor: undefined,
+        bwcType: undefined,
+        managerId: undefined,
+        managerOrgId: undefined
+      }
+      Object.assign(this.queryParams, resetParams)
+      // Then apply search data
+      Object.assign(this.queryParams, searchData)
+      this.queryParams.pageNum = 1
+      this.resetSelected()
+      this.getList()
+    },
+    handleFilterReset() {
+      this.queryParams = {
+        pageNum: 1,
+        pageSize: 10,
+        deviceType: undefined,
+        keyword: undefined,
+        lifecycleStatus: undefined,
+        operabilityStatus: undefined,
+        assignmentStatus: undefined,
+        runtimeStatus: undefined,
+        vendor: undefined,
+        bwcType: undefined,
+        managerId: undefined,
+        managerOrgId: undefined,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      }
       this.resetSelected()
       this.getList()
     },
     handleQuickSearchReset() {
       this.handleFilterReset()
     },
-    handleFilterReset() {
-      this.queryParams = {
-        pageIndex: 1,
-        pageSize: 10,
-        bwcNo: undefined,
-        bwcName: undefined,
-        managerOrgId: undefined,
-        managerId: undefined,
-        brandId: undefined,
-        status: undefined,
-        enableUse: undefined
-      }
-      this.resetPage()
-      this.resetSelected()
-      this.getList()
-    },
     handleOrgChange(orgId) {
-      // 组织变化时，可以在这里处理相关逻辑
+      if (orgId) {
+        this.queryParams.managerId = null
+        listUser({ orgId: '/' + orgId + '/' }).then(function(response) {
+          this.userOptions = response.data.list || []
+        }.bind(this))
+      } else {
+        this.userOptions = []
+      }
     },
     handleRefresh() {
       this.getList()
     },
-    handleSortChang(column, prop, order) {
-      prop = column.prop
-      order = column.order
+    handleSortChang(column) {
+      var prop = column.prop
+      var order = column.order
       if (order === 'descending') {
-        this.queryParams[prop + 'Order'] = 'desc'
+        this.queryParams.sortBy = prop
+        this.queryParams.sortOrder = 'desc'
       } else if (order === 'ascending') {
-        this.queryParams[prop + 'Order'] = 'asc'
+        this.queryParams.sortBy = prop
+        this.queryParams.sortOrder = 'asc'
       } else {
-        this.queryParams[prop + 'Order'] = undefined
+        this.queryParams.sortBy = 'createdAt'
+        this.queryParams.sortOrder = 'desc'
       }
       this.getList()
     },
@@ -1046,21 +972,22 @@ export default {
       if (this.isRestoringSelection) {
         return
       }
-      const selectedIdSet = new Set(
-        (selection || []).map((item) => item && item.id).filter(Boolean)
+      var selectedIdSet = new Set(
+        (selection || []).map(function(item) { return item && (item.deviceUid || item.id) }).filter(Boolean)
       )
-      ;(this.bwcList || []).forEach((row) => {
-        const id = row && row.id
+      var self = this
+      ;(this.bwcList || []).forEach(function(row) {
+        var id = row && (row.deviceUid || row.id)
         if (!id) return
         if (selectedIdSet.has(id)) {
-          this.selectedBwcMap[id] = row
+          self.selectedBwcMap[id] = row
         } else {
-          delete this.selectedBwcMap[id]
+          delete self.selectedBwcMap[id]
         }
       })
       this.selectedBwcRecords = Object.values(this.selectedBwcMap).filter(Boolean)
-      const totalCount = this.bwcList.length
-      const selectedCount = this.selectedBwcRecords.length
+      var totalCount = this.bwcList.length
+      var selectedCount = this.selectedBwcRecords.length
       this.isAllSelected = selectedCount === totalCount && totalCount > 0
       this.isSelectionIndeterminate = selectedCount > 0 && selectedCount < totalCount
     },
@@ -1074,121 +1001,225 @@ export default {
       if (!this.$refs.bwcTable) return
       if (!this.bwcList || !this.bwcList.length) return
       this.isRestoringSelection = true
-      this.$nextTick(() => {
+      var self = this
+      this.$nextTick(function() {
         try {
-          this.bwcList.forEach((row) => {
-            const id = row && row.id
+          self.bwcList.forEach(function(row) {
+            var id = row && (row.deviceUid || row.id)
             if (!id) return
-            if (this.selectedBwcMap[id]) {
-              this.$refs.bwcTable.toggleRowSelection(row, true)
+            if (self.selectedBwcMap[id]) {
+              self.$refs.bwcTable.toggleRowSelection(row, true)
             }
           })
         } finally {
-          setTimeout(() => {
-            this.isRestoringSelection = false
+          setTimeout(function() {
+            self.isRestoringSelection = false
           }, 0)
         }
       })
     },
     handleAdd() {
-      this.reset()
+      this.resetFormData()
+      this.dialogStatus = 'create'
+      this.dialogTitle = '添加执法仪'
       this.open = true
-      this.title = '添加执法仪'
     },
     handleUpdate(row) {
-      this.reset()
+      this.resetFormData()
       this.firstLoad = true
-      if (row && row.id !== undefined) {
-        this.form = { ...row }
+      var source = (row && (row.deviceUid !== undefined || row.id !== undefined)) ? row : this.selectedBwcRecords[0]
+      var self = this
+      if (source) {
+        var uid = source.deviceUid || source.id
+        getEquipmentBwc(uid).then(function(response) {
+          if (response.code === 200 && response.data) {
+            self.form = Object.assign({ sipPassword: '' }, response.data)
+          } else {
+            self.form = Object.assign({ sipPassword: '' }, source)
+          }
+          self.dialogStatus = 'update'
+          self.dialogTitle = '修改执法仪'
+          self.open = true
+        }).catch(function() {
+          self.form = Object.assign({ sipPassword: '' }, source)
+          self.dialogStatus = 'update'
+          self.dialogTitle = '修改执法仪'
+          self.open = true
+        })
       } else {
-        this.form = this.selectedBwcRecords[0] ? { ...this.selectedBwcRecords[0] } : {}
+        this.dialogStatus = 'update'
+        this.dialogTitle = '修改执法仪'
+        this.open = true
       }
-      this.title = '修改执法仪'
-      this.open = true
     },
     handleView(row) {
-      this.viewData = row
+      this.viewLoading = true
+      this.viewData = {}
       this.viewOpen = true
+      getEquipmentBwc(row.deviceUid || row.id).then(function(response) {
+        if (response.code === 200 && response.data) {
+          this.viewData = response.data
+        }
+      }.bind(this)).catch(function(error) {
+        this.msgError('获取设备详情失败：' + (error.message || '未知错误'))
+      }.bind(this)).finally(function() {
+        this.viewLoading = false
+      }.bind(this))
+    },
+    resetFormData() {
+      this.form = {
+        deviceName: undefined,
+        deviceNo: undefined,
+        deviceType: '标准',
+        assetNo: undefined,
+        vendor: undefined,
+        model: undefined,
+        managerId: undefined,
+        managerOrgId: undefined,
+        remark: undefined,
+        bwcType: '标准',
+        storageCapacity: undefined,
+        cameraResolution: undefined,
+        firmwareVersion: undefined,
+        warrantyExpiry: undefined,
+        purchaseDate: undefined,
+        gb28181Id: '',
+        sipPassword: '',
+        terminalExt: {
+          charset: 'GB2312',
+          streamMode: 'TCP-PASSIVE',
+          sdpIp: '',
+          mediaServerId: 'auto',
+          ssrcCheck: false,
+          geoCoordSys: 'WGS84',
+          asMessageChannel: false,
+          broadcastPushAfterAck: false,
+          heartbeatInterval: 60,
+          heartbeatCount: 3
+        }
+      }
+      this.$nextTick(function() {
+        if (this.$refs.form) {
+          this.$refs.form.clearValidate()
+        }
+      }.bind(this))
+    },
+    buildTerminalExtPayload() {
+      var ext = this.form.terminalExt
+      if (!ext) return undefined
+      var defaults = {
+        charset: 'GB2312',
+        streamMode: 'TCP-PASSIVE',
+        sdpIp: '',
+        mediaServerId: 'auto',
+        ssrcCheck: false,
+        geoCoordSys: 'WGS84',
+        asMessageChannel: false,
+        broadcastPushAfterAck: false,
+        heartbeatInterval: 60,
+        heartbeatCount: 3
+      }
+      var result = {}
+      var hasCustom = false
+      var keys = Object.keys(defaults)
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i]
+        if (ext[key] !== defaults[key]) {
+          result[key] = ext[key]
+          hasCustom = true
+        }
+      }
+      return hasCustom ? result : undefined
     },
     submitForm() {
-      this.$refs['form'].validate((valid) => {
-        if (valid) {
-          if (this.form.id !== undefined) {
-            this.startProcessing('正在修改执法仪...')
-            updateEquipmentBwc(this.form, this.form.id)
-              .then(async(response) => {
-                if (response.code === 200) {
-                  await this.delay(2000)
-                  this.resetSelected()
-                  this.getList()
-                  this.msgSuccess(response.msg || '修改执法仪成功')
-                  this.open = false
-                } else {
-                  this.msgError(response.msg || '修改执法仪失败')
-                }
-              })
-              .catch((error) => {
-                this.msgError('修改执法仪失败：' + (error.message || '未知错误'))
-              })
-              .finally(() => {
-                this.stopProcessing()
-              })
-          } else {
-            this.startProcessing('正在创建执法仪...')
-            addEquipmentBwc(this.form)
-              .then(async(response) => {
-                if (response.code === 200) {
-                  await this.delay(2000)
-                  this.getList()
-                  this.msgSuccess(response.msg || '新增执法仪成功')
-                  this.open = false
-                } else {
-                  this.msgError(response.msg || '新增执法仪失败')
-                }
-              })
-              .catch((error) => {
-                this.msgError('新增执法仪失败：' + (error.message || '未知错误'))
-              })
-              .finally(() => {
-                this.stopProcessing()
-              })
+      this.$refs.form.validate(function(valid) {
+        if (!valid) return
+        this.submitLoading = true
+        if (this.form.deviceUid || this.form.id) {
+          var id = this.form.deviceUid || this.form.id
+          updateEquipmentBwc(this.form, id).then(function(response) {
+            if (response.code === 200) {
+              this.getList()
+              this.msgSuccess('修改成功')
+              this.open = false
+            } else {
+              this.msgError(response.msg || '修改失败')
+            }
+          }.bind(this)).catch(function(error) {
+            this.msgError('修改失败：' + (error.message || '未知错误'))
+          }.bind(this)).finally(function() {
+            this.submitLoading = false
+          }.bind(this))
+        } else {
+          var payload = Object.assign({}, this.form)
+          if (this.form.bwcType === '5G' && this.form.gb28181Id) {
+            var mapping = {
+              identityType: 'GB28181_ID',
+              identityValue: this.form.gb28181Id,
+              platformType: 'WVP',
+              terminalExt: this.buildTerminalExtPayload()
+            }
+            if (this.form.sipPassword) {
+              mapping.password = this.form.sipPassword
+            }
+            payload.identityMappings = [mapping]
           }
+          delete payload.gb28181Id
+          delete payload.sipPassword
+          delete payload.terminalExt
+          addEquipmentBwc(payload).then(function(response) {
+            if (response.code === 200) {
+              this.getList()
+              var syncStatus = (response.data && response.data.syncStatus) || ''
+              if (syncStatus === 'registered') {
+                this.msgSuccess('新增成功，WVP 注册完成')
+              } else if (syncStatus === 'pending_retry') {
+                this.$message({ message: '新增成功，WVP 注册中，请稍后确认', type: 'warning', duration: 5000 })
+              } else {
+                this.msgSuccess('新增成功')
+              }
+              this.open = false
+            } else {
+              this.msgError(response.msg || '新增失败')
+            }
+          }.bind(this)).catch(function(error) {
+            this.msgError('新增失败：' + (error.message || '未知错误'))
+          }.bind(this)).finally(function() {
+            this.submitLoading = false
+          }.bind(this))
         }
-      })
+      }.bind(this))
     },
     async handleDelete(row) {
       try {
-        var bwcIds = []
-        var bwcNos = []
-        if (row && row.id !== undefined) {
-          bwcIds = [row.id]
-          bwcNos = [row.bwcNo]
+        var ids = []
+        if (row && (row.deviceUid || row.id)) {
+          ids = [row.deviceUid || row.id]
         } else {
-          bwcIds = this.selectedBwcRecords.map((item) => item.id)
-          bwcNos = this.selectedBwcRecords.map((item) => item.bwcNo)
+          ids = this.selectedBwcRecords.map(function(item) { return item.deviceUid || item.id })
         }
-        const count = Array.isArray(bwcIds) ? bwcIds.length : 1
-        const confirmMessage = count > 1
-          ? `是否确认删除选中的 ${count} 条执法仪记录？此操作不可恢复。`
-          : `是否确认删除执法仪编号为"${bwcNos}"？此操作不可恢复。`
+        var count = ids.length
+        var confirmMessage = count > 1
+          ? '是否确认删除选中的 ' + count + ' 条记录？此操作不可恢复。'
+          : '是否确认删除该记录？此操作不可恢复。'
         await this.$confirm(confirmMessage, '确认删除', {
           confirmButtonText: '删除',
           cancelButtonText: '取消',
           type: 'warning'
         })
-        this.startProcessing('正在删除执法仪...')
-        const response = await delEquipmentBwc({ ids: bwcIds })
+        this.startProcessing('正在删除...')
+        var response = await delEquipmentBwc({ ids: ids })
         if (response.code === 200) {
-          await this.delay(2000)
           this.resetSelected()
-          this.resetPage()
+          this.queryParams.pageNum = 1
           this.getList()
-          this.msgSuccess(response.msg || '删除执法仪成功')
+          this.msgSuccess('删除成功')
         } else {
-          this.msgError(response.msg || '删除执法仪失败')
+          this.msgError(response.msg || '删除失败')
         }
         this.stopProcessing()
       } catch (error) {
+        this.stopProcessing()
         if (error !== 'cancel') {
           this.msgError('删除失败：' + (error.message || '未知错误'))
         }
@@ -1196,67 +1227,114 @@ export default {
     },
     cancel() {
       this.open = false
-      this.reset()
+      this.resetFormData()
     },
     delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms))
+      return new Promise(function(resolve) { setTimeout(resolve, ms) })
+    },
+    onBatchDialogOpened() {
+      this.$nextTick(function() {
+        if (this.$refs.batchReasonInput) {
+          this.$refs.batchReasonInput.focus()
+        }
+      }.bind(this))
+    },
+    openBatchDialog(action) {
+      var ids = this.selectedBwcRecords.map(function(r) { return r.deviceUid || r.id })
+      var actions = {
+        retire: { title: '批量退役', fn: batchRetireBwc, reasonRequired: false },
+        revoke: { title: '批量吊销', fn: batchRevokeBwc, reasonRequired: true },
+        repair: { title: '批量报修', fn: batchRepairBwc, reasonRequired: false },
+        repairComplete: { title: '批量修复完成', fn: batchRepairCompleteBwc, reasonRequired: false }
+      }
+      var config = actions[action]
+      if (!config) return
+      this.batchDialogTitle = config.title
+      this.batchDialogReason = ''
+      this.batchDialogReasonRequired = config.reasonRequired
+      var self = this
+      this.batchDialogAction = function() {
+        return config.fn({ ids: ids, reason: self.batchDialogReason || undefined })
+      }
+      this.batchDialogVisible = true
+    },
+    executeBatchAction() {
+      if (!this.batchDialogAction) return
+      this.batchLoading = true
+      this.batchDialogAction().then(function(response) {
+        this.batchDialogVisible = false
+        if (response.code === 200) {
+          this.batchResult = response.data
+          this.batchResultDialogVisible = true
+          this.getList()
+          if (this.$refs.bwcTable) {
+            this.$refs.bwcTable.clearSelection()
+          }
+        } else {
+          this.msgError(response.msg || '批量操作失败')
+        }
+      }.bind(this)).catch(function(error) {
+        this.msgError('批量操作失败：' + (error.message || '未知错误'))
+      }.bind(this)).finally(function() {
+        this.batchLoading = false
+      }.bind(this))
     },
     async handleExport() {
       try {
-        const hasSelection = this.selectedBwcRecords.length > 0
-        const count = hasSelection ? this.selectedBwcRecords.length : 0
-        const confirmText = hasSelection
-          ? `是否确认导出已勾选的 ${count} 条执法仪数据？`
-          : '是否确认导出所有执法仪数据项？'
+        var hasSelection = this.selectedBwcRecords.length > 0
+        var count = hasSelection ? this.selectedBwcRecords.length : 0
+        var confirmText = hasSelection
+          ? '是否确认导出已勾选的 ' + count + ' 条数据？'
+          : '是否确认导出所有数据项？'
         await this.$confirm(confirmText, '导出确认', {
           confirmButtonText: '导出',
           cancelButtonText: '取消',
           type: 'info'
         })
-        const columnOptions = Array.isArray(this.columnOptions) ? this.columnOptions : []
-        const visibleColumns = Array.isArray(this.visibleColumns) ? this.visibleColumns : []
-        const exportColumns = columnOptions.filter((c) => visibleColumns.includes(c.prop))
+        var columnOptions = Array.isArray(this.columnOptions) ? this.columnOptions : []
+        var visibleColumns = Array.isArray(this.visibleColumns) ? this.visibleColumns : []
+        var exportColumns = columnOptions.filter(function(c) { return visibleColumns.indexOf(c.prop) >= 0 })
         if (!exportColumns.length) {
           this.msgError('当前未选择任何可导出的列')
           return
         }
-        const tHeader = exportColumns.map((c) => c.label)
-        const filterVal = exportColumns.map((c) => c.field || c.prop)
-        let list = []
+        var tHeader = exportColumns.map(function(c) { return c.label })
+        var filterVal = exportColumns.map(function(c) { return c.field || c.prop })
+        var list = []
         if (hasSelection) {
           list = this.selectedBwcRecords
         } else {
-          const baseQueryParams = this.normalizeQueryParams(this.queryParams || {})
-          const pageSize = 1000
-          let pageIndex = 1
-          let total = Infinity
+          var baseQueryParams = this.normalizeQueryParams(this.queryParams || {})
+          var pageSize = 1000
+          var pageNum = 1
+          var total = Infinity
           while (list.length < total) {
-            const query = { ...baseQueryParams, pageIndex, pageSize }
-            const resp = await getEquipmentBwcList(query)
+            var query = Object.assign({}, baseQueryParams, { pageNum: pageNum, pageSize: pageSize })
+            var resp = await getEquipmentBwcList(query)
             if (!resp || resp.code !== 200) {
-              throw new Error((resp && resp.msg) || '查询执法仪列表失败')
+              throw new Error((resp && resp.msg) || '查询失败')
             }
-            const pageList = (resp.data && resp.data.list) || []
-            total = (resp.data && resp.data.count) || 0
+            var pageList = (resp.data && resp.data.list) || []
+            total = (resp.data && resp.data.total) || 0
             list = list.concat(pageList)
-            if (!pageList.length) {
-              break
-            }
-            pageIndex += 1
+            if (!pageList.length) break
+            pageNum += 1
           }
         }
-        const normalizeList = (Array.isArray(list) ? list : []).map((row) => {
-          const output = { ...row }
-          output.status = this.statusFormat(row)
-          output.enableUse = this.enableUseFormat(row)
-          output.purchaseDate = this.parseTime(row.purchaseDate)
+        var normalizeList = (Array.isArray(list) ? list : []).map(function(row) {
+          var output = Object.assign({}, row)
+          output.lifecycleStatus = LifecycleStatusLabels[row.lifecycleStatus] || row.lifecycleStatus
+          output.operabilityStatus = OperabilityStatusLabels[row.operabilityStatus] || row.operabilityStatus
+          output.assignmentStatus = AssignmentStatusLabels[row.assignmentStatus] || row.assignmentStatus
+          output.runtimeStatus = RuntimeStatusLabels[row.runtimeStatus] || row.runtimeStatus
+          output.bwcType = row.bwcType || row.deviceType
           return output
         })
-        const data = formatJson(filterVal, normalizeList)
-        const excel = await import('@/vendor/Export2Excel')
+        var data = formatJson(filterVal, normalizeList)
+        var excel = await import('@/vendor/Export2Excel')
         excel.export_json_to_excel({
           header: tHeader,
-          data,
+          data: data,
           filename: '执法仪列表',
           autoWidth: true,
           bookType: 'xlsx'

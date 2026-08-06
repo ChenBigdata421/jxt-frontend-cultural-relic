@@ -51,17 +51,12 @@
               @click="handleDelete"
             >删除</el-button>
           </template>
-          <!-- 自定义操作列插槽 -->
+          <!-- 更多操作下拉菜单项 -->
           <template #operation="{ row }">
-            <div class="action-buttons">
-              <el-button
-                size="small"
-                type="text"
-                icon="el-icon-link"
-                class="action-btn tertiary"
-                @click="handleShowMedia(row)"
-              >已归档媒体</el-button>
-            </div>
+            <el-dropdown-item
+              icon="el-icon-link"
+              command="media"
+            >已归档媒体</el-dropdown-item>
           </template>
         </ArchiveSelector>
       </el-card>
@@ -590,6 +585,9 @@ export default {
           break
         case 'view':
           this.handleView(row)
+          break
+        case 'media':
+          this.handleShowMedia(row)
           break
         default:
           break

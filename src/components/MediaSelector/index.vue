@@ -1523,9 +1523,6 @@ export default {
       } else if (filterData.filterType === 'archived') {
         // 已归档
         this.queryParams.isArchived = 1
-      } else if (filterData.filterType === 'nonEnforcement') {
-        // 非执法视频
-        this.queryParams.isNonEnforcementMedia = 1
       } else if (filterData.filterType === 'locked') {
         // 已锁定
         this.queryParams.isLocked = 1

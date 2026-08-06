@@ -96,6 +96,14 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/tokens/index.scss';
 
+.chart-card--dashboard {
+  background: $law-bg-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+  padding: 16px 20px;
+  height: 100%;
+}
+
 .coverage-body {
   height: 300px;
   overflow-y: auto;

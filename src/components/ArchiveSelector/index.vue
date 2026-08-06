@@ -282,7 +282,7 @@
       <el-table-column
         v-if="!selectionMode"
         label="操作"
-        width="360"
+        width="220"
         align="center"
         class-name="small-padding fixed-width"
         :fixed="actionFixed ? 'right' : false"
@@ -303,15 +303,22 @@
               class="action-btn tertiary"
               @click="handleOperation(scope.row, 'edit')"
             >修改</el-button>
-            <el-button
-              size="small"
-              type="text"
-              icon="el-icon-delete"
-              class="action-btn tertiary-danger"
-              @click="handleOperation(scope.row, 'delete')"
-            >删除</el-button>
-            <!-- 自定义操作按钮插槽 -->
-            <slot name="operation" :row="scope.row" />
+            <el-dropdown
+              trigger="click"
+              @command="(cmd) => handleOperation(scope.row, cmd)"
+            >
+              <el-button size="small" type="text" class="action-btn tertiary">
+                更多<i class="el-icon-arrow-down el-icon--right" />
+              </el-button>
+              <el-dropdown-menu>
+                <slot name="operation" :row="scope.row" />
+                <el-dropdown-item
+                  icon="el-icon-delete"
+                  command="delete"
+                  class="danger-dropdown-item"
+                >删除</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
           </div>
         </template>
       </el-table-column>
@@ -847,4 +854,15 @@ export default {
   - .status-cell, .status-dot, .status-text → src/styles/components/status.scss
   - .column-settings, .column-settings-header, .column-item → src/styles/components/forms.scss
 */
+</style>
+
+<style>
+.el-dropdown-menu__item.danger-dropdown-item {
+  color: #F56C6C;
+}
+
+.el-dropdown-menu__item.danger-dropdown-item:hover {
+  background-color: rgba(245, 108, 108, 0.1);
+  color: #F56C6C;
+}
 </style>

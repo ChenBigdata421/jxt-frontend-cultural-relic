@@ -39,7 +39,7 @@
           <el-table-column prop="mediaCount" label="采集量" width="120" align="right">
             <template slot-scope="scope">{{ formatNumber(scope.row.mediaCount) }}</template>
           </el-table-column>
-          <el-table-column prop="associationRate" label="关联率" width="100" align="right">
+          <el-table-column prop="associationRate" label="追加率" width="100" align="right">
             <template slot-scope="scope">{{ formatRate(scope.row.associationRate) }}</template>
           </el-table-column>
           <el-table-column prop="archiveRate" label="归档率" width="100" align="right">

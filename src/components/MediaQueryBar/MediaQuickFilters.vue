@@ -9,7 +9,6 @@
       <el-radio-button label="all">全部</el-radio-button>
       <el-radio-button label="today">今日媒体</el-radio-button>
       <el-radio-button label="archived">已归档</el-radio-button>
-      <el-radio-button label="nonEnforcement">非执法视频</el-radio-button>
       <el-radio-button label="locked">已锁定</el-radio-button>
     </el-radio-group>
   </div>

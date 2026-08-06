@@ -160,6 +160,16 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/tokens/index.scss';
+
+.chart-card--dashboard {
+  background: $law-bg-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+  padding: 16px 20px;
+  height: 100%;
+}
+
 .chart-container {
   width: 100%;
   height: 300px;
